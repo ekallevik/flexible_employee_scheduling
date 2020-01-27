@@ -4,6 +4,7 @@ def load_xml_into_dict(filename):
     """ Loads data from the given filename """
 
 
+
     xsd_schema = xmlschema.XMLSchema('data/xsd schema/CreateScheduleRequest.xsd')
 
     if "rproblem" in filename:
