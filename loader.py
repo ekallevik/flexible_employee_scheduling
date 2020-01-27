@@ -16,3 +16,13 @@ def load_xml_into_dict(filename):
         return xsd_schema.to_dict(xml_filepath)
     else:
         raise ValueError("XML file not valid")
+
+def get_xml_schedule(schedule_data):
+    """ Returns the schedule information from XML data in a nicely formatted dict """
+
+    return {
+        "number_of_weeks": schedule_data["NbrOfWeeks"],
+        "period_start": schedule_data["PeriodStart"],
+        "week_start": schedule_data["WeekStart"],
+        "type": schedule_data["Type"]
+    }
