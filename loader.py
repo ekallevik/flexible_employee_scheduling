@@ -1,4 +1,4 @@
-
+import xmlschema
 
 def load_xml_into_dict(filename):
     """ Loads data from the given filename """
