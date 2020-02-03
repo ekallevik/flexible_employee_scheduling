@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<CreateScheduleRequest>
+    <ScheduleInfo>
+        <PeriodId>01300007X00E</PeriodId>
+        <ParentId>012Z0001900C</ParentId>
+        <PeriodStart>2019-02-01</PeriodStart>
+        <PeriodEnd>9999-12-31</PeriodEnd>
+        <Type>R</Type>
+        <NbrOfWeeks>2</NbrOfWeeks>
+        <WeekStart>5</WeekStart>
+    </ScheduleInfo>
+
+    <SchedulePeriod>
+        <DayRestRule>DayRestRule2</DayRestRule>
+        <WeeklyRestRule>WeeklyRestRule2</WeeklyRestRule>
+
+        <Shifts>
+            <Shift>
+                <Name>Shift1</Name>
+                <Type>DAY</Type>
+                <Intervals>
+                    <Interval>
+                        <TimeStart>10:00</TimeStart>
+                        <TimeEnd>18:00</TimeEnd>
+                        <DayIndicator>0</DayIndicator>
+                        <TypeId>1</TypeId>
+                        <BreakMinutes>60</BreakMinutes>
+                    </Interval>
+                </Intervals>
+            </Shift>
+        </Shifts>
+
+        <ScheduleRows>
+
+            <ScheduleRow>
+                <RowNbr>1</RowNbr>
+                <WeekHours>14.0</WeekHours>
+
+                <PerGrpId>PerGrpId1</PerGrpId>
+
+                <DayRestRule>DayRestRule1</DayRestRule>
+                <WeeklyRestRule>WeeklyRestRule1</WeeklyRestRule>
+
+                <Competences>
+                    <CompetenceId>Competence1</CompetenceId>
+                </Competences>
+            </ScheduleRow>
+
+        </ScheduleRows>
+    </SchedulePeriod>
+
+    <Demands>
+        <DemandDefinitions>
+            <DemandDefinition>
+                <DayDemandId>DayDemandId1</DayDemandId>
+                <Rows>
+                    <Row>
+                        <TimeStart>10:00</TimeStart>
+                        <TimeEnd>18:00</TimeEnd>
+                        <Type>WORK</Type>
+                        <Min>1</Min>
+                        <Ideal>2</Ideal>
+                        <Max>3</Max>
+                    </Row>
+                </Rows>
+            </DemandDefinition>
+        </DemandDefinitions>
+        <DayDemandList>
+            <DayDemand>
+                <DayIndex>0</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>1</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>2</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>3</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>4</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>5</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>6</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>7</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>8</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>9</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>10</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>11</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>12</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>13</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+        </DayDemandList>
+    </Demands>
+
+    <Configuration>
+        <TypeOfTimeList>
+            <TypeOfTime>
+                <TypeId>1</TypeId>
+                <Text>Arbete</Text>
+                <Type>WORK</Type>
+                <Factor>1.0</Factor>
+            </TypeOfTime>
+            <TypeOfTime>
+                <TypeId>2</TypeId>
+                <Text>Beredskap</Text>
+                <Type>ON_CALL</Type>
+                <Factor>0.3</Factor>
+            </TypeOfTime>
+        </TypeOfTimeList>
+        <PerGrpList>
+            <PerGrp>
+                <PerGrpId>PerGrpId1</PerGrpId>
+                <Text>Nurse</Text>
+            </PerGrp>
+            <PerGrp>
+                <PerGrpId>PerGrpId2</PerGrpId>
+                <Text>Doctor</Text>
+            </PerGrp>
+        </PerGrpList>
+        <Assignments>
+            <Assignment>
+                <AssignmentId>Assignment1</AssignmentId>
+                <Text>first assignment</Text>
+            </Assignment>
+            <Assignment>
+                <AssignmentId>Assignment2</AssignmentId>
+                <Text>second assignment</Text>
+            </Assignment>
+        </Assignments>
+        <Tasks>
+            <Task>
+                <TaskId>Task1</TaskId>
+                <Text>Intern revision</Text>
+                <CompetenceRequirements>
+                    <CompetenceId>Competence1</CompetenceId>
+                    <CompetenceId>Competence2</CompetenceId>
+                </CompetenceRequirements>
+            </Task>
+            <Task>
+                <TaskId>Task2</TaskId>
+                <Text>Whiskey tasting</Text>
+                <CompetenceRequirements>
+                    <CompetenceId>Competence1</CompetenceId>
+                    <CompetenceId>Competence3</CompetenceId>
+                </CompetenceRequirements>
+            </Task>
+        </Tasks>
+        <Competences>
+            <Competence>
+                <CompetenceId>Competence1</CompetenceId>
+                <Text>first competence</Text>
+            </Competence>
+            <Competence>
+                <CompetenceId>Competence2</CompetenceId>
+                <Text>second competence</Text>
+            </Competence>
+            <Competence>
+                <CompetenceId>Competence3</CompetenceId>
+                <Text>third competence</Text>
+            </Competence>
+        </Competences>
+        <DayRestRules>
+            <DayRestRule>
+                <Id>DayRestRule1</Id>
+                <Type>TIME</Type>
+                <MinRestHours>9</MinRestHours>
+                <TimeStart>1:00</TimeStart>
+            </DayRestRule>
+        </DayRestRules>
+        <WeeklyRestRules>
+            <WeeklyRestRule>
+                <Id>WeeklyRestRule1</Id>
+                <NbrOfDays>7</NbrOfDays>
+                <MinRestHours>36</MinRestHours>
+                <DayStart>3</DayStart>
+                <TimeStart>0:00</TimeStart>
+            </WeeklyRestRule>
+        </WeeklyRestRules>
+    </Configuration>
+
+</CreateScheduleRequest>

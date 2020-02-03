@@ -12,7 +12,7 @@ def load_xml_into_dict(real_mode=False, instance=1):
     if real_mode:
         xml_filepath = f"{BASE_DIR}/xml samples/Real Instances/rproblem{instance}.xml"
     else:
-        xml_filepath = f"{BASE_DIR}/xml samples/Artifical Test Instances/problem{instance}.xml"
+        xml_filepath = f"{BASE_DIR}/xml samples/Artificial Test Instances/problem{instance}.xml"
 
     # Validates an instances against the definition, and converts to dict
     if xsd_schema.is_valid(xml_filepath):
