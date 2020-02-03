@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<CreateScheduleRequest>
+    <ScheduleInfo>
+        <NbrOfWeeks>2</NbrOfWeeks>
+    </ScheduleInfo>
+
+    <SchedulePeriod>
+
+        <ScheduleRows>
+
+            <ScheduleRow>
+                <RowNbr>1</RowNbr>
+                <WeekHours>14.0</WeekHours>
+
+                <PerGrpId>PerGrpId1</PerGrpId>
+
+                <DayRestRule>DayRestRule1</DayRestRule>
+                <WeeklyRestRule>WeeklyRestRule1</WeeklyRestRule>
+
+                <Competences>
+                    <CompetenceId>Competence1</CompetenceId>
+                </Competences>
+            </ScheduleRow>
+
+        </ScheduleRows>
+    </SchedulePeriod>
+
+    <Demands>
+        <DemandDefinitions>
+            <DemandDefinition>
+                <DayDemandId>DayDemandId1</DayDemandId>
+                <Rows>
+                    <Row>
+                        <TimeStart>10:00</TimeStart>
+                        <TimeEnd>18:00</TimeEnd>
+                        <Type>WORK</Type>
+                        <Min>1</Min>
+                        <Ideal>2</Ideal>
+                        <Max>3</Max>
+                    </Row>
+                </Rows>
+            </DemandDefinition>
+        </DemandDefinitions>
+        <DayDemandList>
+            <DayDemand>
+                <DayIndex>0</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>1</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>2</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>3</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>4</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>5</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>6</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>7</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>8</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>9</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>10</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>11</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>12</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+            <DayDemand>
+                <DayIndex>13</DayIndex>
+                <DayDemandId>DayDemandId1</DayDemandId>
+            </DayDemand>
+        </DayDemandList>
+    </Demands>
+
+</CreateScheduleRequest>
