@@ -13,5 +13,5 @@ jobs:
 #      - codecov/upload:
 #          file: junit/test-results.xml
       - run: pytest --cov-report=xml --cov='.'
-        codecov/upload:
+      - codecov/upload:
           file: coverage.xml
