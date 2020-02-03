@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+	<xs:element name="CreateScheduleRequest">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ScheduleInfo" minOccurs="1" maxOccurs="1"/>
+				<xs:element ref="Parameters" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="SchedulePeriod" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Demands" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Configuration" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Constraints" minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- ScheduleInfo -->
+	<xs:element name="ScheduleInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="PeriodId" minOccurs="1" maxOccurs="1" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Identity of schedule period</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ParentId" minOccurs="1" maxOccurs="1" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Identity of organization</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="PeriodStart" minOccurs="1" maxOccurs="1" type="xs:date">
+					<xs:annotation>
+						<xs:documentation>Schedule period start date</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="PeriodEnd" minOccurs="1" maxOccurs="1" type="xs:date">
+					<xs:annotation>
+						<xs:documentation>Schedule period end date, 9999-12-31 means valid to infinity</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Type" minOccurs="1" maxOccurs="1" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Type: R=Recurrent, C=Calendar</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="NbrOfWeeks" minOccurs="1" maxOccurs="1" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>Number of weeks in schedule period</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="WeekStart" minOccurs="1" maxOccurs="1" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>Week position on PeriodStart for recurrence</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Parameters -->
+	<xs:element name="Parameters">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Parameter" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Solver parameters</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+							<xs:element name="Value" minOccurs="1" maxOccurs="1" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+
+	<!-- SchedulePeriod -->
+	<xs:element name="SchedulePeriod">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DayRestRule" minOccurs="0" maxOccurs="1" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Identity of default day rest rule</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="WeeklyRestRule" minOccurs="0" maxOccurs="1" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Identity of default day rest rule</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Shifts">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Shift" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>A shift for one employee one day</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Type" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="ReadOnly" minOccurs="0" maxOccurs="1" type="xs:boolean">
+											<xs:annotation>
+												<xs:documentation>Read only, changes not allowed</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Intervals" minOccurs="1" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Interval" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="TimeStart" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation>Time start 00:00 - 23:59</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="TimeEnd" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation>Time end 00:01 - 24:00, if TimeEnd is less or equal the interval ends on the next day</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="DayIndicator" minOccurs="1" maxOccurs="1" type="xs:integer">
+																	<xs:annotation>
+																		<xs:documentation>Day indicator for overnight shifts: -1=interval starts previous day, 1=interval starts on next day</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="TypeId" minOccurs="1" maxOccurs="1" type="xs:integer">
+																	<xs:annotation>
+																		<xs:documentation>Type of time</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="BreakMinutes" minOccurs="0" maxOccurs="1" type="xs:integer">
+																	<xs:annotation>
+																		<xs:documentation>Floating break minutes</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="AssignmentId" minOccurs="0" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation></xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="TaskId" minOccurs="0" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation></xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="ScheduleRows">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ScheduleRow" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="RowNbr" minOccurs="1" maxOccurs="1" type="xs:integer"/>
+										<xs:element name="ReadOnly" minOccurs="0" maxOccurs="1" type="xs:boolean">
+											<xs:annotation>
+												<xs:documentation>Read only, changes not allowed</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="WeekHours" minOccurs="0" maxOccurs="1" type="xs:decimal">
+											<xs:annotation>
+												<xs:documentation>Number of working hours per week</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="FulltimeWeekHours" minOccurs="0" maxOccurs="1" type="xs:decimal">
+											<xs:annotation>
+												<xs:documentation>Number of full time working hours per week</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="PerGrpId" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="DayRestRule" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="WeeklyRestRule" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Competences" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="CompetenceId" minOccurs="0" maxOccurs="unbounded" type="xs:string">
+														<xs:annotation>
+															<xs:documentation>Competences for employee connected to schedule row</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Days" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Day" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="DayIndex" minOccurs="1" maxOccurs="1" type="xs:integer">
+																	<xs:annotation>
+																		<xs:documentation>0 based day index</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="Shift" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation></xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!--Demands-->
+	<xs:element name="Demands">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DemandDefinitions">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="DemandDefinition" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Definition of staff demands for a day 00:00 - 24:00</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="DayDemandId" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Identity</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Rows" minOccurs="1" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Row" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="TimeStart" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation>Time start 00:00 - 23:59</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="TimeEnd" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation>Time end 00:01 - 24:00</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="Type" minOccurs="1" maxOccurs="1" type="xs:string">
+																	<xs:annotation>
+																		<xs:documentation>Type of time: WORK, ON_DUTY or ON_CALL</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="Min" minOccurs="1" maxOccurs="1" type="xs:integer"/>
+																<xs:element name="Ideal" minOccurs="1" maxOccurs="1" type="xs:integer">
+																	<xs:annotation>
+																		<xs:documentation>Number of employees ideally planned</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="Max" minOccurs="1" maxOccurs="1" type="xs:integer"/>
+																<xs:element name="PerGrpId" minOccurs="0" maxOccurs="1" type="xs:string"/>
+																<xs:element name="AssignmentId" minOccurs="0" maxOccurs="1" type="xs:string"/>
+																<xs:element name="TaskId" minOccurs="0" maxOccurs="1" type="xs:string"/>
+																<xs:element name="CompetenceRequirements" minOccurs="0" maxOccurs="1">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="CompetenceId" minOccurs="0" maxOccurs="unbounded" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="DayDemandList">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="DayDemand" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="DayIndex" minOccurs="1" maxOccurs="1" type="xs:integer">
+											<xs:annotation>
+												<xs:documentation>0 based day index</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="DayDemandId" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Identity of day definition of demands</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!--Configuration -->
+	<xs:element name="Configuration">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="TypeOfTimeList" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TypeOfTime" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Type of time and factor for weekly hours calculation</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="TypeId" minOccurs="1" maxOccurs="1" type="xs:integer"/>
+										<xs:element name="Text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Type" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Factor" minOccurs="1" maxOccurs="1" type="xs:decimal"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="PerGrpList" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="PerGrp" minOccurs="0" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Type of employee: Doctor, Nurse etc.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="PerGrpId" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="Assignments" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Assignment" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Can be a project, external customer or account distribution</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="AssignmentId" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Tasks" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Type of task, may have competence requirements</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Task" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="TaskId" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="CompetenceRequirements" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="CompetenceId" minOccurs="0" maxOccurs="unbounded" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Competences" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Competence" minOccurs="0" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Definition of competence requirement</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="CompetenceId" minOccurs="1" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="DayRestRules">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="DayRestRule" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Identity</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Type" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>AVERAGE=Average day rest , TIME=Day rest for daybreak at StartTime</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="MinRestHours" minOccurs="1" maxOccurs="1" type="xs:integer">
+											<xs:annotation>
+												<xs:documentation>Number of minimum rest hours</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="TimeStart" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Day start 00:00-23:59</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="RestConnected" minOccurs="0" maxOccurs="1" type="xs:boolean">
+											<xs:annotation>
+												<xs:documentation>Should the rest be connected when type is AVERAGE</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="WeeklyRestRules">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="WeeklyRestRule" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Identity</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="NbrOfDays" minOccurs="0" maxOccurs="1" type="xs:integer">
+											<xs:annotation>
+												<xs:documentation>Number of days</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="MinRestHours" minOccurs="1" maxOccurs="1" type="xs:integer">
+											<xs:annotation>
+												<xs:documentation>Number of minimum rest hours</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="DayStart" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>1=Monday until 7=Sunday</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="TimeStart" minOccurs="1" maxOccurs="1" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>Day start 00:00-23:59</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="Constraints">
+		<xs:complexType>
+			<xs:sequence>
+
+				<!-- blocked hours constraints -->
+				<xs:element name="BlockedHoursConstraints" minOccurs="0" maxOccurs="1">
+
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="BlockedHoursConstraint" minOccurs="0" maxOccurs="unbounded">
+
+								<xs:annotation>
+									<xs:documentation>Hours where schedule rows can't be placed. Hard constraint.</xs:documentation>
+								</xs:annotation>
+
+								<xs:complexType>
+									<xs:sequence>
+
+										<xs:element name="Id" minOccurs="0" maxOccurs="1" type="xs:string"/>
+
+										<xs:element name="Block" minOccurs="0" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="WeekDay" type="xs:string">
+														<xs:annotation>
+															<xs:documentation>1=Monday ... 7=Sunday</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="TimeStart" type="xs:string"/>
+													<xs:element name="TimeEnd" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+
+										<xs:element name="ScheduleRows" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>List of schedule rows to which the constraint should apply</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="RowNbr" minOccurs="0" maxOccurs="unbounded" type="xs:integer"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<!-- weekly rest constraints -->
+				<xs:element name="WeeklyRestConstraints" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="WeeklyRestConstraint" minOccurs="0" maxOccurs="unbounded">
+
+								<xs:annotation>
+									<xs:documentation>Constraint maximizing weekly rest. Soft constraint.</xs:documentation>
+								</xs:annotation>
+
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Weight" type="xs:decimal"/>
+										<xs:element name="RestHours" type="xs:decimal">
+											<xs:annotation>
+												<xs:documentation>Constraint should trigger if weekly rest exceeds this value.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+
+										<xs:element name="ScheduleRows" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>List of schedule rows to which the constraint should apply</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="RowNbr" minOccurs="0" maxOccurs="unbounded" type="xs:integer"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+
+									</xs:sequence>
+								</xs:complexType>
+
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<!-- weekend distribution constraints -->
+				<xs:element name="WeekendDistributionConstraints" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="WeekendDistributionConstraint" minOccurs="0" maxOccurs="unbounded">
+
+								<xs:annotation>
+									<xs:documentation>Constrained balancing working weekends between schedule rows. Soft constraint.</xs:documentation>
+								</xs:annotation>
+
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Weight" type="xs:decimal"/>
+										<xs:element name="WeekDayStart" type="xs:string"/>
+										<xs:element name="TimeStart" type="xs:string"/>
+										<xs:element name="WeekDayEnd" type="xs:string"/>
+										<xs:element name="TimeEnd" type="xs:string"/>
+										<xs:element name="Percentage" type="xs:decimal">
+											<xs:annotation>
+												<xs:documentation>Constraint triggered if percentage of working weekends exceeds this value.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="ScheduleRows" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>List of schedule rows to which the constraint should apply</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="RowNbr" minOccurs="0" maxOccurs="unbounded" type="xs:integer"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+
+							</xs:element>
+
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<!-- Preferable or non preferable hours constraints -->
+				<xs:element name="PointConstraints" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="PointConstraint" minOccurs="0" maxOccurs="unbounded">
+
+								<xs:annotation>
+									<xs:documentation>Constraint for preferable / non preferable working hours. Soft constraint</xs:documentation>
+								</xs:annotation>
+
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Weight" type="xs:decimal"/>
+										<xs:element name="Interval" minOccurs="1" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Week" type="xs:string" minOccurs="0" maxOccurs="1"/>
+													<xs:element name="WeekDay" type="xs:string"/>
+													<xs:element name="TimeStart" type="xs:string"/>
+													<xs:element name="TimeEnd" type="xs:string"/>
+													<xs:element name="Points" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="ScheduleRows" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>List of schedule rows to which the constraint should apply</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="RowNbr" minOccurs="0" maxOccurs="unbounded" type="xs:integer"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+
+							</xs:element>
+
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+				<!-- Shift pattern constraints -->
+				<xs:element name="ShiftPatternConstraints" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ShiftPatternConstraint" minOccurs="0" maxOccurs="unbounded">
+
+								<xs:annotation>
+									<xs:documentation>Constraint for preferable / non preferable shift patterns</xs:documentation>
+								</xs:annotation>
+
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Id" minOccurs="0" maxOccurs="1" type="xs:string"/>
+										<xs:element name="Weight" type="xs:decimal"/>
+										<xs:element name="WeekDayStart" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="Pattern">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="ShiftType" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+
+										<xs:element name="ScheduleRows" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>List of schedule rows to which the constraint should apply</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="RowNbr" minOccurs="0" maxOccurs="unbounded" type="xs:integer"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+
+									</xs:sequence>
+								</xs:complexType>
+
+							</xs:element>
+
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>
