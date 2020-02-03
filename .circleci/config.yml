@@ -1,10 +1,10 @@
-version: 2.1
+4.6.8version: 2.1
 orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
   build:
     docker:
-        - image: circleci/python:2.7.15-node
+        - image: circleci/python:3.8.0
     steps:
       - checkout
       - run: sudo python -m pip install --upgrade pip
