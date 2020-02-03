@@ -15,3 +15,5 @@ jobs:
       - run: coverage run -m pytest
       - run: coverage report
       - run: coverage html
+      - store_artifacts:
+          path: htmlcov
