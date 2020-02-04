@@ -23,10 +23,15 @@ def test_loader_returns_schedule_info(data):
     assert len(schedule_info.keys()) == 1
 
 
-def test_loader_returns_employees_for_test_data(data):
+def test_loader_returns_employee_info(data):
 
-    employees = loader.get_employees(data)
+    number_of_employees, working_hours, competencies = loader.get_employee_info(data)
 
-    assert type(employees) == dict
-    assert len(employees) == 1
-    assert type(employees["ScheduleRow"]) == list
+    assert number_of_employees == 2
+
+    assert working_hours == [14, 28]
+
+    assert len(competencies.keys()) == 2
+    assert competencies["Competence1"] == [0, 1]
+    assert competencies["Competence2"] == [0]
+

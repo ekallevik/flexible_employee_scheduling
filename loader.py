@@ -29,10 +29,24 @@ def get_schedule_info(data):
     }
 
 
-def get_employees(data):
+def get_employee_info(data):
 
-    return data["SchedulePeriod"]["ScheduleRows"]
+    employee_list = data["SchedulePeriod"]["ScheduleRows"]["ScheduleRow"]
 
+    number_of_employees = len(employee_list)
+    working_hours = []
+    competencies = {}
+
+    for employee_id, employee in enumerate(employee_list):
+        working_hours.append(employee["WeekHours"])
+
+        for competency in employee["Competences"]["CompetenceId"]:
+            if competency in competencies:
+                competencies[competency].append(employee_id)
+            else:
+                competencies[competency] = [employee_id]
+
+    return number_of_employees, working_hours, competencies
 
 
 def get_data():

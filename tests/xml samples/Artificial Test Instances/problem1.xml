@@ -35,12 +35,21 @@
             <ScheduleRow>
                 <RowNbr>1</RowNbr>
                 <WeekHours>14.0</WeekHours>
-
                 <PerGrpId>PerGrpId1</PerGrpId>
-
                 <DayRestRule>DayRestRule1</DayRestRule>
                 <WeeklyRestRule>WeeklyRestRule1</WeeklyRestRule>
+                <Competences>
+                    <CompetenceId>Competence1</CompetenceId>
+                    <CompetenceId>Competence2</CompetenceId>
+                </Competences>
+            </ScheduleRow>
 
+            <ScheduleRow>
+                <RowNbr>2</RowNbr>
+                <WeekHours>28.0</WeekHours>
+                <PerGrpId>PerGrpId1</PerGrpId>
+                <DayRestRule>DayRestRule1</DayRestRule>
+                <WeeklyRestRule>WeeklyRestRule1</WeeklyRestRule>
                 <Competences>
                     <CompetenceId>Competence1</CompetenceId>
                 </Competences>
