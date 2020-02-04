@@ -65,7 +65,15 @@
                 <Rows>
                     <Row>
                         <TimeStart>10:00</TimeStart>
-                        <TimeEnd>18:00</TimeEnd>
+                        <TimeEnd>15:00</TimeEnd>
+                        <Type>WORK</Type>
+                        <Min>1</Min>
+                        <Ideal>2</Ideal>
+                        <Max>3</Max>
+                    </Row>
+                    <Row>
+                        <TimeStart>14:30</TimeStart>
+                        <TimeEnd>18:15</TimeEnd>
                         <Type>WORK</Type>
                         <Min>1</Min>
                         <Ideal>2</Ideal>

@@ -35,3 +35,19 @@ def test_loader_returns_employee_info(data):
     assert competencies["Competence1"] == [0, 1]
     assert competencies["Competence2"] == [0]
 
+
+def test_get_tasks(data):
+
+    tasks = loader.get_tasks(demand_definitions=data["Demands"]["DemandDefinitions"]["DemandDefinition"])
+
+    print(tasks)
+
+    assert len(tasks) == 1
+    assert len(tasks["DayDemandId1"]) == 2
+
+
+def test_aggregate_demand(data):
+
+    demand = loader.aggregate_demand(data)
+
+    assert False

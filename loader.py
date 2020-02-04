@@ -1,5 +1,7 @@
 import xmlschema
 
+from constants import HOURS_IN_A_DAY
+
 BASE_DIR = "../flexible_employee_scheduling_data"
 
 
@@ -47,6 +49,28 @@ def get_employee_info(data):
                 competencies[competency] = [employee_id]
 
     return number_of_employees, working_hours, competencies
+
+
+def get_tasks(demand_definitions):
+
+    tasks = {}
+
+    for definition in demand_definitions:
+        demand_id = definition["DayDemandId"]
+        tasks[demand_id] = [task for task in definition["Rows"]["Row"]]
+
+    return tasks
+
+
+def aggregate_demand(data):
+
+    demand = {}
+    tasks = get_tasks(data["Demands"]["DemandDefinitions"]["DemandDefinition"])
+
+    for day_demand_id in tasks:
+        print(tasks[day_demand_id])
+
+    return demand
 
 
 def get_data():
