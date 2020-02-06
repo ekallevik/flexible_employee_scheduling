@@ -1,6 +1,7 @@
+import math
+
 import xmlschema
 
-from constants import HOURS_IN_A_DAY
 
 BASE_DIR = "../flexible_employee_scheduling_data"
 
@@ -51,12 +52,50 @@ def get_employee_info(data):
     return number_of_employees, working_hours, competencies
 
 
+# todo: replace Precision-enum with int-parameter?
+def adjust_times(time, round_up=True, time_step=1):
+
+    if time[1] % time_step > 0:
+        factor = math.ceil(time[1] / time_step) if round_up else math.floor(time[1] / time_step)
+        time = (time[0], factor * time_step)
+        if time[1] == 60:
+            time = (time[0] + 1, 0)
+
+    return time
+
+
+
+def get_task_period(task):
+    """
+    Converts the task to Python format, and applies rounding if necessary.
+
+    Args:
+        task:
+
+    Returns:
+
+    """
+
+    # time_start = [int(time) for time in str.split(task['time_start'], ":")]
+    # time_end = [int(time) for time in str.split(task['time_end'], ":")]
+
+    pass
+
+
+
+
+
+
+
+# todo: how to handle ON_DUTY and ON_CALL? Just drop them? How will this affect workforce / demand ratio.
 def get_tasks(demand_definitions):
 
     tasks = {}
 
     for definition in demand_definitions:
         demand_id = definition["DayDemandId"]
+
+
         tasks[demand_id] = [task for task in definition["Rows"]["Row"]]
 
     return tasks

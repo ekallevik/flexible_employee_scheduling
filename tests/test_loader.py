@@ -40,14 +40,25 @@ def test_get_tasks(data):
 
     tasks = loader.get_tasks(demand_definitions=data["Demands"]["DemandDefinitions"]["DemandDefinition"])
 
-    print(tasks)
-
     assert len(tasks) == 1
     assert len(tasks["DayDemandId1"]) == 2
 
 
-def test_aggregate_demand(data):
+@pytest.mark.parametrize("time, round_up, time_step, expected", [
+    [(9, 13), True, 1, (9, 13)],
+    [(9, 13), True, 15, (9, 15)],
+    [(9, 13), True, 30, (9, 30)],
+    [(9, 13), True, 60, (10, 00)],
+    [(15, 47), False, 1, (15, 47)],
+    [(15, 47), False, 15, (15, 45)],
+    [(15, 47), False, 30, (15, 30)],
+    [(15, 47), False, 60, (15, 00)]
+])
+def test_adjust_times(time, round_up, time_step, expected):
 
-    demand = loader.aggregate_demand(data)
+    actual_time = loader.adjust_times(time, round_up, time_step)
 
-    assert False
+    assert actual_time == expected
+
+
+
