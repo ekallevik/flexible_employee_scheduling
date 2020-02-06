@@ -2,9 +2,9 @@ import math
 
 import xmlschema
 
-from constants import HOURS_IN_A_DAY
+from source.const import HOURS_IN_A_DAY
 
-BASE_DIR = "../flexible_employee_scheduling_data"
+BASE_DIR = "../../flexible_employee_scheduling_data"
 
 
 def load_xml_into_dict(real_mode=False, instance=1):

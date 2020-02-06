@@ -1,7 +1,7 @@
 from unittest import mock
 import pytest
 
-import loader
+from source import loader
 
 
 @pytest.fixture()
@@ -90,13 +90,13 @@ def test_format_demand_definitions(data, expected_formatted_definitions):
     assert actual_formatted_definitions == expected_formatted_definitions
 
 
-@pytest.mark.parametrize("task, time_step, expected", [
-    [{'TimeStart': [9, 13], 'TimeEnd': [15, 47]}, 15, ]
-])
-def test_convert_task_times_to_indices(task, time_step, expected):
-
-    assert task["TimeStart"] == expected[0]
-    assert task["TimeEnd"] == expected[0]
+# @pytest.mark.parametrize("task, time_step, expected", [
+#     [{'TimeStart': [9, 13], 'TimeEnd': [15, 47]}, 15, ]
+# ])
+# def test_convert_task_times_to_indices(task, time_step, expected):
+#
+#     assert task["TimeStart"] == expected[0]
+#     assert task["TimeEnd"] == expected[0]
 
 
 def test_aggregate_definitions(data, expected_aggregated_definitions):
