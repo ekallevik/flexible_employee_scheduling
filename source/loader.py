@@ -2,7 +2,8 @@ import math
 
 import xmlschema
 
-from source.const import HOURS_IN_A_DAY
+from source import utils
+from source.const import HOURS_IN_A_DAY, MINUTES_IN_A_HOUR
 
 BASE_DIR = "../../flexible_employee_scheduling_data"
 
@@ -34,7 +35,6 @@ def get_schedule_info(data):
 
 
 def get_employee_info(data):
-
     employee_list = data["SchedulePeriod"]["ScheduleRows"]["ScheduleRow"]
 
     number_of_employees = len(employee_list)
@@ -54,9 +54,12 @@ def get_employee_info(data):
 
 
 def adjust_times(time, round_up=True, time_step=1):
-
     if time[1] % time_step > 0:
-        factor = math.ceil(time[1] / time_step) if round_up else math.floor(time[1] / time_step)
+        factor = math.ceil(
+            time[1] /
+            time_step) if round_up else math.floor(
+            time[1] /
+            time_step)
         time = [time[0], factor * time_step]
         if time[1] == 60:
             time = [time[0] + 1, 0]
@@ -65,18 +68,18 @@ def adjust_times(time, round_up=True, time_step=1):
 
 
 def format_task(task, time_step):
-
     time_start = [int(x) for x in str.split(task['TimeStart'], ":")]
     time_end = [int(x) for x in str.split(task['TimeEnd'], ":")]
 
-    task["TimeStart"] = adjust_times(time_start, round_up=True, time_step=time_step)
-    task["TimeEnd"] = adjust_times(time_end, round_up=False, time_step=time_step)
+    task["TimeStart"] = adjust_times(
+        time_start, round_up=True, time_step=time_step)
+    task["TimeEnd"] = adjust_times(
+        time_end, round_up=False, time_step=time_step)
 
     return task
 
 
 def format_demand_definitions(demand_definitions, time_step=1):
-
     formatted_definitions = {}
 
     for definition in demand_definitions:
@@ -89,58 +92,76 @@ def format_demand_definitions(demand_definitions, time_step=1):
     return formatted_definitions
 
 
-def convert_task_times_to_range(task, time_step):
+def convert_time_to_index(time, time_step):
 
-    return range(1, 2)
+    return int((time[0] * MINUTES_IN_A_HOUR + time[1]) / time_step)
 
+
+def get_time_range_for_task(task, time_step):
+
+    start = convert_time_to_index(task["TimeStart"], time_step)
+    end = convert_time_to_index(task["TimeEnd"], time_step)
+
+    return range(start, end)
 
 
 def aggregate_definitions(demand_definitions, time_step=1):
+    formatted_definitions = format_demand_definitions(
+        demand_definitions, time_step=time_step)
 
-    formatted_definitions = format_demand_definitions(demand_definitions, time_step=time_step)
-
-    day_size = int(HOURS_IN_A_DAY/time_step)
-    day_array = [0 for t in range(day_size)]
-    aggregated_definitions = [day_array for i in formatted_definitions]
+    day_size = get_day_size(time_step)
+    aggregated_definitions = {}
 
     for day_demand_id, day_demand in formatted_definitions.items():
-        print(day_demand)
-        for task in day_demand:
-            print(task)
+        print(f"\nday_demand = {day_demand}")
 
-            for t in convert_task_times_to_range(task, time_step):
-                aggregated_definitions[day_demand_id][t] += task["Min"]
+        aggregated_day_demand = get_initialized_demand_dict(day_size)
+
+        for task in day_demand:
+            print(f"task = {task}")
+            for time in get_time_range_for_task(task, time_step):
+                print(f"Time: {time}")
+                aggregated_day_demand["Min"][time] += task["Min"]
+                aggregated_day_demand["Ideal"][time] += task["Ideal"]
+                aggregated_day_demand["Max"][time] += task["Max"]
+
+        aggregated_definitions[day_demand_id] = aggregated_day_demand
 
     return aggregated_definitions
 
 
+def get_initialized_demand_dict(size):
+
+    return {
+        "Min": [0 for t in range(size)],
+        "Ideal": [0 for t in range(size)],
+        "Max": [0 for t in range(size)]
+    }
 
 
-def get_tasks(demand_definitions):
-
-    tasks = {}
-
-    for definition in demand_definitions:
-        demand_id = definition["DayDemandId"]
-
-        tasks[demand_id] = [task for task in definition["Rows"]["Row"]]
-
-    return tasks
+def get_day_size(time_step):
+    return int(HOURS_IN_A_DAY * MINUTES_IN_A_HOUR / time_step)
 
 
-def aggregate_demand(data):
+def aggregate_demand(data, number_of_days, time_step=60):
 
-    demand = {}
-    tasks = get_tasks(data["Demands"]["DemandDefinitions"]["DemandDefinition"])
+    demand_definitions = aggregate_definitions(
+        data["Demands"]["DemandDefinitions"]["DemandDefinition"], time_step)
 
-    for day_demand_id in tasks:
-        print(tasks[day_demand_id])
+    planning_size = get_day_size(time_step) * number_of_days
+
+    demand = get_initialized_demand_dict(planning_size)
+
+
+    for day in data["Demands"]["DayDemandList"]["DayDemand"]:
+        print(day)
+        day_offset = get_day_size(time_step) * day["DayIndex"]
+   
 
     return demand
 
 
 def get_data():
-
     data = load_xml_into_dict()
 
     schedule = get_schedule_info(data)

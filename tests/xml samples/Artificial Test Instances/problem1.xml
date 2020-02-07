@@ -72,7 +72,7 @@
                         <Max>3</Max>
                     </Row>
                     <Row>
-                        <TimeStart>14:30</TimeStart>
+                        <TimeStart>14:00</TimeStart>
                         <TimeEnd>18:15</TimeEnd>
                         <Type>WORK</Type>
                         <Min>1</Min>

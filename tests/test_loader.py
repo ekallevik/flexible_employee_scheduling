@@ -9,7 +9,7 @@ def expected_formatted_definitions():
     return {
         'DayDemandId1': [
             {'TimeStart': [10, 0], 'TimeEnd': [15, 0], 'Type': 'WORK', 'Min': 1, 'Ideal': 2, 'Max': 3},
-            {'TimeStart': [14, 30], 'TimeEnd': [18, 15], 'Type': 'WORK', 'Min': 1,'Ideal': 2, 'Max': 3}],
+            {'TimeStart': [14, 0], 'TimeEnd': [18, 15], 'Type': 'WORK', 'Min': 1, 'Ideal': 2, 'Max': 3}],
         'DayDemandId2': [
             {'TimeStart': [10, 0], 'TimeEnd': [18, 0], 'Type': 'WORK', 'Min': 1, 'Ideal': 2, 'Max': 3}]}
 
@@ -18,13 +18,16 @@ def expected_formatted_definitions():
 def expected_aggregated_definitions():
     return {
             'DayDemandId1': {
-                'Min': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-                'Ideal': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                'Max': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]},
+                'Min': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                'Ideal': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 4, 2, 2, 2, 0, 0, 0, 0, 0, 0],
+                'Max': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 6, 3, 3, 3, 0, 0, 0, 0, 0, 0],
+            },
             'DayDemandId2': {
-                'Min': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                'Ideal': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                'Max': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]}}
+                'Min': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                'Ideal': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
+                'Max': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0],
+            }
+    }
 
 
 @pytest.fixture()
@@ -90,29 +93,53 @@ def test_format_demand_definitions(data, expected_formatted_definitions):
     assert actual_formatted_definitions == expected_formatted_definitions
 
 
-# @pytest.mark.parametrize("task, time_step, expected", [
-#     [{'TimeStart': [9, 13], 'TimeEnd': [15, 47]}, 15, ]
-# ])
-# def test_convert_task_times_to_indices(task, time_step, expected):
-#
-#     assert task["TimeStart"] == expected[0]
-#     assert task["TimeEnd"] == expected[0]
+@pytest.mark.parametrize("time, time_step, expected", [
+    [[0, 0], 30, 0],
+    [[0, 30], 30, 1],
+    [[1, 0], 30, 2],
+    [[1, 30], 30, 3]
+])
+def test_convert_time_to_index(time, time_step, expected):
+
+    index = loader.convert_time_to_index(time, time_step)
+
+    assert index == expected
+
+
+@pytest.mark.parametrize("task, time_step, expected", [
+    [{'TimeStart': [5, 0], 'TimeEnd': [15, 30]}, 30, range(10, 31)],
+    [{'TimeStart': [0, 0], 'TimeEnd': [2, 0]}, 30, range(0, 4)]
+])
+def test_get_time_range_for_task(task, time_step, expected):
+
+    task_range = loader.get_time_range_for_task(task, time_step)
+
+    assert task_range == expected
 
 
 def test_aggregate_definitions(data, expected_aggregated_definitions):
 
-    aggregated_definitions = loader.aggregate_definitions(data["Demands"]["DemandDefinitions"]["DemandDefinition"])
+    aggregated_definitions = loader.aggregate_definitions(data["Demands"]["DemandDefinitions"]["DemandDefinition"],
+                                                          time_step=60)
 
-    print(aggregated_definitions)
+    print(f"\nA = {aggregated_definitions}")
+    print(f"\nE = {expected_aggregated_definitions}")
 
+    assert len(expected_aggregated_definitions["DayDemandId1"]["Min"]) == 24
     assert aggregated_definitions == expected_aggregated_definitions
 
 
-def test_get_tasks(data):
-    tasks = loader.get_tasks(data["Demands"]["DemandDefinitions"]["DemandDefinition"])
 
-    print(tasks)
+def test_aggregate_demand(data):
 
-    assert len(tasks) == 1
-    assert len(tasks["DayDemandId1"]) == 2
+    # todo: refactor
+    demand = loader.aggregate_demand(data, number_of_days=14, time_step=60)
+
+
+    assert False
+
+def test_get_day_size():
+    assert False
+
+def test_get_initialized_demand_dict():
     assert False

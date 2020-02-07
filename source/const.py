@@ -1,3 +1,4 @@
 import enum
 
 HOURS_IN_A_DAY = 24
+MINUTES_IN_A_HOUR = 60
