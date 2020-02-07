@@ -3,7 +3,8 @@ import math
 import xmlschema
 
 from source import utils
-from source.const import HOURS_IN_A_DAY, MINUTES_IN_A_HOUR
+from source.const import MINUTES_IN_A_HOUR
+from source.utils import get_day_size, times_in_day
 
 BASE_DIR = "../../flexible_employee_scheduling_data"
 
@@ -113,14 +114,11 @@ def aggregate_definitions(demand_definitions, time_step=1):
     aggregated_definitions = {}
 
     for day_demand_id, day_demand in formatted_definitions.items():
-        print(f"\nday_demand = {day_demand}")
 
         aggregated_day_demand = get_initialized_demand_dict(day_size)
 
         for task in day_demand:
-            print(f"task = {task}")
             for time in get_time_range_for_task(task, time_step):
-                print(f"Time: {time}")
                 aggregated_day_demand["Min"][time] += task["Min"]
                 aggregated_day_demand["Ideal"][time] += task["Ideal"]
                 aggregated_day_demand["Max"][time] += task["Max"]
@@ -139,24 +137,26 @@ def get_initialized_demand_dict(size):
     }
 
 
-def get_day_size(time_step):
-    return int(HOURS_IN_A_DAY * MINUTES_IN_A_HOUR / time_step)
-
-
 def aggregate_demand(data, number_of_days, time_step=60):
+
+    day_size = get_day_size(time_step)
+    planning_size = day_size * number_of_days
+    demand = get_initialized_demand_dict(planning_size)
 
     demand_definitions = aggregate_definitions(
         data["Demands"]["DemandDefinitions"]["DemandDefinition"], time_step)
 
-    planning_size = get_day_size(time_step) * number_of_days
-
-    demand = get_initialized_demand_dict(planning_size)
-
-
     for day in data["Demands"]["DayDemandList"]["DayDemand"]:
+        day_offset = day_size * day["DayIndex"]
+
+        for time in utils.times_in_day(day["DayIndex"], time_step):
+            demand["Min"][day_offset + time] = demand_definitions[day["DayDemandId"]]["Min"]
+            demand["Ideal"][day_offset + time] = demand_definitions[day["DayDemandId"]]["Ideal"]
+            demand["Max"][day_offset + time] = demand_definitions[day["DayDemandId"]]["Max"]
+
+
+    for day in demand["Min"]:
         print(day)
-        day_offset = get_day_size(time_step) * day["DayIndex"]
-   
 
     return demand
 

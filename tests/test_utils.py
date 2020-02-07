@@ -46,3 +46,33 @@ def test_time_generator_in_for_loop(time_start, time_step, time_end):
 
     for time in utils.time_generator(time_start, time_step, time_end):
         assert time[0] < time_end[0] or time[0] == time_end[0] or time[1] < time_end[1]
+
+
+
+
+@pytest.mark.parametrize("day, time_step, expected", [
+    [0, 15, [i for i in range(24*4)]],
+    [0, 30, [i for i in range(24*2)]],
+    [0, 60, [i for i in range(24)]],
+    [1, 60, [i for i in range(24, 24*2)]],
+    [2, 60, [i for i in range(24*2, 24*3)]]
+])
+def test_times_in_day(day, time_step, expected):
+
+    times_in_day = utils.times_in_day(day, time_step)
+    times = []
+
+    for time in times_in_day:
+        times.append(time)
+
+    assert times == expected
+
+
+@pytest.mark.parametrize("time_step, expected", [
+    [60, 24],
+    [30, 48],
+    [15, 96]
+])
+def test_get_day_size(time_step, expected):
+
+    assert utils.get_day_size(time_step) == expected

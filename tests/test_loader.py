@@ -2,6 +2,7 @@ from unittest import mock
 import pytest
 
 from source import loader
+from source.const import HOURS_IN_A_DAY, MINUTES_IN_A_HOUR
 
 
 @pytest.fixture()
@@ -132,14 +133,17 @@ def test_aggregate_definitions(data, expected_aggregated_definitions):
 
 def test_aggregate_demand(data):
 
+    number_of_days = 14
+    time_step = 60
+
     # todo: refactor
-    demand = loader.aggregate_demand(data, number_of_days=14, time_step=60)
+    demand = loader.aggregate_demand(data, number_of_days, time_step)
 
-
+    assert len(demand["Min"]) == number_of_days * HOURS_IN_A_DAY * MINUTES_IN_A_HOUR / time_step
     assert False
 
-def test_get_day_size():
-    assert False
+
+
 
 def test_get_initialized_demand_dict():
     assert False

@@ -1,3 +1,5 @@
+from source.const import HOURS_IN_A_DAY, MINUTES_IN_A_HOUR
+
 
 def time_generator(time_start, time_step, time_end):
     """
@@ -22,3 +24,15 @@ def time_generator(time_start, time_step, time_end):
         time[1] += time_step
         if time[1] == 60:
             time = [time[0] + 1, 0]
+
+
+def times_in_day(day, time_step):
+
+    day_size = get_day_size(time_step)
+
+    for time in range(day_size):
+        yield day * day_size + time
+
+
+def get_day_size(time_step):
+    return int(HOURS_IN_A_DAY * MINUTES_IN_A_HOUR / time_step)
