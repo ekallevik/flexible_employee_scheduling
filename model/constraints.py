@@ -1,4 +1,8 @@
-from gurobipy import *
+import os
+
+CI = os.environ.get("CI", False)
+if not CI:
+    from gurobipy import *
 
 
 # todo: convert min_demand to tupledict
