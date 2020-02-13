@@ -1,7 +1,16 @@
+import os
+
 import pytest
 from gurobipy.gurobipy import Model, GRB
 
 from model import constraints, variables
+
+
+CI = os.environ.get("CI", False)
+
+pytestmark = pytest.mark.skipif(
+    CI, reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
+)
 
 
 @pytest.fixture()
