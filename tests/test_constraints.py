@@ -1,12 +1,11 @@
 import os
-
 import pytest
-from gurobipy.gurobipy import Model, GRB
-
-from model import constraints, variables
-
 
 CI = os.environ.get("CI", False)
+if not CI:
+    from gurobipy.gurobipy import Model, GRB
+
+from model import constraints, variables
 
 pytestmark = pytest.mark.skipif(
     CI, reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
@@ -109,7 +108,6 @@ def lambda_var(model, employees):
 
 
 def test_add_minimum_demand(model, employees, competencies, time_periods, min_demand, y, mu):
-
     constraints.add_minimum_demand(model, y, employees, min_demand, mu, competencies, time_periods)
     model.update()
 
@@ -126,9 +124,9 @@ def test_add_maximum_demand(model, employees, competencies, time_periods, min_de
 
 
 def test_add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, deltas, competencies,
-                                                    time_periods):
+                                         time_periods):
     constraints.add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, *deltas,
-                                    competencies, time_periods)
+                                                competencies, time_periods)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 12
@@ -177,10 +175,9 @@ def test_add_minimum_weekly_rest(model, employees, days_in_week, weeks, off_shif
 
 
 def test_add_maximum_contracted_hours(model, competencies, employees, time_periods, weeks, contracted_hours,
-                                                 y, lambda_var):
-
+                                      y, lambda_var):
     constraints.add_maximum_contracted_hours(model, competencies, employees, time_periods, len(weeks), contracted_hours,
-                                 y, lambda_var)
+                                             y, lambda_var)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 10
