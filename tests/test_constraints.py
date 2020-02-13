@@ -3,6 +3,7 @@ import os
 import pytest
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
+print(ENVIRONMENT)
 if ENVIRONMENT == "local":
     from gurobipy.gurobipy import Model, GRB
 
