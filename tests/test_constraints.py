@@ -2,14 +2,14 @@ import os
 
 import pytest
 
-CI = os.environ.get("CI", False)
-if not CI:
+ENVIRONMENT = os.environ.get("ENVIRONMENT")
+if ENVIRONMENT == "local":
     from gurobipy.gurobipy import Model, GRB
 
 from model import constraints, variables
 
 pytestmark = pytest.mark.skipif(
-    CI, reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
+    ENVIRONMENT != "local", reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
 )
 
 
