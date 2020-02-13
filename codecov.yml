@@ -8,3 +8,6 @@ coverage:
 
 comment:
   layout: "header, diff, changes"
+
+ignore:
+  - "model"
