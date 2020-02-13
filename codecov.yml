@@ -11,3 +11,5 @@ comment:
 
 ignore:
   - "model"
+  - "tests"
+
