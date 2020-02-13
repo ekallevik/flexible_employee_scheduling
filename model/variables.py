@@ -1,5 +1,7 @@
-from gurobipy.gurobipy import GRB
+from utils import const
 
+if const.ENVIRONMENT == "local":
+    from gurobipy.gurobipy import GRB
 
 def add_y(model, competencies, employees, time_periods):
     return model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
