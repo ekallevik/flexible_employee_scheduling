@@ -4,8 +4,10 @@ import pytest
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 print(ENVIRONMENT)
-if ENVIRONMENT == "local":
+try:
     from gurobipy.gurobipy import Model, GRB
+except ModuleNotFoundError:
+    pass
 
 from model import constraints, variables
 
