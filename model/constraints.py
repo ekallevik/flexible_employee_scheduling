@@ -1,7 +1,7 @@
-import os
 
-CI = os.environ.get("CI", False)
-if not CI:
+from utils import const
+
+if const.ENVIRONMENT == "local":
     from gurobipy import *
 
 

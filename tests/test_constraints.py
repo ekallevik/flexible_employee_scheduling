@@ -1,18 +1,13 @@
-import os
-
 import pytest
 
-ENVIRONMENT = os.environ.get("ENVIRONMENT")
-print(ENVIRONMENT)
-try:
-    from gurobipy.gurobipy import Model, GRB
-except ModuleNotFoundError:
-    pass
-
+from utils import const
 from model import constraints, variables
 
+if const.ENVIRONMENT == "local":
+    from gurobipy.gurobipy import Model, GRB
+
 pytestmark = pytest.mark.skipif(
-    ENVIRONMENT != "local", reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
+    const.ENVIRONMENT != "local", reason="This test is dependent on Gurobi, and cannot be run in CircleCI"
 )
 
 
