@@ -1,5 +1,9 @@
 import xml.etree.ElementTree as ET
 import datetime
+from pathlib import Path
+
+data_folder = Path(__file__).resolve().parents[2]
+
 
 class demand():
 
@@ -25,7 +29,7 @@ class demand():
 
 
 def get_demand():
-    root = ET.parse('rproblem1.xml').getroot()
+    root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem3.xml').getroot()
     demands = []
     i = 0
 
@@ -42,10 +46,7 @@ def get_demand():
 
     days_with_demand = {}
     for day in root.findall('Demands/DayDemandList/DayDemand'):
-
         for obj in demands:
             if obj.demand_id == day.find("DayDemandId").text:
                 days_with_demand[day.find("DayIndex").text] = obj
     return days_with_demand
-
-print(datetime.datetime.now().time())
