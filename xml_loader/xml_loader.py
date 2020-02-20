@@ -4,7 +4,11 @@ from pathlib import Path
 
 data_folder = Path(__file__).resolve().parents[2]
 today = date.today()
-root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem4.xml').getroot()
+root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem2.xml').getroot()
+time_step_length = None
+
+
+
 
 
 class weekly_rest_rule():
@@ -22,7 +26,7 @@ class employee():
         self.id = nbr
         self.weekly_rest_hours = None
         self.daily_rest_hours = None
-        self.competency = None
+        self.competencies = [0] #Default. Could also be called default directly (or another name)
         self.contracted_hours = None
 
     def add_daily_rest(self, daily_rest):
@@ -32,7 +36,7 @@ class employee():
         pass
         
     def set_comptency(self, competency):
-        pass
+        self.competencies.append(competency)
         
     def set_contracted_hours(self, hours):
         self.contracted_hours = hours
@@ -50,6 +54,7 @@ class demand():
         self.maks = [] 
         self.ideal = []
         self.time_delta = []
+        self.time_step_length = None
 
     def add_info(self, start, end, maksimum, minimum, ideal):
         start = start.split(":")
@@ -87,13 +92,35 @@ def get_demand():
                 days_with_demand[day.find("DayIndex").text] = obj
     return days_with_demand
 
+def get_time_steps():
+    time_step_length = None
+    demands = get_demand()
+    for demand in demands:
+        for i in range(len(demands[demand].end)):
+            if(demands[demand].end[i].minute == 30 or demands[demand].start[i].minute == 30):
+                print("Var 30 minutter her")
+
+"""                
+if(int(start[1]) > 0):
+    if(int(start[1]) == 30 or end[1] == 30):
+        print("Inneholder halvtimer")
+    elif(int(start[1] == 45 or start[1] == 15 or end[1] == 15 or end[1] == 45):
+        print("Inneholder kvarterer")
+    else:
+        print("Inneholder minutter")
+"""
+
+
 
 
 def get_employees():
     employees = []
     for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
         employee_id = schedule_row.find("RowNbr").text
-        contracted_hours = float(schedule_row.find("WeekHours").text)
+        try: 
+            contracted_hours = float(schedule_row.find("WeekHours").text)
+        except AttributeError:
+            print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
 
         emp = employee(employee_id)
         emp.set_contracted_hours(contracted_hours)
@@ -118,8 +145,30 @@ def get_daily_rest_rules():
         daily_rest_rules.append(rule)
 
 
+if __name__ == "__main__":
+    #Sets i Need:
+    employee_ids = []
+    employee_competencies = []
+
+
+    for e in get_employees():
+        employee_ids.append(int(e.id))
+        employee_competencies.append(e.competencies)
+
 get_demand()
-get_daily_rest_rules()
-get_weekly_rest_rules()
-for e in get_employees():
-    print(e.contracted_hours)
+print(get_time_steps())
+#get_daily_rest_rules()
+#get_weekly_rest_rules()
+#for e in get_employees():
+ #   print(e.contracted_hours)
+
+
+
+"""
+Stuff needed to run old model:
+1. Shifts (Here we need to either fix model implementation or add shifts (off, on_call? on_duty?))
+2. Durations. This is not included in the data and should be generated based on the demand
+3. Preferences. We do not have data that includes preferences. This have to be either manually created, randomly created, randomly created and saved
+4. Have to remove offsets from the model
+5. Weights have to be included either in another file to be loaded in or created in another script
+"""
