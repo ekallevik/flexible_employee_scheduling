@@ -1,78 +1,19 @@
 import xml.etree.ElementTree as ET
 from datetime import date, time, timedelta, datetime
 from pathlib import Path
+from demand import Demand
+from employee import Employee
+from rest_rule import Weekly_rest_rule, Daily_rest_rule
+
 
 data_folder = Path(__file__).resolve().parents[2]
 root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem3.xml').getroot()
 today = date.today()
 
-
-class weekly_rest_rule():
-    def __init__(self, hours, rest_id):
-        self.rest_id = rest_id
-        self.hours = hours
-
-class daily_rest_rule():
-    def __init__(self, hours, rest_id):
-        self.rest_id = rest_id
-        self.hours = hours
-
-class employee():
-    def __init__(self, nbr):
-        self.id = nbr
-        self.weekly_rest_hours = None
-        self.daily_rest_hours = None
-        self.competencies = [0] #Default. Could also be called default directly (or another name)
-        self.contracted_hours = None
-
-    def add_daily_rest(self, daily_rest):
-        pass
-
-    def add_weekly_rest(self, daily_rest):
-        pass
-        
-    def set_comptency(self, competency):
-        self.competencies.append(competency)
-        
-    def set_contracted_hours(self, hours):
-        self.contracted_hours = hours
-
-    def __str__(self):
-        return self.id
-
-class demand():
-
-    def __init__(self, demand_id):
-        self.demand_id = demand_id
-        self.start = []
-        self.end = []
-        self.minimum = []
-        self.maks = [] 
-        self.ideal = []
-        self.time_delta = []
-        self.time_step_length = None
-    
-    def add_info(self, start, end, maksimum, minimum, ideal):
-        start = start.split(":")
-        end = end.split(":")
-        start = time(int(start[0]), int(start[1]))
-        end = time(int(end[0]), int(end[1]))
-        self.start.append(start)
-        self.end.append(end)
-        self.minimum.append(int(minimum))
-        self.maks.append(int(maksimum))
-        self.ideal.append(int(ideal))
-        self.time_delta.append(datetime.combine(today, end) - datetime.combine(today,start))
-
-
-    def __str__(self):
-        return(self.demand_id)
-
-
 def get_demand_definitions():
     demands = []
     for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
-        dem = demand(DemandDefinition.find("DayDemandId").text)
+        dem = Demand(DemandDefinition.find("DayDemandId").text)
         for row in DemandDefinition.find("Rows").findall("Row"):
             start = row.find("TimeStart").text
             end = row.find("TimeEnd").text
@@ -167,7 +108,7 @@ def get_employees():
         except AttributeError:
             print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
 
-        emp = employee(employee_id)
+        emp = Employee(employee_id)
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
