@@ -38,6 +38,7 @@ def get_days_with_demand():
     return days_with_demand
 
 
+
 def get_time_steps():
     demands = get_days_with_demand()
     time_step_length = 100
@@ -132,6 +133,7 @@ def get_daily_rest_rules():
 
 def time_to_flyt():
     time_periods = get_time_periods()
+    #print(time_periods)
     time_flyt = []
     
     for t in time_periods:
@@ -144,10 +146,42 @@ def time_to_flyt():
 
         day_offset = (t.date() - today).days
         time_flyt.append(float(float(t.hour) + (minutes)) + 24*int(day_offset))
-    #print(time_flyt)
+    return time_flyt
+
+
+def get_events():
+    events = []
+    demand_days = get_days_with_demand()
+
+    for key in demand_days:
+        for t in range(len(demand_days[key].start)):
+            time = datetime.combine(key, demand_days[key].start[t])
+            events.append(time)
+            time = datetime.combine(key, demand_days[key].end[t])
+            events.append(time)
+
+    time_flyt = []
+    
+    for t in events:
+        minutes = t.time().minute 
+        if(int(minutes) == 0):
+            pass
+        else:
+            minutes = 60/minutes
+            minutes = (100/minutes)/100
+
+        day_offset = (t.date() - today).days
+        tid = float(float(t.hour) + (minutes)) + 24*int(day_offset)
+        if tid not in time_flyt:
+            time_flyt.append(tid)
+
+    return time_flyt
+
+
 
 if __name__ == "__main__":
     #Sets i Need:
+    durations = {}
     employee_ids = []
     employee_competencies = []
     contracted_hours = []
@@ -158,6 +192,17 @@ if __name__ == "__main__":
         employee_ids.append(int(e.id))
         employee_competencies.append(e.competencies)
         contracted_hours.append(e.contracted_hours)
+
+    possible_durations = [t/4 for t in range(6*4, 12*4)]
+    #print(possible_durations)
+    for t in time_periods:
+        durations[t] = []
+        for dur in possible_durations:
+            if(t+dur in time_periods):
+                durations[t].append(dur)
+    
+    print(get_events())
+                
 
     
 
