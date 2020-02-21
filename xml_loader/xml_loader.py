@@ -3,12 +3,8 @@ from datetime import date, time, timedelta, datetime
 from pathlib import Path
 
 data_folder = Path(__file__).resolve().parents[2]
+root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem3.xml').getroot()
 today = date.today()
-root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem2.xml').getroot()
-time_step_length = None
-
-
-
 
 
 class weekly_rest_rule():
@@ -55,7 +51,7 @@ class demand():
         self.ideal = []
         self.time_delta = []
         self.time_step_length = None
-
+    
     def add_info(self, start, end, maksimum, minimum, ideal):
         start = start.split(":")
         end = end.split(":")
@@ -68,11 +64,12 @@ class demand():
         self.ideal.append(int(ideal))
         self.time_delta.append(datetime.combine(today, end) - datetime.combine(today,start))
 
+
     def __str__(self):
         return(self.demand_id)
 
 
-def get_demand():
+def get_demand_definitions():
     demands = []
     for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
         dem = demand(DemandDefinition.find("DayDemandId").text)
@@ -84,32 +81,80 @@ def get_demand():
             ideal = row.find("Ideal").text
             dem.add_info(start, end, maksimum, minimum, ideal)
         demands.append(dem)
+    return demands
 
+def get_days_with_demand():
+    days = []
+    demands = get_demand_definitions()
+    #print(demands)
     days_with_demand = {}
     for day in root.findall('Demands/DayDemandList/DayDemand'):
+        days.append(int(day.find("DayIndex").text))
         for obj in demands:
             if obj.demand_id == day.find("DayDemandId").text:
-                days_with_demand[day.find("DayIndex").text] = obj
+                day_obj = today + timedelta(days = int(day.find("DayIndex").text))
+                days_with_demand[day_obj] = obj
     return days_with_demand
 
+
 def get_time_steps():
-    time_step_length = None
-    demands = get_demand()
+    demands = get_days_with_demand()
+    time_step_length = 100
     for demand in demands:
         for i in range(len(demands[demand].end)):
-            if(demands[demand].end[i].minute == 30 or demands[demand].start[i].minute == 30):
-                print("Var 30 minutter her")
+            if(demands[demand].end[i].minute > 0):
+                if(demands[demand].end[i].minute == 30 and not (time_step_length <= 30)):
+                    time_step_length = 30
+                elif(demands[demand].end[i].minute in [15,45] and not (time_step_length <= 15)):
+                    time_step_length = 15
+                elif(demands[demand].end[i].minute < 15):
+                    time_step_length = 1
+                    break
 
-"""                
-if(int(start[1]) > 0):
-    if(int(start[1]) == 30 or end[1] == 30):
-        print("Inneholder halvtimer")
-    elif(int(start[1] == 45 or start[1] == 15 or end[1] == 15 or end[1] == 45):
-        print("Inneholder kvarterer")
-    else:
-        print("Inneholder minutter")
-"""
+            if(demands[demand].start[i].minute > 0):
+                if(demands[demand].start[i].minute == 30 and not (time_step_length <= 30)):
+                    time_step_length = 30
+                elif(demands[demand].start[i].minute in [15,45] and not (time_step_length <= 15)):
+                    time_step_length = 15
+                elif(demands[demand].start[i].minute < 15 ):
+                    time_step_length = 1
+                    break
 
+    return time_step_length
+
+
+def get_time_periods():
+    time_periods = []
+    i = 0
+    time_step = get_time_steps()
+    demands = get_days_with_demand()
+    for dem in demands:
+        for i in range(len(demands[dem].start)):
+            time = datetime.combine(dem, demands[dem].start[i])
+            while(time.time() < demands[dem].end[i]):
+                time_periods.append(time)
+                time += timedelta(minutes = time_step)
+
+    return time_periods
+
+
+def get_demand_periods():
+    min_demand = []
+    ideal_demand = []
+    max_demand = []
+
+    time_step = get_time_steps()
+    demands = get_days_with_demand()
+    for dem in demands:
+        for i in range(len(demands[dem].start)):
+            time = datetime.combine(dem, demands[dem].start[i])
+            while(time.time() < demands[dem].end[i]):
+                time += timedelta(minutes = time_step)
+                
+                min_demand.append(demands[dem].minimum[i])
+                ideal_demand.append(demands[dem].ideal[i])
+                max_demand.append(demands[dem].maks[i])
+    return min_demand, ideal_demand, max_demand
 
 
 
@@ -144,23 +189,42 @@ def get_daily_rest_rules():
         rule = daily_rest_rule(hours, rest_id)
         daily_rest_rules.append(rule)
 
+def time_to_flyt():
+    time_periods = get_time_periods()
+    time_flyt = []
+    
+    for t in time_periods:
+        minutes = t.time().minute 
+        if(int(minutes) == 0):
+            pass
+        else:
+            minutes = 60/minutes
+            minutes = (100/minutes)/100
+
+        day_offset = (t.date() - today).days
+        time_flyt.append(float(float(t.hour) + (minutes)) + 24*int(day_offset))
+    #print(time_flyt)
 
 if __name__ == "__main__":
     #Sets i Need:
     employee_ids = []
     employee_competencies = []
-
-
+    contracted_hours = []
+    days = []
+    time_periods = time_to_flyt()
+    min_demand, ideal_demand, max_demand = get_demand_periods()
     for e in get_employees():
         employee_ids.append(int(e.id))
         employee_competencies.append(e.competencies)
+        contracted_hours.append(e.contracted_hours)
 
-get_demand()
-print(get_time_steps())
+    
+
+
+
+    
 #get_daily_rest_rules()
 #get_weekly_rest_rules()
-#for e in get_employees():
- #   print(e.contracted_hours)
 
 
 
@@ -171,4 +235,5 @@ Stuff needed to run old model:
 3. Preferences. We do not have data that includes preferences. This have to be either manually created, randomly created, randomly created and saved
 4. Have to remove offsets from the model
 5. Weights have to be included either in another file to be loaded in or created in another script
+6. Time period sets
 """
