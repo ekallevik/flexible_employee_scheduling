@@ -133,7 +133,6 @@ def get_daily_rest_rules():
 
 def time_to_flyt():
     time_periods = get_time_periods()
-    #print(time_periods)
     time_flyt = []
     
     for t in time_periods:
@@ -152,12 +151,12 @@ def time_to_flyt():
 def get_events():
     events = []
     demand_days = get_days_with_demand()
-
+    time_step = get_time_steps()
     for key in demand_days:
         for t in range(len(demand_days[key].start)):
             time = datetime.combine(key, demand_days[key].start[t])
             events.append(time)
-            time = datetime.combine(key, demand_days[key].end[t])
+            time = datetime.combine(key, demand_days[key].end[t]) - timedelta(minutes = time_step)
             events.append(time)
 
     time_flyt = []
@@ -181,27 +180,40 @@ def get_events():
 
 if __name__ == "__main__":
     #Sets i Need:
+    #Durations v of shifts indexed by a time t
     durations = {}
+    #An array containing id's of employees (from 1 to number of employees)
     employee_ids = []
+    #The competency of the employee at the index
     employee_competencies = []
+    #Contracted hours of the employee at the index
     contracted_hours = []
+    #Number of days in the planning period
     days = []
+    #All the individual time periods where there is demand with time step equal to the shortest demand periods
     time_periods = time_to_flyt()
+    #Min/max/ideal demand for each time period
     min_demand, ideal_demand, max_demand = get_demand_periods()
+    #Events where a demand begins or ends (Endings have time step subtracted)
+    events = get_events()
+
+
     for e in get_employees():
         employee_ids.append(int(e.id))
         employee_competencies.append(e.competencies)
         contracted_hours.append(e.contracted_hours)
 
     possible_durations = [t/4 for t in range(6*4, 12*4)]
-    #print(possible_durations)
-    for t in time_periods:
-        durations[t] = []
-        for dur in possible_durations:
-            if(t+dur in time_periods):
-                durations[t].append(dur)
     
-    print(get_events())
+    #print(possible_durations)
+    for t in events:
+        for dur in possible_durations:
+            if(t+dur in events):
+                try:
+                    durations[t].append(dur)
+                except:
+                    durations[t] = [dur]
+
                 
 
     
