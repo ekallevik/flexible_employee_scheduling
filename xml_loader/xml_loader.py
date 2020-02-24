@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as ET
 from datetime import date, time, timedelta, datetime
+import sys
+sys.path.insert(1, '/Users/hakongrov/Documents/Code/Masteroppgave/flexible_employee_scheduling/xml_loader')
 from pathlib import Path
 from demand import Demand
 from employee import Employee
@@ -122,6 +124,7 @@ def get_weekly_rest_rules():
         hours = weekly_rule.find("MinRestHours")
         rule = weekly_rest_rule(hours, rest_id)
         weekly_rest_rules.append(rule)
+    return weekly_rest_rules
 
 def get_daily_rest_rules():
     daily_rest_rules = []
@@ -130,6 +133,7 @@ def get_daily_rest_rules():
         hours = daily_rule.find("MinRestHours")
         rule = daily_rest_rule(hours, rest_id)
         daily_rest_rules.append(rule)
+    return daily_rest_rules
 
 def time_to_flyt():
     time_periods = get_time_periods()
@@ -176,10 +180,37 @@ def get_events():
 
     return time_flyt
 
+def get_employee_competencies():
+    employee_competencies = []
+    employee_ids = []
+    contracted_hours = []
+    for e in get_employees():
+        employee_ids.append(int(e.id))
+        employee_competencies.append(e.competencies)
+        contracted_hours.append(e.contracted_hours)
+    return employee_competencies, employee_ids, contracted_hours
 
+
+def get_durations():
+    events = get_events()
+    durations = {}
+    possible_durations = [t/4 for t in range(6*4, 12*4)]
+    
+    for t in events:
+        for dur in possible_durations:
+            if(t+dur in events):
+                try:
+                    durations[t].append(dur)
+                except:
+                    durations[t] = [dur]
+    
+    return durations
+
+def get_shifts_at_days():
+    shifts = get_durations()
 
 if __name__ == "__main__":
-    #Sets i Need:
+    #Sets I Need:
     #Durations v of shifts indexed by a time t
     durations = {}
     #An array containing id's of employees (from 1 to number of employees)
@@ -195,27 +226,9 @@ if __name__ == "__main__":
     #Min/max/ideal demand for each time period
     min_demand, ideal_demand, max_demand = get_demand_periods()
     #Events where a demand begins or ends (Endings have time step subtracted)
-    events = get_events()
 
-
-    for e in get_employees():
-        employee_ids.append(int(e.id))
-        employee_competencies.append(e.competencies)
-        contracted_hours.append(e.contracted_hours)
-
-    possible_durations = [t/4 for t in range(6*4, 12*4)]
-    
-    #print(possible_durations)
-    for t in events:
-        for dur in possible_durations:
-            if(t+dur in events):
-                try:
-                    durations[t].append(dur)
-                except:
-                    durations[t] = [dur]
-
-                
-
+    dur = get_durations()
+    print(len(dur.keys()))
     
 
 
