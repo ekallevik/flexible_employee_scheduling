@@ -8,9 +8,24 @@ from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
 
 
-data_folder = Path(__file__).resolve().parents[2]
-root = ET.parse(data_folder / 'flexible_employee_scheduling_data/xml data/Real Instances/rproblem3.xml').getroot()
+data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
+root = ET.parse(data_folder / 'rproblem3.xml').getroot()
 today = date.today()
+
+# def get_demand_definitions():
+#     demands = []
+#     for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
+#         dem = Demand(DemandDefinition.find("DayDemandId").text)
+#         for row in DemandDefinition.find("Rows").findall("Row"):
+#             start = row.find("TimeStart").text
+#             end = row.find("TimeEnd").text
+#             maksimum = row.find("Max").text
+#             minimum = row.find("Min").text
+#             ideal = row.find("Ideal").text
+#             dem.add_info(start, end, maksimum, minimum, ideal)
+#         demands.append(dem)
+#     return demands
+
 
 def get_demand_definitions():
     demands = []
@@ -26,16 +41,25 @@ def get_demand_definitions():
         demands.append(dem)
     return demands
 
+
+# def get_days_with_demand():
+#     demands = get_demand_definitions()
+#     days_with_demand = {}
+#     for day in root.findall('Demands/DayDemandList/DayDemand'):
+#         for obj in demands:
+#             if obj.demand_id == day.find("DayDemandId").text:
+#                 day_obj = today + timedelta(days = int(day.find("DayIndex").text))
+#                 days_with_demand[day_obj] = obj
+#     return days_with_demand
+
 def get_days_with_demand():
-    days = []
     demands = get_demand_definitions()
     days_with_demand = {}
     for day in root.findall('Demands/DayDemandList/DayDemand'):
-        days.append(int(day.find("DayIndex").text))
         for obj in demands:
             if obj.demand_id == day.find("DayDemandId").text:
-                day_obj = today + timedelta(days = int(day.find("DayIndex").text))
-                days_with_demand[day_obj] = obj
+                d = int(day.find("DayIndex").text)
+                days_with_demand[d] = obj
     return days_with_demand
 
 def get_days():
@@ -45,30 +69,52 @@ def get_days():
     return days
 
 
+# def get_time_steps():
+#     demands = get_days_with_demand()
+#     time_step_length = 100
+#     for demand in demands:
+#         for i in range(len(demands[demand].end)):
+#             if(demands[demand].end[i].minute > 0):
+#                 if(demands[demand].end[i].minute == 30 and not (time_step_length <= 30)):
+#                     time_step_length = 30
+#                 elif(demands[demand].end[i].minute in [15,45] and not (time_step_length <= 15)):
+#                     time_step_length = 15
+#                 elif(demands[demand].end[i].minute < 15):
+#                     time_step_length = 1
+#                     break
+
+#             if(demands[demand].start[i].minute > 0):
+#                 if(demands[demand].start[i].minute == 30 and not (time_step_length <= 30)):
+#                     time_step_length = 30
+#                 elif(demands[demand].start[i].minute in [15,45] and not (time_step_length <= 15)):
+#                     time_step_length = 15
+#                 elif(demands[demand].start[i].minute < 15 ):
+#                     time_step_length = 1
+#                     break
+
+#     return time_step_length
 
 def get_time_steps():
-    demands = get_days_with_demand()
+    demands = get_demand_definitions()
     time_step_length = 100
     for demand in demands:
-        for i in range(len(demands[demand].end)):
-            if(demands[demand].end[i].minute > 0):
-                if(demands[demand].end[i].minute == 30 and not (time_step_length <= 30)):
-                    time_step_length = 30
-                elif(demands[demand].end[i].minute in [15,45] and not (time_step_length <= 15)):
-                    time_step_length = 15
-                elif(demands[demand].end[i].minute < 15):
-                    time_step_length = 1
+        for i in range(len(demand.end)):
+            if(demand.end[i] - int(demand.end[i]) > 0):
+                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length != 0.5):
+                    time_step_length = 0.5
+                elif(demand.end[i] - int(demand.end[i]) == 0.25 and time_step_length != 0.25):
+                    time_step_length = 0.25
+                elif(demand.end[i] - int(demand.end[i]) < 0.25):
+                    time_step_length = 100/60
                     break
-
-            if(demands[demand].start[i].minute > 0):
-                if(demands[demand].start[i].minute == 30 and not (time_step_length <= 30)):
-                    time_step_length = 30
-                elif(demands[demand].start[i].minute in [15,45] and not (time_step_length <= 15)):
-                    time_step_length = 15
-                elif(demands[demand].start[i].minute < 15 ):
-                    time_step_length = 1
+            if(demand.start[i] - int(demand.start[i]) > 0):
+                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length != 0.5):
+                    time_step_length = 0.5
+                elif(demand.start[i] - int(demand.start[i]) == 0.25 and time_step_length != 0.25):
+                    time_step_length = 0.25
+                elif(demand.start[i] - int(demand.start[i]) < 0.25):
+                    time_step_length = 100/60
                     break
-
     return time_step_length
 
 
@@ -91,18 +137,20 @@ def get_demand_periods():
     min_demand = []
     ideal_demand = []
     max_demand = []
-
+    competencies = [0]
     time_step = get_time_steps()
     demands = get_days_with_demand()
-    for dem in demands:
-        for i in range(len(demands[dem].start)):
-            time = datetime.combine(dem, demands[dem].start[i])
-            while(time.time() < demands[dem].end[i]):
-                time += timedelta(minutes = time_step)
-                
-                min_demand.append(demands[dem].minimum[i])
-                ideal_demand.append(demands[dem].ideal[i])
-                max_demand.append(demands[dem].maks[i])
+
+
+    for c in range(len(competencies)):
+        for dem in demands:
+            for i in range(len(demands[dem].start)):
+                time = datetime.combine(dem, demands[dem].start[i])
+                while(time.time() < demands[dem].end[i]):
+                    time += timedelta(minutes = time_step)
+                    min_demand.append(demands[dem].minimum[i])
+                    ideal_demand.append(demands[dem].ideal[i])
+                    max_demand.append(demands[dem].maks[i])
     return min_demand, ideal_demand, max_demand
 
 
@@ -139,6 +187,8 @@ def get_daily_rest_rules():
         rule = daily_rest_rule(hours, rest_id)
         daily_rest_rules.append(rule)
     return daily_rest_rules
+
+
 
 def time_to_flyt():
     time_periods = get_time_periods()
@@ -186,14 +236,19 @@ def get_events():
     return time_flyt
 
 def get_employee_competencies():
-    employee_competencies = []
+    employee_with_competencies = []
     employee_ids = []
     contracted_hours = []
-    for e in get_employees():
-        employee_ids.append(int(e.id))
-        employee_competencies.append(e.competencies)
-        contracted_hours.append(e.contracted_hours)
-    return employee_competencies, employee_ids, contracted_hours
+    competencies = [0]
+    for c in range(len(competencies)):
+        employee_with_competencies.append([])
+        for e in get_employees():
+           # print(e.competencies)
+            if(c in e.competencies):
+                employee_with_competencies[c].append(int(e.id))
+            employee_ids.append(int(e.id))
+            contracted_hours.append(e.contracted_hours)
+    return employee_with_competencies, employee_ids, contracted_hours
 
 
 def get_durations():
@@ -232,11 +287,8 @@ def get_shifts_at_days():
 def get_shifts_overlapping_t():
     time_periods = time_to_flyt()
     time_step = (100/(60/get_time_steps()))/100
-    print(time_step)
     shifts_overlapping_t = {}
-    #print(time_periods)
     shifts = get_durations()
-    #print(shifts)
     for t in time_periods:
         for time in shifts:
             for dur in shifts[time]:
@@ -250,28 +302,29 @@ def get_shifts_overlapping_t():
 
 
 if __name__ == "__main__":
+    print(get_time_steps())
     #Sets I Need:
     #Durations v of shifts indexed by a time t
-    durations = {}
-    #An array containing id's of employees (from 1 to number of employees)
-    employee_ids = []
-    #The competency of the employee at the index
-    employee_competencies = []
-    #Contracted hours of the employee at the index
-    contracted_hours = []
-    #Number of days in the planning period
-    days = []
-    #All the individual time periods where there is demand with time step equal to the shortest demand periods
-    time_periods = time_to_flyt()
-    #Min/max/ideal demand for each time period
-    min_demand, ideal_demand, max_demand = get_demand_periods()
-    #Events where a demand begins or ends (Endings have time step subtracted)
+    # durations = {}
+    # #An array containing id's of employees (from 1 to number of employees)
+    # employee_ids = []
+    # #The competency of the employee at the index
+    # employee_competencies = []
+    # #Contracted hours of the employee at the index
+    # contracted_hours = []
+    # #Number of days in the planning period
+    # days = []
+    # #All the individual time periods where there is demand with time step equal to the shortest demand periods
+    # time_periods = time_to_flyt()
+    # #Min/max/ideal demand for each time period
+    # min_demand, ideal_demand, max_demand = get_demand_periods()
+    # #Events where a demand begins or ends (Endings have time step subtracted)
 
-    dur = get_durations()
-    #print(len(dur.keys()))
+    # dur = get_durations()
+    # #print(len(dur.keys()))
 
-    get_shifts_at_days()
-    get_shifts_overlapping_t()
+    # get_shifts_at_days()
+    # get_shifts_overlapping_t()
     
 
 

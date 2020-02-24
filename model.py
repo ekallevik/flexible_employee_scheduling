@@ -8,12 +8,23 @@ model = Model("Employee_scheduling_haakon")
 e_competencies, employees, contracted_hours = get_employee_competencies()
 competencies = [0]
 time_periods = time_to_flyt()
-
-
+min_demand, demand_ideal, demand_max = get_demand_periods()
 #Variables
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
-x = model.addVars(employees, shifts_work, time_periods, work_durations, vtype=GRB.BINARY, name='x')
+#x = model.addVars(employees, shifts, vtype=GRB.BINARY, name='x')
+mu = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='mu')
 
+demand_min = tupledict([((c,t), 0) for c in competencies for t in time_periods])
+i = 0
+for c in competencies:
+    for t in time_periods:
+        demand_min[c,t] = min_demand[i]
+        i += 1
+
+#Constraints
+model.addConstrs((quicksum(y[c, e, t] for e in e_competencies[c]) == demand_min[c,t] + mu[c,t]  
+for c in competencies for t in time_periods),
+name='minimum_demand_coverage')
 
 
 
@@ -76,7 +87,6 @@ def add_variables(self):
     self.q_con = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_con')
     self.q_iso_off = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_off')
     self.q_iso_work = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_work')
-    self.mu = self.model.addVars(self.competencies, self.shifts_work, self.time_periods, vtype=GRB.INTEGER, name='mu')
     self.l = self.model.addVars(self.employees,vtype=GRB.INTEGER, name='lambda')
     self.delta_plus = self.model.addVars(self.competencies, self.shifts_work, self.time_periods, vtype=GRB.INTEGER, name='delta_plus')
     self.delta_minus = self.model.addVars(self.competencies, self.shifts_work, self.time_periods, vtype=GRB.INTEGER, name='delta_minus')
