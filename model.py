@@ -9,12 +9,18 @@ employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest
 competencies = [0]
 time_periods = get_time_periods()
 demand_min, demand_ideal, demand_max = get_demand_periods()
+shifts, shifts_at_day = get_shift_lists()
+days = get_days()
+shifts_overlapping_t = get_shifts_overlapping_t()
+
+
 #Variables
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
-#x = model.addVars(employees, shifts, vtype=GRB.BINARY, name='x')
+x = model.addVars(employees, shifts, vtype=GRB.BINARY, name='x')
 mu = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='mu')
 delta_plus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_plus')
 delta_minus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_minus')
+gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
 
 #Constraints
 model.addConstrs((quicksum(y[c, e, t] for e in employee_with_competencies[c]) == demand_min[c,t] + mu[c,t]  
@@ -33,8 +39,40 @@ model.addConstrs((
     for c in competencies),
 name="deviation_from_ideel_demand")
 
+model.addConstrs((
+    quicksum(x[e,t,v] 
+    for t,v in shifts_at_day[i]) 
+    <= 1 
+    for e in employees 
+    for i in days), 
+    name="cover_maximum_one_shift")
 
+model.addConstrs((
+    quicksum(x[e,t_marked,v] 
+    for t_marked,v in shifts_overlapping_t[t]) 
+    == quicksum(y[c,e,t] for c in competencies)
+    for e in employees
+    for t in time_periods
+),name="mapping_shift_to_demand")
 
+model.addConstrs((
+    quicksum(y[c,e,t] 
+    for c in competencies) 
+    <= 1 
+    for e in employees 
+    for t in time_periods
+), name="only_cover_one_demand_at_a_time")
+
+model.addConstrs((
+    quicksum(x[e,t,v] 
+    for e in employees 
+    for t,v in shifts_at_day[i]) 
+    == gamma[e,i] 
+    for e in employees 
+    for i in days
+), name="if_employee_e_works_day_i")
+
+model.write("out.lp")
 """
 def objective_restriction(self):
     model.addConstrs((

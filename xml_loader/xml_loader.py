@@ -288,35 +288,35 @@ def get_durations():
                     durations[t].append(dur)
                 except:
                     durations[t] = [dur]
-    print(durations)
+    #print(durations)
     return durations
 
-def get_shifts_at_days():
+def get_shift_lists():
     durations = get_durations()
-    shifts = {}
+    shifts_per_day = tupledict()
+    shifts = tuplelist()
     days = get_days()
     time_step = get_time_steps()
     for d in days:
+        shifts_per_day[d] = []
         for t in durations:
-            if(t >=(d-1)*24 and t <= (24*d - time_step)):
-                try:
-                    shifts[d].append((t,durations[t]))
-                except:
-                    shifts[d] = [(t,durations[t])]
+            if(t >=d*24 and t <= (24*(d+1) - time_step)):
+                for dur in durations[t]:
+                    shifts_per_day[d].append((t,dur))
+                    shifts.append((t,dur))
             if(t > 24*d):
                 continue
-    #print(shifts)
-    return shifts
+    return shifts, shifts_per_day
 
-def get_shift_list():
-    shifts = tuplelist()
-    dur = get_durations()
-    i = 0
-    for t in dur:
-        for v in dur[t]:
-            shifts.append(i)
-            i += 1
-    #print(shifts)
+# def get_shift_list():
+#     shifts = tuplelist()
+#     dur = get_durations()
+#     i = 0
+#     for t in dur:
+#         for v in dur[t]:
+#             shifts.append(i)
+#             i += 1
+#     #print(shifts)
 
 def get_shifts_overlapping_t():
     time_periods = get_time_periods()
@@ -326,13 +326,13 @@ def get_shifts_overlapping_t():
     for t in time_periods:
         for time in shifts:
             for dur in shifts[time]:
-                if(t >= time and t < time + dur):
+                if(t >= time and t <= time + dur):
                     try:
                         shifts_overlapping_t[t].append((time, dur))
                     except:
                         shifts_overlapping_t[t] = [(time, dur)]
     return shifts_overlapping_t
-                        
+
 
 
 if __name__ == "__main__":
@@ -353,7 +353,7 @@ if __name__ == "__main__":
     # #Min/max/ideal demand for each time period
     # min_demand, ideal_demand, max_demand = get_demand_periods()
     # #Events where a demand begins or ends (Endings have time step subtracted)
-
+    #print(get_days())
     #get_shift_list()
     # #print(len(dur.keys()))
      #get_shifts_at_days()
