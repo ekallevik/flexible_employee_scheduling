@@ -29,7 +29,6 @@ def get_demand_definitions():
 def get_days_with_demand():
     days = []
     demands = get_demand_definitions()
-    #print(demands)
     days_with_demand = {}
     for day in root.findall('Demands/DayDemandList/DayDemand'):
         days.append(int(day.find("DayIndex").text))
@@ -38,6 +37,12 @@ def get_days_with_demand():
                 day_obj = today + timedelta(days = int(day.find("DayIndex").text))
                 days_with_demand[day_obj] = obj
     return days_with_demand
+
+def get_days():
+    days = []
+    for day in root.findall('Demands/DayDemandList/DayDemand'):
+        days.append(int(day.find("DayIndex").text))
+    return days
 
 
 
@@ -207,7 +212,42 @@ def get_durations():
     return durations
 
 def get_shifts_at_days():
+    durations = get_durations()
+    #print(durations.keys())
+    shifts = {}
+    days = get_days()
+    time_step = (100/(60/get_time_steps()))/100
+    for d in days:
+        for t in durations:
+            if(t >=(d-1)*24 and t <= (24*d - time_step)):
+                try:
+                    shifts[d].append((t,durations[t]))
+                except:
+                    shifts[d] = [(t,durations[t])]
+            if(t > 24*d):
+                continue
+    return shifts
+
+
+def get_shifts_overlapping_t():
+    time_periods = time_to_flyt()
+    time_step = (100/(60/get_time_steps()))/100
+    print(time_step)
+    shifts_overlapping_t = {}
+    #print(time_periods)
     shifts = get_durations()
+    #print(shifts)
+    for t in time_periods:
+        for time in shifts:
+            for dur in shifts[time]:
+                if(t >= time and t < time + dur):
+                    try:
+                        shifts_overlapping_t[t].append((time, dur))
+                    except:
+                        shifts_overlapping_t[t] = [(time, dur)]
+    return shifts_overlapping_t
+                        
+
 
 if __name__ == "__main__":
     #Sets I Need:
@@ -228,7 +268,10 @@ if __name__ == "__main__":
     #Events where a demand begins or ends (Endings have time step subtracted)
 
     dur = get_durations()
-    print(len(dur.keys()))
+    #print(len(dur.keys()))
+
+    get_shifts_at_days()
+    get_shifts_overlapping_t()
     
 
 
