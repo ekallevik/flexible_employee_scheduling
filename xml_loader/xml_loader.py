@@ -6,6 +6,7 @@ from pathlib import Path
 from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
+from gurobipy import *
 
 
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
@@ -118,6 +119,21 @@ def get_time_steps():
     return time_step_length
 
 
+# def get_time_periods():
+#     time_periods = []
+#     i = 0
+#     time_step = get_time_steps()
+#     demands = get_days_with_demand()
+#     for dem in demands:
+#         for i in range(len(demands[dem].start)):
+#             time = datetime.combine(dem, demands[dem].start[i])
+#             while(time.time() < demands[dem].end[i]):
+#                 time_periods.append(time)
+#                 time += timedelta(minutes = time_step)
+
+#     return time_periods
+
+
 def get_time_periods():
     time_periods = []
     i = 0
@@ -125,49 +141,48 @@ def get_time_periods():
     demands = get_days_with_demand()
     for dem in demands:
         for i in range(len(demands[dem].start)):
-            time = datetime.combine(dem, demands[dem].start[i])
-            while(time.time() < demands[dem].end[i]):
+            time = demands[dem].start[i] + 24*(dem)
+            while(time < demands[dem].end[i] + 24*dem):
                 time_periods.append(time)
-                time += timedelta(minutes = time_step)
-
+                time += time_step
     return time_periods
 
 
 def get_demand_periods():
-    min_demand = []
-    ideal_demand = []
-    max_demand = []
+    min_demand = tupledict()
+    ideal_demand = tupledict()
+    max_demand = tupledict()
     competencies = [0]
     time_step = get_time_steps()
     demands = get_days_with_demand()
-
-
-    for c in range(len(competencies)):
+    for c in competencies:
         for dem in demands:
             for i in range(len(demands[dem].start)):
-                time = datetime.combine(dem, demands[dem].start[i])
-                while(time.time() < demands[dem].end[i]):
-                    time += timedelta(minutes = time_step)
-                    min_demand.append(demands[dem].minimum[i])
-                    ideal_demand.append(demands[dem].ideal[i])
-                    max_demand.append(demands[dem].maks[i])
+                t = demands[dem].start[i] + 24*(dem)
+                while(t < demands[dem].end[i] + 24*dem):
+                    min_demand[c,t] = demands[dem].minimum[i]
+                    ideal_demand[c,t] = demands[dem].ideal[i]
+                    max_demand[c,t] = demands[dem].maks[i]
+                    t += time_step
+
     return min_demand, ideal_demand, max_demand
 
 
 
 def get_employees():
     employees = []
+    contracted_hours = 0
     for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
         employee_id = schedule_row.find("RowNbr").text
         try: 
             contracted_hours = float(schedule_row.find("WeekHours").text)
         except AttributeError:
             print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
-
         emp = Employee(employee_id)
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
+
 
 
 def get_weekly_rest_rules():
@@ -210,45 +225,55 @@ def time_to_flyt():
 def get_events():
     events = []
     demand_days = get_days_with_demand()
+    #print(demand_days)
     time_step = get_time_steps()
-    for key in demand_days:
-        for t in range(len(demand_days[key].start)):
-            time = datetime.combine(key, demand_days[key].start[t])
-            events.append(time)
-            time = datetime.combine(key, demand_days[key].end[t]) - timedelta(minutes = time_step)
-            events.append(time)
+    for day in demand_days:
+        for t in range(len(demand_days[day].start)):
+            events.append(demand_days[day].start[t] + 24*day)
+            events.append((demand_days[day].end[t] + 24*day) - time_step)
 
-    time_flyt = []
+    #print(events)
+    return events
+
+
+    # time_flyt = []
     
-    for t in events:
-        minutes = t.time().minute 
-        if(int(minutes) == 0):
-            pass
-        else:
-            minutes = 60/minutes
-            minutes = (100/minutes)/100
+    # for t in events:
+    #     minutes = t.time().minute 
+    #     if(int(minutes) == 0):
+    #         pass
+    #     else:
+    #         minutes = 60/minutes
+    #         minutes = (100/minutes)/100
 
-        day_offset = (t.date() - today).days
-        tid = float(float(t.hour) + (minutes)) + 24*int(day_offset)
-        if tid not in time_flyt:
-            time_flyt.append(tid)
+    #     day_offset = (t.date() - today).days
+    #     tid = float(float(t.hour) + (minutes)) + 24*int(day_offset)
+    #     if tid not in time_flyt:
+    #         time_flyt.append(tid)
 
-    return time_flyt
+    # return time_flyt
 
-def get_employee_competencies():
-    employee_with_competencies = []
-    employee_ids = []
-    contracted_hours = []
+def get_employee_lists():
+    employee_with_competencies = tupledict()
+    employees = tuplelist()
+    employee_weekly_rest = tuplelist()
+    employee_daily_rest = tuplelist()
     competencies = [0]
+
+    emp = get_employees()
     for c in range(len(competencies)):
-        employee_with_competencies.append([])
-        for e in get_employees():
-           # print(e.competencies)
+        employee_with_competencies[c] = []
+        for e in emp:
             if(c in e.competencies):
                 employee_with_competencies[c].append(int(e.id))
-            employee_ids.append(int(e.id))
-            contracted_hours.append(e.contracted_hours)
-    return employee_with_competencies, employee_ids, contracted_hours
+    
+    for e in emp:
+        employees.append(int(e.id))
+        employee_daily_rest.append(e.daily_rest_hours)
+        employee_weekly_rest.append(e.daily_rest_hours)
+    
+    return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest
+
 
 
 def get_durations():
@@ -263,15 +288,14 @@ def get_durations():
                     durations[t].append(dur)
                 except:
                     durations[t] = [dur]
-    
+    print(durations)
     return durations
 
 def get_shifts_at_days():
     durations = get_durations()
-    #print(durations.keys())
     shifts = {}
     days = get_days()
-    time_step = (100/(60/get_time_steps()))/100
+    time_step = get_time_steps()
     for d in days:
         for t in durations:
             if(t >=(d-1)*24 and t <= (24*d - time_step)):
@@ -281,12 +305,22 @@ def get_shifts_at_days():
                     shifts[d] = [(t,durations[t])]
             if(t > 24*d):
                 continue
+    #print(shifts)
     return shifts
 
+def get_shift_list():
+    shifts = tuplelist()
+    dur = get_durations()
+    i = 0
+    for t in dur:
+        for v in dur[t]:
+            shifts.append(i)
+            i += 1
+    #print(shifts)
 
 def get_shifts_overlapping_t():
-    time_periods = time_to_flyt()
-    time_step = (100/(60/get_time_steps()))/100
+    time_periods = get_time_periods()
+    time_step = get_time_steps()
     shifts_overlapping_t = {}
     shifts = get_durations()
     for t in time_periods:
@@ -302,7 +336,7 @@ def get_shifts_overlapping_t():
 
 
 if __name__ == "__main__":
-    print(get_time_steps())
+    #get_demand_periods()
     #Sets I Need:
     #Durations v of shifts indexed by a time t
     # durations = {}
@@ -320,11 +354,10 @@ if __name__ == "__main__":
     # min_demand, ideal_demand, max_demand = get_demand_periods()
     # #Events where a demand begins or ends (Endings have time step subtracted)
 
-    # dur = get_durations()
+    #get_shift_list()
     # #print(len(dur.keys()))
-
-    # get_shifts_at_days()
-    # get_shifts_overlapping_t()
+     #get_shifts_at_days()
+     print(get_shifts_overlapping_t())
     
 
 
