@@ -225,12 +225,13 @@ def time_to_flyt():
 def get_events():
     events = []
     demand_days = get_days_with_demand()
-    #print(demand_days)
     time_step = get_time_steps()
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
-            events.append(demand_days[day].start[t] + 24*day)
-            events.append((demand_days[day].end[t] + 24*day) - time_step)
+            if(demand_days[day].start[t] + 24*day not in events):
+                events.append(demand_days[day].start[t] + 24*day)
+            if(demand_days[day].end[t] + 24*day not in events):
+                events.append((demand_days[day].end[t] + 24*day))
 
     #print(events)
     return events
@@ -308,15 +309,15 @@ def get_shift_lists():
                 continue
     return shifts, shifts_per_day
 
-# def get_shift_list():
-#     shifts = tuplelist()
-#     dur = get_durations()
-#     i = 0
-#     for t in dur:
-#         for v in dur[t]:
-#             shifts.append(i)
-#             i += 1
-#     #print(shifts)
+def get_shift_list():
+    shifts = tuplelist()
+    dur = get_durations()
+    i = 0
+    for t in dur:
+        for v in dur[t]:
+            shifts.append(i)
+            i += 1
+    return shifts
 
 def get_shifts_overlapping_t():
     time_periods = get_time_periods()
@@ -354,10 +355,12 @@ if __name__ == "__main__":
     # min_demand, ideal_demand, max_demand = get_demand_periods()
     # #Events where a demand begins or ends (Endings have time step subtracted)
     #print(get_days())
-    #get_shift_list()
+   # print(get_durations())
+    #print(len(get_shift_list()))
     # #print(len(dur.keys()))
      #get_shifts_at_days()
      print(get_shifts_overlapping_t())
+     #print(get_shift_list())
     
 
 
