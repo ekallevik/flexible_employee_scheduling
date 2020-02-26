@@ -198,3 +198,5 @@ model.setObjective(
             , GRB.MAXIMIZE)
 
 model.write("out.lp")
+
+model.optimize()

@@ -1,16 +1,15 @@
 import xml.etree.ElementTree as ET
 from datetime import date, time, timedelta, datetime
 import sys
-sys.path.insert(1, '/Users/hakongrov/Documents/Code/Masteroppgave/flexible_employee_scheduling/xml_loader')
 from pathlib import Path
-from demand import Demand
-from employee import Employee
-from rest_rule import Weekly_rest_rule, Daily_rest_rule
 from gurobipy import *
 import numpy as np
 import time
-
-
+loader_path = str(Path(__file__).resolve().parent)
+sys.path.insert(1, loader_path)
+from demand import Demand
+from employee import Employee
+from rest_rule import Weekly_rest_rule, Daily_rest_rule
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
 root = ET.parse(data_folder / 'rproblem3.xml').getroot()
 today = date.today()
@@ -407,7 +406,6 @@ def get_t_covered_by_off_shifts():
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
     get_time_periods()
-
 
 
 """
