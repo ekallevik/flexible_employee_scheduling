@@ -5,14 +5,18 @@ model = Model("Employee_scheduling_haakon")
 
 
 #SETS
-employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest = get_employee_lists()
+employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists()
 competencies = [0]
-time_periods = get_time_periods()
+time_periods, time_periods_in_week = get_time_periods()
 demand_min, demand_ideal, demand_max = get_demand_periods()
 shifts, shifts_at_day = get_shift_lists()
 days = get_days()
 shifts_overlapping_t = get_shifts_overlapping_t()
-
+t_in_off_shifts = get_t_covered_by_off_shifts()
+off_shifts, off_shift_in_week = get_off_shifts()
+weeks = [w for w in range(int(len(days)/7))]
+saturdays = [5 + (i*7) for i in range(len(weeks))]
+L_C_D = 5
 
 #Variables
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
@@ -21,6 +25,32 @@ mu = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='mu')
 delta_plus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_plus')
 delta_minus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_minus')
 gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
+w = model.addVars(employees, off_shifts, vtype=GRB.BINARY, name='w')
+lam = model.addVars(employees,vtype=GRB.INTEGER, name='lambda')
+ro_sat = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sat')
+ro_sun = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sun')
+q_iso_off = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_off')
+q_iso_work = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_work')
+q_con = model.addVars(employees, days, vtype=GRB.BINARY, name='q_con')
+f_plus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_plus')
+f_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_minus')
+g_plus = model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
+g_minus = model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
+
+weights =   {
+                "rest": 1,
+                "contracted hours": 1,
+                "partial weekends": 1,
+                "isolated working days": 1,
+                "isolated off days": 1,
+                "consecutive days": 1,
+                "backward rotation": 1,
+                "preferences": 1,
+                "lowest fairness score" : 1,
+                "demand_deviation" : 1
+            }
+
+
 
 #Constraints
 model.addConstrs((quicksum(y[c, e, t] for e in employee_with_competencies[c]) == demand_min[c,t] + mu[c,t]  
@@ -72,100 +102,99 @@ model.addConstrs((
     for i in days
 ), name="if_employee_e_works_day_i")
 
-model.write("out.lp")
-"""
-def objective_restriction(self):
-    model.addConstrs((
-        f[e] ==  
-            weight_contract * l[e]
-            - weight_weekends * 
-                quicksum(ro_sat[e,j] + ro_sun[e,j] 
-                for j in saturdays)
-            + 2*weight_preferences[e] * 
-                quicksum(
-                        preferences[e,t]*
-                        quicksum(
-                                y[c,e,t] 
-                                for c in competencies)
-                        for t in time_periods)
-            + weight_rest * 
-                quicksum(
-                    quicksum(
-                        quicksum(
-                            (v - employee_rest_weekly[e]) * z[e,t,v]
-                            for t in all_time_periods
-                        if t >= offset_week_employee[e]+j*hours_in_week 
-                        and t < offset_week_employee[e]+(j+1)*hours_in_week-(v))
-                        for v in weekly_off_durations)
-                    for j in weeks
-                    )
-            - weight_consecutive_days * 
-                quicksum(
-                    q_con[e,i] 
-                    for i in days)
-            - weight_isolated_work * 
-                quicksum(
-                    q_iso_work[e,i] 
-                    for i in days)
-            - weight_isolated_off *
-                quicksum(
-                    q_iso_off[e,i] 
-                    for i in days)
-            - weight_rot * 
-                quicksum(
-                    gamma[e,i] 
-                    for i in days)
-    for e in employees),
-    name="objective_function_restriction")
+model.addConstrs((
+    quicksum(w[e,t,v] 
+    for t,v in off_shift_in_week[j]) 
+    == 1 
+    for e in employees 
+    for j in weeks
+), name="one_weekly_off_shift_per_day")
 
+model.addConstrs((
+    len(t_in_off_shifts[t,v]) * w[e,t,v]
+    <=  quicksum(
+            quicksum(
+                (1-y[c,e,t_mark]) 
+                for c in competencies)
+        for t_mark in t_in_off_shifts[t,v]) 
+    for e in employees 
+    for t,v in off_shifts
+), name="no_work_during_off_shift")
 
-    model.addConstrs((
-        g <= f[e] for e in employees)
-        ,name="lowest_fairness_score")
-
-def add_variables(self):
-    w = model.addVars(employees, days, vtype=GRB.BINARY, name='w')
-    ro_sat = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sat')
-    ro_sun = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sun')
-    z = model.addVars(employees, all_time_periods, off_durations, vtype=GRB.BINARY, name='z')
-    gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
-    q_con = model.addVars(employees, days, vtype=GRB.BINARY, name='q_con')
-    q_iso_off = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_off')
-    q_iso_work = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_work')
-    l = model.addVars(employees,vtype=GRB.INTEGER, name='lambda')
-    delta_plus = model.addVars(competencies, shifts_work, time_periods, vtype=GRB.INTEGER, name='delta_plus')
-    delta_minus = model.addVars(competencies, shifts_work, time_periods, vtype=GRB.INTEGER, name='delta_minus')
-    f = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f')
-    g = model.addVar(vtype=GRB.CONTINUOUS, name='g')
-
-    model.update()
-    #Set variable parameters
-
-    #Used to fix the possible shift starting times to a number of predefined times. 
-    #for key in fixed_shift_times:
-        #   x[key].ub = 0
-
-    for var in delta_plus:
-        delta_plus[var].lb = 0
-        delta_minus[var].lb = 0
-
-
-    
-    for key in x_dict.keys():
-        x[key].ub = 0
-
-
-def add_objective(self):
-    model.setObjective(
-        quicksum(f[e] for e in employees)
-        + weight_lowest_fairness_score * g
-        - weight_demand_deviation*
+model.addConstrs((
+    quicksum(
         quicksum(
+            y[c,e,t] for t in time_periods
+        ) for c in competencies
+    ) == len(weeks)*contracted_hours[e] for e in employees
+), name="worked_hours_for_employee")
+
+model.addConstrs((
+    quicksum(
+        quicksum(
+            y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) >= 0.6*contracted_hours[e] for e in employees for j in weeks
+), name="min_weekly_work_hours")
+
+model.addConstrs((
+    quicksum(
+        quicksum(
+            y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) >= 1.4*contracted_hours[e] for e in employees for j in weeks
+), name="maximum_weekly_work_hours")
+
+model.addConstrs((
+    gamma[e,i] + gamma[e,(i+1)] == ro_sat[e,i] - ro_sun[e,(i+1)] for e in employees for i in saturdays
+), name="partial_weekends")
+
+model.addConstrs((
+    -gamma[e,i] + gamma[e,(i+1)] - gamma[e,(i+2)] <= q_iso_work[e,(i+1)] for e in employees for i in range(len(days)-2)
+), name="isolated_working_days")
+
+model.addConstrs((
+    gamma[e,i] - gamma[e,(i+1)] + gamma[e,(i+2)] - 1 <= q_iso_off[e,(i+1)] for e in employees for i in range(len(days)-2)
+), name="isolated_off_days")
+
+model.addConstrs((
+    quicksum(
+        gamma[e,i_marked] for i_marked in range(i, i+L_C_D)
+    ) - L_C_D <= q_con[e,i] for e in employees for i in range(len(days) - L_C_D)
+), name="consecutive_days")
+
+ 
+model.addConstrs((
+        f_plus[e] - f_minus[e] ==
+        weights["rest"] * quicksum(v * w[e,t,v] for t,v in off_shifts)
+        - weights["contracted hours"] * lam[e]
+        - weights["partial weekends"] * quicksum(ro_sat[e,j] + ro_sun[e,j] for j in weeks)
+        - weights["isolated working days"] * quicksum(q_iso_work[e,i] for i in days)
+        - weights["isolated off days"] * quicksum(q_iso_off[e,i] for i in days)
+        - weights["consecutive days"] * quicksum(q_con[e,i] for i in days)
+        for e in employees
+        ), name="objective_function_restriction")
+#             #- weights["backward rotation"] * k[e,i]
+#             #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in competencies)
+        
+
+
+
+
+model.addConstrs((
+    g_plus - g_minus <= f_plus[e] - f_minus[e] for e in employees)
+    , name="lowest_fairness_score")
+
+#Objective Function:
+model.setObjective(
+            quicksum(f_plus[e] - f_minus[e] for e in employees)
+            + weights["lowest fairness score"] * (g_plus - g_minus)
+            - weights["demand_deviation"] *
             quicksum(
                 quicksum(
-                    delta_plus[c,s,t] + delta_minus[c,s,t] for t in time_periods
-                ) for s in shifts_work
+                    delta_plus[c, t] + delta_minus[c, t] for t in time_periods
             ) for c in competencies
-        )
-        ,GRB.MAXIMIZE)
-"""
+            )
+            , GRB.MAXIMIZE)
+
+model.write("out.lp")

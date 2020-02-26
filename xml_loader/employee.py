@@ -1,8 +1,8 @@
 class Employee():
     def __init__(self, nbr):
         self.id = nbr
-        self.weekly_rest_hours = None
-        self.daily_rest_hours = None
+        self.weekly_rest_hours = 36
+        self.daily_rest_hours = 8
         self.competencies = [0] #Default. Could also be called default directly (or another name)
         self.contracted_hours = None
 
@@ -15,7 +15,7 @@ class Employee():
     def set_comptency(self, competency):
         self.competencies.append(competency)
         
-    def set_contracted_hours(self, hours):
+    def set_contracted_hours(self, hours=38):
         self.contracted_hours = hours
 
     def __str__(self):

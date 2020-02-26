@@ -7,6 +7,8 @@ from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
 from gurobipy import *
+import numpy as np
+import time
 
 
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
@@ -103,15 +105,15 @@ def get_time_steps():
             if(demand.end[i] - int(demand.end[i]) > 0):
                 if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length != 0.5):
                     time_step_length = 0.5
-                elif(demand.end[i] - int(demand.end[i]) == 0.25 and time_step_length != 0.25):
+                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length != 0.25):
                     time_step_length = 0.25
                 elif(demand.end[i] - int(demand.end[i]) < 0.25):
                     time_step_length = 100/60
                     break
             if(demand.start[i] - int(demand.start[i]) > 0):
-                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length != 0.5):
+                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length < 0.5):
                     time_step_length = 0.5
-                elif(demand.start[i] - int(demand.start[i]) == 0.25 and time_step_length != 0.25):
+                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length < 0.25):
                     time_step_length = 0.25
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
                     time_step_length = 100/60
@@ -139,13 +141,20 @@ def get_time_periods():
     i = 0
     time_step = get_time_steps()
     demands = get_days_with_demand()
+    time_periods_in_week = tupledict()
+    week = 0
+    time_periods_in_week[week] = []
     for dem in demands:
         for i in range(len(demands[dem].start)):
             time = demands[dem].start[i] + 24*(dem)
             while(time < demands[dem].end[i] + 24*dem):
+                if(time > (week+1)*24*7):
+                    week += 1
+                    time_periods_in_week[week] = []
                 time_periods.append(time)
+                time_periods_in_week[week].append(time)
                 time += time_step
-    return time_periods
+    return time_periods, time_periods_in_week
 
 
 def get_demand_periods():
@@ -206,7 +215,7 @@ def get_daily_rest_rules():
 
 
 def time_to_flyt():
-    time_periods = get_time_periods()
+    time_periods = get_time_periods()[0]
     time_flyt = []
     
     for t in time_periods:
@@ -257,8 +266,9 @@ def get_events():
 def get_employee_lists():
     employee_with_competencies = tupledict()
     employees = tuplelist()
-    employee_weekly_rest = tuplelist()
-    employee_daily_rest = tuplelist()
+    employee_weekly_rest = tupledict()
+    employee_daily_rest = tupledict()
+    employee_contracted_hours = tupledict()
     competencies = [0]
 
     emp = get_employees()
@@ -269,11 +279,14 @@ def get_employee_lists():
                 employee_with_competencies[c].append(int(e.id))
     
     for e in emp:
-        employees.append(int(e.id))
-        employee_daily_rest.append(e.daily_rest_hours)
-        employee_weekly_rest.append(e.daily_rest_hours)
+        id = int(e.id)
+        employees.append(id)
+        employee_daily_rest[id] = e.daily_rest_hours
+        employee_weekly_rest[id] = e.daily_rest_hours
+        employee_contracted_hours[id] = e.contracted_hours
+        
     
-    return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest
+    return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, employee_contracted_hours
 
 
 
@@ -320,7 +333,7 @@ def get_shift_list():
     return shifts
 
 def get_shifts_overlapping_t():
-    time_periods = get_time_periods()
+    time_periods = get_time_periods()[0]
     time_step = get_time_steps()
     shifts_overlapping_t = {}
     shifts = get_durations()
@@ -334,40 +347,66 @@ def get_shifts_overlapping_t():
                         shifts_overlapping_t[t] = [(time, dur)]
     return shifts_overlapping_t
 
+def get_start_events():
+    events = []
+    demand_days = get_days_with_demand()
+    for day in demand_days:
+        for t in range(len(demand_days[day].start)):
+            for j in range(len(demand_days[day].end)):
+                diff = demand_days[day].end[j] - demand_days[day].start[t]
+                if(diff >= 6):
+                    events.append((demand_days[day].start[t] + 24*day))
+                    break
+    return events
+
+
+def get_off_shifts():
+    events = get_start_events()
+    off_shifts = []
+    off_shifts_in_week = tupledict()
+    week = 0
+    off_shifts_in_week[week] = []
+    for i in range(len(events)):
+        for event2 in events[i:]:
+            dur = event2 - events[i]
+            if(events[i] >= (week+1)*24*7):
+                week+=1
+                off_shifts_in_week[week] = []
+            if(event2 >= (week+1)*24*7):
+               break
+            if(dur > 70):
+                break
+            elif(dur>= 36):
+                off_shifts_in_week[week].append((events[i], dur))
+                off_shifts.append((events[i], dur))
+    return off_shifts, off_shifts_in_week
+
+    # for event in events:
+    #     if(not(event >= 24*7*week and event < 24*7*(week+1))):
+    #         print("next week" + str(event))
+    #         week += 1
+    #         off_shifts_in_week[week] = []
+    #     for dur in possible_off_shift_durations:
+    #         off_shifts.append((event,dur))
+    #         off_shifts_in_week[week].append((event, dur))
+    # return off_shifts
+
+def get_t_covered_by_off_shifts():
+    off_shifts = get_off_shifts()[0]
+    t_covered = tupledict()
+    time_periods = get_time_periods()[0]
+    for shift in off_shifts:
+        end = time_periods.index(shift[0] + shift[1])
+        start = time_periods.index(shift[0])
+        t_covered[shift[0], shift[1]] = time_periods[start:end]
+    return t_covered
+
+
 
 
 if __name__ == "__main__":
-    #get_demand_periods()
-    #Sets I Need:
-    #Durations v of shifts indexed by a time t
-    # durations = {}
-    # #An array containing id's of employees (from 1 to number of employees)
-    # employee_ids = []
-    # #The competency of the employee at the index
-    # employee_competencies = []
-    # #Contracted hours of the employee at the index
-    # contracted_hours = []
-    # #Number of days in the planning period
-    # days = []
-    # #All the individual time periods where there is demand with time step equal to the shortest demand periods
-    # time_periods = time_to_flyt()
-    # #Min/max/ideal demand for each time period
-    # min_demand, ideal_demand, max_demand = get_demand_periods()
-    # #Events where a demand begins or ends (Endings have time step subtracted)
-    #print(get_days())
-   # print(get_durations())
-    #print(len(get_shift_list()))
-    # #print(len(dur.keys()))
-     #get_shifts_at_days()
-     print(get_shifts_overlapping_t())
-     #print(get_shift_list())
-    
-
-
-
-    
-#get_daily_rest_rules()
-#get_weekly_rest_rules()
+    #print(get_t_covered_by_off_shifts())
+    get_time_periods()
 
 
 
