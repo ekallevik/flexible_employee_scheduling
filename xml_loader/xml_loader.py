@@ -292,7 +292,7 @@ def get_employee_lists():
 def get_durations():
     events = get_events()
     durations = {}
-    possible_durations = [t/4 for t in range(10*4, 12*4)]
+    possible_durations = [t/4 for t in range(6*4, 12*4)]
     
     for t in events:
         for dur in possible_durations:

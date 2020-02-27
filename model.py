@@ -97,7 +97,6 @@ model.addConstrs((
 
 model.addConstrs((
     quicksum(x[e,t,v] 
-    for e in employees 
     for t,v in shifts_at_day[i]) 
     == gamma[e,i] 
     for e in employees 
@@ -147,9 +146,9 @@ model.addConstrs((
     ) <= 1.4*contracted_hours[e] for e in employees for j in weeks
 ), name="maximum_weekly_work_hours")
 
-# model.addConstrs((
-#     gamma[e,i] + gamma[e,(i+1)] == ro_sat[e,i] - ro_sun[e,(i+1)] for e in employees for i in saturdays
-# ), name="partial_weekends")
+model.addConstrs((
+    gamma[e,i] + gamma[e,(i+1)] == ro_sat[e,i] - ro_sun[e,(i+1)] for e in employees for i in saturdays
+), name="partial_weekends")
 
 model.addConstrs((
     -gamma[e,i] + gamma[e,(i+1)] - gamma[e,(i+2)] <= q_iso_work[e,(i+1)] for e in employees for i in range(len(days)-2)
@@ -166,50 +165,50 @@ model.addConstrs((
 ), name="consecutive_days")
 
  
-# model.addConstrs((
-#         f_plus[e] - f_minus[e] ==
-#         weights["rest"] * quicksum(v * w[e,t,v] for t,v in off_shifts)
-#         - weights["contracted hours"] * lam[e]
-#         - weights["partial weekends"] * quicksum(ro_sat[e,j] + ro_sun[e,j] for j in weeks)
-#         - weights["isolated working days"] * quicksum(q_iso_work[e,i] for i in days)
-#         - weights["isolated off days"] * quicksum(q_iso_off[e,i] for i in days)
-#         - weights["consecutive days"] * quicksum(q_con[e,i] for i in days)
-#         for e in employees
-#         ), name="objective_function_restriction")
-# #             #- weights["backward rotation"] * k[e,i]
-# #             #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in competencies)
+model.addConstrs((
+        f_plus[e] - f_minus[e] ==
+        weights["rest"] * quicksum(v * w[e,t,v] for t,v in off_shifts)
+        - weights["contracted hours"] * lam[e]
+        - weights["partial weekends"] * quicksum(ro_sat[e,j] + ro_sun[e,j] for j in weeks)
+        - weights["isolated working days"] * quicksum(q_iso_work[e,i] for i in days)
+        - weights["isolated off days"] * quicksum(q_iso_off[e,i] for i in days)
+        - weights["consecutive days"] * quicksum(q_con[e,i] for i in days)
+        for e in employees
+        ), name="objective_function_restriction")
+#             #- weights["backward rotation"] * k[e,i]
+#             #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in competencies)
         
 
 
 
-# model.addConstrs((
-#     g_plus - g_minus <= f_plus[e] - f_minus[e] for e in employees)
-#     , name="lowest_fairness_score")
+model.addConstrs((
+    g_plus - g_minus <= f_plus[e] - f_minus[e] for e in employees)
+    , name="lowest_fairness_score")
 
 #Objective Function:
-model.setObjective(
-    quicksum(
-        quicksum(
-            quicksum(
-                y[c,e,t] for e in employees
-            )  
-             for c in competencies
-        ) for t in time_periods
-    ), GRB.MINIMIZE
-)
-
-
-
 # model.setObjective(
-#             quicksum(f_plus[e] - f_minus[e] for e in employees)
-#             + weights["lowest fairness score"] * (g_plus - g_minus)
-#             - weights["demand_deviation"] *
+#     quicksum(
+#         quicksum(
 #             quicksum(
-#                 quicksum(
-#                     delta_plus[c, t] + delta_minus[c, t] for t in time_periods
-#             ) for c in competencies
-#             )
-#             , GRB.MAXIMIZE)
+#                 y[c,e,t] for e in employees
+#             )  
+#              for c in competencies
+#         ) for t in time_periods
+#     ), GRB.MINIMIZE
+# )
+
+
+
+model.setObjective(
+            quicksum(f_plus[e] - f_minus[e] for e in employees)
+            + weights["lowest fairness score"] * (g_plus - g_minus)
+            - weights["demand_deviation"] *
+            quicksum(
+                quicksum(
+                    delta_plus[c, t] + delta_minus[c, t] for t in time_periods
+            ) for c in competencies
+            )
+            ,GRB.MAXIMIZE)
 
 model.write("out.lp")
 
