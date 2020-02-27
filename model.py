@@ -7,6 +7,7 @@ model = Model("Employee_scheduling_haakon")
 #SETS
 employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists()
 competencies = [0]
+print(employee_with_competencies)
 time_periods, time_periods_in_week = get_time_periods()
 demand_min, demand_ideal, demand_max = get_demand_periods()
 shifts, shifts_at_day = get_shift_lists()
@@ -53,7 +54,7 @@ weights =   {
 
 
 #Constraints
-model.addConstrs((quicksum(y[c, e, t] for e in employee_with_competencies[c]) == demand_min[c,t] + mu[c,t]  
+model.addConstrs((quicksum(y[c,e,t] for e in employee_with_competencies[c]) == demand_min[c,t] + mu[c,t]  
 for c in competencies for t in time_periods),
 name='minimum_demand_coverage')
 
@@ -69,13 +70,13 @@ model.addConstrs((
     for c in competencies),
 name="deviation_from_ideel_demand")
 
-# model.addConstrs((
-#     quicksum(x[e,t,v] 
-#     for t,v in shifts_at_day[i]) 
-#     <= 1 
-#     for e in employees 
-#     for i in days), 
-#     name="cover_maximum_one_shift")
+model.addConstrs((
+    quicksum(x[e,t,v] 
+    for t,v in shifts_at_day[i]) 
+    <= 1 
+    for e in employees 
+    for i in days), 
+    name="cover_maximum_one_shift")
 
 model.addConstrs((
     quicksum(x[e,t_marked,v] 
@@ -85,49 +86,49 @@ model.addConstrs((
     for t in time_periods
 ),name="mapping_shift_to_demand")
 
-# model.addConstrs((
-#     quicksum(y[c,e,t] 
-#     for c in competencies) 
-#     <= 1 
-#     for e in employees 
-#     for t in time_periods
-# ), name="only_cover_one_demand_at_a_time")
+model.addConstrs((
+    quicksum(y[c,e,t] 
+    for c in competencies) 
+    <= 1 
+    for e in employees 
+    for t in time_periods
+), name="only_cover_one_demand_at_a_time")
 
-# model.addConstrs((
-#     quicksum(x[e,t,v] 
-#     for e in employees 
-#     for t,v in shifts_at_day[i]) 
-#     == gamma[e,i] 
-#     for e in employees 
-#     for i in days
-# ), name="if_employee_e_works_day_i")
+model.addConstrs((
+    quicksum(x[e,t,v] 
+    for e in employees 
+    for t,v in shifts_at_day[i]) 
+    == gamma[e,i] 
+    for e in employees 
+    for i in days
+), name="if_employee_e_works_day_i")
 
-# model.addConstrs((
-#     quicksum(w[e,t,v] 
-#     for t,v in off_shift_in_week[j]) 
-#     == 1 
-#     for e in employees 
-#     for j in weeks
-# ), name="one_weekly_off_shift_per_day")
+model.addConstrs((
+    quicksum(w[e,t,v] 
+    for t,v in off_shift_in_week[j]) 
+    == 1 
+    for e in employees 
+    for j in weeks
+), name="one_weekly_off_shift_per_day")
 
-# model.addConstrs((
-#     len(t_in_off_shifts[t,v]) * w[e,t,v]
-#     <=  quicksum(
-#             quicksum(
-#                 (1-y[c,e,t_mark]) 
-#                 for c in competencies)
-#         for t_mark in t_in_off_shifts[t,v]) 
-#     for e in employees 
-#     for t,v in off_shifts
-# ), name="no_work_during_off_shift")
+model.addConstrs((
+    len(t_in_off_shifts[t,v]) * w[e,t,v]
+    <=  quicksum(
+            quicksum(
+                (1-y[c,e,t_mark]) 
+                for c in competencies)
+        for t_mark in t_in_off_shifts[t,v]) 
+    for e in employees 
+    for t,v in off_shifts
+), name="no_work_during_off_shift")
 
-# model.addConstrs((
-#     quicksum(
-#         quicksum(
-#             y[c,e,t] for t in time_periods
-#         ) for c in competencies
-#     ) == len(weeks)*contracted_hours[e] for e in employees
-# ), name="worked_hours_for_employee")
+model.addConstrs((
+    quicksum(
+        quicksum(
+            y[c,e,t] for t in time_periods
+        ) for c in competencies
+    ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
+), name="worked_hours_for_employee")
 
 # model.addConstrs((
 #     quicksum(
@@ -180,23 +181,37 @@ model.addConstrs((
 
 
 
-
 # model.addConstrs((
 #     g_plus - g_minus <= f_plus[e] - f_minus[e] for e in employees)
 #     , name="lowest_fairness_score")
 
 #Objective Function:
 model.setObjective(
-            quicksum(f_plus[e] - f_minus[e] for e in employees)
-            + weights["lowest fairness score"] * (g_plus - g_minus)
-            - weights["demand_deviation"] *
+    quicksum(
+        quicksum(
             quicksum(
-                quicksum(
-                    delta_plus[c, t] + delta_minus[c, t] for t in time_periods
-            ) for c in competencies
-            )
-            , GRB.MAXIMIZE)
+                y[c,e,t] for e in employees
+            )  
+             for c in competencies
+        ) for t in time_periods
+    ), GRB.MINIMIZE
+)
+
+
+
+# model.setObjective(
+#             quicksum(f_plus[e] - f_minus[e] for e in employees)
+#             + weights["lowest fairness score"] * (g_plus - g_minus)
+#             - weights["demand_deviation"] *
+#             quicksum(
+#                 quicksum(
+#                     delta_plus[c, t] + delta_minus[c, t] for t in time_periods
+#             ) for c in competencies
+#             )
+#             , GRB.MAXIMIZE)
 
 model.write("out.lp")
 
+
 model.optimize()
+model.write("solution.sol")

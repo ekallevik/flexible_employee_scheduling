@@ -292,7 +292,7 @@ def get_employee_lists():
 def get_durations():
     events = get_events()
     durations = {}
-    possible_durations = [t/4 for t in range(6*4, 12*4)]
+    possible_durations = [t/4 for t in range(10*4, 12*4)]
     
     for t in events:
         for dur in possible_durations:
@@ -405,7 +405,10 @@ def get_t_covered_by_off_shifts():
 
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
-    get_time_periods()
+    #get_time_periods()
+    times = get_shifts_overlapping_t()
+    for t in times:
+        print(t, times[t])
 
 
 """
