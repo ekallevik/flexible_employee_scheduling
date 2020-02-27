@@ -7,7 +7,8 @@ model = Model("Employee_scheduling_haakon")
 #SETS
 employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists()
 competencies = [0]
-print(employee_with_competencies)
+time_step = get_time_steps()
+print(time_step)
 time_periods, time_periods_in_week = get_time_periods()
 demand_min, demand_ideal, demand_max = get_demand_periods()
 shifts, shifts_at_day = get_shift_lists()
@@ -27,7 +28,7 @@ delta_plus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='
 delta_minus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_minus')
 gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
 w = model.addVars(employees, off_shifts, vtype=GRB.BINARY, name='w')
-lam = model.addVars(employees,vtype=GRB.INTEGER, name='lambda')
+lam = model.addVars(employees,vtype=GRB.CONTINUOUS, name='lambda')
 ro_sat = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sat')
 ro_sun = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sun')
 q_iso_off = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_off')
@@ -125,44 +126,44 @@ model.addConstrs((
 model.addConstrs((
     quicksum(
         quicksum(
-            y[c,e,t] for t in time_periods
+            time_step*y[c,e,t] for t in time_periods
         ) for c in competencies
     ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
-), name="worked_hours_for_employee")
+), name="contracted_hours")
 
 # model.addConstrs((
 #     quicksum(
 #         quicksum(
-#             y[c,e,t] for t in time_periods_in_week[j]
+#             time_step*y[c,e,t] for t in time_periods_in_week[j]
 #         ) for c in competencies
-#     ) >= 0.6*contracted_hours[e] for e in employees for j in weeks
+#     ) >= 0.1*contracted_hours[e] for e in employees for j in weeks
 # ), name="min_weekly_work_hours")
 
-# model.addConstrs((
-#     quicksum(
-#         quicksum(
-#             y[c,e,t] for t in time_periods_in_week[j]
-#         ) for c in competencies
-#     ) >= 1.4*contracted_hours[e] for e in employees for j in weeks
-# ), name="maximum_weekly_work_hours")
+model.addConstrs((
+    quicksum(
+        quicksum(
+            time_step*y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) <= 1.4*contracted_hours[e] for e in employees for j in weeks
+), name="maximum_weekly_work_hours")
 
 # model.addConstrs((
 #     gamma[e,i] + gamma[e,(i+1)] == ro_sat[e,i] - ro_sun[e,(i+1)] for e in employees for i in saturdays
 # ), name="partial_weekends")
 
-# model.addConstrs((
-#     -gamma[e,i] + gamma[e,(i+1)] - gamma[e,(i+2)] <= q_iso_work[e,(i+1)] for e in employees for i in range(len(days)-2)
-# ), name="isolated_working_days")
+model.addConstrs((
+    -gamma[e,i] + gamma[e,(i+1)] - gamma[e,(i+2)] <= q_iso_work[e,(i+1)] for e in employees for i in range(len(days)-2)
+), name="isolated_working_days")
 
-# model.addConstrs((
-#     gamma[e,i] - gamma[e,(i+1)] + gamma[e,(i+2)] - 1 <= q_iso_off[e,(i+1)] for e in employees for i in range(len(days)-2)
-# ), name="isolated_off_days")
+model.addConstrs((
+    gamma[e,i] - gamma[e,(i+1)] + gamma[e,(i+2)] - 1 <= q_iso_off[e,(i+1)] for e in employees for i in range(len(days)-2)
+), name="isolated_off_days")
 
-# model.addConstrs((
-#     quicksum(
-#         gamma[e,i_marked] for i_marked in range(i, i+L_C_D)
-#     ) - L_C_D <= q_con[e,i] for e in employees for i in range(len(days) - L_C_D)
-# ), name="consecutive_days")
+model.addConstrs((
+    quicksum(
+        gamma[e,i_marked] for i_marked in range(i, i+L_C_D)
+    ) - L_C_D <= q_con[e,i] for e in employees for i in range(len(days) - L_C_D)
+), name="consecutive_days")
 
  
 # model.addConstrs((
