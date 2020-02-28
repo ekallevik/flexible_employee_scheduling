@@ -401,14 +401,28 @@ def get_t_covered_by_off_shifts():
     return t_covered
 
 
+def get_shifts_covered_by_off_shifts():
+    off_shifts = get_off_shifts()[0]
+    shifts_covered = tupledict()
+    shifts = get_shift_lists()[0]
+    for off_shift in off_shifts:
+        shifts_covered[off_shift] = []
+        for shift in shifts:
+            if(shift[0] >= off_shift[0] and shift[0] < (off_shift[0] + off_shift[1]) or (shift[0] + shift[1]) >= off_shift[0] and (shift[0] + shift[1]) < (off_shift[0] + off_shift[1])):
+                shifts_covered[off_shift].append(shift)
+    return shifts_covered
+
+
 
 
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
     #get_time_periods()
-    times = get_shifts_overlapping_t()
-    for t in times:
-        print(t, times[t])
+    shifts_covered = get_shifts_covered_by_off_shifts()
+    for shift in shifts_covered:
+        print(len(shifts_covered[shift]))
+    # for t in times:
+    #     print(t, times[t])
 
 
 """

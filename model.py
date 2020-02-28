@@ -1,5 +1,6 @@
 from gurobipy import *
 from xml_loader.xml_loader import *
+
 #MODEL
 model = Model("Employee_scheduling_haakon")
 
@@ -8,11 +9,11 @@ model = Model("Employee_scheduling_haakon")
 employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists()
 competencies = [0]
 time_step = get_time_steps()
-print(time_step)
 time_periods, time_periods_in_week = get_time_periods()
 demand_min, demand_ideal, demand_max = get_demand_periods()
 shifts, shifts_at_day = get_shift_lists()
 days = get_days()
+shifts_covered_by_off_shift = get_shifts_covered_by_off_shifts()
 shifts_overlapping_t = get_shifts_overlapping_t()
 t_in_off_shifts = get_t_covered_by_off_shifts()
 off_shifts, off_shift_in_week = get_off_shifts()
@@ -49,7 +50,7 @@ weights =   {
                 "backward rotation": 1,
                 "preferences": 1,
                 "lowest fairness score" : 1,
-                "demand_deviation" : 1
+                "demand_deviation" : 10
             }
 
 
@@ -111,15 +112,25 @@ model.addConstrs((
     for j in weeks
 ), name="one_weekly_off_shift_per_day")
 
+# model.addConstrs((
+#     len(t_in_off_shifts[t,v]) * w[e,t,v]
+#     <=  quicksum(
+#             quicksum(
+#                 (1-y[c,e,t_mark]) 
+#                 for c in competencies)
+#         for t_mark in t_in_off_shifts[t,v]) 
+#     for e in employees 
+#     for t,v in off_shifts
+# ), name="no_work_during_off_shift")
+
+#Alternativ 2 til off_shift restriksjon (restriksjon 1.10). Virker raskere
 model.addConstrs((
-    len(t_in_off_shifts[t,v]) * w[e,t,v]
-    <=  quicksum(
-            quicksum(
-                (1-y[c,e,t_mark]) 
-                for c in competencies)
-        for t_mark in t_in_off_shifts[t,v]) 
-    for e in employees 
-    for t,v in off_shifts
+    len(shifts_covered_by_off_shift[t,v]) * w[e,t,v] <= 
+    quicksum(
+        quicksum(
+            (1-x[e,t_marked,v_marked]) for c in competencies
+        ) for t_marked,v_marked in shifts_covered_by_off_shift[t,v]
+    ) for e in employees for t,v in off_shifts
 ), name="no_work_during_off_shift")
 
 model.addConstrs((
@@ -130,13 +141,13 @@ model.addConstrs((
     ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
 ), name="contracted_hours")
 
-# model.addConstrs((
-#     quicksum(
-#         quicksum(
-#             time_step*y[c,e,t] for t in time_periods_in_week[j]
-#         ) for c in competencies
-#     ) >= 0.1*contracted_hours[e] for e in employees for j in weeks
-# ), name="min_weekly_work_hours")
+model.addConstrs((
+    quicksum(
+        quicksum(
+            time_step*y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) >= 0.1*contracted_hours[e] for e in employees for j in weeks
+), name="min_weekly_work_hours")
 
 model.addConstrs((
     quicksum(
