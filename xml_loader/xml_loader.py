@@ -11,22 +11,22 @@ from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-root = ET.parse(data_folder / 'rproblem3_2.xml').getroot()
+root = ET.parse(data_folder / 'rproblem1_1.xml').getroot()
 today = date.today()
 
-# def get_demand_definitions():
-#     demands = []
-#     for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
-#         dem = Demand(DemandDefinition.find("DayDemandId").text)
-#         for row in DemandDefinition.find("Rows").findall("Row"):
-#             start = row.find("TimeStart").text
-#             end = row.find("TimeEnd").text
-#             maksimum = row.find("Max").text
-#             minimum = row.find("Min").text
-#             ideal = row.find("Ideal").text
-#             dem.add_info(start, end, maksimum, minimum, ideal)
-#         demands.append(dem)
-#     return demands
+def get_demand_definitions2():
+    demands = []
+    for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
+        dem = Demand(DemandDefinition.find("DayDemandId").text)
+        for row in DemandDefinition.find("Rows").findall("Row"):
+            start = row.find("TimeStart").text
+            end = row.find("TimeEnd").text
+            maksimum = row.find("Max").text
+            minimum = row.find("Min").text
+            ideal = row.find("Ideal").text
+            dem.add_info2(start, end, maksimum, minimum, ideal)
+        demands.append(dem)
+    return demands
 
 
 def get_demand_definitions():
@@ -44,15 +44,15 @@ def get_demand_definitions():
     return demands
 
 
-# def get_days_with_demand():
-#     demands = get_demand_definitions()
-#     days_with_demand = {}
-#     for day in root.findall('Demands/DayDemandList/DayDemand'):
-#         for obj in demands:
-#             if obj.demand_id == day.find("DayDemandId").text:
-#                 day_obj = today + timedelta(days = int(day.find("DayIndex").text))
-#                 days_with_demand[day_obj] = obj
-#     return days_with_demand
+def get_days_with_demand2():
+    demands = get_demand_definitions2()
+    days_with_demand = {}
+    for day in root.findall('Demands/DayDemandList/DayDemand'):
+        for obj in demands:
+            if obj.demand_id == day.find("DayDemandId").text:
+                day_obj = today + timedelta(days = int(day.find("DayIndex").text))
+                days_with_demand[day_obj] = obj
+    return days_with_demand
 
 def get_days_with_demand():
     demands = get_demand_definitions()
@@ -150,8 +150,9 @@ def get_time_periods():
                 if(time > (week+1)*24*7):
                     week += 1
                     time_periods_in_week[week] = []
-                time_periods.append(time)
-                time_periods_in_week[week].append(time)
+                if(time not in time_periods):
+                    time_periods.append(time)
+                    time_periods_in_week[week].append(time)
                 time += time_step
     return time_periods, time_periods_in_week
 
@@ -168,9 +169,18 @@ def get_demand_periods():
             for i in range(len(demands[dem].start)):
                 t = demands[dem].start[i] + 24*(dem)
                 while(t < demands[dem].end[i] + 24*dem):
-                    min_demand[c,t] = demands[dem].minimum[i]
-                    ideal_demand[c,t] = demands[dem].ideal[i]
-                    max_demand[c,t] = demands[dem].maks[i]
+                    try:
+                        min_demand[c,t] += demands[dem].minimum[i]
+                    except:
+                        min_demand[c,t] = demands[dem].minimum[i]
+                    try:
+                        ideal_demand[c,t] += demands[dem].ideal[i]
+                    except:
+                        ideal_demand[c,t] = demands[dem].ideal[i]
+                    try:
+                        max_demand[c,t] += demands[dem].maks[i]
+                    except:
+                        max_demand[c,t] = demands[dem].maks[i]
                     t += time_step
 
     return min_demand, ideal_demand, max_demand
@@ -233,15 +243,16 @@ def time_to_flyt():
 def get_events():
     events = []
     demand_days = get_days_with_demand()
-    time_step = get_time_steps()
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
+            if(demand_days[day].end[t] - demand_days[day].start[t] >= 12):
+                diff = (demand_days[day].end[t] - demand_days[day].start[t])/2
+                events.append(demand_days[day].start[t] + 24*day + diff)
             if(demand_days[day].start[t] + 24*day not in events):
                 events.append(demand_days[day].start[t] + 24*day)
             if(demand_days[day].end[t] + 24*day not in events):
                 events.append((demand_days[day].end[t] + 24*day))
 
-    #print(events)
     return events
 
 
@@ -301,7 +312,7 @@ def get_durations():
                     durations[t].append(dur)
                 except:
                     durations[t] = [dur]
-    #print(durations)
+
     return durations
 
 def get_shift_lists():
@@ -339,7 +350,7 @@ def get_shifts_overlapping_t():
     for t in time_periods:
         for time in shifts:
             for dur in shifts[time]:
-                if(t >= time and t <= time + dur):
+                if(t >= time and t < time + dur):
                     try:
                         shifts_overlapping_t[t].append((time, dur))
                     except:
@@ -373,7 +384,7 @@ def get_off_shifts():
                 off_shifts_in_week[week] = []
             if(event2 >= (week+1)*24*7):
                break
-            if(dur > 70):
+            if(dur > 100):
                 break
             elif(dur>= 36):
                 off_shifts_in_week[week].append((events[i], dur))
@@ -417,10 +428,11 @@ def get_shifts_covered_by_off_shifts():
 
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
+    get_shift_lists()
     #get_time_periods()
-    shifts_covered = get_shifts_covered_by_off_shifts()
-    for shift in shifts_covered:
-        print(len(shifts_covered[shift]))
+    #shifts_covered = get_shifts_covered_by_off_shifts()
+    #for shift in shifts_covered:
+    #    print(len(shifts_covered[shift]))
     # for t in times:
     #     print(t, times[t])
 
