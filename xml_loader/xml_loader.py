@@ -11,7 +11,7 @@ from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-root = ET.parse(data_folder / 'rproblem1_1.xml').getroot()
+root = ET.parse(data_folder / 'rproblem5.xml').getroot()
 today = date.today()
 
 def get_demand_definitions2():
@@ -384,11 +384,12 @@ def get_off_shifts():
                 off_shifts_in_week[week] = []
             if(event2 >= (week+1)*24*7):
                break
-            if(dur > 100):
+            if(dur > 60):
                 break
             elif(dur>= 36):
-                off_shifts_in_week[week].append((events[i], dur))
-                off_shifts.append((events[i], dur))
+                if((events[i], dur) not in off_shifts):
+                    off_shifts_in_week[week].append((events[i], dur))
+                    off_shifts.append((events[i], dur))
     return off_shifts, off_shifts_in_week
 
     # for event in events:
