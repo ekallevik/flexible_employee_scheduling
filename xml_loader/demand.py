@@ -31,6 +31,16 @@ class Demand():
         self.ideal.append(int(ideal))
         #self.time_delta.append(datetime.combine(self.today, end) - datetime.combine(self.today,start))
 
+    def add_info2(self, start, end, maksimum, minimum, ideal):
+        start = start.split(":")
+        end = end.split(":")
+        self.start.append(time(int(start[0]),int(start[1])))
+        self.end.append(time(int(end[0]), int(end[1])))
+        self.minimum.append(int(minimum))
+        self.maks.append(int(maksimum))
+        self.ideal.append(int(ideal))
+        #self.time_delta.append(datetime.combine(self.today, end) - datetime.combine(self.today,start))
+
 
     def __str__(self):
         return(self.demand_id)
