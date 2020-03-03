@@ -3,7 +3,7 @@ class Employee():
         self.id = nbr
         self.weekly_rest_hours = 36
         self.daily_rest_hours = 8
-        self.competencies = [0] #Default. Could also be called default directly (or another name)
+        self.competencies = [] #Default. Could also be called default directly (or another name)
         self.contracted_hours = None
 
     def add_daily_rest(self, daily_rest):
