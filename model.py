@@ -21,7 +21,6 @@ weeks = [w for w in range(int(len(days)/7))]
 saturdays = [5 + (i*7) for i in range(len(weeks))]
 L_C_D = 5
 
-print(shifts_at_day[0])
 
 #Variables
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
@@ -41,6 +40,8 @@ f_plus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_plus')
 f_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_minus')
 g_plus = model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
 g_minus = model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
+
+print("#############VARIABLES ADDED#############")
 
 weights =   {
                 "rest": 5,
@@ -143,21 +144,21 @@ model.addConstrs((
     ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
 ), name="contracted_hours")
 
-# model.addConstrs((
-#     quicksum(
-#         quicksum(
-#             time_step*y[c,e,t] for t in time_periods_in_week[j]
-#         ) for c in competencies
-#     ) >= 0.1*contracted_hours[e] for e in employees for j in weeks
-# ), name="min_weekly_work_hours")
+model.addConstrs((
+    quicksum(
+        quicksum(
+            time_step*y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) >= 0.1*contracted_hours[e] for e in employees for j in weeks
+), name="min_weekly_work_hours")
 
-# model.addConstrs((
-#     quicksum(
-#         quicksum(
-#             time_step*y[c,e,t] for t in time_periods_in_week[j]
-#         ) for c in competencies
-#     ) <= 1.4*contracted_hours[e] for e in employees for j in weeks
-# ), name="maximum_weekly_work_hours")
+model.addConstrs((
+    quicksum(
+        quicksum(
+            time_step*y[c,e,t] for t in time_periods_in_week[j]
+        ) for c in competencies
+    ) <= 1.4*contracted_hours[e] for e in employees for j in weeks
+), name="maximum_weekly_work_hours")
 
 model.addConstrs((
     gamma[e,i] - gamma[e,(i+1)] == ro_sat[e,i] - ro_sun[e,(i+1)] for e in employees for i in saturdays
@@ -188,8 +189,8 @@ model.addConstrs((
         - weights["consecutive days"] * quicksum(q_con[e,i] for i in days)
         for e in employees
         ), name="objective_function_restriction")
-#             #- weights["backward rotation"] * k[e,i]
-#             #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in competencies)
+            #- weights["backward rotation"] * k[e,i]
+            #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in competencies)
         
 
 
@@ -199,34 +200,36 @@ model.addConstrs((
     , name="lowest_fairness_score")
 
 #Objective Function:
-model.setObjective(
-    quicksum(
-        quicksum(
-            quicksum(
-                y[c,e,t] for e in employees
-            )  
-             for c in competencies
-        ) for t in time_periods
-    )
-        +
-    quicksum(
-        quicksum(
-            mu[c,t] for c in competencies
-        ) for t in time_periods
-    ), GRB.MINIMIZE
-)
-
-
 # model.setObjective(
-#             quicksum(f_plus[e] - f_minus[e] for e in employees)
-#             + weights["lowest fairness score"] * (g_plus - g_minus)
-#             - weights["demand_deviation"] *
+#     quicksum(
+#         quicksum(
 #             quicksum(
-#                 quicksum(
-#                     delta_plus[c, t] + delta_minus[c, t] for t in time_periods
-#             ) for c in competencies
-#             )
-#             ,GRB.MAXIMIZE)
+#                 y[c,e,t] for e in employees
+#             )  
+#              for c in competencies
+#         ) for t in time_periods
+#     )
+#         +
+#     quicksum(
+#         quicksum(
+#             mu[c,t] for c in competencies
+#         ) for t in time_periods
+#     ), GRB.MINIMIZE
+# )
+
+
+model.setObjective(
+            quicksum(f_plus[e] - f_minus[e] for e in employees)
+            + weights["lowest fairness score"] * (g_plus - g_minus)
+            - weights["demand_deviation"] *
+            quicksum(
+                quicksum(
+                    delta_plus[c, t] + delta_minus[c, t] for t in time_periods
+            ) for c in competencies
+            )
+            ,GRB.MAXIMIZE)
+
+print("#############RESTRICTIONS ADDED#############")
 
 model.write("out.lp")
 
