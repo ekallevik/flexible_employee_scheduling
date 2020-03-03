@@ -6,11 +6,11 @@ class Employee():
         self.competencies = [] #Default. Could also be called default directly (or another name)
         self.contracted_hours = None
 
-    def add_daily_rest(self, daily_rest):
-        pass
+    def add_weekly_rest(self, weekly_rest):
+        self.weekly_rest_hours = weekly_rest
 
-    def add_weekly_rest(self, daily_rest):
-        pass
+    def add_daily_rest(self, daily_rest):
+        self.daily_rest_hours = daily_rest
         
     def set_comptency(self, competency):
         self.competencies.append(competency)

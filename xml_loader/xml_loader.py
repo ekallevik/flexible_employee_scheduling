@@ -77,6 +77,68 @@ def get_days():
         days.append(int(day.find("DayIndex").text))
     return days
 
+def get_weekly_rest_rules():
+    weekly_rest_rules = []
+    for weekly_rule in root.findall('Configuration/WeeklyRestRules/WeeklyRestRule'):
+        rest_id = weekly_rule.find("Id")
+        hours = weekly_rule.find("MinRestHours")
+        rule = Weekly_rest_rule(hours, rest_id)
+        weekly_rest_rules.append(rule)
+    return weekly_rest_rules
+
+def get_daily_rest_rules():
+    daily_rest_rules = []
+    for daily_rule in root.findall('Configuration/DailyRestRules/DailyRestRule'):
+        rest_id = daily_rule.find("Id")
+        hours = daily_rule.find("MinRestHours")
+        rule = Daily_rest_rule(hours, rest_id)
+        daily_rest_rules.append(rule)
+    return daily_rest_rules
+
+def get_employees():
+    employees = []
+    competencies = get_competencies()
+    weekly_rest_rules = get_weekly_rest_rules()
+    Daily_rest_rules = get_daily_rest_rules()
+    for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
+        employee_id = schedule_row.find("RowNbr").text
+        emp = Employee(employee_id)
+        try: 
+            contracted_hours = float(schedule_row.find("WeekHours").text)
+        except AttributeError:
+            print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
+            contracted_hours = 36
+
+        if(len(competencies) == 0):
+            emp.set_comptency(0)
+        else:
+            try: 
+                for competence in schedule_row.find("Competences").findall("CompetenceId"):
+                    if(competence.text in competencies):
+                        emp.set_comptency(competence.text)
+            except AttributeError:
+                print("ScheduleRow %s don't have a set Competence tag" % employee_id)
+        try:
+            weekly_rest_rule = schedule_row.find("WeeklyRestRule").text
+            for weekly_rule in weekly_rest_rules:
+                if(weekly_rule.id == weekly_rest_rule):
+                    emp.add_weekly_rest(weekly_rule.hours)
+        except:
+            pass
+        try:
+            daily_rest_rule = schedule_row.find("DayRestRule1").text
+            for daily_rule in Daily_rest_rules:
+                if(daily_rule.id == daily_rest_rule):
+                    emp.add_daily_rest(daily_rule.hours)
+        except:
+            pass
+        
+        emp.set_contracted_hours(contracted_hours)
+        employees.append(emp)
+    return employees
+
+
+
 
 # def get_time_steps():
 #     demands = get_days_with_demand()
@@ -192,56 +254,6 @@ def get_demand_periods():
 
     return min_demand, ideal_demand, max_demand
 
-
-
-def get_employees():
-    employees = []
-    contracted_hours = 0
-    competencies = get_competencies()
-    print(len(competencies))
-    for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
-        employee_id = schedule_row.find("RowNbr").text
-        emp = Employee(employee_id)
-        try: 
-            contracted_hours = float(schedule_row.find("WeekHours").text)
-            contracted_hours = 36
-        except AttributeError:
-            print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
-
-        if(len(competencies) == 0):
-            emp.set_comptency(0)
-        else:
-            try: 
-                for competence in schedule_row.find("Competences").findall("CompetenceId"):
-    
-                    if(competence.text in competencies):
-                        emp.set_comptency(competence.text)
-            except AttributeError:
-                print("ScheduleRow %s don't have a set Competence tag" % employee_id)
-
-        emp.set_contracted_hours(contracted_hours)
-        employees.append(emp)
-    return employees
-
-
-
-def get_weekly_rest_rules():
-    weekly_rest_rules = []
-    for weekly_rule in root.findall('Configuration/WeeklyRestRules/WeeklyRestRule'):
-        rest_id = weekly_rule.find("Id")
-        hours = weekly_rule.find("MinRestHours")
-        rule = weekly_rest_rule(hours, rest_id)
-        weekly_rest_rules.append(rule)
-    return weekly_rest_rules
-
-def get_daily_rest_rules():
-    daily_rest_rules = []
-    for daily_rule in root.findall('Configuration/DailyRestRules/DailyRestRule'):
-        rest_id = daily_rule.find("Id")
-        hours = daily_rule.find("MinRestHours")
-        rule = daily_rest_rule(hours, rest_id)
-        daily_rest_rules.append(rule)
-    return daily_rest_rules
 
 
 
@@ -451,7 +463,7 @@ def get_shifts_covered_by_off_shifts():
 
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
-    print(get_employees()[0].competencies)
+    print(get_employees()[0].weekly_rest_hours)
     #print(get_competencies())
     #get_time_periods()
     #shifts_covered = get_shifts_covered_by_off_shifts()
