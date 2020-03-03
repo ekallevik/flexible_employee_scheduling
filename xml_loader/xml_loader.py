@@ -10,8 +10,8 @@ sys.path.insert(1, loader_path)
 from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
-data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-root = ET.parse(data_folder / 'rproblem5.xml').getroot()
+data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Artifical Test Instances/'
+root = ET.parse(data_folder / 'problem22.xml').getroot()
 today = date.today()
 
 def get_demand_definitions2():
@@ -42,6 +42,13 @@ def get_demand_definitions():
             dem.add_info(start, end, maksimum, minimum, ideal)
         demands.append(dem)
     return demands
+
+def get_competencies():
+    competencies = tuplelist()
+    for competence in root.findall('Configuration/Competences/Competence'):
+        id = competence.find('CompetenceId').text
+        competencies.append(id)
+    return competencies
 
 
 def get_days_with_demand2():
@@ -190,13 +197,23 @@ def get_demand_periods():
 def get_employees():
     employees = []
     contracted_hours = 0
+    competencies = get_competencies()
     for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
         employee_id = schedule_row.find("RowNbr").text
+        emp = Employee(employee_id)
         try: 
             contracted_hours = float(schedule_row.find("WeekHours").text)
+            contracted_hours = 36
         except AttributeError:
             print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
-        emp = Employee(employee_id)
+
+        try: 
+            for competence in schedule_row.find("Competences").findall("CompetenceId"):
+                if(competence.text in competencies):
+                    emp.set_comptency(competence.text)
+        except AttributeError:
+            print("ScheduleRow %s don't have a set Competence tag" % employee_id)
+            
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
@@ -429,7 +446,8 @@ def get_shifts_covered_by_off_shifts():
 
 if __name__ == "__main__":
     #print(get_t_covered_by_off_shifts())
-    get_shift_lists()
+    print(get_employees()[0].competencies)
+    #print(get_competencies())
     #get_time_periods()
     #shifts_covered = get_shifts_covered_by_off_shifts()
     #for shift in shifts_covered:
