@@ -10,8 +10,8 @@ sys.path.insert(1, loader_path)
 from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
-data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Artifical Test Instances/'
-root = ET.parse(data_folder / 'problem22.xml').getroot()
+data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
+root = ET.parse(data_folder / 'rproblem3.xml').getroot()
 today = date.today()
 
 def get_demand_definitions2():
@@ -198,6 +198,7 @@ def get_employees():
     employees = []
     contracted_hours = 0
     competencies = get_competencies()
+    print(len(competencies))
     for schedule_row in root.findall('SchedulePeriod/ScheduleRows/ScheduleRow'):
         employee_id = schedule_row.find("RowNbr").text
         emp = Employee(employee_id)
@@ -207,13 +208,17 @@ def get_employees():
         except AttributeError:
             print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
 
-        try: 
-            for competence in schedule_row.find("Competences").findall("CompetenceId"):
-                if(competence.text in competencies):
-                    emp.set_comptency(competence.text)
-        except AttributeError:
-            print("ScheduleRow %s don't have a set Competence tag" % employee_id)
-            
+        if(len(competencies) == 0):
+            emp.set_comptency(0)
+        else:
+            try: 
+                for competence in schedule_row.find("Competences").findall("CompetenceId"):
+    
+                    if(competence.text in competencies):
+                        emp.set_comptency(competence.text)
+            except AttributeError:
+                print("ScheduleRow %s don't have a set Competence tag" % employee_id)
+
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
