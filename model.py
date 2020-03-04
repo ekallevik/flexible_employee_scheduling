@@ -144,6 +144,8 @@ model.addConstrs((
     ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
 ), name="contracted_hours")
 
+#Soft Constraints
+
 # model.addConstrs((
 #     quicksum(
 #         quicksum(
@@ -204,8 +206,7 @@ model.setObjective(
     quicksum(
         quicksum(
             quicksum(
-                y[c,e,t] for e in employees
-            )  
+                y[c,e,t] for e in employees)  
              for c in competencies
         ) for t in time_periods
     ), GRB.MINIMIZE
@@ -228,7 +229,6 @@ print("#############RESTRICTIONS ADDED#############")
 
 model.write(sys.argv[1] + ".lp")
 model.setParam("LogFile", (sys.argv[1] + ".log"))
-
 model.optimize()
 model.write(sys.argv[1] + ".sol")
 

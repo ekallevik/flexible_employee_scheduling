@@ -418,7 +418,7 @@ def get_off_shifts():
                 off_shifts_in_week[week] = []
             if(event2 >= (week+1)*24*7):
                break
-            if(dur > 60):
+            if(dur > 70):
                 break
             elif(dur>= 36):
                 if((events[i], dur) not in off_shifts):
