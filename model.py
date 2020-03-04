@@ -1,9 +1,9 @@
 from gurobipy import *
 from xml_loader.xml_loader import *
+import sys
 
 #MODEL
 model = Model("Employee_scheduling_haakon")
-
 
 #SETS
 employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists()
@@ -225,8 +225,10 @@ model.setObjective(
 
 print("#############RESTRICTIONS ADDED#############")
 
-model.write("out.lp")
 
+model.write(sys.argv[1] + ".lp")
+model.setParam("LogFile", (sys.argv[1] + ".log"))
 
 model.optimize()
-model.write("solution.sol")
+model.write(sys.argv[1] + ".sol")
+
