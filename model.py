@@ -2,6 +2,9 @@ from gurobipy import *
 from xml_loader.xml_loader import *
 import sys
 
+from model import sets, weights
+
+
 #MODEL
 model = Model("Employee_scheduling_haakon")
 
@@ -21,40 +24,32 @@ weeks = [w for w in range(int(len(days)/7))]
 saturdays = [5 + (i*7) for i in range(len(weeks))]
 L_C_D = 5
 
+sets = sets.get_sets()
+
 
 #Variables
+# todo: Hvorfor ikke bare tidsperioder med demand?
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
 x = model.addVars(employees, shifts, vtype=GRB.BINARY, name='x')
 mu = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='mu')
-# delta_plus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_plus')
-# delta_minus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_minus')
-# gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
+delta_plus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_plus')
+delta_minus = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='delta_minus')
+gamma = model.addVars(employees, days, vtype=GRB.BINARY, name='gamma')
 w = model.addVars(employees, off_shifts, vtype=GRB.BINARY, name='w')
 lam = model.addVars(employees,vtype=GRB.CONTINUOUS, name='lambda')
-# ro_sat = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sat')
-# ro_sun = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sun')
-# q_iso_off = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_off')
-# q_iso_work = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_work')
-# q_con = model.addVars(employees, days, vtype=GRB.BINARY, name='q_con')
-# f_plus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_plus')
-# f_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_minus')
-# g_plus = model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
-# g_minus = model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
+ro_sat = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sat')
+ro_sun = model.addVars(employees, days, vtype=GRB.BINARY, name='ro_sun')
+q_iso_off = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_off')
+q_iso_work = model.addVars(employees, days, vtype=GRB.BINARY, name='q_iso_work')
+q_con = model.addVars(employees, days, vtype=GRB.BINARY, name='q_con')
+f_plus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_plus')
+f_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_minus')
+g_plus = model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
+g_minus = model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
 
 print("#############VARIABLES ADDED#############")
 
-weights =   {
-                "rest": 5,
-                "contracted hours": 1,
-                "partial weekends": 1,
-                "isolated working days": 1,
-                "isolated off days": 1,
-                "consecutive days": 1,
-                "backward rotation": 1,
-                "preferences": 1,
-                "lowest fairness score" : 1,
-                "demand_deviation" : 5
-            }
+weights = weights.get_weights()
 
 
 
@@ -226,9 +221,9 @@ model.setObjective(
 
 print("#############RESTRICTIONS ADDED#############")
 
-
-model.write(sys.argv[1] + ".lp")
-model.setParam("LogFile", (sys.argv[1] + ".log"))
+# todo: add this again
+#model.write(sys.argv[1] + ".lp")
+#model.setParam("LogFile", (sys.argv[1] + ".log"))
 model.optimize()
 model.write(sys.argv[1] + ".sol")
 
