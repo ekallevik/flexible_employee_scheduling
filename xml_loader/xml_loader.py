@@ -1,10 +1,9 @@
 import xml.etree.ElementTree as ET
-from datetime import date, time, timedelta, datetime
-import sys
+from datetime import date, timedelta
 from pathlib import Path
+
 from gurobipy import *
-import numpy as np
-import time
+
 loader_path = str(Path(__file__).resolve().parent)
 sys.path.insert(1, loader_path)
 from demand import Demand
