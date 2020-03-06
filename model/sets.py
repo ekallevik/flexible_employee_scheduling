@@ -41,7 +41,10 @@ def get_sets():
             "weeks": days * 7,
             "days": days
         },
-        "demand": {"min": demand_min, "ideal": demand_ideal, "max": demand_max},
+        "demand": {
+            "min": demand_min,
+            "ideal": demand_ideal,
+            "max": demand_max},
         "shifts": {
             "shifts": shifts,
             "day": shifts_at_day,
@@ -49,5 +52,5 @@ def get_sets():
             "off_shift_in_week": off_shift_in_week,
         },
         "competencies": [0],
-        "L_C_D": 5
+        "limit_for_consecutive_days": 5
     }

@@ -28,7 +28,8 @@ sets = sets.get_sets()
 
 
 #Variables
-# todo: Hvorfor ikke bare tidsperioder med demand?
+# todo: Hvorfor ikke bare tidsperioder med demand? y kanskje eksistere for alle t for å ikke krasje med off-shift,
+# todo: men vi kunne låst flere y-er etterpå?
 y = model.addVars(competencies, employees, time_periods, vtype=GRB.BINARY, name='y')
 x = model.addVars(employees, shifts, vtype=GRB.BINARY, name='x')
 mu = model.addVars(competencies, time_periods, vtype=GRB.INTEGER, name='mu')
