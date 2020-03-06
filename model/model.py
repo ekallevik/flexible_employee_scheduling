@@ -1,11 +1,10 @@
 from gurobipy import *
 
-import model.constraints
-import model.objective as objective
-import model.sets as sets
-import model.variables as variables
-import model.weights as weights
-
+from model.constraints import add_constraints
+from model.objective import add_objective
+from model.variables import add_variables
+from model.sets import get_sets
+from model.weights import get_weights
 
 
 def create_model(name="employee_scheduling"):
@@ -13,15 +12,17 @@ def create_model(name="employee_scheduling"):
 
 
 def setup_model(model, find_optimal_solution=True):
-    weights = we.get_weights()
-    sets = sets.get_sets()
+
+    weights = get_weights()
+    sets = get_sets()
     variables = add_variables(model, sets)
 
     add_constraints(model, sets, variables, find_optimal_solution)
-    objective.add_objective(model, sets, weights, variables, find_optimal_solution)
+    add_objective(model, sets, weights, variables, find_optimal_solution)
 
 
 def run_model(model):
+
     # model.write(sys.argv[1] + ".lp")
     # model.setParam("LogFile", (sys.argv[1] + ".log"))
     model.optimize()

@@ -44,7 +44,7 @@ def add_delta(model, sets):
 
 
 def add_gamma(model, sets):
-    return model.addVars(sets["employees"], sets["days"], vtype=GRB.BINARY, name="gamma")
+    return model.addVars(sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="gamma")
 
 
 def add_lambda(model, sets):
@@ -54,8 +54,8 @@ def add_lambda(model, sets):
 def add_rho(model, sets):
 
     rho = {
-        "sat": model.addVars(sets["employees"], sets["days"], vtype=GRB.BINARY, name="rho_sat"),
-        "sun": model.addVars(sets["employees"], sets["days"], vtype=GRB.BINARY, name="rho_sun"),
+        "sat": model.addVars(sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="rho_sat"),
+        "sun": model.addVars(sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="rho_sun"),
     }
 
     return rho
@@ -65,12 +65,12 @@ def add_q(model, sets):
 
     q = {
         "iso_off": model.addVars(
-            sets["employees"], sets["days"], vtype=GRB.BINARY, name="q_iso_off"
+            sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="q_iso_off"
         ),
         "iso_work": model.addVars(
-            sets["employees"], sets["days"], vtype=GRB.BINARY, name="q_iso_work"
+            sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="q_iso_work"
         ),
-        "con": model.addVars(sets["employees"], sets["days"], vtype=GRB.BINARY, name="q_con"),
+        "con": model.addVars(sets["employees"], sets["time"]["days"], vtype=GRB.BINARY, name="q_con"),
     }
 
     return q

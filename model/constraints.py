@@ -44,7 +44,7 @@ def add_minimum_demand_coverage(model, sets, y, mu):
 
     model.addConstrs(
         (
-            quicksum(y[c, e, t] for e in sets["employees"]["competency"][c])
+            quicksum(y[c, e, t] for e in sets["employees"]["competencies"][c])
             == sets["demand"]["min"][c, t] + mu[c, t]
             for c in sets["competencies"]
             for t in sets["time"]["periods"]
@@ -94,10 +94,10 @@ def add_mapping_of_shift_to_demand(model, sets, x, y):
 
     model.addConstrs(
         (
-            quicksum(x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t])
+            quicksum(x[e, t_marked, v] for t_marked, v in sets["time"]["shifts_overlapping_t"][t])
             == quicksum(y[c, e, t] for c in sets["competencies"])
             for e in sets["employees"]
-            for t in sets["time_periods"]
+            for t in sets["time"]["periods"]
         ),
         name="mapping_shift_to_demand",
     )
@@ -155,18 +155,18 @@ def add_no_demand_cover_during_off_shift(model, sets, w, x, y):
 
     # todo: fix this before merging! -Even, 5. March
     # Alternativ 2 til off_shift restriksjon (restriksjon 1.10). Virker raskere
-    model.addConstrs(
-        (
-            len(shifts_covered_by_off_shift[t, v]) * w[e, t, v]
-            <= quicksum(
-                quicksum((1 - x[e, t_marked, v_marked]) for c in sets["competencies"])
-                for t_marked, v_marked in shifts_covered_by_off_shift[t, v]
-            )
-            for e in sets["employees"]
-            for t, v in sets["shifts"]["off_shifts"]
-        ),
-        name="no_work_during_off_shift",
-    )
+    #model.addConstrs(
+    #    (
+    #        len(shifts_covered_by_off_shift[t, v]) * w[e, t, v]
+    #        <= quicksum(
+    #            quicksum((1 - x[e, t_marked, v_marked]) for c in sets["competencies"])
+    #            for t_marked, v_marked in shifts_covered_by_off_shift[t, v]
+    #        )
+    #        for e in sets["employees"]
+    #        for t, v in sets["shifts"]["off_shifts"]
+    #    ),
+    #    name="no_work_during_off_shift",
+    #)
 
 
 def add_contracted_hours(model, sets, y, lam):

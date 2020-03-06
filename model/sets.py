@@ -37,14 +37,12 @@ def get_sets():
             "periods_in_week": time_periods_in_week,
             "step": loader.get_time_steps(),
             "t_in_off_shifts": loader.get_t_covered_by_off_shifts(),
+            "shifts_overlapping_t": loader.get_shifts_overlapping_t(),
             "saturdays": get_saturdays(days),
             "weeks": days * 7,
-            "days": days
+            "days": days,
         },
-        "demand": {
-            "min": demand_min,
-            "ideal": demand_ideal,
-            "max": demand_max},
+        "demand": {"min": demand_min, "ideal": demand_ideal, "max": demand_max},
         "shifts": {
             "shifts": shifts,
             "day": shifts_at_day,
@@ -52,5 +50,5 @@ def get_sets():
             "off_shift_in_week": off_shift_in_week,
         },
         "competencies": [0],
-        "limit_for_consecutive_days": 5
+        "limit_for_consecutive_days": 5,
     }
