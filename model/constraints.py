@@ -1,9 +1,14 @@
 from gurobipy import *
 
 
-def add_constraints(model, sets, variables):
+def add_constraints(model, sets, variables, find_optimal_solution=True):
+
+    y, x, w, mu, delta, gamma, lam, rho, q, f, g = variables.values()
 
     add_hard_constraints(model, sets, variables)
+
+    if find_optimal_solution:
+        add_soft_constraints(model, sets, variables)
 
 
 def add_hard_constraints(model, sets, variables):
@@ -19,13 +24,20 @@ def add_hard_constraints(model, sets, variables):
     add_weekly_rest(model, sets, w)
     add_no_demand_cover_during_off_shift(model, sets, w, x, y)
     add_contracted_hours(model, sets, y, lam)
+
+
     add_minimum_weekly_work_hours(model, sets, y)
     add_maximum_weekly_work_hours(model, sets, y)
 
 
 def add_soft_constraints(model, sets, variables):
 
-    raise NotImplementedError
+    y, x, w, mu, delta, gamma, lam, rho, q, f, g = variables.values()
+
+    add_partial_weekends(model, sets, gamma, rho)
+    add_isolated_working_days(model, sets, gamma, q)
+    add_isolated_off_days(model, sets, gamma, q)
+    add_consecutive_days(model, sets, gamma, q)
 
 
 def add_minimum_demand_coverage(model, sets, y, mu):
@@ -255,36 +267,4 @@ def add_consecutive_days(model, sets, gamma, q):
             for i in range(len(sets["days"]) - sets["limit_for_consecutive_days"])
         ),
         name="consecutive_days",
-    )
-
-
-def add_fairness_score(model, sets, weights, f, w, lam, rho, q):
-
-    model.addConstrs(
-        (
-            f["plus"][e] - f["minus"][e]
-            == weights["rest"] * quicksum(v * w[e, t, v] for t, v in sets["shifts"]["off_shifts"])
-            - weights["contracted hours"] * lam[e]
-            - weights["partial weekends"]
-            * quicksum(rho["sat"][e, j] + rho["sun"][e, j] for j in sets["time"]["weeks"])
-            - weights["isolated working days"]
-            * quicksum(q["iso_work"][e, i] for i in sets["time"]["days"])
-            - weights["isolated off days"]
-            * quicksum(q["iso_off"][e, i] for i in sets["time"]["days"])
-            - weights["consecutive days"] * quicksum(q["con"][e, i] for i in sets["time"]["days"])
-            for e in sets["employees"]
-        ),
-        name="fairness_score",
-    )
-
-
-# todo: fiks dette.
-# - weights["backward rotation"] * k[e,i]
-# +weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in sets["competencies"])
-
-
-def add_lowest_fairness_score(model, sets, f, g):
-    model.addConstrs(
-        (g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e] for e in sets["employees"]),
-        name="lowest_fairness_score",
     )
