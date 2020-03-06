@@ -16,5 +16,8 @@ def setup_model(model):
     sets = get_sets()
     variables = add_variables(model, sets)
 
-    add_constraints(model, sets, variables)
+    add_constraints(model, sets, variables, weights)
+
+    #todo: add objective-function somewhere
+
 
