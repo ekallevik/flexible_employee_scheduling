@@ -164,7 +164,9 @@ def create_gantt_chart(data, solution):
                   Demand_8='rgb(191, 214, 205)', Demand_9='rgb(183, 209, 199)', Demand_10='rgb(175, 204, 193)', Demand_11='rgb(168, 199, 187)', 
                   Demand_12='rgb(153, 181, 170)', Demand_13='rgb(138, 163, 154)', Demand_14='rgb(123, 145, 137)', Demand_15='rgb(107, 127, 119)',
                   Demand_16='rgb(92, 109, 102)', Demand_17='rgb(77, 91, 85)', Demand_18='rgb(62, 73, 68)', Demand_19='rgb(46, 55, 51)', Demand_20='rgb(31, 37, 34)',
-                  Demand_21='rgb(16, 19, 17)')
+                  Demand_21='rgb(16, 19, 17)', Demand_22='rgb(0, 19, 17)' , Demand_23='rgb(16, 50, 18)' , Demand_24= 'rgb(50, 50, 17)', Demand_25= 'rgb(70, 70, 17)',
+                  Demand_26= 'rgb(16, 80, 80)', Demand_27= 'rgb(16, 90, 90)', Demand_28='rgb(16, 200, 120)', Demand_29='rgb(210, 190, 210)',
+                  Demand_30='rgb(100, 100, 100)', Demand_31='rgb(120, 120, 120)', Demand_32='rgb(140, 140, 140)', Demand_33='rgb(160, 160, 160)')
 
     fig = ff.create_gantt(df, colors=colors, index_col='Resource', show_colorbar=True, group_tasks=True)
     print("Not Done")
@@ -174,7 +176,7 @@ def create_gantt_chart(data, solution):
 def main():
     demand = get_days_with_demand2()
     # case = "base_v3.4.json"
-    solution = str(solution_folder / "solution.sol")
+    solution = str(solution_folder / "test_4.sol")
     
     
 
