@@ -1,11 +1,8 @@
 import sys
 from pathlib import Path
-loader_path = str(Path(__file__).resolve().parent)
-sys.path.insert(1, loader_path)
-from demand import Demand
-from employee import Employee
-from rest_rule import Weekly_rest_rule, Daily_rest_rule
-
+from xml_loader.demand import Demand
+from xml_loader.employee import Employee
+from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
 
 def get_demand_definitions(root):
     demands = []
@@ -48,17 +45,17 @@ def get_days(root):
 def get_weekly_rest_rules(root):
     weekly_rest_rules = []
     for weekly_rule in root.findall('Configuration/WeeklyRestRules/WeeklyRestRule'):
-        rest_id = weekly_rule.find("Id")
-        hours = weekly_rule.find("MinRestHours")
+        rest_id = weekly_rule.find("Id").text
+        hours = weekly_rule.find("MinRestHours").text
         rule = Weekly_rest_rule(hours, rest_id)
         weekly_rest_rules.append(rule)
     return weekly_rest_rules
 
 def get_daily_rest_rules(root):
     daily_rest_rules = []
-    for daily_rule in root.findall('Configuration/DailyRestRules/DailyRestRule'):
-        rest_id = daily_rule.find("Id")
-        hours = daily_rule.find("MinRestHours")
+    for daily_rule in root.findall('Configuration/DayRestRules/DayRestRule'):
+        rest_id = daily_rule.find("Id").text
+        hours = daily_rule.find("MinRestHours").text
         rule = Daily_rest_rule(hours, rest_id)
         daily_rest_rules.append(rule)
     return daily_rest_rules
@@ -88,14 +85,14 @@ def get_employees(root, competencies):
         try:
             weekly_rest_rule = schedule_row.find("WeeklyRestRule").text
             for weekly_rule in weekly_rest_rules:
-                if(weekly_rule.id == weekly_rest_rule):
+                if(weekly_rule.rest_id == weekly_rest_rule):
                     emp.add_weekly_rest(weekly_rule.hours)
         except:
             pass
         try:
-            daily_rest_rule = schedule_row.find("DayRestRule1").text
+            daily_rest_rule = schedule_row.find("DayRestRule").text
             for daily_rule in Daily_rest_rules:
-                if(daily_rule.id == daily_rest_rule):
+                if(daily_rule.rest_id == daily_rest_rule):
                     emp.add_daily_rest(daily_rule.hours)
         except:
             pass

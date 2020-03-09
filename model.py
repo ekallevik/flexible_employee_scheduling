@@ -32,8 +32,7 @@ demand = data["demand"]
 (
     t_in_off_shifts,
     off_shifts, 
-    off_shift_in_week 
-    ) = data["off_shifts"]
+    off_shift_in_week) = data["off_shifts"]
 
 competencies = [0]
 weeks = [w for w in range(int(len(days)/7))]
