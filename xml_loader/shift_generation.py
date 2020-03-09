@@ -37,11 +37,15 @@ def get_time_periods(root):
     demands = get_days_with_demand(root)
     time_periods_in_week = tupledict()
     week = 0
-    time_periods_in_week[week] = []
+    time_periods_in_week[week] = tuplelist()
     for dem in demands:
         for i in range(len(demands[dem].start)):
             time = demands[dem].start[i] + 24*(dem)
-            while(time < demands[dem].end[i] + 24*dem):
+            end = demands[dem].end[i] + 24*dem
+            #Håndterer special cases hvor demand end er mindre enn demand start
+            if(end < time):
+                end += 24
+            while(time < end):
                 if(time > (week+1)*24*7):
                     week += 1
                     time_periods_in_week[week] = []
@@ -78,7 +82,6 @@ def get_demand_periods(root):
                     except:
                         demand["max"][c,t] = demands[dem].maks[i]
                     t += time_step
-
     return demand
 
 
@@ -123,7 +126,6 @@ def get_employee_lists(root):
         
     
     return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, employee_contracted_hours
-
 
 
 def get_durations(root):
