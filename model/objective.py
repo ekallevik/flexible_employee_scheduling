@@ -47,7 +47,7 @@ def add_objective_for_feasible_solution(model, sets, y):
 
     model.setObjective(
         quicksum(
-            quicksum(quicksum(y[c, e, t] for e in sets["employees"]) for c in sets["competencies"])
+            quicksum(quicksum(y[c, e, t] for e in sets["employees"]["all"]) for c in sets["competencies"])
             for t in sets["time"]["periods"]
         ),
         GRB.MINIMIZE,

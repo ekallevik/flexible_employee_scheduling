@@ -39,7 +39,7 @@ def get_sets():
             "t_in_off_shifts": loader.get_t_covered_by_off_shifts(),
             "shifts_overlapping_t": loader.get_shifts_overlapping_t(),
             "saturdays": get_saturdays(days),
-            "weeks": days * 7,
+            "weeks": [i for i in range(int(len(days)/7))],
             "days": days,
         },
         "demand": {"min": demand_min, "ideal": demand_ideal, "max": demand_max},

@@ -1,6 +1,7 @@
 from gurobipy import *
 
-from model.constraints import add_constraints
+
+from model import constraints
 from model.objective import add_objective
 from model.variables import add_variables
 from model.sets import get_sets
@@ -17,7 +18,7 @@ def setup_model(model, find_optimal_solution=True):
     sets = get_sets()
     variables = add_variables(model, sets)
 
-    add_constraints(model, sets, variables, find_optimal_solution)
+    constraints.add_constraints(model, sets, variables, find_optimal_solution)
     add_objective(model, sets, weights, variables, find_optimal_solution)
 
 
