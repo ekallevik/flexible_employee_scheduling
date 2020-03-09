@@ -1,10 +1,9 @@
+from gurobipy import *
+from xml_loader.xml_loader import *
+import xml.etree.ElementTree as ET
 import sys
 from pathlib import Path
-loader_path = str(Path(__file__).resolve().parent)
-sys.path.insert(1, loader_path)
-from gurobipy import *
-from loader_2 import *
-import xml.etree.ElementTree as ET
+
 
 def get_time_steps(root):
     demands = get_demand_definitions(root)
@@ -251,13 +250,11 @@ def load_data(problem_name):
     data["employees"] = get_employee_lists(root)
     data["time"] = [get_time_steps(root)]
     data["time"].extend(get_time_periods(root))
-    data["time"].extend(get_days(root))
+    data["time"].extend([get_days(root)])
     data["demand"] = get_demand_periods(root)
-    data["shifts"] = [get_shift_lists(root), get_shifts_covered_by_off_shifts(root), get_shifts_overlapping_t(root)]
+    data["shifts"] = [get_shifts_covered_by_off_shifts(root), get_shifts_overlapping_t(root)]
+    data["shifts"].extend(get_shift_lists(root))
     data["off_shifts"] = [get_t_covered_by_off_shifts(root)]
     data["off_shifts"].extend(get_off_shifts(root))
     data["competencies"] = get_competencies(root)
-
     return data
-
-load_data("rproblem3")

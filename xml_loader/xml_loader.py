@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+loader_path = str(Path(__file__).resolve().parent)
+sys.path.insert(1, loader_path)
 from demand import Demand
 from employee import Employee
 from rest_rule import Weekly_rest_rule, Daily_rest_rule
