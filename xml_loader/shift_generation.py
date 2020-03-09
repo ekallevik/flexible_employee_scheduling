@@ -27,6 +27,8 @@ def get_time_steps(root):
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
                     time_step_length = 100/60
                     break
+            if(time_step_length == 100 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
+                time_step_length = 1
     return time_step_length
 
 
@@ -49,13 +51,14 @@ def get_time_periods(root):
                     time_periods.append(time)
                     time_periods_in_week[week].append(time)
                 time += time_step
-    return time_periods, time_periods_in_week
+    return [time_periods, time_periods_in_week]
 
 
 def get_demand_periods(root):
-    min_demand = tupledict()
-    ideal_demand = tupledict()
-    max_demand = tupledict()
+    demand = {}
+    demand["min"] = tupledict()
+    demand["ideal"] = tupledict()
+    demand["max"] = tupledict()
     competencies = [0]
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
@@ -65,20 +68,20 @@ def get_demand_periods(root):
                 t = demands[dem].start[i] + 24*(dem)
                 while(t < demands[dem].end[i] + 24*dem):
                     try:
-                        min_demand[c,t] += demands[dem].minimum[i]
+                        demand["min"][c,t] += demands[dem].minimum[i]
                     except:
-                        min_demand[c,t] = demands[dem].minimum[i]
+                        demand["min"][c,t] = demands[dem].minimum[i]
                     try:
-                        ideal_demand[c,t] += demands[dem].ideal[i]
+                        demand["ideal"][c,t] += demands[dem].ideal[i]
                     except:
-                        ideal_demand[c,t] = demands[dem].ideal[i]
+                        demand["ideal"][c,t] = demands[dem].ideal[i]
                     try:
-                        max_demand[c,t] += demands[dem].maks[i]
+                        demand["max"][c,t] += demands[dem].maks[i]
                     except:
-                        max_demand[c,t] = demands[dem].maks[i]
+                        demand["max"][c,t] = demands[dem].maks[i]
                     t += time_step
 
-    return min_demand, ideal_demand, max_demand
+    return demand
 
 
 def get_events(root):
@@ -155,7 +158,7 @@ def get_shift_lists(root):
                     shifts.append((t,dur))
             if(t > 24*d):
                 continue
-    return shifts, shifts_per_day
+    return [shifts, shifts_per_day]
 
 def get_shift_list(root):
     shifts = tuplelist()
@@ -215,7 +218,7 @@ def get_off_shifts(root):
                 if((events[i], dur) not in off_shifts):
                     off_shifts_in_week[week].append((events[i], dur))
                     off_shifts.append((events[i], dur))
-    return off_shifts, off_shifts_in_week
+    return [off_shifts, off_shifts_in_week]
 
 def get_t_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]
@@ -240,23 +243,21 @@ def get_shifts_covered_by_off_shifts(root):
     return shifts_covered
 
 
-def main_loader(problem_name):
+def load_data(problem_name):
     data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-    problem_name = 'rproblem3'
     root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
 
+    data = {}
+    data["employees"] = get_employee_lists(root)
+    data["time"] = [get_time_steps(root)]
+    data["time"].extend(get_time_periods(root))
+    data["time"].extend(get_days(root))
+    data["demand"] = get_demand_periods(root)
+    data["shifts"] = [get_shift_lists(root), get_shifts_covered_by_off_shifts(root), get_shifts_overlapping_t(root)]
+    data["off_shifts"] = [get_t_covered_by_off_shifts(root)]
+    data["off_shifts"].extend(get_off_shifts(root))
+    data["competencies"] = get_competencies(root)
 
-    employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, contracted_hours = get_employee_lists(root)
-    time_step = get_time_steps(root)
-    time_periods, time_periods_in_week = get_time_periods(root)
-    demand_min, demand_ideal, demand_max = get_demand_periods(root)
-    shifts, shifts_at_day = get_shift_lists(root)
-    days = get_days(root)
-    shifts_covered_by_off_shift = get_shifts_covered_by_off_shifts(root)
-    shifts_overlapping_t = get_shifts_overlapping_t(root)
-    t_in_off_shifts = get_t_covered_by_off_shifts(root)
-    off_shifts, off_shift_in_week = get_off_shifts(root)
-    return (employees, employee_with_competencies, employee_daily_rest, employee_weekly_rest, contracted_hours, 
-            time_step, time_periods, time_periods_in_week, demand_min, demand_ideal, demand_max,
-            shifts, shifts_at_day, shifts_covered_by_off_shift, shifts_overlapping_t, days,
-            off_shifts, t_in_off_shifts, off_shift_in_week)
+    return data
+
+load_data("rproblem3")
