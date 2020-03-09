@@ -27,7 +27,7 @@ def run_model(model):
     # model.write(sys.argv[1] + ".lp")
     # model.setParam("LogFile", (sys.argv[1] + ".log"))
     model.optimize()
-    model.write(sys.argv[1] + ".sol")
+    # model.write(sys.argv[1] + ".sol")
 
 
 def main():

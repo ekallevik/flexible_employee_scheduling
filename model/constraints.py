@@ -25,6 +25,7 @@ def add_hard_constraints(model, sets, variables):
     add_no_demand_cover_during_off_shift(model, sets, w, x, y)
     add_contracted_hours(model, sets, y, lam)
 
+    # todo: hard or soft?
     add_minimum_weekly_work_hours(model, sets, y)
     add_maximum_weekly_work_hours(model, sets, y)
 
@@ -128,10 +129,6 @@ def add_calculate_helping_variable_gamma(model, sets, x, gamma):
 
 def add_weekly_rest(model, sets, w):
 
-    #print(w)
-    print(sets["shifts"]["off_shift_in_week"])
-
-    # todo: should w consist of time steps of 15 min? -Even, 9. March
     model.addConstrs(
         (
             quicksum(w[e, t, v] for t, v in sets["shifts"]["off_shift_in_week"][j]) == 1
