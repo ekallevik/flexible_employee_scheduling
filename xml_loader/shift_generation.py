@@ -43,7 +43,7 @@ def get_time_periods(root):
             time = demands[dem].start[i] + 24*(dem)
             end = demands[dem].end[i] + 24*dem
             #Håndterer special cases hvor demand end er mindre enn demand start
-            if(end < time):
+            if(end <= time):
                 end += 24
             while(time < end):
                 if(time > (week+1)*24*7):
@@ -90,14 +90,16 @@ def get_events(root):
     demand_days = get_days_with_demand(root)
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
-            if(demand_days[day].end[t] - demand_days[day].start[t] >= 12):
-                diff = (demand_days[day].end[t] - demand_days[day].start[t])/2
-                events.append(demand_days[day].start[t] + 24*day + diff)
+            if(demand_days[day].end[t] == 0):
+                demand_days[day].end[t] += 24
             if(demand_days[day].start[t] + 24*day not in events):
                 events.append(demand_days[day].start[t] + 24*day)
+            if(demand_days[day].end[t] - demand_days[day].start[t] >= 12):
+                diff = (demand_days[day].end[t] - demand_days[day].start[t])/2
+                if(demand_days[day].start[t] + 24*day + diff not in events):
+                    events.append(demand_days[day].start[t] + 24*day + diff)
             if(demand_days[day].end[t] + 24*day not in events):
                 events.append((demand_days[day].end[t] + 24*day))
-
     return events
 
 
@@ -131,8 +133,8 @@ def get_employee_lists(root):
 def get_durations(root):
     events = get_events(root)
     durations = {}
-    possible_durations = [t/4 for t in range(6*4, 12*4)]
-    
+    #Possible durations are between 6.0 hours and 12.0 hours
+    possible_durations = [t/4 for t in range(6*4, (12*4+1))]
     for t in events:
         for dur in possible_durations:
             if(t+dur in events):
@@ -140,7 +142,6 @@ def get_durations(root):
                     durations[t].append(dur)
                 except:
                     durations[t] = [dur]
-
     return durations
 
 def get_shift_lists(root):
@@ -158,6 +159,7 @@ def get_shift_lists(root):
                     shifts.append((t,dur))
             if(t > 24*d):
                 continue
+    print(shifts)
     return [shifts, shifts_per_day]
 
 def get_shift_list(root):
