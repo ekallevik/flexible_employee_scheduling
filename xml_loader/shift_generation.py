@@ -126,7 +126,6 @@ def get_employee_lists(root):
         employee_weekly_rest[id] = e.daily_rest_hours
         employee_contracted_hours[id] = e.contracted_hours
         
-    
     return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, employee_contracted_hours
 
 
@@ -159,7 +158,6 @@ def get_shift_lists(root):
                     shifts.append((t,dur))
             if(t > 24*d):
                 continue
-    print(shifts)
     return [shifts, shifts_per_day]
 
 def get_shift_list(root):
