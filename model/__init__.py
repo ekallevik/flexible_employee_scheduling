@@ -1,6 +1,3 @@
-#import model.constraints
-import model.model_runner
-import model.objective
-import model.sets
-import model.variables
-import model.weights
+import model.optimality_constraints
+import model.optimality_objective
+import model.optimality_variables
