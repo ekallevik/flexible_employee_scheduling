@@ -58,7 +58,7 @@ f_plus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_plus')
 f_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name='f_minus')
 g_plus = model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
 g_minus = model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
-
+# k = model.addvars(employees, time_periods, vtype.GRB.BINARY, name='backward_rotation')
 print("#############VARIABLES ADDED#############")
 
 weights =   {
@@ -187,6 +187,13 @@ model.addConstrs((
         gamma[e,i_marked] for i_marked in range(i, i+L_C_D)
     ) - L_C_D <= q_con[e,i] for e in employees for i in range(len(days) - L_C_D)
 ), name="consecutive_days")
+
+# model.addConstrs((
+#     quicksum(x[e,t,v] for t,v in s_br[t])
+#     <= k[e,t] + 1
+#     for e in employees
+#     for t in time_periods
+# ), name="backward_rotation")
 
  
 model.addConstrs((

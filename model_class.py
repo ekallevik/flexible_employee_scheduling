@@ -1,24 +1,31 @@
 from gurobipy import *
-from xml_loader.xml_loader import *
+from xml_loader.shift_generation import *
 
 #MODEL
 
 
 
 class Optimization_model():
-    def __init__(self):
-        self.model = Model("Employee_scheduling_haakon")
-        self.employees, self.employee_with_competencies, self.employee_weekly_rest, self.employee_daily_rest, self.contracted_hours = get_employee_lists()
+    def __init__(self, problem_name):
+        self.model = Model("Employee_scheduling")
+        data = load_data(problem_name)
+        
+        (   self.employees, 
+            self.employee_with_competencies, 
+            self.employee_daily_rest, 
+            self.employee_weekly_rest, 
+            self.contracted_hours
+        ) = data[0:5]
+        self.time_step, self.time_periods, self.time_periods_in_week = data[5:8]
+        self.demand_min, self.demand_ideal, self.demand_max = data[8:11]
+        self.shifts, self.shifts_at_day, self.shifts_covered_by_off_shift, self.shifts_overlapping_t = data[11:15]
+        self.days = data[15]
+        self.off_shifts, self.t_in_off_shifts, self.off_shift_in_week = data[16:19]
+        ##self.competencies = data[19]
+
         self.competencies = [0]
-        self.time_step = get_time_steps()
-        self.time_periods, self.time_periods_in_week = get_time_periods()
-        self.demand_min, self.demand_ideal, self.demand_max = get_demand_periods()
-        self.shifts, self.shifts_at_day = get_shift_lists()
-        self.days = get_days()
-        self.shifts_covered_by_off_shift = get_shifts_covered_by_off_shifts()
-        self.shifts_overlapping_t = get_shifts_overlapping_t()
-        self.t_in_off_shifts = get_t_covered_by_off_shifts()
-        self.off_shifts, self.off_shift_in_week = get_off_shifts()
+
+
         self.weeks = [w for w in range(int(len(self.days)/7))]
         self.saturdays = [5 + (i*7) for i in range(len(self.weeks))]
         self.L_C_D = 5
@@ -197,6 +204,7 @@ class Optimization_model():
                 ), name="objective_function_restriction")
                     #- weights["backward rotation"] * k[e,i]
                     #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(self.y[c,e,t] for c in self.competencies)
+       
         self.model.addConstrs((
             self.g_plus - self.g_minus 
             <= self.f_plus[e] - self.f_minus[e] 
@@ -220,19 +228,5 @@ class Optimization_model():
 
         print("#############RESTRICTIONS ADDED#############")
 
-
-def main():
-    model = Optimization_model()
-    model.add_variables()
-    model.add_constraints()
-    model.set_objective()
-
-    model.model.optimize()
-
-
-
-
-if __name__ == "__main__":
-    main()
 
 
