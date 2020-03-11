@@ -212,12 +212,12 @@ def get_off_shifts(root):
     week = 0
     off_shifts_in_week[week] = []
     for i in range(len(events)):
-        for event2 in events[i:]:
-            dur = event2 - events[i]
+        for event in events[i:]:
+            dur = event - events[i]
             if(events[i] >= (week+1)*24*7):
                 week+=1
                 off_shifts_in_week[week] = []
-            if(event2 >= (week+1)*24*7):
+            if(event >= (week+1)*24*7):
                break
             if(dur > 70):
                 break
@@ -226,6 +226,7 @@ def get_off_shifts(root):
                     off_shifts_in_week[week].append((events[i], dur))
                     off_shifts.append((events[i], dur))
     return [off_shifts, off_shifts_in_week]
+
 
 def get_t_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]
