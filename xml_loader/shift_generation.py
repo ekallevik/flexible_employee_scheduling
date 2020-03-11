@@ -6,27 +6,34 @@ import xml.etree.ElementTree as ET
 
 def get_time_steps(root):
     demands = get_demand_definitions(root)
-    time_step_length = 100
+    time_step_length = 1
     for demand in demands:
         for i in range(len(demand.end)):
             if(demand.end[i] - int(demand.end[i]) > 0):
-                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length != 0.5):
+                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length > 0.5):
                     time_step_length = 0.5
-                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length != 0.25):
+                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
+                # TODO: Check if elif-sentence below makes sense. What if we have one event at 17.80 and the rest on
+                #  whole hours? We would get 0.8 that should give time steps in minutes but that is not < 0.25.
                 elif(demand.end[i] - int(demand.end[i]) < 0.25):
-                    time_step_length = 100/60
+                    time_step_length = 1/60
                     break
             if(demand.start[i] - int(demand.start[i]) > 0):
-                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length < 0.5):
+                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length > 0.5):
                     time_step_length = 0.5
-                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length < 0.25):
+                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
+                # TODO: Check if elif-sentence below makes sense. What if we have one event at 17.80 and the rest on
+                #  whole hours? We would get 0.8 that should give time steps in minutes but that is not < 0.25.
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
-                    time_step_length = 100/60
+                    time_step_length = 1/60
                     break
-            if(time_step_length == 100 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
-                time_step_length = 1
+
+            # NOTE: The code below should be redundant as time_step_lenght is set to 1 at the beginning and not changed if the statement is true?
+            # if(time_step_length == 1 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
+                #time_step_length = 1
+
     return time_step_length
 
 
