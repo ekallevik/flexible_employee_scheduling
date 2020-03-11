@@ -9,12 +9,12 @@ class OptimalityConstraints(BaseConstraints):
 
         super(OptimalityConstraints, self).__init__(model, sets, var)
 
-        self.add_minimum_weekly_work_hours(sets, var["y"])
-        self.add_maximum_weekly_work_hours(sets, var["y"])
-        self.add_partial_weekends(sets, var["gamma"], var["rho"])
-        self.add_isolated_working_days(sets, var["gamma"], var["q"])
-        self.add_isolated_off_days(sets, var["gamma"], var["q"])
-        self.add_consecutive_days(sets, var["gamma"], var["q"])
+        self.add_minimum_weekly_work_hours(sets, var.y)
+        self.add_maximum_weekly_work_hours(sets, var.y)
+        self.add_partial_weekends(sets, var.gamma, var.rho)
+        self.add_isolated_working_days(sets, var.gamma, var.q)
+        self.add_isolated_off_days(sets, var.gamma, var.q)
+        self.add_consecutive_days(sets, var.gamma, var.q)
 
     def add_minimum_weekly_work_hours(self, sets, y):
 
@@ -91,7 +91,7 @@ class OptimalityConstraints(BaseConstraints):
                 - sets["limit_for_consecutive_days"]
                 <= q["con"][e, i]
                 for e in sets["employees"]["all"]
-                for i in range(len(sets["days"]) - sets["limit_for_consecutive_days"])
+                for i in range(len(sets["time"]["days"]) - sets["limit_for_consecutive_days"])
             ),
             name="consecutive_days",
         )

@@ -11,7 +11,8 @@ class OptimalityVariables(BaseVariables):
         self.q = self.add_q(sets)
         self.gamma = self.add_gamma(sets)
         self.f = self.add_f(sets)
-        self.g = self.add_g(sets)
+        self.g = self.add_g()
+
 
     def add_rho(self, sets):
 

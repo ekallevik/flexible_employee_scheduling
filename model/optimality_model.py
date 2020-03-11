@@ -14,6 +14,6 @@ class OptimalityModel(BaseModel):
         self.weights = get_weights()
 
         self.var = OptimalityVariables(self.model, self.sets)
-        self.constraints = OptimalityConstraints(self.model, self.sets, self.var, self.weights)
+        self.constraints = OptimalityConstraints(self.model, self.sets, self.var)
 
         self.objective = OptimalityObjective(self.model, self.sets, self.var, self.weights)

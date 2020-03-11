@@ -22,8 +22,5 @@ class BaseModel:
     def create_model(self):
         return Model(name=self.name)
 
-    def configure_model(self):
-        raise NotImplementedError
-
     def run_model(self):
-        self.model.optimze()
+        self.model.optimize()

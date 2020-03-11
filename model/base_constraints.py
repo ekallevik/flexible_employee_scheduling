@@ -6,15 +6,15 @@ class BaseConstraints:
 
         self.model = model
 
-        self.add_minimum_demand_coverage(sets, var["y"], var["mu"])
-        self.add_maximum_demand_coverage(sets, var["mu"])
-        self.add_deviation_from_ideal_demand(sets, var["mu"], var["delta"])
-        self.add_mapping_of_shift_to_demand(sets, var["x"], var["y"])
-        self.add_maximum_one_shift_each_day(sets, var["x"])
-        self.add_calculate_helping_variable_gamma(sets, var["x"], var["gamma"])
-        self.add_weekly_rest(sets, var["w"])
-        self.add_no_demand_cover_during_off_shift(sets, var["w"], var["x"], var["y"])
-        self.add_contracted_hours(sets, var["y"], var["lam"])
+        self.add_minimum_demand_coverage(sets, var.y, var.mu)
+        self.add_maximum_demand_coverage(sets, var.mu)
+        self.add_deviation_from_ideal_demand(sets, var.mu, var.delta)
+        self.add_mapping_of_shift_to_demand(sets, var.x, var.y)
+        self.add_maximum_one_shift_each_day(sets, var.x)
+        self.add_calculate_helping_variable_gamma(sets, var.x, var.gamma)
+        self.add_weekly_rest(sets, var.w)
+        self.add_no_demand_cover_during_off_shift(sets, var.w, var.x, var.y)
+        self.add_contracted_hours(sets, var.y, var.lam)
 
     def add_minimum_demand_coverage(self, sets, y, mu):
         self.model.addConstrs(
@@ -101,7 +101,7 @@ class BaseConstraints:
             name="one_weekly_off_shift_per_week",
         )
 
-    def add_no_demand_cover_during_off_shift(self, model, sets, w, x, y):
+    def add_no_demand_cover_during_off_shift(self, sets, w, x, y):
         self.model.addConstrs(
             (
                 len(sets["time"]["t_in_off_shifts"][t, v]) * w[e, t, v]

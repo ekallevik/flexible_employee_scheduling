@@ -3,13 +3,13 @@ from gurobipy.gurobipy import GRB, quicksum
 
 class OptimalityObjective:
 
-    def __init__(self, model, sets, weights, var):
+    def __init__(self, model, sets, var, weights):
 
         self.model = model
 
-        self.add_fairness_score(sets, weights, var["f"], var["w"], var["lam"], var["rho"], var["q"])
-        self.add_lowest_fairness_score(sets, var["f"], var["g"])
-        self.add_objective_for_optimal_solution(sets, weights, var["f"], var["g"], var["delta"])
+        self.add_fairness_score(sets, weights, var.f, var.w, var.lam, var.rho, var.q)
+        self.add_lowest_fairness_score(sets, var.f, var.g)
+        self.add_objective_for_optimal_solution(sets, weights, var.f, var.g, var.delta)
 
     def add_fairness_score(self, sets, weights, f, w, lam, rho, q):
 
@@ -27,7 +27,7 @@ class OptimalityObjective:
                 * quicksum(q["iso_off"][e, i] for i in sets["time"]["days"])
                 - weights["consecutive days"]
                 * quicksum(q["con"][e, i] for i in sets["time"]["days"])
-                for e in sets["employees"]
+                for e in sets["employees"]["all"]
                 # todo: fiks dette.
                 # - weights["backward rotation"] * k[e,i]
                 # +weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in sets["competencies"])
@@ -38,7 +38,7 @@ class OptimalityObjective:
     def add_lowest_fairness_score(self, sets, f, g):
 
         self.model.addConstrs(
-            (g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e] for e in sets["employees"]),
+            (g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e] for e in sets["employees"]["all"]),
             name="lowest_fairness_score",
         )
 
@@ -58,7 +58,7 @@ class OptimalityObjective:
     def add_objective_for_optimal_solution(self, sets, weights, f, g, delta):
 
         self.model.setObjective(
-            quicksum(f["plus"][e] - f["minus"][e] for e in sets["employees"])
+            quicksum(f["plus"][e] - f["minus"][e] for e in sets["employees"]["all"])
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
             - weights["demand_deviation"]
             * quicksum(
