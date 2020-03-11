@@ -7,7 +7,6 @@ def get_saturdays(days):
 
 def get_sets():
 
-    # todo: modify xml_loader such that this step is not necessary.
     days = loader.get_days()
 
     off_shifts, off_shift_in_week = loader.get_off_shifts()

@@ -1,7 +1,7 @@
 import pytest
 
 from utils import const
-from model import constraints, variables
+from model import base_constraints, optimality_variables
 
 if const.ENVIRONMENT == "local":
     from gurobipy.gurobipy import Model, GRB
@@ -78,36 +78,36 @@ def max_demand():
 
 @pytest.fixture()
 def y(competencies, employees, model, time_periods):
-    return variables.add_y(model, competencies, employees, time_periods)
+    return optimality_variables.add_y(model, competencies, employees, time_periods)
 
 
 @pytest.fixture()
 def x(model, employees, days, shifts):
-    return variables.add_x(model, employees, days, shifts)
+    return optimality_variables.add_x(model, employees, days, shifts)
 
 
 @pytest.fixture()
 def w(model, employees, days, off_shifts):
-    return variables.add_w(model, employees, days, off_shifts)
+    return optimality_variables.add_w(model, employees, days, off_shifts)
 
 
 @pytest.fixture()
 def mu(model, competencies, time_periods):
-    return variables.add_mu(model, competencies, time_periods)
+    return optimality_variables.add_mu(model, competencies, time_periods)
 
 
 @pytest.fixture()
 def deltas(model, competencies, time_periods):
-    return variables.add_deltas(model, competencies, time_periods)
+    return optimality_variables.add_deltas(model, competencies, time_periods)
 
 
 @pytest.fixture()
 def lambda_var(model, employees):
-    return variables.add_lambda_var(model, employees)
+    return optimality_variables.add_lambda_var(model, employees)
 
 
 def test_add_minimum_demand(model, employees, competencies, time_periods, min_demand, y, mu):
-    constraints.add_minimum_demand(model, y, employees, min_demand, mu, competencies, time_periods)
+    base_constraints.add_minimum_demand(model, y, employees, min_demand, mu, competencies, time_periods)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 12
@@ -115,7 +115,7 @@ def test_add_minimum_demand(model, employees, competencies, time_periods, min_de
 
 
 def test_add_maximum_demand(model, employees, competencies, time_periods, min_demand, max_demand, mu):
-    constraints.add_maximum_demand(model, max_demand, min_demand, mu, competencies, time_periods)
+    base_constraints.add_maximum_demand(model, max_demand, min_demand, mu, competencies, time_periods)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 4
@@ -124,8 +124,8 @@ def test_add_maximum_demand(model, employees, competencies, time_periods, min_de
 
 def test_add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, deltas, competencies,
                                          time_periods):
-    constraints.add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, *deltas,
-                                                competencies, time_periods)
+    base_constraints.add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, *deltas,
+                                                     competencies, time_periods)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 12
@@ -133,7 +133,7 @@ def test_add_deviation_from_ideal_demand(model, min_demand, ideal_demand, mu, de
 
 
 def test_add_maximum_one_allocation_for_each_time(model, competencies, employees, time_periods, y):
-    constraints.add_maximum_one_allocation_for_each_time(model, competencies, employees, time_periods, y)
+    base_constraints.add_maximum_one_allocation_for_each_time(model, competencies, employees, time_periods, y)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == len(competencies) * len(employees) * len(time_periods)
@@ -141,7 +141,7 @@ def test_add_maximum_one_allocation_for_each_time(model, competencies, employees
 
 
 def test_add_maximum_one_shift_for_each_day(model, employees, days, shifts, x):
-    constraints.add_maximum_one_shift_for_each_day(model, employees, days, shifts, x)
+    base_constraints.add_maximum_one_shift_for_each_day(model, employees, days, shifts, x)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == len(employees) * len(days) * len(shifts)
@@ -149,7 +149,7 @@ def test_add_maximum_one_shift_for_each_day(model, employees, days, shifts, x):
 
 
 def test_add_mapping_of_shift_to_demand(model, employees, days, shifts, competencies, time_periods, x, y):
-    constraints.add_mapping_of_shift_to_demand(model, employees, days, shifts, competencies, time_periods, x, y)
+    base_constraints.add_mapping_of_shift_to_demand(model, employees, days, shifts, competencies, time_periods, x, y)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 10
@@ -158,7 +158,7 @@ def test_add_mapping_of_shift_to_demand(model, employees, days, shifts, competen
 
 @pytest.mark.skip
 def test_add_mapping_of_off_shift_to_rest(model, employees, days, off_shifts, competencies, time_periods, w, y):
-    constraints.add_mapping_of_off_shift_to_rest(model, employees, days, off_shifts, competencies, time_periods, w, y)
+    base_constraints.add_mapping_of_off_shift_to_rest(model, employees, days, off_shifts, competencies, time_periods, w, y)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 10
@@ -166,7 +166,7 @@ def test_add_mapping_of_off_shift_to_rest(model, employees, days, off_shifts, co
 
 
 def test_add_minimum_weekly_rest(model, employees, days_in_week, weeks, off_shifts, w):
-    constraints.add_minimum_weekly_rest(model, employees, days_in_week, weeks, off_shifts, w)
+    base_constraints.add_minimum_weekly_rest(model, employees, days_in_week, weeks, off_shifts, w)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 2
@@ -175,8 +175,8 @@ def test_add_minimum_weekly_rest(model, employees, days_in_week, weeks, off_shif
 
 def test_add_maximum_contracted_hours(model, competencies, employees, time_periods, weeks, contracted_hours,
                                       y, lambda_var):
-    constraints.add_maximum_contracted_hours(model, competencies, employees, time_periods, len(weeks), contracted_hours,
-                                             y, lambda_var)
+    base_constraints.add_maximum_contracted_hours(model, competencies, employees, time_periods, len(weeks), contracted_hours,
+                                                  y, lambda_var)
     model.update()
 
     assert model.getAttr(GRB.Attr.NumVars) == 10
