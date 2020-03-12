@@ -80,12 +80,12 @@ def get_employees(root, competencies):
             contracted_hours = 36
 
         if len(competencies) == 0:
-            emp.set_comptency(0)
+            emp.set_competency(0)
         else:
             try:
                 for competence in schedule_row.find("Competences").findall("CompetenceId"):
                     if competence.text in competencies:
-                        emp.set_comptency(competence.text)
+                        emp.set_competency(competence.text)
             except AttributeError:
                 print("ScheduleRow %s don't have a set Competence tag" % employee_id)
         try:
