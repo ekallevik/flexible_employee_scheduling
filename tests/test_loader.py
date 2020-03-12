@@ -102,11 +102,11 @@ def test_loading_demand(demand_definitions):
 
     assert dem1.minimum == [1, 2]
     assert dem1.ideal == [2, 3]
-    assert dem1.maks == [3, 4]
+    assert dem1.maximum == [3, 4]
 
     assert dem2.minimum == [1, 2, 3, 4]
     assert dem2.ideal == [2, 3, 4, 5]
-    assert dem2.maks == [3, 4, 5, 6]
+    assert dem2.maximum == [3, 4, 5, 6]
 
 
 def test_rest_rules(rest_rules):

@@ -12,10 +12,10 @@ def get_demand_definitions(root):
         for row in DemandDefinition.find("Rows").findall("Row"):
             start = row.find("TimeStart").text
             end = row.find("TimeEnd").text
-            maksimum = row.find("Max").text
+            maximum = row.find("Max").text
             minimum = row.find("Min").text
             ideal = row.find("Ideal").text
-            dem.add_info(start, end, maksimum, minimum, ideal)
+            dem.add_info(start, end, maximum, minimum, ideal)
         demands.append(dem)
     return demands
 
@@ -68,7 +68,7 @@ def get_daily_rest_rules(root):
 
 def get_employees(root, competencies):
     weekly_rest_rules = get_weekly_rest_rules(root)
-    Daily_rest_rules = get_daily_rest_rules(root)
+    daily_rest_rules = get_daily_rest_rules(root)
     employees = []
     for schedule_row in root.findall("SchedulePeriod/ScheduleRows/ScheduleRow"):
         employee_id = schedule_row.find("RowNbr").text
@@ -97,7 +97,7 @@ def get_employees(root, competencies):
             pass
         try:
             daily_rest_rule = schedule_row.find("DayRestRule").text
-            for daily_rule in Daily_rest_rules:
+            for daily_rule in daily_rest_rules:
                 if daily_rule.rest_id == daily_rest_rule:
                     emp.add_daily_rest(daily_rule.hours)
         except:
