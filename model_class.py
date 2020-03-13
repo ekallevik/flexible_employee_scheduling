@@ -9,19 +9,32 @@ class Optimization_model():
     def __init__(self, problem_name):
         self.model = Model("Employee_scheduling")
         data = load_data(problem_name)
-        
-        (   self.employees, 
-            self.employee_with_competencies, 
-            self.employee_daily_rest, 
-            self.employee_weekly_rest, 
-            self.contracted_hours
-        ) = data[0:5]
-        self.time_step, self.time_periods, self.time_periods_in_week = data[5:8]
-        self.demand_min, self.demand_ideal, self.demand_max = data[8:11]
-        self.shifts, self.shifts_at_day, self.shifts_covered_by_off_shift, self.shifts_overlapping_t = data[11:15]
-        self.days = data[15]
-        self.off_shifts, self.t_in_off_shifts, self.off_shift_in_week = data[16:19]
-        ##self.competencies = data[19]
+        (
+        self.employees, 
+        self.employee_with_competencies, 
+        self.employee_weekly_rest, 
+        self.employee_daily_rest, 
+        self.contracted_hours) = data["employees"]
+
+        (
+        self.time_step, 
+        self.time_periods, 
+        self.time_periods_in_week, 
+        self.days) = data["time"]
+
+
+        self.demand = data["demand"]
+
+        (
+        self.shifts_covered_by_off_shift,
+        self.shifts_overlapping_t,
+        self.shifts, 
+        self.shifts_at_day) = data["shifts"]
+
+        (
+        self.t_in_off_shifts,
+        self.off_shifts, 
+        self.off_shift_in_week) = data["off_shifts"]
 
         self.competencies = [0]
 
@@ -31,7 +44,7 @@ class Optimization_model():
         self.L_C_D = 5
 
         self.weights =   {
-                "rest": 5,
+                "rest": 1,
                 "contracted hours": 1,
                 "partial weekends": 1,
                 "isolated working self.days": 1,
@@ -40,48 +53,53 @@ class Optimization_model():
                 "backward rotation": 1,
                 "preferences": 1,
                 "lowest fairness score" : 1,
-                "demand_deviation" : 5
+                "demand_deviation" : 1
             }
 
 
 #Variables
     def add_variables(self):
+        self.delta = {}
+        self.ro = {}
+        self.q_iso = {}
+        self.f = {}
+        self.g = {}
         self.y = self.model.addVars(self.competencies,  self.employees, self.time_periods, vtype=GRB.BINARY, name='y')
         self.x = self.model.addVars(self.employees, self.shifts, vtype=GRB.BINARY, name='x')
         self.mu = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='mu')
-        self.delta_plus = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='delta_plus')
-        self.delta_minus = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='delta_minus')
+        self.delta["plus"] = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='delta_plus')
+        self.delta["minus"] = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='delta_minus')
         self.gamma = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='gamma')
         self.w = self.model.addVars(self.employees, self.off_shifts, vtype=GRB.BINARY, name='w')
         self.lam = self.model.addVars(self.employees,vtype=GRB.CONTINUOUS, name='lambda')
-        self.ro_sat = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='ro_sat')
-        self.ro_sun = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='ro_sun')
-        self.q_iso_off = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_off')
-        self.q_iso_work = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_work')
+        self.ro["sat"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='ro_sat')
+        self.ro["sun"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='ro_sun')
+        self.q_iso["off"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_off')
+        self.q_iso["work"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_work')
         self.q_con = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_con')
-        self.f_plus = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_plus')
-        self.f_minus = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_minus')
-        self.g_plus = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
-        self.g_minus = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
+        self.f["plus"] = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_plus')
+        self.f["minus"] = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_minus')
+        self.g["plus"] = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
+        self.g["minus"] = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
 
 
 
     def add_constraints(self):
         self.model.addConstrs((quicksum(self.y[c,e,t] for e in self.employee_with_competencies[c]) 
-        == self.demand_min[c,t] + self.mu[c,t]  
+        == self.demand["min"][c,t] + self.mu[c,t]  
         for c in self.competencies 
         for t in self.time_periods),
         name='minimum_demand_coverage')
 
         self.model.addConstrs((self.mu[c,t] 
-        <= self.demand_max[c,t] - self.demand_min[c,t]
+        <= self.demand["max"][c,t] - self.demand["min"][c,t]
             for c in self.competencies 
             for t in self.time_periods),
         name='mu_less_than_difference')
 
         self.model.addConstrs((
-            self.mu[c,t] + self.demand_min[c,t] - self.demand_ideal[c,t] 
-            == self.delta_plus[c,t] - self.delta_minus[c,t] 
+            self.mu[c,t] + self.demand["min"][c,t] - self.demand["ideal"][c,t] 
+            == self.delta["plus"][c,t] - self.delta["minus"][c,t] 
             for t in self.time_periods 
             for c in self.competencies),
         name="deviation_from_ideel_demand")
@@ -163,21 +181,21 @@ class Optimization_model():
         #Soft Constraints
         self.model.addConstrs((
             self.gamma[e,i] - self.gamma[e,(i+1)] 
-            == self.ro_sat[e,i] - self.ro_sun[e,(i+1)] 
+            == self.ro["sat"][e,i] - self.ro["sun"][e,(i+1)] 
             for e in  self.employees 
             for i in self.saturdays
         ), name="partial_weekends")
 
         self.model.addConstrs((
             -self.gamma[e,i] + self.gamma[e,(i+1)] - self.gamma[e,(i+2)] 
-            <= self.q_iso_work[e,(i+1)] 
+            <= self.q_iso["work"][e,(i+1)] 
             for e in  self.employees 
             for i in range(len(self.days)-2)
         ), name="isolated_working_days")
 
         self.model.addConstrs((
             self.gamma[e,i] - self.gamma[e,(i+1)] + self.gamma[e,(i+2)] - 1 
-            <= self.q_iso_off[e,(i+1)] 
+            <= self.q_iso["off"][e,(i+1)] 
             for e in  self.employees 
             for i in range(len(self.days)-2)
         ), name="isolated_off_days")
@@ -193,12 +211,12 @@ class Optimization_model():
 
         
         self.model.addConstrs((
-                self.f_plus[e] - self.f_minus[e] ==
+                self.f["plus"][e] - self.f["minus"][e] ==
                 self.weights["rest"] * quicksum(v * self.w[e,t,v] for t,v in self.off_shifts)
                 - self.weights["contracted hours"] * self.lam[e]
-                - self.weights["partial weekends"] * quicksum(self.ro_sat[e,j] + self.ro_sun[e,j] for j in self.weeks)
-                - self.weights["isolated working self.days"] * quicksum(self.q_iso_work[e,i] for i in self.days)
-                - self.weights["isolated off self.days"] * quicksum(self.q_iso_off[e,i] for i in self.days)
+                - self.weights["partial weekends"] * quicksum(self.ro["sat"][e,j] + self.ro["sun"][e,j] for j in self.saturdays)
+                - self.weights["isolated working self.days"] * quicksum(self.q_iso["work"][e,i] for i in self.days)
+                - self.weights["isolated off self.days"] * quicksum(self.q_iso["off"][e,i] for i in self.days)
                 - self.weights["consecutive self.days"] * quicksum(self.q_con[e,i] for i in self.days)
                 for e in  self.employees
                 ), name="objective_function_restriction")
@@ -206,27 +224,41 @@ class Optimization_model():
                     #+weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(self.y[c,e,t] for c in self.competencies)
        
         self.model.addConstrs((
-            self.g_plus - self.g_minus 
-            <= self.f_plus[e] - self.f_minus[e] 
+            self.g["plus"] - self.g["minus"] 
+            <= self.f["plus"][e] - self.f["minus"][e] 
             for e in self.employees)
             , name="lowest_fairness_score")
                 
 
     def set_objective(self):
         self.model.setObjective(
-                    quicksum(self.f_plus[e] - self.f_minus[e] for e in self.employees)
-                    + self.weights["lowest fairness score"] * (self.g_plus - self.g_minus)
+                    quicksum(self.f["plus"][e] - self.f["minus"][e] for e in self.employees)
+                    + self.weights["lowest fairness score"] * (self.g["plus"] - self.g["minus"])
                     - self.weights["demand_deviation"] *
                     quicksum(
                         quicksum(
-                            self.delta_plus[c, t] + self.delta_minus[c, t] for t in self.time_periods
+                            self.delta["plus"][c, t] + self.delta["minus"][c, t] for t in self.time_periods
                     ) for c in self.competencies
                     )
                     ,GRB.MAXIMIZE)
 
+    def optimize(self):
+        self.model.optimize()
+        self.model.write("Test.sol")
 
 
-        print("#############RESTRICTIONS ADDED#############")
+
+if __name__ == "__main__":
+    model = Optimization_model("rproblem2")
+    model.add_variables()
+    print("#############VARIABLES ADDED#############")
+    model.add_constraints()
+    print("#############RESTRICTIONS ADDED#############")
+    model.set_objective()
+    print("#############OBJECTIVE SET#############")
+    model.optimize()
+
+
 
 
 
