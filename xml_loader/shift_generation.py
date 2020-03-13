@@ -10,22 +10,22 @@ def get_time_steps(root):
     for demand in demands:
         for i in range(len(demand.end)):
             if(demand.end[i] - int(demand.end[i]) > 0):
-                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length != 0.5):
+                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length > 0.5):
                     time_step_length = 0.5
-                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length != 0.25):
+                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
                 elif(demand.end[i] - int(demand.end[i]) < 0.25):
-                    time_step_length = 100/60
+                    time_step_length = 1/60
                     break
             if(demand.start[i] - int(demand.start[i]) > 0):
-                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length < 0.5):
+                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length > 0.5):
                     time_step_length = 0.5
-                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length < 0.25):
+                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
-                    time_step_length = 100/60
+                    time_step_length = 1/60
                     break
-            if(time_step_length == 100 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
+            if(time_step_length > 1 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
                 time_step_length = 1
     return time_step_length
 
