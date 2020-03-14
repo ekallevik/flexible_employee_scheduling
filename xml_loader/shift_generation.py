@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 def get_time_steps(root):
     demands = get_demand_definitions(root)
-    time_step_length = 100
+    time_step_length = 1
     for demand in demands:
         for i in range(len(demand.end)):
             if(demand.end[i] - int(demand.end[i]) > 0):
@@ -25,8 +25,6 @@ def get_time_steps(root):
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
                     time_step_length = 1/60
                     break
-            if(time_step_length > 1 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
-                time_step_length = 1
     return time_step_length
 
 
@@ -205,12 +203,12 @@ def get_off_shifts(root):
     week = 0
     off_shifts_in_week[week] = []
     for i in range(len(events)):
-        for event2 in events[i:]:
-            dur = event2 - events[i]
+        for event in events[i:]:
+            dur = event - events[i]
             if(events[i] >= (week+1)*24*7):
                 week+=1
                 off_shifts_in_week[week] = []
-            if(event2 >= (week+1)*24*7):
+            if(event >= (week+1)*24*7):
                break
             if(dur > 70):
                 break
@@ -220,6 +218,7 @@ def get_off_shifts(root):
                     off_shifts.append((events[i], dur))
     return [off_shifts, off_shifts_in_week]
 
+  
 def get_t_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]
     t_covered = tupledict()
