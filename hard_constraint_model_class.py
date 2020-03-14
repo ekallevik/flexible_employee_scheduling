@@ -125,9 +125,11 @@ class Optimization_model():
         self.model.addConstrs((
             quicksum(
                 quicksum(
-                    self.time_step * self.y[c,e,t] for t in self.time_periods
-                ) for c in self.competencies
-            ) + self.lam[e] == len(self.weeks)*self.contracted_hours[e] for e in  self.employees
+                    self.time_step * self.y[c,e,t] 
+                    for t in self.time_periods) 
+                for c in self.competencies)
+                >= len(self.weeks)*self.contracted_hours[e] 
+                for e in  self.employees
         ), name="contracted_hours")
 
     def set_objective(self):
@@ -148,7 +150,7 @@ class Optimization_model():
 
 
 if __name__ == "__main__":
-    model = Optimization_model("rproblem2")
+    model = Optimization_model("rproblem3")
     model.add_variables()
     print("#############VARIABLES ADDED#############")
     model.add_constraints()
