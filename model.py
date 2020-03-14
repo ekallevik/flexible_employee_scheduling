@@ -138,9 +138,8 @@ model.addConstrs((
 model.addConstrs((
     len(shifts_covered_by_off_shift[t,v]) * w[e,t,v] <= 
     quicksum(
-        quicksum(
-            (1-x[e,t_marked,v_marked]) for c in competencies
-        ) for t_marked,v_marked in shifts_covered_by_off_shift[t,v]
+        1-x[e,t_marked,v_marked]
+        for t_marked,v_marked in shifts_covered_by_off_shift[t,v]
     ) for e in employees for t,v in off_shifts
 ), name="no_work_during_off_shift")
 
