@@ -14,8 +14,6 @@ def get_time_steps(root):
                     time_step_length = 0.5
                 elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
-                # TODO: Check if elif-sentence below makes sense. What if we have one event at 17.80 and the rest on
-                #  whole hours? We would get 0.8 that should give time steps in minutes but that is not < 0.25.
                 elif(demand.end[i] - int(demand.end[i]) < 0.25):
                     time_step_length = 1/60
                     break
@@ -24,16 +22,9 @@ def get_time_steps(root):
                     time_step_length = 0.5
                 elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length > 0.25):
                     time_step_length = 0.25
-                # TODO: Check if elif-sentence below makes sense. What if we have one event at 17.80 and the rest on
-                #  whole hours? We would get 0.8 that should give time steps in minutes but that is not < 0.25.
                 elif(demand.start[i] - int(demand.start[i]) < 0.25):
                     time_step_length = 1/60
                     break
-
-            # NOTE: The code below should be redundant as time_step_lenght is set to 1 at the beginning and not changed if the statement is true?
-            # if(time_step_length == 1 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
-                #time_step_length = 1
-
     return time_step_length
 
 
@@ -227,7 +218,7 @@ def get_off_shifts(root):
                     off_shifts.append((events[i], dur))
     return [off_shifts, off_shifts_in_week]
 
-
+  
 def get_t_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]
     t_covered = tupledict()
