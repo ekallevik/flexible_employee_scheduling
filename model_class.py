@@ -147,9 +147,8 @@ class Optimization_model():
         self.model.addConstrs((
             len(self.shifts_covered_by_off_shift[t,v]) * self.w[e,t,v] <= 
             quicksum(
-                quicksum(
-                    (1-self.x[e,t_marked,v_marked]) for c in self.competencies
-                ) for t_marked,v_marked in self.shifts_covered_by_off_shift[t,v]
+                (1-self.x[e,t_marked,v_marked])
+                for t_marked,v_marked in self.shifts_covered_by_off_shift[t,v]
             ) for e in self.employees for t,v in self.off_shifts
         ), name="no_work_during_off_shift")
 
