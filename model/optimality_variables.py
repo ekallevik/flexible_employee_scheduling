@@ -4,7 +4,9 @@ from model.base_variables import BaseVariables
 
 
 class OptimalityVariables(BaseVariables):
-    def __init__(self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days):
+    def __init__(
+        self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+    ):
 
         super(OptimalityVariables, self).__init__(
             model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
@@ -19,37 +21,27 @@ class OptimalityVariables(BaseVariables):
     def add_rho(self):
 
         return {
-            "sat": self.model.addVars(
-                self.employees.employees, self.days, vtype=GRB.BINARY, name="rho_sat"
-            ),
-            "sun": self.model.addVars(
-                self.employees.employees, self.days, vtype=GRB.BINARY, name="rho_sun"
-            ),
+            "sat": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sat"),
+            "sun": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sun"),
         }
 
     def add_q(self):
 
         return {
             "iso_off": self.model.addVars(
-                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_iso_off"
+                self.employees, self.days, vtype=GRB.BINARY, name="q_iso_off"
             ),
             "iso_work": self.model.addVars(
-                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_iso_work"
+                self.employees, self.days, vtype=GRB.BINARY, name="q_iso_work"
             ),
-            "con": self.model.addVars(
-                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_con"
-            ),
+            "con": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="q_con"),
         }
 
     def add_f(self):
 
         return {
-            "plus": self.model.addVars(
-                self.employees.employees, vtype=GRB.CONTINUOUS, name="f_plus"
-            ),
-            "minus": self.model.addVars(
-                self.employees.employees, vtype=GRB.CONTINUOUS, name="f_minus"
-            ),
+            "plus": self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name="f_plus"),
+            "minus": self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name="f_minus"),
         }
 
     def add_g(self):

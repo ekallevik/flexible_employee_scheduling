@@ -15,9 +15,20 @@ class FeasibilityModel(BaseModel):
             self.shifts_set,
             self.off_shifts_set,
             self.time_periods,
-            self.days
+            self.days,
         )
 
-        self.constraints = BaseConstraints(self.model, self.var, self.staff, self.demand, self.competencies, self.time, self.shifts_set, self.off_shifts_set)
+        self.constraints = BaseConstraints(
+            self.model,
+            self.var,
+            self.staff,
+            self.demand,
+            self.competencies,
+            self.time,
+            self.shifts_set,
+            self.off_shifts_set,
+        )
 
-        self.objective = FeasibilityObjective(self.model, self.var.y, self.competencies, self.staff, self.time)
+        self.objective = FeasibilityObjective(
+            self.model, self.var.y, self.competencies, self.staff, self.time
+        )

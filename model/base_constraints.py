@@ -79,9 +79,7 @@ class BaseConstraints:
 
         self.model.addConstrs(
             (
-                quicksum(
-                    x[e, t_marked, v] for t_marked, v in self.shifts_overlapping_t[t]
-                )
+                quicksum(x[e, t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
                 == quicksum(y[c, e, t] for c in self.competencies)
                 for e in self.employees
                 for t in self.time_periods

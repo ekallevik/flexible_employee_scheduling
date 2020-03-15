@@ -12,7 +12,33 @@ class OptimalityModel(BaseModel):
 
         self.weights = get_weights()
 
-        self.var = OptimalityVariables(self.model, self.sets)
-        self.constraints = OptimalityConstraints(self.model, self.sets, self.var)
+        self.var = OptimalityVariables(
+            self.model,
+            self.competencies,
+            self.staff,
+            self.shifts_set,
+            self.off_shifts_set,
+            self.time_periods,
+            self.days,
+        )
+        self.constraints = OptimalityConstraints(
+            self.model,
+            self.var,
+            self.staff,
+            self.demand,
+            self.competencies,
+            self.time,
+            self.shifts_set,
+            self.off_shifts_set,
+            self.limit_on_consecutive_days,
+        )
 
-        self.objective = OptimalityObjective(self.model, self.sets, self.var, self.weights)
+        self.objective = OptimalityObjective(
+            self.model,
+            self.var,
+            self.weights,
+            self.competencies,
+            self.staff,
+            self.time,
+            self.off_shifts_set,
+        )

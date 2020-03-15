@@ -22,7 +22,9 @@ class BaseVariables:
         self.lam = self.add_lambda()
 
     def add_y(self):
-        return self.model.addVars(self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y")
+        return self.model.addVars(
+            self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y"
+        )
 
     def add_x(self):
         return self.model.addVars(self.employees, self.shifts, vtype=GRB.BINARY, name="x")
@@ -31,7 +33,9 @@ class BaseVariables:
         return self.model.addVars(self.employees, self.off_shifts, vtype=GRB.BINARY, name="w")
 
     def add_mu(self):
-        return self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name="mu")
+        return self.model.addVars(
+            self.competencies, self.time_periods, vtype=GRB.INTEGER, name="mu"
+        )
 
     def add_delta(self):
 
