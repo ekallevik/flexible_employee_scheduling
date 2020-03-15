@@ -285,7 +285,7 @@ def load_data(problem_name):
             "shifts_per_day": shift_set[1],
         },
         "off_shifts": {
-            "t_covered_by_off_shifts": get_t_covered_by_off_shifts(root),
+            "t_in_off_shifts": get_t_covered_by_off_shifts(root),
             "off_shifts": off_shift_set[0],
             "off_shifts_per_week": off_shift_set[1],
         },

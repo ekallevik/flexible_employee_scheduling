@@ -11,7 +11,8 @@ class BaseConstraints:
         self.contracted_hours = staff["employee_contracted_hours"]
         self.demand = demand
         self.competencies = competencies
-        self.time_periods = time["periods"]
+        self.time_periods = time["periods"][0]
+        self.time_periods_per_week = time["periods"][1]
         self.days = time["days"]
         self.weeks = time["weeks"]
         self.shifts_per_day = shift_set["shifts_per_day"]
@@ -27,9 +28,9 @@ class BaseConstraints:
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
         self.add_mapping_of_shift_to_demand(var.x, var.y)
         self.add_maximum_one_shift_each_day(var.x)
-        self.add_calculate_helping_variable_gamma(var.x, var.gamma)
+        self.add_helping_variable_gamma(var.x, var.gamma)
         self.add_weekly_rest(var.w)
-        self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y)
+        self.add_no_demand_cover_during_off_shift(var.w, var.y)
         self.add_contracted_hours(var.y, var.lam)
 
     def add_minimum_demand_coverage(self, y, mu):
@@ -75,6 +76,7 @@ class BaseConstraints:
         )
 
     def add_mapping_of_shift_to_demand(self, x, y):
+
         self.model.addConstrs(
             (
                 quicksum(
@@ -97,10 +99,10 @@ class BaseConstraints:
             name="only_cover_one_demand_at_a_time",
         )
 
-    def add_calculate_helping_variable_gamma(self, x, gamma):
+    def add_helping_variable_gamma(self, x, gamma):
         self.model.addConstrs(
             (
-                quicksum(x[e, t, v] for t, v in self.days[i]) == gamma[e, i]
+                quicksum(x[e, t, v] for t, v in self.shifts_per_day[i]) == gamma[e, i]
                 for e in self.employees
                 for i in self.days
             ),
