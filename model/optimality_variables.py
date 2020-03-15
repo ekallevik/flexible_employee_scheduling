@@ -4,59 +4,57 @@ from model.base_variables import BaseVariables
 
 
 class OptimalityVariables(BaseVariables):
-    def __init__(self, model, sets):
-        super(OptimalityVariables, self).__init__(model, sets)
+    def __init__(self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days):
 
-        self.rho = self.add_rho(sets)
-        self.q = self.add_q(sets)
-        self.gamma = self.add_gamma(sets)
-        self.f = self.add_f(sets)
+        super(OptimalityVariables, self).__init__(
+            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+        )
+
+        self.rho = self.add_rho()
+        self.q = self.add_q()
+        self.gamma = self.add_gamma()
+        self.f = self.add_f()
         self.g = self.add_g()
 
+    def add_rho(self):
 
-    def add_rho(self, sets):
-
-        rho = {
+        return {
             "sat": self.model.addVars(
-                sets["employees"]["all"], sets["time"]["days"], vtype=GRB.BINARY, name="rho_sat"
+                self.employees.employees, self.days, vtype=GRB.BINARY, name="rho_sat"
             ),
             "sun": self.model.addVars(
-                sets["employees"]["all"], sets["time"]["days"], vtype=GRB.BINARY, name="rho_sun"
+                self.employees.employees, self.days, vtype=GRB.BINARY, name="rho_sun"
             ),
         }
 
-        return rho
+    def add_q(self):
 
-    def add_q(self, sets):
-
-        q = {
+        return {
             "iso_off": self.model.addVars(
-                sets["employees"]["all"], sets["time"]["days"], vtype=GRB.BINARY, name="q_iso_off"
+                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_iso_off"
             ),
             "iso_work": self.model.addVars(
-                sets["employees"]["all"], sets["time"]["days"], vtype=GRB.BINARY, name="q_iso_work"
+                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_iso_work"
             ),
             "con": self.model.addVars(
-                sets["employees"]["all"], sets["time"]["days"], vtype=GRB.BINARY, name="q_con"
+                self.employees.employees, self.days, vtype=GRB.BINARY, name="q_con"
             ),
         }
 
-        return q
+    def add_f(self):
 
-    def add_f(self, sets):
-
-        f = {
-            "plus": self.model.addVars(sets["employees"]["all"], vtype=GRB.CONTINUOUS, name="f_plus"),
-            "minus": self.model.addVars(sets["employees"]["all"], vtype=GRB.CONTINUOUS, name="f_minus"),
+        return {
+            "plus": self.model.addVars(
+                self.employees.employees, vtype=GRB.CONTINUOUS, name="f_plus"
+            ),
+            "minus": self.model.addVars(
+                self.employees.employees, vtype=GRB.CONTINUOUS, name="f_minus"
+            ),
         }
-
-        return f
 
     def add_g(self):
 
-        g = {
+        return {
             "plus": self.model.addVar(vtype=GRB.CONTINUOUS, name="g_plus"),
             "minus": self.model.addVar(vtype=GRB.CONTINUOUS, name="g_minus"),
         }
-
-        return g

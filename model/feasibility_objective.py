@@ -2,21 +2,25 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class FeasibilityObjective:
-
-    def __init__(self, model, sets, y):
+    def __init__(self, model, y, competencies, staff, time):
 
         self.model = model
 
-        self.add_objective(sets, y)
+        self.employees = staff["employees"]
+        self.competencies = competencies
+        self.time_periods = time["periods"]
 
-    def add_objective(self, sets, y):
+        self.add_objective(y)
+
+    def add_objective(self, y):
 
         self.model.setObjective(
             quicksum(
                 quicksum(
-                    quicksum(y[c, e, t] for e in sets["employees"]["all"]) for c in sets["competencies"]
+                    quicksum(y[c, e, t] for e in self.employees)
+                    for c in self.competencies
                 )
-                for t in sets["time"]["periods"]
+                for t in self.time_periods
             ),
             GRB.MINIMIZE,
         )

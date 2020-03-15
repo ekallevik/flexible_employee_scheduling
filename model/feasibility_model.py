@@ -5,11 +5,19 @@ from model.feasibility_objective import FeasibilityObjective
 
 
 class FeasibilityModel(BaseModel):
-
     def __init__(self, name):
         super(FeasibilityModel, self).__init__(name)
 
-        self.var = BaseVariables(self.model, self.sets)
-        self.constraints = BaseConstraints(self.model, self.sets, self.var)
+        self.var = BaseVariables(
+            self.model,
+            self.competencies,
+            self.staff,
+            self.shifts_set,
+            self.off_shifts_set,
+            self.time_periods,
+            self.days
+        )
 
-        self.objective = FeasibilityObjective(self.model, self.sets, self.var.y)
+        self.constraints = BaseConstraints(self.model, self.var, self.staff, self.demand, self.competencies, self.time, self.shifts_set, self.off_shifts_set)
+
+        self.objective = FeasibilityObjective(self.model, self.var.y, self.competencies, self.staff, self.time)

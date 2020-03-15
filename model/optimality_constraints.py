@@ -4,7 +4,6 @@ from model.base_constraints import BaseConstraints
 
 
 class OptimalityConstraints(BaseConstraints):
-
     def __init__(self, model, sets, var):
 
         super(OptimalityConstraints, self).__init__(model, sets, var)

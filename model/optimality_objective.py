@@ -2,7 +2,6 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-
     def __init__(self, model, sets, var, weights):
 
         self.model = model
@@ -38,7 +37,10 @@ class OptimalityObjective:
     def add_lowest_fairness_score(self, sets, f, g):
 
         self.model.addConstrs(
-            (g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e] for e in sets["employees"]["all"]),
+            (
+                g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e]
+                for e in sets["employees"]["all"]
+            ),
             name="lowest_fairness_score",
         )
 
