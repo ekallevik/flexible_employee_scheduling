@@ -1,4 +1,4 @@
-from model_class import *
+from hard_constraint_model_class import *
 from xml_loader.shift_generation import load_data
 
 
@@ -17,7 +17,6 @@ w = model.w
 #         if(w[e,t,v].x == 1):
 #             print(e,t,v)
 def calculate_deviation_from_demand():
-
     delta = {}
     for c in model.competencies:
         for t in model.time_periods:
@@ -121,36 +120,58 @@ def calculate_objective_function():
 
 
 def cover_minimum_demand():
+    below_minimum_demand = {}
     for c in model.competencies:
         for t in model.time_periods:
-            sum(y[c,e,t].x for e in model.employee_with_competencies[c]) - model.demand["min"][c,t]
+            below_minimum_demand[c,t] = max(0, (model.demand["min"][c,t] - sum(y[c,e,t].x for e in model.employee_with_competencies[c])))
 
 def under_maximum_demand():
+    above_maximum_demand = {}
     for c in model.competencies:
         for t in model.time_periods:
-            model.demand["max"] - sum(y[c,e,t].x for e in model.employee_with_competencies[c])
+            above_maximum_demand[c,t] = max(0, (sum(y[c,e,t].x for e in model.employee_with_competencies[c]) - model.demand["max"]))
 
 def maximum_one_shift_per_day():
+    more_than_one_shift_per_day = {}
     for e in model.employees:
         for i in model.days:
-            1 - sum(x[e,t,v].x for t,v in model.shifts_at_day[i])
+            more_than_one_shift_per_day[e,i] = max(0, (sum(x[e,t,v].x for t,v in model.shifts_at_day[i]) - 1))
 
 def cover_only_one_demand_per_time_period():
+    cover_multiple_demand_periods = {}
     for e in model.employees:
         for t in model.time_periods:
-            1 - sum(y[c,e,t].x for c in model.competencies)
+            cover_multiple_demand_periods[e,t] = max(0,(sum(y[c,e,t].x for c in model.competencies - 1)))
 
 def one_weekly_off_shift():
+    weekly_off_shift_error = {}
     for e in model.employees:
         for j in model.weeks:
-            abs(1 - sum(w[e,t,v].x for t,v in model.off_shift_in_week[j]))
-
+            weekly_off_shift_error[e,j] = max(0,(abs(sum(w[e,t,v].x for t,v in model.off_shift_in_week[j]) - 1)))
 
 def no_work_during_off_shift():
+    no_work_during_off_shift = {}
     for e in model.employees:
         for t,v in model.off_shifts:
-            (len(model.shifts_covered_by_off_shift[t,v]) * model.w[e,t,v])
+           no_work_during_off_shift[e,t,v] = max(0,(len(model.shifts_covered_by_off_shift[t,v]) * model.w[e,t,v].x) - sum((1 - x[e,t_marked, v_marked].x) for t_marked, v_marked in model.shifts_covered_by_off_shift[t,v]))
 
-            sum((1 - x[e,t_marked, v_marked]) for t_marked, v_marked in model.shifts_covered_by_off_shift[t,v])
-            
-calculate_objective_function()
+
+def mapping_shift_to_demand():
+    mapping_shift_to_demand = {}
+    for e in model.employees:
+        for t in model.time_periods:
+           mapping_shift_to_demand[e,t] = max(0,abs(sum(model.x[e, t_marked, v].x for t_marked, v in model.shifts_overlapping_t[t]) - sum(model.y[c,e,t].x for c in model.competencies)))
+
+
+
+
+        self.model.addConstrs((
+            quicksum(self.x[e,t_marked,v] 
+            for t_marked,v in self.shifts_overlapping_t[t]) 
+            == quicksum(self.y[c,e,t] for c in self.competencies)
+            for e in self.employees
+            for t in self.time_periods
+        ),name="mapping_shift_to_demand")
+
+no_work_during_off_shift()
+#calculate_objective_function()
