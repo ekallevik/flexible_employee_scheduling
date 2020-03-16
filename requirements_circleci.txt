@@ -1,4 +1,4 @@
-xmlschema==1.1.0
+xmlschema==1.1.1
 autopep8==1.5
 pycodestyle==2.5.0
 pytest==5.4.1
