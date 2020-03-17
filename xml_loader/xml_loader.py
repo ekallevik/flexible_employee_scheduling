@@ -25,7 +25,6 @@ def get_competencies(root):
         competencies.append(id)
     return competencies
 
-
 def get_days_with_demand(root):
     demands = get_demand_definitions(root)
     days_with_demand = {}

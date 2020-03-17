@@ -229,6 +229,6 @@ model.setObjective(
 
 print("#############RESTRICTIONS ADDED#############")
 
-
+model.write("out.lp")
 model.optimize()
 

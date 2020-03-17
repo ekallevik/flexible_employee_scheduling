@@ -48,6 +48,8 @@ class Optimization_model():
         self.delta = {}
         self.ro = {}
         self.q_iso = {}
+        self.f = {}
+        self.g = {}
         self.y = self.model.addVars(self.competencies,  self.employees, self.time_periods, vtype=GRB.BINARY, name='y')
         self.x = self.model.addVars(self.employees, self.shifts, vtype=GRB.BINARY, name='x')
         self.mu = self.model.addVars(self.competencies, self.time_periods, vtype=GRB.INTEGER, name='mu')
@@ -61,25 +63,41 @@ class Optimization_model():
         self.q_iso["off"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_off')
         self.q_iso["work"] = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_iso_work')
         self.q_con = self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name='q_con')
+        self.f["plus"] = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_plus')
+        self.f["minus"] = self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name='f_minus')
+        self.g["plus"] = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_plus')
+        self.g["minus"] = self.model.addVar(vtype=GRB.CONTINUOUS, name='g_minus')
 
 
 
     def add_constraints(self):
-        self.model.addConstrs((
-            quicksum(self.y[c,e,t] 
-            for e in self.employee_with_competencies[c]) 
-            >= self.demand["min"][c,t]  
-            for c in self.competencies 
-            for t in self.time_periods),
+        # self.model.addConstrs((
+        #     quicksum(self.y[c,e,t] 
+        #     for e in self.employee_with_competencies[c]) 
+        #     >= self.demand["min"][c,t]  
+        #     for c in self.competencies 
+        #     for t in self.time_periods),
+        # name='minimum_demand_coverage')
+
+        # self.model.addConstrs((
+        #     quicksum(self.y[c,e,t] 
+        #     for e in self.employee_with_competencies[c])
+        #     <= self.demand["max"][c,t]
+        #     for c in self.competencies 
+        #     for t in self.time_periods),
+        # name='less_than_max_demand')
+
+        self.model.addConstrs((quicksum(self.y[c,e,t] 
+        for e in self.employee_with_competencies[c]) == self.demand["min"][c,t] + self.mu[c,t]  
+        for c in self.competencies 
+        for t in self.time_periods),
         name='minimum_demand_coverage')
 
-        self.model.addConstrs((
-            quicksum(self.y[c,e,t] 
-            for e in self.employee_with_competencies[c])
-            <= self.demand["max"][c,t]
+        self.model.addConstrs((self.mu[c,t] <= self.demand["max"][c,t] - self.demand["min"][c,t]
             for c in self.competencies 
             for t in self.time_periods),
-        name='less_than_max_demand')
+        name='mu_less_than_difference')
+
 
         self.model.addConstrs((
             quicksum(self.x[e,t,v] 
@@ -122,14 +140,22 @@ class Optimization_model():
             ) for e in self.employees for t,v in self.off_shifts
         ), name="no_work_during_off_shift")
 
+        # self.model.addConstrs((
+        #     quicksum(
+        #         quicksum(
+        #             self.time_step * self.y[c,e,t] 
+        #             for t in self.time_periods) 
+        #         for c in self.competencies)
+        #         >= len(self.weeks)*self.contracted_hours[e] 
+        #         for e in  self.employees
+        # ), name="contracted_hours")
+
         self.model.addConstrs((
             quicksum(
                 quicksum(
-                    self.time_step * self.y[c,e,t] 
-                    for t in self.time_periods) 
-                for c in self.competencies)
-                >= len(self.weeks)*self.contracted_hours[e] 
-                for e in  self.employees
+                    self.time_step*self.y[c,e,t] for t in self.time_periods
+                ) for c in self.competencies
+            ) + self.lam[e] == len(self.weeks)*self.contracted_hours[e] for e in self.employees
         ), name="contracted_hours")
 
     def set_objective(self):
