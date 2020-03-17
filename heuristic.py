@@ -2,7 +2,7 @@ from hard_constraint_model_class import *
 from xml_loader.shift_generation import load_data
 
 
-model = Optimization_model("rproblem2")
+model = Optimization_model("rproblem3")
 model.add_variables()
 model.add_constraints()
 model.set_objective()
@@ -21,18 +21,10 @@ def calculate_deviation_from_demand():
     for c in model.competencies:
         for t in model.time_periods:
             delta[c,t] = abs(sum(model.y[c,e,t].x for e in model.employee_with_competencies[c]) - model.demand["ideal"][c,t])
-            if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
-                print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
-                print("Different Delta")
+            # if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
+            #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
+            #     print("Different Delta")
     return delta
-
-    model.addConstrs((
-        quicksum(
-            quicksum(
-                time_step*y[c,e,t] for t in time_periods
-            ) for c in competencies
-        ) + lam[e] == len(weeks)*contracted_hours[e] for e in employees
-    ), name="contracted_hours")
 
 def calculate_deviation_from_contracted_hours():
     delta_contracted_hours = {}
@@ -50,10 +42,10 @@ def calculate_partial_weekends():
     for e in model.employees:
         for i in model.saturdays:
             partial_weekend[e,i] = abs((sum(model.x[e,t,v].x for t,v in model.shifts_at_day[i]) - sum(model.x[e,t,v].x for t,v in model.shifts_at_day[i+1])))
-            if(partial_weekend[e,i] != abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)):
-                print(str(partial_weekend) + "," + str(abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)))
-                print(i)
-                print("Different partial weekends")
+            # if(partial_weekend[e,i] != abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)):
+            #     print(str(partial_weekend) + "," + str(abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)))
+            #     print(i)
+            #     print("Different partial weekends")
     return partial_weekend
 
 def calculate_isolated_working_days():
@@ -64,8 +56,8 @@ def calculate_isolated_working_days():
             + sum(x[e,t,v].x for t,v in model.shifts_at_day[i+1]) 
             - sum(x[e,t,v].x for t,v in model.shifts_at_day[i+2])))
 
-            if(isolated_working_days[e,i] != model.q_iso["work"][e,i].x):
-                print("Different isolated working days")
+            # if(isolated_working_days[e,i] != model.q_iso["work"][e,i].x):
+            #     print("Different isolated working days")
 
     return isolated_working_days
 
@@ -77,8 +69,8 @@ def calculate_isolated_off_days():
             isolated_off_days[e,i+1] = max(0,(sum(x[e,t,v].x for t,v in model.shifts_at_day[i]) 
             - sum(x[e,t,v].x for t,v in model.shifts_at_day[i+1]) 
             + sum(x[e,t,v].x for t,v in model.shifts_at_day[i+2])-1))
-        if(isolated_off_days[e,i] != model.q_iso["off"][e,i].x):
-            print("Different isolated off days")
+        # if(isolated_off_days[e,i] != model.q_iso["off"][e,i].x):
+        #     print("Different isolated off days")
     return isolated_off_days
 
 def calculate_consecutive_days():
@@ -89,8 +81,8 @@ def calculate_consecutive_days():
                 sum(x[e,t,v].x for t,v in model.shifts_at_day[i_marked]) 
             for i_marked in range(i,i+model.L_C_D)))- model.L_C_D)
             
-            if(consecutive_days[e,i] != model.q_con[e,i].x):
-                print("Different consecutive days")
+            # if(consecutive_days[e,i] != model.q_con[e,i].x):
+            #     print("Different consecutive days")
     return consecutive_days
 
 def calculate_objective_function():
@@ -171,4 +163,4 @@ no_work_during_off_shift()
 mapping_shift_to_demand()
 
 no_work_during_off_shift()
-#calculate_objective_function()
+calculate_objective_function()
