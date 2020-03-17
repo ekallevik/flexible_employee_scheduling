@@ -30,6 +30,7 @@ def get_time_steps(root):
     return time_step_length
 
 
+
 def get_time_periods(root):
     time_periods = []
     i = 0
@@ -228,8 +229,20 @@ def get_t_covered_by_off_shifts(root):
         end = time_periods.index(shift[0] + shift[1])
         start = time_periods.index(shift[0])
         t_covered[shift[0], shift[1]] = time_periods[start:end]
+    #print(t_covered)
     return t_covered
 
+def get_t_covered_by_shift(root):
+    time_step = get_time_steps(root)
+    shifts = get_shift_lists(root)[0]
+    time_periods = get_time_periods(root)[0]
+    t_covered_by_shift = tupledict()
+    for shift in shifts:
+        end = time_periods.index(shift[0] + shift[1] - time_step)
+        start = time_periods.index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
+    #print(t_covered_by_shift)
+    return t_covered_by_shift
 
 def get_shifts_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]

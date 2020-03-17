@@ -1,8 +1,11 @@
 from hard_constraint_model_class import *
-from xml_loader.shift_generation import load_data
+from xml_loader.shift_generation import load_data, get_t_covered_by_shift
 
+problem_name = "rproblem3"
+data_folder = Path(__file__).resolve().parents[1] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
+root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
 
-model = Optimization_model("rproblem3")
+model = Optimization_model(problem_name)
 model.add_variables()
 model.add_constraints()
 model.set_objective()
@@ -92,6 +95,9 @@ def calculate_objective_function():
     q_con = calculate_consecutive_days()
     delta = calculate_deviation_from_demand()
     delta_c = calculate_deviation_from_contracted_hours()
+    lowest_contracted_hours(delta_c, delta)
+   # for e in model.employees:
+    #    print(str(delta_c[e]) + ", index: " + str(e)) 
     f = {}
     for e in model.employees:
         f[e] = (sum(v * w[e,t,v].x for t,v in model.off_shifts)
@@ -100,7 +106,7 @@ def calculate_objective_function():
             - sum(q_iso_work[e,i] for i in range(len(model.days)-2))
             - sum(q_iso_off[e,i+1] for i in range(len(model.days)-2))
             - sum(q_con[e,i] for i in range(len(model.days)-model.L_C_D)))
-        print(str(f[e]) + ", " + str(model.f["plus"][e].x-model.f["minus"][e].x))
+        #print(str(f[e]) + ", " + str(model.f["plus"][e].x-model.f["minus"][e].x) + ", index: "+ str(e))
     g = min(f.values())
 
     objective =    (sum(f[e] for e in model.employees)
@@ -108,9 +114,7 @@ def calculate_objective_function():
                     - sum(sum(delta[c,t] for t in model.time_periods) for c in model.competencies)
                     )
 
-    print(objective)
-
-
+    #print(objective)
 def cover_minimum_demand():
     below_minimum_demand = {}
     for c in model.competencies:
@@ -154,13 +158,49 @@ def mapping_shift_to_demand():
         for t in model.time_periods:
            mapping_shift_to_demand[e,t] = max(0,abs(sum(model.x[e, t_marked, v].x for t_marked, v in model.shifts_overlapping_t[t]) - sum(model.y[c,e,t].x for c in model.competencies)))
 
-cover_minimum_demand()
-under_maximum_demand()
-maximum_one_shift_per_day()
-cover_only_one_demand_per_time_period()
-one_weekly_off_shift()
-no_work_during_off_shift()
-mapping_shift_to_demand()
+#Repair algorithms:
+def lowest_contracted_hours(delta_c, delta):
+    employee = min(delta_c, key=delta_c.get)
+    working_days = []
+    t = get_t_covered_by_shift(root)
+    for i in model.days:
+        if sum(model.x[employee,t,v].x for t,v in model.shifts_at_day[i]) != 0:
+            working_days.append(i)
+    print(working_days)
+    maximum_deviation_from_demand = {}
+    for i in working_days:
+        for shift in model.shifts_at_day[i]:
+            maximum_deviation_from_demand[shift] = sum(delta[0,t] for t in t[shift])
+   # placement = max(maximum_deviation_from_demand, key=maximum_deviation_from_demand.get)
+   # print(x[employee, placement[0], placement[1]].set(1))
+   # delta2 = calculate_deviation_from_contracted_hours()
+   # print(employee)
+   # print(min(delta2, key=delta2.get))
 
-no_work_during_off_shift()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# cover_minimum_demand()
+# under_maximum_demand()
+# maximum_one_shift_per_day()
+# cover_only_one_demand_per_time_period()
+# one_weekly_off_shift()
+# no_work_during_off_shift()
+# mapping_shift_to_demand()
+
+# no_work_during_off_shift()
 calculate_objective_function()
+
