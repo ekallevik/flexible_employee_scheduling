@@ -6,11 +6,10 @@ class BaseVariables:
         self.model = model
 
         self.competencies = competencies
-
         self.employees = staff["employees"]
         self.shifts = shifts_set["shifts"]
         self.off_shifts = off_shifts_set["off_shifts"]
-        self.time_periods = time_periods
+        self.time_periods = time_periods[0]
         self.days = days
 
         self.y = self.add_y()
@@ -18,7 +17,6 @@ class BaseVariables:
         self.w = self.add_w()
         self.mu = self.add_mu()
         self.delta = self.add_delta()
-        self.gamma = self.add_gamma()
         self.lam = self.add_lambda()
 
     def add_y(self):

@@ -8,7 +8,7 @@ class FeasibilityObjective:
 
         self.employees = staff["employees"]
         self.competencies = competencies
-        self.time_periods = time["periods"]
+        self.time_periods = time["periods"][0]
 
         self.add_objective(y)
 
