@@ -14,11 +14,13 @@ model.optimize()
 x = model.x
 y = model.y
 w = model.w
-
+employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v].x != 0] for em in model.employees}
 # for e in model.employees:
 #     for t,v in model.off_shifts:
 #         if(w[e,t,v].x == 1):
 #             print(e,t,v)
+
+
 def calculate_deviation_from_demand():
     delta = {}
     for c in model.competencies:
@@ -88,16 +90,13 @@ def calculate_consecutive_days():
             #     print("Different consecutive days")
     return consecutive_days
 
-def calculate_objective_function():
+
+def calculate_f():
     partial_weekend = calculate_partial_weekends()
     q_iso_work = calculate_isolated_working_days()
     q_iso_off = calculate_isolated_off_days()
     q_con = calculate_consecutive_days()
-    delta = calculate_deviation_from_demand()
     delta_c = calculate_deviation_from_contracted_hours()
-    lowest_contracted_hours(delta_c, delta)
-   # for e in model.employees:
-    #    print(str(delta_c[e]) + ", index: " + str(e)) 
     f = {}
     for e in model.employees:
         f[e] = (sum(v * w[e,t,v].x for t,v in model.off_shifts)
@@ -107,8 +106,16 @@ def calculate_objective_function():
             - sum(q_iso_off[e,i+1] for i in range(len(model.days)-2))
             - sum(q_con[e,i] for i in range(len(model.days)-model.L_C_D)))
         #print(str(f[e]) + ", " + str(model.f["plus"][e].x-model.f["minus"][e].x) + ", index: "+ str(e))
-    g = min(f.values())
+    return f
 
+def calculate_objective_function():
+    delta = calculate_deviation_from_demand()
+    delta_c = calculate_deviation_from_contracted_hours()
+    lowest_contracted_hours(delta_c, delta)
+   # for e in model.employees:
+    #    print(str(delta_c[e]) + ", index: " + str(e)) 
+    f = calculate_f()
+    g = min(f.values())
     objective =    (sum(f[e] for e in model.employees)
                     + g
                     - sum(sum(delta[c,t] for t in model.time_periods) for c in model.competencies)
@@ -168,20 +175,25 @@ def lowest_contracted_hours(delta_c, delta):
             working_days.append(i)
     print(working_days)
     maximum_deviation_from_demand = {}
-    for i in working_days:
-        for shift in model.shifts_at_day[i]:
-            maximum_deviation_from_demand[shift] = sum(delta[0,t] for t in t[shift])
-   # placement = max(maximum_deviation_from_demand, key=maximum_deviation_from_demand.get)
+    for i in model.days: 
+        if i not in working_days:
+            for shift in model.shifts_at_day[i]:
+                maximum_deviation_from_demand[shift] = sum(delta[0,t] for t in t[shift])
+    print(maximum_deviation_from_demand)
+    placement = max(maximum_deviation_from_demand, key=maximum_deviation_from_demand.get)
+    print(x[employee,placement[0], placement[1]])
+    #Remember to set y when you set x values as these should always be mapped
    # print(x[employee, placement[0], placement[1]].set(1))
    # delta2 = calculate_deviation_from_contracted_hours()
    # print(employee)
    # print(min(delta2, key=delta2.get))
 
 
+def remove_partial_weekends():
 
 
-
-
+print(calculate_partial_weekends())
+    pass
 
 
 
@@ -202,5 +214,5 @@ def lowest_contracted_hours(delta_c, delta):
 # mapping_shift_to_demand()
 
 # no_work_during_off_shift()
-calculate_objective_function()
+#calculate_objective_function()
 
