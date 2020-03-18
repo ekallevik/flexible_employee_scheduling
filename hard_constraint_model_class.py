@@ -171,7 +171,7 @@ class Optimization_model():
 
     def optimize(self):
         self.model.optimize()
-
+        self.model.write("solution.sol")
         print("#############RESTRICTIONS ADDED#############")
 
 
@@ -184,3 +184,4 @@ if __name__ == "__main__":
     model.set_objective()
     print("#############OBJECTIVE SET#############")
     model.optimize()
+

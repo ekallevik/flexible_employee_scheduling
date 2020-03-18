@@ -22,12 +22,7 @@ employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v].x != 0] for e
 
 
 
-def convert():
-    x = {(e,t,v): abs(model.x[e,t,v].x) for e,t,v in model.x}
-    y = {(c,e,t): abs(model.y[c,e,t].x) for c,e,t in model.y}
-    w = {(e,t,v): abs(model.w[e,t,v].x) for e,t,v in model.w}
 
-    return x,y,w
 
 def calculate_deviation_from_demand():
     delta = {}
