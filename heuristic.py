@@ -21,6 +21,14 @@ employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v].x != 0] for e
 #             print(e,t,v)
 
 
+
+def convert():
+    x = {(e,t,v): abs(model.x[e,t,v].x) for e,t,v in model.x}
+    y = {(c,e,t): abs(model.y[c,e,t].x) for c,e,t in model.y}
+    w = {(e,t,v): abs(model.w[e,t,v].x) for e,t,v in model.w}
+
+    return x,y,w
+
 def calculate_deviation_from_demand():
     delta = {}
     for c in model.competencies:
@@ -190,11 +198,14 @@ def lowest_contracted_hours(delta_c, delta):
 
 
 def remove_partial_weekends():
+    partial_weekends = calculate_partial_weekends()
+    actual_partial_weekends = [key for key, value in partial_weekends.items() if value != 0]
+    print(actual_partial_weekends)
 
+#print(calculate_partial_weekends())
+#remove_partial_weekends()
 
-print(calculate_partial_weekends())
-    pass
-
+convert()
 
 
 
