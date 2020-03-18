@@ -25,6 +25,10 @@ def get_competencies(root):
     for competence in root.findall("Configuration/Competences/Competence"):
         id = competence.find("CompetenceId").text
         competencies.append(id)
+
+    if not competencies:
+        competencies = [0]
+
     return competencies
 
 
