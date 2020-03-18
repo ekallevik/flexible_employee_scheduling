@@ -4,12 +4,8 @@ from model.optimality_model import OptimalityModel
 
 def main():
 
-    esp = OptimalityModel("employee_scheduling_problem")
+    esp = FeasibilityModel("esp")
     esp.run_model()
-
-
-
-
 
 
 if __name__ == "__main__":
