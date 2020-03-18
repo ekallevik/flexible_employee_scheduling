@@ -29,6 +29,8 @@ class OptimalityConstraints(BaseConstraints):
         self.add_isolated_working_days(var.gamma, var.q)
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
+        self.add_helping_variable_gamma(var.x, var.gamma)
+
 
     def add_minimum_weekly_work_hours(self, y):
 
@@ -101,4 +103,14 @@ class OptimalityConstraints(BaseConstraints):
                 for i in range(len(self.days) - self.limit_on_consecutive_days)
             ),
             name="consecutive_days",
+        )
+
+    def add_helping_variable_gamma(self, x, gamma):
+        self.model.addConstrs(
+            (
+                quicksum(x[e, t, v] for t, v in self.shifts_per_day[i]) == gamma[e, i]
+                for e in self.employees
+                for i in self.days
+            ),
+            name="if_employee_e_works_day_i",
         )

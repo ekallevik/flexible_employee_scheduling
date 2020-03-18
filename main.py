@@ -4,7 +4,7 @@ from model.optimality_model import OptimalityModel
 
 def main():
 
-    esp = OptimalityModel("esp")
+    esp = FeasibilityModel("esp")
     esp.run_model()
 
 
