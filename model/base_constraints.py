@@ -28,7 +28,6 @@ class BaseConstraints:
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
         self.add_mapping_of_shift_to_demand(var.x, var.y)
         self.add_maximum_one_shift_each_day(var.x)
-        self.add_helping_variable_gamma(var.x, var.gamma)
         self.add_weekly_rest(var.w)
         self.add_no_demand_cover_during_off_shift(var.w, var.y)
         self.add_contracted_hours(var.y, var.lam)
@@ -95,16 +94,6 @@ class BaseConstraints:
                 for t in self.time_periods
             ),
             name="only_cover_one_demand_at_a_time",
-        )
-
-    def add_helping_variable_gamma(self, x, gamma):
-        self.model.addConstrs(
-            (
-                quicksum(x[e, t, v] for t, v in self.shifts_per_day[i]) == gamma[e, i]
-                for e in self.employees
-                for i in self.days
-            ),
-            name="if_employee_e_works_day_i",
         )
 
     def add_weekly_rest(self, w):
