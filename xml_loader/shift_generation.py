@@ -5,8 +5,10 @@ from xml_loader.xml_loader import *
 
 
 def get_time_steps(root):
+
     demands = get_demand_definitions(root)
     time_step_length = 1
+
     for demand in demands:
         for i in range(len(demand.end)):
             if demand.end[i] - int(demand.end[i]) > 0:
@@ -17,6 +19,7 @@ def get_time_steps(root):
                 elif demand.end[i] - int(demand.end[i]) < 0.25:
                     time_step_length = 1/60
                     break
+
             if demand.start[i] - int(demand.start[i]) > 0:
                 if demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length > 0.5:
                     time_step_length = 0.5
@@ -28,10 +31,12 @@ def get_time_steps(root):
                 elif demand.start[i] - int(demand.start[i]) < 0.25:
                     time_step_length = 1/60
                     break
+
     return time_step_length
 
 
 def get_time_periods(root):
+
     time_periods = []
     i = 0
     time_step = get_time_steps(root)
@@ -39,6 +44,7 @@ def get_time_periods(root):
     time_periods_in_week = tupledict()
     week = 0
     time_periods_in_week[week] = tuplelist()
+
     for dem in demands:
         for i in range(len(demands[dem].start)):
             time = demands[dem].start[i] + 24 * dem
@@ -63,10 +69,11 @@ def get_demand_periods(root):
     competencies = [0]
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
+
     for c in competencies:
         for dem in demands:
             for i in range(len(demands[dem].start)):
-                t = demands[dem].start[i] + 24 * (dem)
+                t = demands[dem].start[i] + 24 * dem
                 while t < demands[dem].end[i] + 24 * dem:
                     try:
                         demand["min"][c, t] += demands[dem].minimum[i]
@@ -103,13 +110,17 @@ def get_events(root):
 
 
 def get_employee_lists(root):
+
     competencies = get_competencies(root)
+
     employee_with_competencies = tupledict()
     employees = tuplelist()
     employee_weekly_rest = tupledict()
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
+
     emp = get_employees(root, competencies)
+
     if len(competencies) == 0:
         competencies.append(0)
     for c in range(len(competencies)):
@@ -135,10 +146,13 @@ def get_employee_lists(root):
 
 
 def get_durations(root):
+
     events = get_events(root)
     durations = {}
+
     # Possible durations are between 6.0 hours and 12.0 hours
     possible_durations = [t / 4 for t in range(6 * 4, (12 * 4 + 1))]
+
     for t in events:
         for dur in possible_durations:
             if t + dur in events:
@@ -150,15 +164,17 @@ def get_durations(root):
 
 
 def get_shift_lists(root):
+
     durations = get_durations(root)
     shifts_per_day = tupledict()
     shifts = tuplelist()
     days = get_days(root)
     time_step = get_time_steps(root)
+
     for d in days:
         shifts_per_day[d] = []
         for t in durations:
-            if t >= d * 24 and t <= (24 * (d + 1) - time_step):
+            if d * 24 <= t <= (24 * (d + 1) - time_step):
                 for dur in durations[t]:
                     shifts_per_day[d].append((t, dur))
                     shifts.append((t, dur))
@@ -179,14 +195,16 @@ def get_shift_list(root):
 
 
 def get_shifts_overlapping_t(root):
+
     time_periods = get_time_periods(root)[0]
     time_step = get_time_steps(root)
     shifts_overlapping_t = {}
     shifts = get_durations(root)
+
     for t in time_periods:
         for time in shifts:
             for dur in shifts[time]:
-                if t >= time and t < time + dur:
+                if time <= t < time + dur:
                     try:
                         shifts_overlapping_t[t].append((time, dur))
                     except:
@@ -195,8 +213,10 @@ def get_shifts_overlapping_t(root):
 
 
 def get_start_events(root):
+
     events = []
     demand_days = get_days_with_demand(root)
+
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
             for j in range(len(demand_days[day].end)):
@@ -208,11 +228,13 @@ def get_start_events(root):
 
 
 def get_off_shifts(root):
+
     events = get_start_events(root)
     off_shifts = []
     off_shifts_in_week = tupledict()
     week = 0
     off_shifts_in_week[week] = []
+
     for i in range(len(events)):
         for event in events[i:]:
             dur = event - events[i]
@@ -227,13 +249,16 @@ def get_off_shifts(root):
                 if (events[i], dur) not in off_shifts:
                     off_shifts_in_week[week].append((events[i], dur))
                     off_shifts.append((events[i], dur))
+
     return [off_shifts, off_shifts_in_week]
 
   
 def get_t_covered_by_off_shifts(root):
+
     off_shifts = get_off_shifts(root)[0]
     t_covered = tupledict()
     time_periods = get_time_periods(root)[0]
+
     for shift in off_shifts:
         end = time_periods.index(shift[0] + shift[1])
         start = time_periods.index(shift[0])
@@ -242,17 +267,17 @@ def get_t_covered_by_off_shifts(root):
 
 
 def get_shifts_covered_by_off_shifts(root):
+
     off_shifts = get_off_shifts(root)[0]
     shifts_covered = tupledict()
     shifts = get_shift_lists(root)[0]
+
     for off_shift in off_shifts:
         shifts_covered[off_shift] = []
         for shift in shifts:
             if (
-                shift[0] >= off_shift[0]
-                and shift[0] < (off_shift[0] + off_shift[1])
-                or (shift[0] + shift[1]) >= off_shift[0]
-                and (shift[0] + shift[1]) < (off_shift[0] + off_shift[1])
+                off_shift[0] <= shift[0] < (off_shift[0] + off_shift[1])
+                    or off_shift[0] <= (shift[0] + shift[1]) < (off_shift[0] + off_shift[1])
             ):
                 shifts_covered[off_shift].append(shift)
     return shifts_covered
