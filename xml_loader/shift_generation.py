@@ -1,9 +1,7 @@
 from gurobipy import *
-from pathlib import Path
 
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
-import xml.etree.ElementTree as ET
 
 
 def get_time_steps(root):

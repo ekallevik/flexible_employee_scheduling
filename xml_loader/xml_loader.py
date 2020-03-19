@@ -1,13 +1,10 @@
-import sys
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from utils.const import DEFAULT_COMPETENCY
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
-
-
 
 
 def get_demand_definitions(root):
