@@ -1,9 +1,12 @@
+from utils.const import DEFAULT_COMPETENCY
+
+
 class Employee:
     def __init__(self, nbr):
         self.id = nbr
         self.weekly_rest_hours = 36
         self.daily_rest_hours = 8
-        self.competencies = [0]  # Default. Could also be called default directly (or another name)
+        self.competencies = DEFAULT_COMPETENCY
         self.contracted_hours = None
 
     def add_weekly_rest(self, weekly_rest):

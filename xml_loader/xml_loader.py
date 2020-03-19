@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+
+from utils.const import DEFAULT_COMPETENCY
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
@@ -27,7 +29,7 @@ def get_competencies(root):
         competencies.append(id)
 
     if not competencies:
-        competencies = [0]
+        competencies = DEFAULT_COMPETENCY
 
     return competencies
 
