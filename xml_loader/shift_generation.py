@@ -1,5 +1,7 @@
 from gurobipy import *
 from pathlib import Path
+
+from xml_loader import xml_loader
 from xml_loader.xml_loader import *
 import xml.etree.ElementTree as ET
 
@@ -14,7 +16,7 @@ def get_time_steps(root):
                     time_step_length = 0.5
                 elif demand.end[i] - int(demand.end[i]) in [0.25, 0.75] and time_step_length > 0.25:
                     time_step_length = 0.25
-                elif(demand.end[i] - int(demand.end[i]) < 0.25):
+                elif demand.end[i] - int(demand.end[i]) < 0.25:
                     time_step_length = 1/60
                     break
             if demand.start[i] - int(demand.start[i]) > 0:
@@ -25,7 +27,7 @@ def get_time_steps(root):
                     and time_step_length > 0.25
                 ):
                     time_step_length = 0.25
-                elif(demand.start[i] - int(demand.start[i]) < 0.25):
+                elif demand.start[i] - int(demand.start[i]) < 0.25:
                     time_step_length = 1/60
                     break
     return time_step_length
@@ -41,7 +43,7 @@ def get_time_periods(root):
     time_periods_in_week[week] = tuplelist()
     for dem in demands:
         for i in range(len(demands[dem].start)):
-            time = demands[dem].start[i] + 24 * (dem)
+            time = demands[dem].start[i] + 24 * dem
             end = demands[dem].end[i] + 24 * dem
             # Håndterer special cases hvor demand end er mindre enn demand start
             if end <= time:
@@ -58,10 +60,8 @@ def get_time_periods(root):
 
 
 def get_demand_periods(root):
-    demand = {}
-    demand["min"] = tupledict()
-    demand["ideal"] = tupledict()
-    demand["max"] = tupledict()
+    demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
+
     competencies = [0]
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
@@ -261,11 +261,7 @@ def get_shifts_covered_by_off_shifts(root):
 
 
 def load_data(problem_name):
-    data_folder = (
-        Path(__file__).resolve().parents[2]
-        / "flexible_employee_scheduling_data/xml data/Real Instances/"
-    )
-    root = ET.parse(data_folder / (problem_name + ".xml")).getroot()
+    root = xml_loader.get_root(problem_name)
 
     shift_set = get_shift_lists(root)
     off_shift_set = get_off_shifts(root)
@@ -300,3 +296,5 @@ def load_data(problem_name):
     }
 
     return data
+
+

@@ -1,10 +1,13 @@
 import sys
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 from utils.const import DEFAULT_COMPETENCY
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
+
+
 
 
 def get_demand_definitions(root):
@@ -112,3 +115,12 @@ def get_employees(root, competencies):
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
+
+
+def get_root(problem_name):
+    data_folder = (
+            Path(__file__).resolve().parents[2]
+            / "flexible_employee_scheduling_data/xml data/Real Instances/"
+    )
+    root = ET.parse(data_folder / (problem_name + ".xml")).getroot()
+    return root
