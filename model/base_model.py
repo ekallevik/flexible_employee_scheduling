@@ -21,8 +21,9 @@ class BaseModel:
         self.staff = data["staff"]
         self.shifts_set = data["shifts"]
         self.off_shifts_set = data["off_shifts"]
+        self.time_set = data["time"]
 
-        self.time = data["time"]
+        # want to remove
         self.time_step = data["time"]["step"]
         self.time_periods = data["time"]["periods"]
         self.days = data["time"]["days"]

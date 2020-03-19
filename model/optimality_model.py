@@ -27,7 +27,7 @@ class OptimalityModel(BaseModel):
             self.staff,
             self.demand,
             self.competencies,
-            self.time,
+            self.time_set,
             self.shifts_set,
             self.off_shifts_set,
             self.limit_on_consecutive_days,
@@ -39,6 +39,6 @@ class OptimalityModel(BaseModel):
             self.weights,
             self.competencies,
             self.staff,
-            self.time,
+            self.time_set,
             self.off_shifts_set,
         )
