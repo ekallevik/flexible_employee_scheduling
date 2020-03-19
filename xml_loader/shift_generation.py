@@ -38,7 +38,6 @@ def get_time_steps(root):
 def get_time_periods(root):
 
     time_periods = []
-    i = 0
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
     time_periods_in_week = tupledict()
@@ -197,7 +196,6 @@ def get_shift_list(root):
 def get_shifts_overlapping_t(root):
 
     time_periods = get_time_periods(root)[0]
-    time_step = get_time_steps(root)
     shifts_overlapping_t = {}
     shifts = get_durations(root)
 
