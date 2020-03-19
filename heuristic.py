@@ -1,5 +1,6 @@
 from hard_constraint_model_class import *
 from xml_loader.shift_generation import load_data, get_t_covered_by_shift
+from converter import *
 
 problem_name = "rproblem3"
 data_folder = Path(__file__).resolve().parents[1] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
@@ -11,10 +12,14 @@ model.add_constraints()
 model.set_objective()
 model.optimize()
 
+
+# x,y,w = convert(model)
 x = model.x
 y = model.y
 w = model.w
 employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v].x != 0] for em in model.employees}
+
+
 # for e in model.employees:
 #     for t,v in model.off_shifts:
 #         if(w[e,t,v].x == 1):
@@ -200,7 +205,7 @@ def remove_partial_weekends():
 #print(calculate_partial_weekends())
 #remove_partial_weekends()
 
-convert()
+convert(model)
 
 
 
