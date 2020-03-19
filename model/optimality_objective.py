@@ -55,7 +55,6 @@ class OptimalityObjective:
 
     def add_objective_for_optimal_solution(self, weights, f, g, delta):
 
-        #todo: fix this time_periods
         self.model.setObjective(
             quicksum(f["plus"][e] - f["minus"][e] for e in self.employees)
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])

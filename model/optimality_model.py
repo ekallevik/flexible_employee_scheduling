@@ -11,17 +11,15 @@ class OptimalityModel(BaseModel):
 
         self.weights = get_weights()
 
-        # todo: want to replace time_periods and days
         self.var = OptimalityVariables(
             model=self.model,
             competencies=self.competencies,
             staff=self.staff,
             time_set=self.time_set,
-            shifts_set=self.shifts_set,
-            off_shifts_set=self.off_shifts_set
+            shift_set=self.shift_set,
+            off_shift_set=self.off_shift_set
         )
 
-        #todo: want to have consistent naming for shift sets
         self.constraints = OptimalityConstraints(
             model=self.model,
             var=self.var,
@@ -29,8 +27,8 @@ class OptimalityModel(BaseModel):
             demand=self.demand,
             competencies=self.competencies,
             time_set=self.time_set,
-            shift_set=self.shifts_set,
-            off_shift_set=self.off_shifts_set,
+            shift_set=self.shift_set,
+            off_shift_set=self.off_shift_set,
             limit_on_consecutive_days=self.limit_on_consecutive_days,
         )
 
@@ -41,5 +39,5 @@ class OptimalityModel(BaseModel):
             competencies=self.competencies,
             staff=self.staff,
             time_set=self.time_set,
-            off_shift_set=self.off_shifts_set,
+            off_shift_set=self.off_shift_set,
         )

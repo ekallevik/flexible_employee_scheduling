@@ -13,8 +13,8 @@ class FeasibilityModel(BaseModel):
             competencies=self.competencies,
             staff=self.staff,
             time_set=self.time_set,
-            shifts_set=self.shifts_set,
-            off_shifts_set=self.off_shifts_set,
+            shift_set=self.shift_set,
+            off_shift_set=self.off_shift_set,
         )
 
         self.constraints = BaseConstraints(
@@ -24,8 +24,8 @@ class FeasibilityModel(BaseModel):
             staff=self.staff,
             demand=self.demand,
             time_set=self.time_set,
-            shift_set=self.shifts_set,
-            off_shift_set=self.off_shifts_set,
+            shift_set=self.shift_set,
+            off_shift_set=self.off_shift_set,
         )
 
         self.objective = FeasibilityObjective(
