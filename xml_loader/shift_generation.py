@@ -17,7 +17,7 @@ def get_time_steps(root):
                 elif demand.end[i] - int(demand.end[i]) in [0.25, 0.75] and time_step_length > 0.25:
                     time_step_length = 0.25
                 elif demand.end[i] - int(demand.end[i]) < 0.25:
-                    time_step_length = 1/60
+                    time_step_length = 1 / 60
                     break
 
             if demand.start[i] - int(demand.start[i]) > 0:
@@ -29,7 +29,7 @@ def get_time_steps(root):
                 ):
                     time_step_length = 0.25
                 elif demand.start[i] - int(demand.start[i]) < 0.25:
-                    time_step_length = 1/60
+                    time_step_length = 1 / 60
                     break
 
     return time_step_length
@@ -137,12 +137,12 @@ def get_employee_lists(root):
         employee_contracted_hours[id] = e.contracted_hours
 
     return {
-            "employees": employees,
-            "employees_with_competencies": employee_with_competencies,
-            "employee_with_weekly_rest": employee_weekly_rest,
-            "employee_daily_rest": employee_daily_rest,
-            "employee_contracted_hours": employee_contracted_hours,
-        }
+        "employees": employees,
+        "employees_with_competencies": employee_with_competencies,
+        "employee_with_weekly_rest": employee_weekly_rest,
+        "employee_daily_rest": employee_daily_rest,
+        "employee_contracted_hours": employee_contracted_hours,
+    }
 
 
 def get_durations(root):
@@ -252,7 +252,7 @@ def get_off_shifts(root):
 
     return [off_shifts, off_shifts_in_week]
 
-  
+
 def get_t_covered_by_off_shifts(root):
 
     off_shifts = get_off_shifts(root)[0]
@@ -275,10 +275,9 @@ def get_shifts_covered_by_off_shifts(root):
     for off_shift in off_shifts:
         shifts_covered[off_shift] = []
         for shift in shifts:
-            if (
-                off_shift[0] <= shift[0] < (off_shift[0] + off_shift[1])
-                    or off_shift[0] <= (shift[0] + shift[1]) < (off_shift[0] + off_shift[1])
-            ):
+            if off_shift[0] <= shift[0] < (off_shift[0] + off_shift[1]) or off_shift[0] <= (
+                shift[0] + shift[1]
+            ) < (off_shift[0] + off_shift[1]):
                 shifts_covered[off_shift].append(shift)
     return shifts_covered
 
@@ -289,9 +288,9 @@ def load_data(problem_name):
     shift_set = get_shift_lists(root)
     off_shift_set = get_off_shifts(root)
     days = get_days(root)
-    number_of_weeks = int(len(days)/7)
+    number_of_weeks = int(len(days) / 7)
     weeks = [i for i in range(number_of_weeks)]
-    saturdays = [5+i*7 for i in range(number_of_weeks)]
+    saturdays = [5 + i * 7 for i in range(number_of_weeks)]
 
     data = {
         "competencies": get_competencies(root),
@@ -314,10 +313,8 @@ def load_data(problem_name):
             "periods": get_time_periods(root),
             "days": days,
             "weeks": weeks,
-            "saturdays": saturdays
+            "saturdays": saturdays,
         },
     }
 
     return data
-
-
