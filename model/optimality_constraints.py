@@ -92,13 +92,13 @@ class OptimalityConstraints(BaseConstraints):
         )
 
     def add_consecutive_days(self, gamma, q):
-        self.model.addConstrs(
+        return self.model.addConstrs(
             (
                 quicksum(
-                    gamma[e, i_marked] for i_marked in range(i, i + self.limit_on_consecutive_days)
+                    gamma[e, i_marked] for i_marked in self.get_consecutive_days_time_window(i)
                 )
                 - self.limit_on_consecutive_days
-                <= q["con"][e, i]
+                <= q["con"][e, i] - 1
                 for e in self.employees
                 for i in range(len(self.days) - self.limit_on_consecutive_days)
             ),
@@ -114,3 +114,6 @@ class OptimalityConstraints(BaseConstraints):
             ),
             name="if_employee_e_works_day_i",
         )
+
+    def get_consecutive_days_time_window(self, day):
+        return range(day, day + self.limit_on_consecutive_days)
