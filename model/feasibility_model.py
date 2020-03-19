@@ -20,9 +20,9 @@ class FeasibilityModel(BaseModel):
         self.constraints = BaseConstraints(
             model=self.model,
             var=self.var,
+            competencies=self.competencies,
             staff=self.staff,
             demand=self.demand,
-            competencies=self.competencies,
             time_set=self.time_set,
             shift_set=self.shifts_set,
             off_shift_set=self.off_shifts_set,

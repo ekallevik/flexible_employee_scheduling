@@ -23,7 +23,7 @@ class BaseModel:
         self.off_shifts_set = data["off_shifts"]
         self.time_set = data["time"]
 
-        # want to remove
+        # todo: want to remove
         self.time_step = data["time"]["step"]
         self.time_periods = data["time"]["periods"]
         self.days = data["time"]["days"]

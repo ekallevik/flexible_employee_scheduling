@@ -18,7 +18,7 @@ class OptimalityConstraints(BaseConstraints):
     ):
 
         super(OptimalityConstraints, self).__init__(
-            model, var, staff, demand, competencies, time_set, shift_set, off_shift_set
+            model=model, var=var, staff=staff, demand=demand, competencies=competencies, time_set=time_set, shift_set=shift_set, off_shift_set=off_shift_set
         )
 
         self.limit_on_consecutive_days = limit_on_consecutive_days
