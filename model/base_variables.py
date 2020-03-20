@@ -11,6 +11,8 @@ class BaseVariables:
         self.off_shifts = off_shift_set["off_shifts"]
         self.time_periods = time_set["periods"][0]
         self.days = time_set["days"]
+        self.weeks = time_set["weeks"]
+        self.saturdays = time_set["saturdays"]
 
         self.y = self.add_y()
         self.x = self.add_x()
@@ -45,9 +47,6 @@ class BaseVariables:
                 self.competencies, self.time_periods, vtype=GRB.INTEGER, name="delta_minus"
             ),
         }
-
-    def add_gamma(self):
-        return self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="gamma")
 
     def add_lambda(self):
         return self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name="lambda")

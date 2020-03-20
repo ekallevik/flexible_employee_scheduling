@@ -18,11 +18,14 @@ class OptimalityVariables(BaseVariables):
         self.f = self.add_f()
         self.g = self.add_g()
 
+    def add_gamma(self):
+        return self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="gamma")
+
     def add_rho(self):
 
         return {
-            "sat": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sat"),
-            "sun": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sun"),
+            "sat": self.model.addVars(self.employees, self.weeks, vtype=GRB.BINARY, name="rho_sat"),
+            "sun": self.model.addVars(self.employees, self.weeks, vtype=GRB.BINARY, name="rho_sun"),
         }
 
     def add_q(self):

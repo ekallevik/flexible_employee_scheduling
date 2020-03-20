@@ -16,7 +16,7 @@ class OptimalityConstraints(BaseConstraints):
             competencies=competencies,
             time_set=time_set,
             shift_set=shift_set,
-            off_shift_set=off_shift_set
+            off_shift_set=off_shift_set,
         )
 
         self.limit_on_consecutive_days = limit_on_consecutive_days
@@ -59,11 +59,14 @@ class OptimalityConstraints(BaseConstraints):
         )
 
     def add_partial_weekends(self, gamma, rho):
+
         self.model.addConstrs(
             (
-                gamma[e, i] - gamma[e, (i + 1)] == rho["sat"][e, i] - rho["sun"][e, (i + 1)]
+                gamma[e, j * DAYS_IN_WEEK + SATURDAY_INDEX]
+                - gamma[e, j * DAYS_IN_WEEK + SUNDAY_INDEX]
+                == rho["sat"][e, j] - rho["sun"][e, j]
                 for e in self.employees
-                for i in self.saturdays
+                for j in self.weeks
             ),
             name="partial_weekends",
         )
