@@ -62,10 +62,9 @@ def get_time_periods(root):
     return [time_periods, time_periods_in_week]
 
 
-def get_demand_periods(root):
+def get_demand_periods(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
 
-    competencies = [0]
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
 
@@ -108,20 +107,16 @@ def get_events(root):
     return events
 
 
-def get_employee_lists(root):
+def get_employee_lists(root, competencies):
 
-    competencies = get_competencies(root)
-
-    employee_with_competencies = tupledict()
     employees = tuplelist()
+    employee_with_competencies = tupledict()
     employee_weekly_rest = tupledict()
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
 
     emp = get_employees(root, competencies)
 
-    if len(competencies) == 0:
-        competencies.append(0)
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
         for e in emp:
@@ -283,6 +278,7 @@ def get_shifts_covered_by_off_shifts(root):
 def load_data(problem_name):
     root = xml_loader.get_root(problem_name)
 
+    competencies = get_competencies(root)
     shift_set = get_shift_lists(root)
     off_shift_set = get_off_shifts(root)
     days = get_days(root)
@@ -291,9 +287,9 @@ def load_data(problem_name):
     saturdays = [5 + i * 7 for i in range(number_of_weeks)]
 
     data = {
-        "competencies": get_competencies(root),
-        "demand": get_demand_periods(root),
-        "staff": get_employee_lists(root),
+        "competencies": competencies,
+        "demand": get_demand_periods(root, competencies),
+        "staff": get_employee_lists(root, competencies),
         "limit_on_consecutive_days": 5,
         "shifts": {
             "shifts_covered_by_off_shifts": get_shifts_covered_by_off_shifts(root),
