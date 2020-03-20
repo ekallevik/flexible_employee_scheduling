@@ -1,4 +1,4 @@
-import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from utils.const import DEFAULT_COMPETENCY
@@ -112,3 +112,12 @@ def get_employees(root, competencies):
         emp.set_contracted_hours(contracted_hours)
         employees.append(emp)
     return employees
+
+
+def get_root(problem_name):
+    data_folder = (
+        Path(__file__).resolve().parents[2]
+        / "flexible_employee_scheduling_data/xml data/Real Instances/"
+    )
+    root = ET.parse(data_folder / (problem_name + ".xml")).getroot()
+    return root
