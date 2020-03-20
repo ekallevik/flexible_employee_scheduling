@@ -131,14 +131,25 @@ class Optimization_model():
             for j in self.weeks
         ), name="one_weekly_off_shift_per_week")
 
+        # self.model.addConstrs((
+        #     len(self.shifts_covered_by_off_shift[t,v]) * self.w[e,t,v] <= 
+        #     quicksum(
+        #         quicksum(
+        #             (1-self.x[e,t_marked,v_marked]) for c in self.competencies
+        #         ) for t_marked,v_marked in self.shifts_covered_by_off_shift[t,v]
+        #     ) for e in self.employees for t,v in self.off_shifts
+        # ), name="no_work_during_off_shift")
+
         self.model.addConstrs((
-            len(self.shifts_covered_by_off_shift[t,v]) * self.w[e,t,v] <= 
-            quicksum(
+            len(self.t_in_off_shifts[t,v]) * self.w[e,t,v]
+            <= quicksum(
                 quicksum(
-                    (1-self.x[e,t_marked,v_marked]) for c in self.competencies
-                ) for t_marked,v_marked in self.shifts_covered_by_off_shift[t,v]
-            ) for e in self.employees for t,v in self.off_shifts
+                    (1-self.y[c,e,t_mark]) for c in self.competencies
+                ) for t_mark in self.t_in_off_shifts[t,v]
+            ) for e in self.employees
+            for t, v in self.off_shifts
         ), name="no_work_during_off_shift")
+
 
         self.model.addConstrs((
             quicksum(
