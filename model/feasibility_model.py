@@ -5,8 +5,8 @@ from model.feasibility_objective import FeasibilityObjective
 
 
 class FeasibilityModel(BaseModel):
-    def __init__(self, name):
-        super(FeasibilityModel, self).__init__(name)
+    def __init__(self, name, problem):
+        super(FeasibilityModel, self).__init__(name, problem)
 
         self.var = BaseVariables(
             model=self.model,

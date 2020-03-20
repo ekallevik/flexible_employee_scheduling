@@ -4,7 +4,7 @@ from model.optimality_model import OptimalityModel
 
 def main():
 
-    esp = OptimalityModel("esp")
+    esp = OptimalityModel(name="esp", problem="rproblem2")
     esp.run_model()
 
 
