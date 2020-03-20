@@ -2,26 +2,30 @@ from gurobipy import *
 
 
 class BaseConstraints:
-    def __init__(self, model, var, staff, demand, competencies, time, shift_set, off_shift_set):
+    def __init__(self, model, var, competencies, staff, demand, time_set, shift_set, off_shift_set):
 
         self.model = model
 
-        self.employees_with_competencies = staff["employees_with_competencies"]
-        self.employees = staff["employees"]
-        self.contracted_hours = staff["employee_contracted_hours"]
-        self.demand = demand
         self.competencies = competencies
-        self.time_periods = time["periods"][0]
-        self.time_periods_per_week = time["periods"][1]
-        self.days = time["days"]
-        self.weeks = time["weeks"]
+
+        self.employees = staff["employees"]
+        self.employees_with_competencies = staff["employees_with_competencies"]
+        self.contracted_hours = staff["employee_contracted_hours"]
+
+        self.demand = demand
+
+        self.time_step = time_set["step"]
+        self.time_periods = time_set["periods"][0]
+        self.time_periods_per_week = time_set["periods"][1]
+        self.days = time_set["days"]
+        self.weeks = time_set["weeks"]
+        self.saturdays = time_set["saturdays"]
+
         self.shifts_per_day = shift_set["shifts_per_day"]
         self.shifts_overlapping_t = shift_set["shifts_overlapping_t"]
         self.off_shifts_in_week = off_shift_set["off_shifts_per_week"]
         self.t_in_off_shifts = off_shift_set["t_in_off_shifts"]
         self.off_shifts = off_shift_set["off_shifts"]
-        self.time_step = time["step"]
-        self.saturdays = time["saturdays"]
 
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)

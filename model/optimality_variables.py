@@ -5,11 +5,11 @@ from model.base_variables import BaseVariables
 
 class OptimalityVariables(BaseVariables):
     def __init__(
-        self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+        self, model, competencies, staff, time_set, shift_set, off_shift_set
     ):
 
         super(OptimalityVariables, self).__init__(
-            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+            model=model, competencies=competencies, staff=staff, time_set=time_set, shift_set=shift_set, off_shift_set=off_shift_set
         )
 
         self.rho = self.add_rho()

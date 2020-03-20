@@ -19,14 +19,9 @@ class BaseModel:
         self.competencies = data["competencies"]
         self.demand = data["demand"]
         self.staff = data["staff"]
-        self.shifts_set = data["shifts"]
-        self.off_shifts_set = data["off_shifts"]
-
-        self.time = data["time"]
-        self.time_step = data["time"]["step"]
-        self.time_periods = data["time"]["periods"]
-        self.days = data["time"]["days"]
-
+        self.time_set = data["time"]
+        self.shift_set = data["shifts"]
+        self.off_shift_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
 
     def create_model(self):

@@ -5,20 +5,18 @@ from model.base_constraints import BaseConstraints
 
 class OptimalityConstraints(BaseConstraints):
     def __init__(
-        self,
-        model,
-        var,
-        staff,
-        demand,
-        competencies,
-        time,
-        shift_set,
-        off_shift_set,
-        limit_on_consecutive_days,
+        self, model, var, staff, demand, competencies, time_set, shift_set, off_shift_set, limit_on_consecutive_days,
     ):
 
         super(OptimalityConstraints, self).__init__(
-            model, var, staff, demand, competencies, time, shift_set, off_shift_set
+            model=model,
+            var=var,
+            staff=staff,
+            demand=demand,
+            competencies=competencies,
+            time_set=time_set,
+            shift_set=shift_set,
+            off_shift_set=off_shift_set
         )
 
         self.limit_on_consecutive_days = limit_on_consecutive_days
@@ -30,7 +28,6 @@ class OptimalityConstraints(BaseConstraints):
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
         self.add_helping_variable_gamma(var.x, var.gamma)
-
 
     def add_minimum_weekly_work_hours(self, y):
 

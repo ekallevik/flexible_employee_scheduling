@@ -2,13 +2,13 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class FeasibilityObjective:
-    def __init__(self, model, y, competencies, staff, time):
+    def __init__(self, model, y, competencies, staff, time_set):
 
         self.model = model
 
-        self.employees = staff["employees"]
         self.competencies = competencies
-        self.time_periods = time["periods"][0]
+        self.employees = staff["employees"]
+        self.time_periods = time_set["periods"][0]
 
         self.add_objective(y)
 
