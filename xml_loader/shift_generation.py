@@ -256,10 +256,18 @@ def get_shifts_covered_by_off_shifts(root):
     return shifts_covered
 
 
+def shift_lookup(root):
+    shifts = get_shift_lists(root)[1]
+    shift_lookup = {}
+    for key in shifts.keys():
+        for value in shifts[key]:
+            shift_lookup[value] = key
+    return shift_lookup
+
 def load_data(problem_name):
     data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
     root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
-
+    shift_lookup(root)
     data = {}
     data["employees"] = get_employee_lists(root)
     data["time"] = [get_time_steps(root)]

@@ -1,6 +1,7 @@
 from hard_constraint_model_class import *
-from xml_loader.shift_generation import load_data, get_t_covered_by_shift
+from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup
 from converter import *
+from random import choice
 
 problem_name = "rproblem3"
 data_folder = Path(__file__).resolve().parents[1] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
@@ -15,6 +16,7 @@ model.add_constraints()
 model.set_objective()
 model.optimize()
 
+shift_lookup = shift_lookup(root)
 
 x,y,w = convert(model)
 
@@ -46,6 +48,16 @@ def calculate_deviation_from_demand():
             #     print("Different Delta")
     return delta
 
+def calculate_negative_deviation_from_demand():
+    delta = {}
+    for c in model.competencies:
+        for t in model.time_periods:
+            delta[c,t] = max(0, model.demand["ideal"][c,t] - sum(y[c,e,t] for e in model.employee_with_competencies[c]))
+            # if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
+            #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
+            #     print("Different Delta")
+    return delta
+
 def calculate_deviation_from_contracted_hours():
     delta_contracted_hours = {}
     for e in model.employees:
@@ -59,14 +71,18 @@ def calculate_deviation_from_contracted_hours():
 def calculate_partial_weekends():
     partial_weekend = {}
     print("Partial Weekends")
-    for e in model.employees:
-        for i in model.saturdays:
-            partial_weekend[e,i] = abs((sum(x[e,t,v] for t,v in model.shifts_at_day[i]) - sum(x[e,t,v] for t,v in model.shifts_at_day[i+1])))
+    partial_weekend_shifts = []
+    for i in model.saturdays:
+        for e in model.employees:
+            if(abs(sum(x[e,t,v] for t,v in model.shifts_at_day[i]) - sum(x[e,t,v] for t,v in model.shifts_at_day[i+1])) != 0):
+                partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i] if x[e,t,v] == 1])
+                partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i+1] if x[e,t,v] == 1])
+            partial_weekend[e,i] = abs(sum(x[e,t,v] for t,v in model.shifts_at_day[i]) - sum(x[e,t,v] for t,v in model.shifts_at_day[i+1]))
             # if(partial_weekend[e,i] != abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)):
             #     print(str(partial_weekend) + "," + str(abs(model.ro["sat"][e,i].x - model.ro["sun"][e,(i+1)].x)))
             #     print(i)
             #     print("Different partial weekends")
-    return partial_weekend
+    return partial_weekend, partial_weekend_shifts
 
 def calculate_isolated_working_days():
     isolated_working_days = {}
@@ -107,7 +123,7 @@ def calculate_consecutive_days():
 
 
 def calculate_f():
-    partial_weekend = calculate_partial_weekends()
+    partial_weekend = calculate_partial_weekends()[0]
     q_iso_work = calculate_isolated_working_days()
     q_iso_off = calculate_isolated_off_days()
     q_con = calculate_consecutive_days()
@@ -204,18 +220,86 @@ def lowest_contracted_hours(delta_c, delta):
    # print(employee)
    # print(min(delta2, key=delta2.get))
 
+def set_x(e, t, v, value):
+    x[e,t,v] = value
+    #Need a smarter solution for choosing competency
+    for t in t_covered_by_shift[t,v]:
+        y[0,e,t] = value
+
 
 def remove_partial_weekends():
     partial_weekends = calculate_partial_weekends()
-    actual_partial_weekends = [key for key, value in partial_weekends.items() if value != 0]
-    partial_weekend_shifts = {}
+    for e,t,v in partial_weekends[1]:
+        set_x(e,t,v,0)
+    return partial_weekends
 
+
+def add_random_weekends(partial):
+    actual_partial_weekends = [key for key, value in partial[0].items() if value != 0]
     for e,i in actual_partial_weekends:
-        partial_weekend_shifts[e,i] = []
-        for shift in employee_shifts[e]:
-            if shift[0] >= 24*i and shift[0] <= 24*(i+2):
-                partial_weekend_shifts[e,i].append(shift)
-    print(partial_weekend_shifts)
+        t1,v1 = choice(model.shifts_at_day[i])
+        t2,v2 = choice(model.shifts_at_day[i+1])
+        set_x(e,t1,v1,1)
+        set_x(e,t2,v2,1)
+
+def add_greedy_weekends(partial):
+    actual_partial_weekends = [key for key, value in partial[0].items() if value != 0]
+    t_covered = get_t_covered_by_shift(root)
+    for e,i in actual_partial_weekends:
+        delta = calculate_negative_deviation_from_demand()
+        avail_shifts = [[], []]
+        avail_shifts[0] = [sum(delta[c,t] for c in model.competencies for t in t_covered[shift]) for shift in model.shifts_at_day[i]]
+        avail_shifts[1] = [sum(delta[c,t] for c in model.competencies for t in t_covered[shift]) for shift in model.shifts_at_day[i+1]]
+        ind = [avail_shifts[0].index(max(avail_shifts[0])), avail_shifts[1].index(max(avail_shifts[1]))]
+        print(ind)
+        if(ind[0] == 0 and ind[1] == 0):
+            continue
+
+        print(avail_shifts)
+        t1,v1 = model.shifts_at_day[i][ind[0]]
+        t2,v2 = model.shifts_at_day[i+1][ind[1]]
+        set_x(e, t1, v1, 1)
+        set_x(e, t2, v2, 1)
+
+print(calculate_objective_function())
+partial = remove_partial_weekends()
+add_greedy_weekends(partial)
+print(calculate_objective_function())
+
+
+
+
+
+
+
+
+
+# def remove_partial_weekends():
+#     partial_weekend_shifts = calculate_partial_weekends()[1]
+#     for day in partial_weekend_shifts:
+#         if(day in model.saturdays):
+#             for shift in partial_weekend_shifts[day]:
+#                 if(len(partial_weekend_shifts[day+1]) != 0):
+#                     set_x(shift[0], shift[1], shift[2], 0)
+#                     employee_next_day = partial_weekend_shifts[day+1].pop(0)
+#                     set_x(employee_next_day, shift[1], shift[2], 1)
+
+#         else:
+            
+
+
+
+# def remove_partial_weekends():
+#     partial_weekends = calculate_partial_weekends()
+#     actual_partial_weekends = [key for key, value in partial_weekends.items() if value != 0]
+#     partial_weekend_shifts = {}
+
+#     for e,i in actual_partial_weekends:
+#         partial_weekend_shifts[e,i] = []
+#         for shift in employee_shifts[e]:
+#             if shift[0] >= 24*i and shift[0] <= 24*(i+2):
+#                 partial_weekend_shifts[e,i].append(shift)
+#     print(partial_weekend_shifts)
 
 
 
@@ -233,29 +317,13 @@ def remove_partial_weekends():
 
     #print(actual_partial_weekends)
 
+#print(calculate_partial_weekends()[1])
 
-def set_x(e, t, v, value):
-    x[e,t,v] = value
-    
-    #Need a smarter solution for choosing competency
-    for t in t_covered_by_shift[t,v]:
-        y[0,e,t] = value
 
 #print(calculate_objective_function())
-#print(calculate_partial_weekends())
-remove_partial_weekends()
+
 
 #print(calculate_objective_function())
-#convert(model)
-
-
-
-
-
-
-
-
-
 
 # cover_minimum_demand()
 # under_maximum_demand()
