@@ -35,9 +35,7 @@ class BaseConstraints:
         self.add_maximum_one_shift_each_day(var.x)
         self.add_weekly_rest(var.w)
 
-        # todo: Remove this comment before merge!! -even
-        self.add_no_demand_cover_during_off_shift(var.w, var.y)
-        #self.add_no_demand_cover_during_off_shift_v2(var.w, var.x)
+        self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y, version="original")
 
         self.add_contracted_hours(var.y, var.lam)
 
@@ -115,7 +113,16 @@ class BaseConstraints:
             name="one_weekly_off_shift_per_week",
         )
 
-    def add_no_demand_cover_during_off_shift(self, w, y):
+    def add_no_demand_cover_during_off_shift(self, w, x, y, version):
+
+        if version == "original":
+            return self.add_no_demand_cover_during_off_shift_original(w, y)
+        elif version == "alternative":
+            return self.add_no_demand_cover_during_off_shift_alternative(w, x)
+        else:
+            raise ValueError("Unknown version of no_demand_while_off-constraint")
+
+    def add_no_demand_cover_during_off_shift_original(self, w, y):
         self.model.addConstrs(
             (
                 len(self.t_in_off_shifts[t, v]) * w[e, t, v]
@@ -126,10 +133,11 @@ class BaseConstraints:
                 for e in self.employees
                 for t, v in self.off_shifts
             ),
-            name="no_work_during_off_shift",
+            name="no_work_during_off_shift_original",
         )
 
-    def add_no_demand_cover_during_off_shift_v2(self, w, x):
+    def add_no_demand_cover_during_off_shift_alternative(self, w, x):
+
         self.model.addConstrs(
             (
                 len(self.shifts_covered_by_off_shift[t, v]) * w[e, t, v]
@@ -140,7 +148,7 @@ class BaseConstraints:
                 for e in self.employees
                 for t, v in self.off_shifts
             ),
-            name="no_work_during_off_shift",
+            name="no_work_during_off_shift_alternative",
         )
 
     def add_contracted_hours(self, y, lam):
