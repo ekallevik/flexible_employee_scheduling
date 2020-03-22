@@ -144,7 +144,10 @@ def get_employee_lists(root, competencies):
         "employee_contracted_hours": employee_contracted_hours,
     }
 
+
 def get_demand_pairs(demand, day):
+    """ Return a list of demand pairs tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand ¨
+        rows in a DemandID """
 
     start_times = [t + 24 * int(day) for t in demand.start]
     end_times = [t + 24 * int(day) for t in demand.end]
@@ -156,7 +159,10 @@ def get_demand_pairs(demand, day):
     return demand_pairs
 
 
-def get_demand_intervals(demand, day):
+def get_day_demand_intervals(demand, day):
+    """ Returns a list of related demand pairs. Demand pairs like (07:00, 10:00) and (10:00, 14:00) are merged to
+        form the the related interval [07:00, 10:00, 14:00].  Unrelated demand pairs, like (07:00, 10:00) and
+        (20:00, 24:00) are kept separate, formin [[07:00, 10:00],[20:00, 24:00]]"""
 
     demand_pairs = get_demand_pairs(demand, day)
     related_intervals = []
@@ -178,25 +184,29 @@ def get_demand_intervals(demand, day):
     return related_intervals
 
 
-def get_daily_demand_intervals(root):
+def get_demand_intervals(root):
+    """ Returns a dict, representing the day_demand_intervals for each day """
 
     daily_demand = get_days_with_demand(root)
     daily_demand_intervals = {}
 
     for day in daily_demand:
-        daily_demand_intervals[day] = get_demand_intervals(daily_demand[day], day)
+        daily_demand_intervals[day] = get_day_demand_intervals(daily_demand[day], day)
 
-    return(daily_demand_intervals)
+    return daily_demand_intervals
 
 
 def combine_demand_intervals(root):
+    """ Returns a complete list including all demand intervals and connecting all demand intervals that could be
+        conneceted. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
+        next day. """
 
-    daily_demand_intervals = get_daily_demand_intervals(root)
+    demand_intervals = get_demand_intervals(root)
     interval_list = []
     combined_demand_intervals = []
 
-    for day in daily_demand_intervals:
-        for interval in daily_demand_intervals[day]:
+    for day in demand_intervals:
+        for interval in demand_intervals[day]:
             interval_list.append(interval)
 
     while len(interval_list) != 0:
@@ -225,8 +235,7 @@ def get_shift_lists(root):
             start_time = intervals[0]
             dur = intervals[1] - start_time
             if dur >= max(desired_dur):
-                # Todo: handle long shifts
-                shifts.append((time, dur))
+                shifts.append((start_time, dur))
             else:
                 shifts.append((start_time, intervals[1] - start_time))
         else:
@@ -238,7 +247,6 @@ def get_shift_lists(root):
                         shifts.append((time, dur))
                         found_shift = True
                     if dur > max(desired_dur) and not found_shift:
-                        # Todo: handle long shifts
                         shifts.append((time, dur))
 
     shifts_per_day = tupledict()
