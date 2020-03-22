@@ -2,6 +2,7 @@ from gurobipy import *
 from pathlib import Path
 from xml_loader.xml_loader import *
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 
 def get_time_steps(root):
@@ -55,6 +56,27 @@ def get_time_periods(root):
                     time_periods_in_week[week].append(time)
                 time += time_step
     return [time_periods, time_periods_in_week]
+
+
+def get_time_periods_in_day(root):
+    time_step = get_time_steps(root)
+    demands = get_days_with_demand(root)
+    time_periods_in_day = defaultdict(list)
+    day = 0
+    for dem in demands:
+        for i in range(len(demands[dem].start)):
+            time = demands[dem].start[i] + 24*(dem)
+            end = demands[dem].end[i] + 24*dem
+            #Håndterer special cases hvor demand end er mindre enn demand start
+            if(end <= time):
+                end += 24
+            while(time < end):
+                if(time > (day+1)*24):
+                    day += 1
+                if(time not in time_periods_in_day[day]):
+                    time_periods_in_day[day].append(time)
+                time += time_step
+    return time_periods_in_day
 
 
 def get_demand_periods(root):

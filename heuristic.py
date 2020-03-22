@@ -1,7 +1,8 @@
 from hard_constraint_model_class import *
-from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup
+from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup, get_time_periods_in_day
 from converter import *
-from random import choice
+from collections import defaultdict
+from random import choice, sample, choices
 
 problem_name = "rproblem3"
 data_folder = Path(__file__).resolve().parents[1] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
@@ -9,6 +10,7 @@ root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
 
 
 t_covered_by_shift = get_t_covered_by_shift(root)
+time_periods_in_day = get_time_periods_in_day(root)
 
 model = Optimization_model(problem_name)
 model.add_variables()
@@ -37,7 +39,6 @@ employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v] != 0] for em 
 
 
 
-
 def calculate_deviation_from_demand():
     delta = {}
     for c in model.competencies:
@@ -48,14 +49,15 @@ def calculate_deviation_from_demand():
             #     print("Different Delta")
     return delta
 
-def calculate_negative_deviation_from_demand():
+def calculate_negative_deviation_from_demand(days=model.days):
     delta = {}
     for c in model.competencies:
-        for t in model.time_periods:
-            delta[c,t] = max(0, model.demand["ideal"][c,t] - sum(y[c,e,t] for e in model.employee_with_competencies[c]))
-            # if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
-            #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
-            #     print("Different Delta")
+        for i in days:
+            for t in time_periods_in_day[i]:
+                delta[c,t] = max(0, model.demand["ideal"][c,t] - sum(y[c,e,t] for e in model.employee_with_competencies[c]))
+                # if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
+                #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
+                #     print("Different Delta")
     return delta
 
 def calculate_deviation_from_contracted_hours():
@@ -70,7 +72,7 @@ def calculate_deviation_from_contracted_hours():
 
 def calculate_partial_weekends():
     partial_weekend = {}
-    print("Partial Weekends")
+    #print("Partial Weekends")
     partial_weekend_shifts = []
     for i in model.saturdays:
         for e in model.employees:
@@ -88,7 +90,7 @@ def calculate_isolated_working_days():
     isolated_working_days = {}
     for e in model.employees:
         for i in range(len(model.days)-2):
-            isolated_working_days[e,i] = max(0,(-sum(x[e,t,v] for t,v in model.shifts_at_day[i]) 
+            isolated_working_days[e,i+1] = max(0,(-sum(x[e,t,v] for t,v in model.shifts_at_day[i]) 
             + sum(x[e,t,v] for t,v in model.shifts_at_day[i+1]) 
             - sum(x[e,t,v] for t,v in model.shifts_at_day[i+2])))
 
@@ -122,18 +124,18 @@ def calculate_consecutive_days():
     return consecutive_days
 
 
-def calculate_f():
+def calculate_f(employees=model.employees):
     partial_weekend = calculate_partial_weekends()[0]
     q_iso_work = calculate_isolated_working_days()
     q_iso_off = calculate_isolated_off_days()
     q_con = calculate_consecutive_days()
     delta_c = calculate_deviation_from_contracted_hours()
     f = {}
-    for e in model.employees:
+    for e in employees:
         f[e] = (sum(v * w[e,t,v] for t,v in model.off_shifts)
             - delta_c[e]
             - sum(partial_weekend[e,i] for i in model.saturdays)
-            - sum(q_iso_work[e,i] for i in range(len(model.days)-2))
+            - sum(q_iso_work[e,i+1] for i in range(len(model.days)-2))
             - sum(q_iso_off[e,i+1] for i in range(len(model.days)-2))
             - sum(q_con[e,i] for i in range(len(model.days)-model.L_C_D)))
         #print(str(f[e]) + ", " + str(model.f["plus"][e].x-model.f["minus"][e].x) + ", index: "+ str(e))
@@ -226,7 +228,7 @@ def set_x(e, t, v, value):
     for t in t_covered_by_shift[t,v]:
         y[0,e,t] = value
 
-
+#Destroy and repair algorithm targeting partial weekends
 def remove_partial_weekends():
     partial_weekends = calculate_partial_weekends()
     for e,t,v in partial_weekends[1]:
@@ -244,32 +246,94 @@ def add_random_weekends(partial):
 
 def add_greedy_weekends(partial):
     actual_partial_weekends = [key for key, value in partial[0].items() if value != 0]
-    t_covered = get_t_covered_by_shift(root)
     for e,i in actual_partial_weekends:
         delta = calculate_negative_deviation_from_demand()
         avail_shifts = [[], []]
-        avail_shifts[0] = [sum(delta[c,t] for c in model.competencies for t in t_covered[shift]) for shift in model.shifts_at_day[i]]
-        avail_shifts[1] = [sum(delta[c,t] for c in model.competencies for t in t_covered[shift]) for shift in model.shifts_at_day[i+1]]
+        avail_shifts[0] = [sum(delta[c,t] for c in model.competencies for t in t_covered_by_shift[shift]) for shift in model.shifts_at_day[i]]
+        avail_shifts[1] = [sum(delta[c,t] for c in model.competencies for t in t_covered_by_shift[shift]) for shift in model.shifts_at_day[i+1]]
         ind = [avail_shifts[0].index(max(avail_shifts[0])), avail_shifts[1].index(max(avail_shifts[1]))]
-        print(ind)
+        #print(ind)
         if(ind[0] == 0 and ind[1] == 0):
             continue
 
-        print(avail_shifts)
+        #print(avail_shifts)
         t1,v1 = model.shifts_at_day[i][ind[0]]
         t2,v2 = model.shifts_at_day[i+1][ind[1]]
         set_x(e, t1, v1, 1)
         set_x(e, t2, v2, 1)
 
+
+def remove_isolated_working_day():
+    iso_w = calculate_isolated_working_days()
+    iso_w_days = [key for key, value in iso_w.items() if value != 0]
+    [set_x(e,t,v,0) for e,i in iso_w_days for t,v in model.shifts_at_day[i] if x[e,t,v] == 1]
+    iso = defaultdict(int)
+    for ele in iso_w_days:
+        iso[ele[1]] += 1
+    return iso
+    
+def add_previously_isolated_days_randomly(iso_days):
+    employees = {i: [e for e in model.employees if sum(x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
+    for day, k in iso_days.items():
+        delta = calculate_negative_deviation_from_demand([day])
+        emps = sample(employees[day], k) 
+        #shifts = choices(model.shifts_at_day[day], k=k)
+
+        shifts = [sum(delta[c,t] for c in model.competencies for t in t_covered_by_shift[shift]) for shift in model.shifts_at_day[day]]
+        shifts_sorted = sorted(shifts, reverse=True)
+        shifts_2 = [model.shifts_at_day[day][shifts.index(shifts_sorted[place])] for place in range(k)]
+
+        for e,shift in zip(emps, shifts_2):
+            set_x(e, shift[0], shift[1], 1)
+    
+def add_previously_isolated_days_greedy(iso_days):
+    employees = {i: [e for e in model.employees if sum(x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
+    for i,k in iso_days.items():
+        delta = calculate_negative_deviation_from_demand([i])
+        f = calculate_f(employees[i])
+
+
+        f_sorted = {k: v for k, v in sorted(f.items(), key=lambda item: item[1])}
+        #print(f_sorted)
+        emps = [e for e in f_sorted.keys()][:k]
+        shifts = [sum(delta[c,t] for c in model.competencies for t in t_covered_by_shift[shift]) for shift in model.shifts_at_day[i]]
+        shifts_sorted = sorted(shifts, reverse=True)
+        #print(shifts_sorted)
+        shifts_2 = [model.shifts_at_day[i][shifts.index(shifts_sorted[place])] for place in range(k)]
+        [set_x(e,t,v,1) for e in emps for t,v in shifts_2]
+
+
+
+"""Possibilities now.
+1. Could use the same shifts over again. Set random or greedy employees on these shifts
+2. Could use the days over again, but use random or greedy shifts and employees
+"""
 print(calculate_objective_function())
 partial = remove_partial_weekends()
 add_greedy_weekends(partial)
+
+iso = remove_isolated_working_day()
+add_previously_isolated_days_greedy(iso)
+
 print(calculate_objective_function())
+iso_w = calculate_isolated_working_days()
+# iso_off = calculate_isolated_off_days()
+iso_w_days = [key for key, value in iso_w.items() if value != 0]
+print(iso_w_days)
 
+# print(calculate_objective_function())
 
+# print(calculate_objective_function())
+# iso_w = calculate_isolated_working_days()
+# iso_off = calculate_isolated_off_days()
+# iso_w_days = [key for key, value in iso_w.items() if value != 0]
+# iso_off_days = [key for key, value in iso_off.items() if value != 0]
+# print(iso_w_days)
+#print(iso_off_days)
+#print([(7,i) for i in model.days for t,v in model.shifts_at_day[i] if x[7,t,v] == 1])
 
-
-
+#print("----------------------------------")
+#print([(e,t,v) for e,t,v in w if w[e,t,v] == 1])
 
 
 
@@ -289,7 +353,7 @@ print(calculate_objective_function())
 
 
 
-# def remove_partial_weekends():
+0# def remove_partial_weekends():
 #     partial_weekends = calculate_partial_weekends()
 #     actual_partial_weekends = [key for key, value in partial_weekends.items() if value != 0]
 #     partial_weekend_shifts = {}
