@@ -31,7 +31,7 @@ def days():
 def employees():
     root = ET.parse(data_folder / "problem12.xml").getroot()
     competencies = get_competencies(root)
-    employees = get_employees(root, competencies)
+    employees = get_staff(root, competencies)
     return employees
 
 
@@ -54,7 +54,7 @@ def rest_rules():
     return (
         get_weekly_rest_rules(root),
         get_daily_rest_rules(root),
-        get_employees(root, competencies),
+        get_staff(root, competencies),
     )
 
 

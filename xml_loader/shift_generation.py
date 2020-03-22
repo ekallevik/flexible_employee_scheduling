@@ -115,7 +115,7 @@ def get_employee_lists(root, competencies):
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
 
-    emp = get_employees(root, competencies)
+    emp = get_staff(root, competencies)
 
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
