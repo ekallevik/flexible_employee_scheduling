@@ -292,7 +292,7 @@ def load_data(problem_name):
         "staff": get_employee_lists(root, competencies),
         "limit_on_consecutive_days": 5,
         "shifts": {
-            "shifts_covered_by_off_shifts": get_shifts_covered_by_off_shifts(root),
+            "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(root),
             "shifts_overlapping_t": get_shifts_overlapping_t(root),
             "shifts": shift_set[0],
             "shifts_per_day": shift_set[1],

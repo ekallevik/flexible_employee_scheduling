@@ -6,8 +6,8 @@ from utils.weights import get_weights
 
 
 class OptimalityModel(BaseModel):
-    def __init__(self, name):
-        super(OptimalityModel, self).__init__(name)
+    def __init__(self, name, problem):
+        super(OptimalityModel, self).__init__(name, problem)
 
         self.weights = get_weights()
 
