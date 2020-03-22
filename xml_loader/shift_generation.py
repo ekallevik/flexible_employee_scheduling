@@ -92,12 +92,15 @@ def get_demand(root, competencies):
                     except:
                         demand["max"][c, t] = demands[dem].maximum[i]
                     t += time_step
+
     return demand
 
 
 def get_events(root):
+
     events = []
     demand_days = get_days_with_demand(root)
+
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
             if demand_days[day].end[t] == 0:
@@ -110,6 +113,7 @@ def get_events(root):
                     events.append(demand_days[day].start[t] + 24 * day + diff)
             if demand_days[day].end[t] + 24 * day not in events:
                 events.append((demand_days[day].end[t] + 24 * day))
+
     return events
 
 
@@ -146,7 +150,7 @@ def get_employee_lists(root, competencies):
 
 
 def get_demand_pairs(demand, day):
-    """ Return a list of demand pairs tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand ¨
+    """ Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand ¨
         rows in a DemandID """
 
     start_times = [t + 24 * int(day) for t in demand.start]
@@ -181,6 +185,7 @@ def get_day_demand_intervals(demand, day):
             related_intervals.append(temp_related_intervals)
             if index is len(demand_pairs) - 1:
                 break
+
     return related_intervals
 
 
@@ -251,6 +256,7 @@ def get_shift_lists(root):
 
     shifts_per_day = tupledict()
     time_defining_shift_day = const.TIME_DEFINING_SHIFT_DAY
+
     for day in get_days(root):
         shifts_per_day[day] = []
         for shift in shifts:
@@ -277,6 +283,7 @@ def get_shifts_overlapping_t(root):
                     shifts_overlapping_t[time].append(shift)
                 except:
                     shifts_overlapping_t[time] = [shift]
+
     return shifts_overlapping_t
 
 
@@ -292,6 +299,7 @@ def get_start_events(root):
                 if diff >= 6:
                     events.append((demand_days[day].start[t] + 24 * day))
                     break
+
     return events
 
 
@@ -331,6 +339,7 @@ def get_t_covered_by_off_shifts(root):
         end = time_periods.index(shift[0] + shift[1])
         start = time_periods.index(shift[0])
         t_covered[shift[0], shift[1]] = time_periods[start:end]
+
     return t_covered
 
 
@@ -367,6 +376,7 @@ def get_shifts_covered_by_off_shifts(root):
                 shift[0] + shift[1]
             ) < (off_shift[0] + off_shift[1]):
                 shifts_covered[off_shift].append(shift)
+
     return shifts_covered
 
 
