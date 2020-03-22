@@ -68,7 +68,7 @@ def get_time_periods(root):
                 time += time_step
     return [time_periods, time_periods_in_week, time_periods_in_day]
 
-def get_demand_periods(root, competencies):
+def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
 
     time_step = get_time_steps(root)
@@ -168,7 +168,7 @@ def get_day_demand_intervals(demand, day):
     related_intervals = []
 
     if len(demand_pairs) == 1:
-       related_intervals.append([demand_pairs[0][0], demand_pairs[0][1]])
+        related_intervals.append([demand_pairs[0][0], demand_pairs[0][1]])
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
@@ -384,7 +384,7 @@ def load_data(problem_name):
 
     data = {
         "competencies": competencies,
-        "demand": get_demand_periods(root, competencies),
+        "demand": get_demand(root, competencies),
         "staff": get_employee_lists(root, competencies),
         "limit_on_consecutive_days": 5,
         "shifts": {

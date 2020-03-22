@@ -7,7 +7,6 @@ from xml_loader import shift_generation
 def get_root(problem_name):
     return xml_loader.get_root(problem_name)
 
-
 @pytest.fixture
 def time_periods():
     root = get_root("problem12")
