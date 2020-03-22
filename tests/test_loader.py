@@ -2,6 +2,10 @@ import pytest
 import sys
 from pathlib import Path
 
+from utils.const import DAYS_IN_WEEK
+from xml_loader import xml_loader
+
+
 loader_path = Path(__file__).resolve().parents[1]
 sys.path.insert(1, str(loader_path))
 from xml_loader.xml_loader import *
@@ -11,20 +15,6 @@ data_folder = (
     Path(__file__).resolve().parents[2]
     / "flexible_employee_scheduling_data/xml data/Artifical Test Instances/"
 )
-
-
-@pytest.fixture
-def competencies():
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    competencies = get_competencies(root)
-    return competencies
-
-
-@pytest.fixture
-def days():
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    days = get_days(root)
-    return days
 
 
 @pytest.fixture
@@ -116,3 +106,71 @@ def test_rest_rules(rest_rules):
     for employee in rest_rules[2]:
         assert employee.weekly_rest_hours == 36
         assert employee.daily_rest_hours == 9
+
+
+
+
+# todo: NEW TESTS
+
+@pytest.fixture()
+def get_competencies(get_root):
+
+    def _get_competencies(problem):
+        root = get_root(problem)
+        return xml_loader.get_competencies(root)
+
+    return _get_competencies
+
+
+@pytest.mark.parametrize("problem, expected", [
+    ("rproblem", "flexible_employee_scheduling_data/xml data/Real Instances"),
+    ("problem", "flexible_employee_scheduling_data/xml data/Artificial Instances")
+])
+def test_get_data_folder(problem, expected):
+
+    folder = xml_loader.get_data_folder(problem).as_posix()
+
+    assert type(folder) == str
+    assert expected in folder
+
+
+@pytest.mark.parametrize("problem, expected", [
+    ("rproblem2", DEFAULT_COMPETENCY),
+    ("rproblem3", DEFAULT_COMPETENCY),
+    ("problem12", ['Competence1', 'Competence2', 'Competence3'])
+])
+def test_get_competencies(problem, expected):
+
+    root = get_root(problem)
+    competencies = xml_loader.get_competencies(root)
+
+    assert competencies == expected
+
+
+@pytest.mark.parametrize("problem, expected", [
+    ("rproblem2", [i for i in range(2)]),
+    ("rproblem3", [i for i in range(4)]),
+    ("problem12", [i for i in range(3)])
+])
+def test_get_days(problem, expected):
+
+    root = get_root(problem)
+    days = xml_loader.get_days(root)
+
+    assert days == expected
+
+
+@pytest.mark.parametrize("problem, expected_number, expected_contracted, expected_competencies", [
+    ("problem12", 1, 37, ["Competence1", "Competence2", "Competence3"])
+])
+def test_get_employees(problem, expected_number, expected_contracted, expected_competencies):
+
+    root = get_root(problem)
+    competencies = xml_loader.get_competencies(root)
+    employees = xml_loader.get_employees(root, competencies)
+
+    assert len(employees) == expected_number
+    assert employees[0].contracted_hours == expected_contracted
+    assert employees[0].competencies == expected_competencies
+
+

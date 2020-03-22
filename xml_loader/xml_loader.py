@@ -143,10 +143,26 @@ def set_competency_for_employee(competencies, employee, schedule_row):
         employee.set_competency(DEFAULT_COMPETENCY)
 
 
-def get_root(problem_name):
-    data_folder = (
-        Path(__file__).resolve().parents[2]
-        / "flexible_employee_scheduling_data/xml data/Real Instances/"
-    )
-    root = ET.parse(data_folder / (problem_name + ".xml")).getroot()
-    return root
+def get_root(problem):
+
+    data_folder = get_data_folder(problem)
+
+    return ET.parse(data_folder / (problem + ".xml")).getroot()
+
+
+def get_data_folder(problem):
+
+    if "rproblem" in problem:
+        data_folder = (
+                Path(__file__).resolve().parents[2]
+                / "flexible_employee_scheduling_data/xml data/Real Instances/"
+        )
+    elif "problem" in problem:
+        data_folder = (
+                Path(__file__).resolve().parents[2]
+                / "flexible_employee_scheduling_data/xml data/Artificial Instances/"
+        )
+    else:
+        raise ValueError("Not a valid problem! The problem_name should include 'problem' or 'rproblem'")
+
+    return data_folder
