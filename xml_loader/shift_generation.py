@@ -150,7 +150,7 @@ def get_employee_lists(root, competencies):
 
 
 def get_demand_pairs(demand, day):
-    """ Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand ¨
+    """ Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand
         rows in a DemandID """
 
     start_times = [t + 24 * int(day) for t in demand.start]
@@ -166,7 +166,7 @@ def get_demand_pairs(demand, day):
 def get_day_demand_intervals(demand, day):
     """ Returns a list of related demand pairs. Demand pairs like (07:00, 10:00) and (10:00, 14:00) are merged to
         form the the related interval [07:00, 10:00, 14:00].  Unrelated demand pairs, like (07:00, 10:00) and
-        (20:00, 24:00) are kept separate, formin [[07:00, 10:00],[20:00, 24:00]]"""
+        (20:00, 24:00) are kept separate, forming [[07:00, 10:00],[20:00, 24:00]]"""
 
     demand_pairs = get_demand_pairs(demand, day)
     related_intervals = []
@@ -176,7 +176,7 @@ def get_day_demand_intervals(demand, day):
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
-            for pair in demand_pairs[index + 1:]:
+            for pair in demand_pairs[index + 1 :]:
                 if temp_related_intervals[-1] == pair[0]:
                     temp_related_intervals.append(pair[1])
                     demand_pairs.remove(pair)
@@ -246,7 +246,7 @@ def get_shift_lists(root):
         else:
             for time in intervals:
                 found_shift = False
-                for t in intervals[intervals.index(time):]:
+                for t in intervals[intervals.index(time) :]:
                     dur = t - time
                     if min(desired_dur) <= dur <= max(desired_dur):
                         shifts.append((time, dur))
@@ -260,7 +260,11 @@ def get_shift_lists(root):
     for day in get_days(root):
         shifts_per_day[day] = []
         for shift in shifts:
-            if 24 * (int(day) - 1) + time_defining_shift_day <= shift[0] < 24 * int(day) + time_defining_shift_day:
+            if (
+                24 * (int(day) - 1) + time_defining_shift_day
+                <= shift[0]
+                < 24 * int(day) + time_defining_shift_day
+            ):
                 shifts_per_day[day].append(shift)
             if shift[0] >= 24 * int(day) + time_defining_shift_day:
                 if day == get_days(root)[-1]:
