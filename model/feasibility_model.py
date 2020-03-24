@@ -32,3 +32,6 @@ class FeasibilityModel(BaseModel):
         self.objective = FeasibilityObjective(
             self.model, self.var.y, self.competencies, self.staff, self.time
         )
+
+        #For heuristic
+        self.x, self.y, self.w = [None, None, None]

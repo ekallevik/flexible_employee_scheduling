@@ -26,6 +26,8 @@ class BaseModel:
         self.time_step = data["time"]["step"]
         self.time_periods = data["time"]["periods"]
         self.days = data["time"]["days"]
+        self.saturdays = data["time"]["saturdays"]
+        self.employees = data["staff"]["employees"]
 
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
 
