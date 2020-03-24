@@ -30,8 +30,6 @@ def get_time_steps(root):
                 time_step_length = 1
     return time_step_length
 
-
-
 def get_time_periods(root):
     time_periods = []
     i = 0
@@ -301,4 +299,5 @@ def load_data(problem_name):
     data["off_shifts"] = [get_t_covered_by_off_shifts(root)]
     data["off_shifts"].extend(get_off_shifts(root))
     data["competencies"] = get_competencies(root)
+    data["heuristics"] = [get_t_covered_by_shift(root), get_time_periods_in_day(root), shift_lookup(root)]
     return data
