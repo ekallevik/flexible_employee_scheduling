@@ -5,10 +5,10 @@ from heuristic_calculations import calculate_negative_deviation_from_demand, cal
 
 
 
-def add_previously_isolated_days_randomly(model, x, iso_days):
-    employees = {i: [e for e in model.employees if sum(x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
+def add_previously_isolated_days_randomly(model, iso_days):
+    employees = {i: [e for e in model.employees if sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
     for day, k in iso_days.items():
-        delta = calculate_negative_deviation_from_demand([day])
+        delta = calculate_negative_deviation_from_demand(model, [day])
         emps = sample(employees[day], k) 
         #Needed for fully random:
         #shifts = choices(model.shifts_at_day[day], k=k)
@@ -21,8 +21,8 @@ def add_previously_isolated_days_randomly(model, x, iso_days):
 def add_previously_isolated_days_greedy(model, iso_days):
     employees = {i: [e for e in model.employees if sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
     for i,k in iso_days.items():
-        delta = calculate_negative_deviation_from_demand([i])
-        f = calculate_f(employees[i])
+        delta = calculate_negative_deviation_from_demand(model, [i])
+        f = calculate_f(model, employees[i])
         f_sorted = {k: v for k, v in sorted(f.items(), key=lambda item: item[1])}
         emps = [e for e in f_sorted.keys()][:k]
         shifts = [sum(delta[c,t] for c in model.competencies for t in model.t_covered_by_shift[shift]) for shift in model.shifts_at_day[i]]

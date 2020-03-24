@@ -37,7 +37,6 @@ def calculate_deviation_from_contracted_hours(model):
 
 def calculate_partial_weekends(model):
     partial_weekend = {}
-    #print("Partial Weekends")
     partial_weekend_shifts = []
     for i in model.saturdays:
         for e in model.employees:
@@ -123,11 +122,9 @@ def calculate_objective_function(model):
     #    print(str(delta_c[e]) + ", index: " + str(e)) 
     f = calculate_f(model)
     g = min(f.values())
-    print(g)
-    objective =    (sum(f[e] for e in model.employees)
+    objective = (sum(f[e] for e in model.employees)
                     + g
-                    - sum(sum(delta[c,t] for t in model.time_periods) for c in model.competencies)
-                    )
+                    - sum(sum(delta[c,t] for t in model.time_periods) for c in model.competencies))
     return objective
 
 
