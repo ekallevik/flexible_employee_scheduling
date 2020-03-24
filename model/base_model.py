@@ -26,10 +26,22 @@ class BaseModel:
         self.time_step = data["time"]["step"]
         self.time_periods = data["time"]["periods"]
         self.days = data["time"]["days"]
+        
+        self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
+
+        #Heuristic
         self.saturdays = data["time"]["saturdays"]
         self.employees = data["staff"]["employees"]
+        self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
+        self.time_periods_in_day = data["heuristic"]["time_periods_in_day"]
+        self.shift_lookup = data["heuristic"]["shift_lookup"]
+        self.shifts_at_day = data["shifts"]["shifts_per_day"]
+        self.weeks = data["time"]["weeks"]
+        self.contracted_hours = data["staff"]["employee_contracted_hours"]
+        self.time_periods = data["time"]["periods"][0]
+        self.off_shifts = data["off_shifts"]["off_shifts"]
+        self.employee_with_competencies = data["staff"]["employees_with_competencies"]
 
-        self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
 
     def create_model(self):
         return Model(name=self.name)

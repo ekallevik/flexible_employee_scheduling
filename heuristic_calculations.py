@@ -84,10 +84,10 @@ def calculate_isolated_off_days(model):
 def calculate_consecutive_days(model):
     consecutive_days = {}
     for e in model.employees:
-        for i in range(len(model.days)-model.L_C_D):
+        for i in range(len(model.days)-model.limit_on_consecutive_days):
             consecutive_days[e,i] = max(0,(sum(
                 sum(model.x[e,t,v] for t,v in model.shifts_at_day[i_marked]) 
-            for i_marked in range(i,i+model.L_C_D)))- model.L_C_D)
+            for i_marked in range(i,i+model.limit_on_consecutive_days)))- model.limit_on_consecutive_days)
             
             # if(consecutive_days[e,i] != model.q_con[e,i].x):
             #     print("Different consecutive days")
@@ -109,7 +109,7 @@ def calculate_f(model, employees=None):
             - sum(partial_weekend[e,i] for i in model.saturdays)
             - sum(q_iso_work[e,i+1] for i in range(len(model.days)-2))
             - sum(q_iso_off[e,i+1] for i in range(len(model.days)-2))
-            - sum(q_con[e,i] for i in range(len(model.days)-model.L_C_D)))
+            - sum(q_con[e,i] for i in range(len(model.days)-model.limit_on_consecutive_days)))
         #print(str(f[e]) + ", " + str(model.f["plus"][e].x-model.f["minus"][e].x) + ", index: "+ str(e))
     return f
 

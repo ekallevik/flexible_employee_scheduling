@@ -2,6 +2,7 @@ from gurobipy import *
 from pathlib import Path
 from xml_loader.xml_loader import *
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 
 def get_time_steps(root):
@@ -243,6 +244,26 @@ def get_t_covered_by_off_shifts(root):
     return t_covered
 
 
+def get_t_covered_by_shift(root):
+    time_step = get_time_steps(root)
+    shifts = get_shift_lists(root)[0]
+    time_periods = get_time_periods(root)[0]
+    t_covered_by_shift = tupledict()
+    for shift in shifts:
+        end = time_periods.index(shift[0] + shift[1] - time_step)
+        start = time_periods.index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
+    return t_covered_by_shift
+
+def shift_lookup(root):
+    shifts = get_shift_lists(root)[1]
+    shift_lookup = {}
+    for key in shifts.keys():
+        for value in shifts[key]:
+            shift_lookup[value] = key
+    return shift_lookup
+
+
 def get_shifts_covered_by_off_shifts(root):
     off_shifts = get_off_shifts(root)[0]
     shifts_covered = tupledict()
@@ -258,6 +279,26 @@ def get_shifts_covered_by_off_shifts(root):
             ):
                 shifts_covered[off_shift].append(shift)
     return shifts_covered
+
+def get_time_periods_in_day(root):
+    time_step = get_time_steps(root)
+    demands = get_days_with_demand(root)
+    time_periods_in_day = defaultdict(list)
+    day = 0
+    for dem in demands:
+        for i in range(len(demands[dem].start)):
+            time = demands[dem].start[i] + 24*(dem)
+            end = demands[dem].end[i] + 24*dem
+            #Håndterer special cases hvor demand end er mindre enn demand start
+            if(end <= time):
+                end += 24
+            while(time < end):
+                if(time > (day+1)*24):
+                    day += 1
+                if(time not in time_periods_in_day[day]):
+                    time_periods_in_day[day].append(time)
+                time += time_step
+    return time_periods_in_day
 
 
 def load_data(problem_name):
@@ -297,6 +338,11 @@ def load_data(problem_name):
             "weeks": weeks,
             "saturdays": saturdays
         },
+        "heuristic": {
+            "t_covered_by_shift": get_t_covered_by_shift(root),
+            "time_periods_in_day": get_time_periods_in_day(root),
+            "shift_lookup": shift_lookup(root),
+        }
     }
 
     return data

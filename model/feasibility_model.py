@@ -14,7 +14,7 @@ class FeasibilityModel(BaseModel):
             self.staff,
             self.shifts_set,
             self.off_shifts_set,
-            self.time_periods,
+            self.time["periods"],
             self.days,
         )
 
