@@ -1,6 +1,6 @@
 import pytest
 
-from heuristic.converter import Converter
+from results.converter import Converter
 from model.feasibility_model import FeasibilityModel
 
 # todo: how to reuse same fixture?

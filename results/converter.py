@@ -7,7 +7,6 @@ class Converter:
         self.y = self.convert_y()
         self.w = self.convert_w()
 
-    # todo: dict or args?
     def get_converted_variables(self):
         return self.x, self.y, self.y
 
@@ -38,6 +37,7 @@ class Converter:
         var = self.gurobi_variables
         return {(e, t, v): abs(var.w[e, t, v].x) for e, t, v in var.w}
 
+    # todo: move this function to base_model
     @staticmethod
     def get_gurobi_variables(gurobi_model):
         return gurobi_model.var
