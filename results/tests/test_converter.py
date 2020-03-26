@@ -3,6 +3,8 @@ import pytest
 from results.converter import Converter
 from model.feasibility_model import FeasibilityModel
 
+# todo: how to reuse same fixture?
+
 
 @pytest.fixture()
 def gurobi_model():
@@ -18,9 +20,11 @@ def converter(gurobi_model):
 
 def test_get_converted_variables(converter):
 
-    expected_variables = {"x": converter.x, "y": converter.y, "w": converter.w}
+    x = converter.x
+    y = converter.y
+    w = converter.w
 
-    assert converter.get_converted_variables() == expected_variables
+    assert (x, y, w) == converter.get_converted_variables()
 
 
 def test_convert_x(gurobi_model, converter):
@@ -42,3 +46,7 @@ def test_convert_w(gurobi_model, converter):
     assert type(converter.w) == dict
     assert len(converter.w) == len(gurobi_model.var.w)
     assert not any(value < 0 for value in converter.w.values())
+
+
+def test_converter_gets_gurobi_variables(gurobi_model, converter):
+    assert converter.gurobi_variables == gurobi_model.var

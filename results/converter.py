@@ -1,14 +1,14 @@
 class Converter:
-    def __init__(self, gurobi_solution):
+    def __init__(self, gurobi_model):
 
-        self.gurobi_variables = gurobi_solution.get_variables()
+        self.gurobi_variables = self.get_gurobi_variables(gurobi_model)
 
         self.x = self.convert_x()
         self.y = self.convert_y()
         self.w = self.convert_w()
 
     def get_converted_variables(self):
-        return {"x": self.x, "y": self.y, "w": self.w}
+        return self.x, self.y, self.y
 
     def convert_x(self):
         """
@@ -36,3 +36,8 @@ class Converter:
 
         var = self.gurobi_variables
         return {(e, t, v): abs(var.w[e, t, v].x) for e, t, v in var.w}
+
+    # todo: move this function to base_model
+    @staticmethod
+    def get_gurobi_variables(gurobi_model):
+        return gurobi_model.var
