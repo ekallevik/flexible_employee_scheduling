@@ -8,7 +8,7 @@ class Converter:
         self.w = self.convert_w()
 
     def get_converted_variables(self):
-        return self.x, self.y, self.y
+        return {"x": self.x, "y": self.y, "w": self.w}
 
     def convert_x(self):
         """
