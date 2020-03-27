@@ -1,7 +1,7 @@
 class Converter:
-    def __init__(self, gurobi_model):
+    def __init__(self, gurobi_solution):
 
-        self.gurobi_variables = self.get_gurobi_variables(gurobi_model)
+        self.gurobi_variables = self.get_gurobi_variables(gurobi_solution)
 
         self.x = self.convert_x()
         self.y = self.convert_y()

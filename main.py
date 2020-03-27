@@ -1,17 +1,37 @@
 import fire
 
+from heuristic.state import State
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
-from model.construction_model import ConstructionModel
+from results.converter import Converter
 
 
-def run_model(model="construction", problem="rproblem3"):
+def run_heuristic(construction_model="feasibility", problem="rproblem2"):
+    """
+    Skeleton for running ALNS.
+
+    :param construction_model: the model to be use to construct the initial solution.
+    :param problem: the problem instance to run.
+    :return:
+    """
+
+    candidate_solution = run_model(model=construction_model, problem=problem)
+
+    converter = Converter(candidate_solution)
+    converted_solution = converter.get_converted_variables()
+
+    state = State(converted_solution)
+    print(State)
+
+
+def run_model(model="feasibility", problem="rproblem2"):
     """
     Call this function with (with optional params):
         python main.py run_model MODEL PROBLEM
 
     :param model: The model version to be run.
     :param problem: the problem instance to run.
+    :return: the solved model instance.
     """
 
     if model == "feasibility":
@@ -21,9 +41,11 @@ def run_model(model="construction", problem="rproblem3"):
     elif model == "construction":
         esp = ConstructionModel(name="esp_construction", problem=problem)
     else:
-        raise ValueError(f"The model choice: {model} is not valid.")
+        raise ValueError(f"The model choice '{model}' is not valid.")
 
     esp.run_model()
+
+    return esp
 
 
 if __name__ == "__main__":

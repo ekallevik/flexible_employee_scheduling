@@ -1,5 +1,5 @@
 class State:
-    def __init__(self, var, sets):
+    def __init__(self, var):
 
         self.x = var["x"]
         self.y = var["y"]
@@ -7,10 +7,3 @@ class State:
 
     def get_objective_value(self):
         raise NotImplementedError
-
-    def get_working_days(self, employee):
-        raise NotImplementedError
-
-    def is_working_day(self, employee, day):
-        raise NotImplementedError
-
