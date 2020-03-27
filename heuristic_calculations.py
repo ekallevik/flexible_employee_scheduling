@@ -197,7 +197,7 @@ def calculate_objective_function(model):
                     - sum(delta[c,t] for t in model.time_periods for c in model.competencies))
     
     #Penalty from breaking hard constraints
-    objective += hard_constraint_penalties(model)
+    objective -= hard_constraint_penalties(model)
 
     return objective
 
