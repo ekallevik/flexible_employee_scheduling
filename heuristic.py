@@ -1,26 +1,8 @@
-from model.hard_constraint_model_class import Optimization_model
-from xml_loader.shift_generation import get_t_covered_by_shift, get_time_periods_in_day, shift_lookup
+from model.model_class import Optimization_model
 from heuristic_calculations import *
-from pathlib import Path
-import xml.etree.ElementTree as ET
-#calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_deviation_from_demand, calculate_f
-#from model_class import *
 from converter import convert
-
-problem_name = "rproblem2"
-data_folder = Path(__file__).resolve().parents[1] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
-
-
-t_covered_by_shift = get_t_covered_by_shift(root)
-time_periods_in_day = get_time_periods_in_day(root)
-shift_lookup = shift_lookup(root)
-
-
-
-
-
-
+from destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
+from repair_algorithms import *
 
 
 #employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v] != 0] for em in model.employees}
@@ -28,6 +10,7 @@ shift_lookup = shift_lookup(root)
 
 
 def main():
+    problem_name = "rproblem2" 
     model = Optimization_model(problem_name)
     model.add_variables()
     model.add_constraints()
@@ -37,8 +20,13 @@ def main():
     model.x = x
     model.y = y
     model.w = w
-    # print("############## Deviation from Demand ##############")
-    # print(calculate_deviation_from_demand())
+    #print(calculate_objective_function(model))
+
+    print("############## Deviation from Demand ##############")
+    print(calculate_deviation_from_demand(model))
+    
+    print(calculate_negative_deviation_from_contracted_hours(model))
+    print(calculate_positive_deviation_from_contracted_hours(model))
 
     print("############## Partial Weekends ##############")
     print(calculate_partial_weekends(model))
@@ -57,6 +45,15 @@ def main():
 
     print("############## Objective Function ##############")
     print(calculate_objective_function(model))
+
+    # remove_partial_weekends(model)
+    # iso_days = remove_isolated_working_day(model)
+    # add_previously_isolated_days_randomly(model, iso_days)
+    # add_previously_isolated_days_greedy(model, iso_days)
+
+    # partial = remove_partial_weekends(model)
+    # add_random_weekends(model, partial)
+    # add_greedy_weekends(model, partial)
 
 """Possibilities now.
 1. Could use the same shifts over again. Set random or greedy employees on these shifts

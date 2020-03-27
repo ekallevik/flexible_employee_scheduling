@@ -3,6 +3,8 @@ from pathlib import Path
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
+from datetime import timedelta, datetime
+today = datetime.today()
 
 def get_demand_definitions(root):
     demands = []
@@ -33,6 +35,30 @@ def get_days_with_demand(root):
             if obj.demand_id == day.find("DayDemandId").text:
                 d = int(day.find("DayIndex").text)
                 days_with_demand[d] = obj
+    return days_with_demand
+
+def get_demand_definitions2(root):
+    demands = []
+    for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
+        dem = Demand(DemandDefinition.find("DayDemandId").text)
+        for row in DemandDefinition.find("Rows").findall("Row"):
+            start = row.find("TimeStart").text
+            end = row.find("TimeEnd").text
+            maksimum = row.find("Max").text
+            minimum = row.find("Min").text
+            ideal = row.find("Ideal").text
+            dem.add_info2(start, end, maksimum, minimum, ideal)
+        demands.append(dem)
+    return demands
+
+def get_days_with_demand2(root):
+    demands = get_demand_definitions2(root)
+    days_with_demand = {}
+    for day in root.findall('Demands/DayDemandList/DayDemand'):
+        for obj in demands:
+            if obj.demand_id == day.find("DayDemandId").text:
+                day_obj = today + timedelta(days = int(day.find("DayIndex").text))
+                days_with_demand[day_obj] = obj
     return days_with_demand
 
 def get_days(root):

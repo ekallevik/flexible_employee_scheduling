@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import sys
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 #Paths
 data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
 solution_folder = Path(__file__).resolve().parents[1]
 loader_path = Path(__file__).resolve().parents[1] 
-loader_path = loader_path / 'xml_loader'
 sys.path.insert(1, str(loader_path))
-from xml_loader import *
+from xml_loader.xml_loader import *
 
 # creating indices
 key_y = re.compile('\d*,\d*,\d*')
@@ -174,9 +174,12 @@ def create_gantt_chart(data, solution):
 
 
 def main():
-    demand = get_days_with_demand2()
+    
+    data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
+    root = ET.parse(data_folder / ('rproblem2.xml')).getroot()
+    demand = get_days_with_demand2(root)
     # case = "base_v3.4.json"
-    solution = str(solution_folder / "test_4.sol")
+    solution = str(solution_folder / "solution.sol")
     
     
 
