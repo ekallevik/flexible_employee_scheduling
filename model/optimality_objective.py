@@ -2,7 +2,7 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-    def __init__(self, model, var, weights, competencies, staff, time, off_shift_set):
+    def __init__(self, model, var, weights, competencies, staff, time, off_shift_set, saturdays):
 
         self.model = model
 
@@ -12,6 +12,7 @@ class OptimalityObjective:
         self.weeks = time["weeks"]
         self.time_periods = time["periods"]
         self.off_shifts = off_shift_set["off_shifts"]
+        self.saturdays = saturdays
 
         self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q)
         self.add_lowest_fairness_score(var.f, var.g)
@@ -25,7 +26,7 @@ class OptimalityObjective:
                 == weights["rest"] * quicksum(v * w[e, t, v] for t, v in self.off_shifts)
                 - weights["contracted hours"] * lam[e]
                 - weights["partial weekends"]
-                * quicksum(rho["sat"][e, j] + rho["sun"][e, j] for j in self.weeks)
+                * quicksum(rho["sat"][e, i] + rho["sun"][e, i+1] for i in self.saturdays)
                 - weights["isolated working days"]
                 * quicksum(q["iso_work"][e, i] for i in self.days)
                 - weights["isolated off days"] * quicksum(q["iso_off"][e, i] for i in self.days)
@@ -62,7 +63,7 @@ class OptimalityObjective:
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
             - weights["demand_deviation"]
             * quicksum(
-                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
+                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods[0])
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,

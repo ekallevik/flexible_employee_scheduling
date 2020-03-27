@@ -5,11 +5,11 @@ from model.base_variables import BaseVariables
 
 class OptimalityVariables(BaseVariables):
     def __init__(
-        self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+        self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays
     ):
 
         super(OptimalityVariables, self).__init__(
-            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days
+            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays
         )
 
         self.rho = self.add_rho()
@@ -21,8 +21,8 @@ class OptimalityVariables(BaseVariables):
     def add_rho(self):
 
         return {
-            "sat": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sat"),
-            "sun": self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="rho_sun"),
+            "sat": self.model.addVars(self.employees, self.saturdays, vtype=GRB.BINARY, name="rho_sat"),
+            "sun": self.model.addVars(self.employees, self.sundays, vtype=GRB.BINARY, name="rho_sun"),
         }
 
     def add_q(self):

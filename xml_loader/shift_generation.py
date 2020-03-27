@@ -314,7 +314,7 @@ def load_data(problem_name):
     number_of_weeks = int(len(days)/7)
     weeks = [i for i in range(number_of_weeks)]
     saturdays = [5+i*7 for i in range(number_of_weeks)]
-
+    sundays = [6+i*7 for i in range(number_of_weeks)]
     data = {
         "competencies": get_competencies(root),
         "demand": get_demand_periods(root),
@@ -336,7 +336,8 @@ def load_data(problem_name):
             "periods": get_time_periods(root),
             "days": days,
             "weeks": weeks,
-            "saturdays": saturdays
+            "saturdays": saturdays,
+            "sundays": sundays
         },
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(root),

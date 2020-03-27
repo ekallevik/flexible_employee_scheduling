@@ -31,6 +31,7 @@ class BaseModel:
 
         #Heuristic
         self.saturdays = data["time"]["saturdays"]
+        self.sundays = data["time"]["sundays"]
         self.employees = data["staff"]["employees"]
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
         self.time_periods_in_day = data["heuristic"]["time_periods_in_day"]
@@ -40,6 +41,9 @@ class BaseModel:
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
         self.time_periods = data["time"]["periods"][0]
         self.off_shifts = data["off_shifts"]["off_shifts"]
+        self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
+        self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shifts"]
+        self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.employee_with_competencies = data["staff"]["employees_with_competencies"]
 
 
