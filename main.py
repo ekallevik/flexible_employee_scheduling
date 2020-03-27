@@ -8,7 +8,7 @@ from results.converter import Converter
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     """
-    Non-complete skeleton for running ALNS.
+    Skeleton for running ALNS.
 
     :param construction_model: the model to be use to construct the initial solution.
     :param problem: the problem instance to run.
@@ -21,8 +21,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     converted_solution = converter.get_converted_variables()
 
     state = State(converted_solution)
-
-    # add instantiation and running of ALNS
+    print(State)
 
 
 def run_model(model="feasibility", problem="rproblem2"):
