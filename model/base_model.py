@@ -31,6 +31,8 @@ class BaseModel:
 
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
 
+        self.var = None
+
         #Heuristic
         self.saturdays = data["time"]["saturdays"]
         self.sundays = data["time"]["sundays"]
@@ -56,3 +58,7 @@ class BaseModel:
         self.model.setParam("MIPFocus", self.mip_focus)
         self.model.setParam("SolutionLimit", self.solution_limit)
         self.model.optimize()
+
+    def get_variables(self):
+        """ This method is intended to be used in all subclasses of BaseModel"""
+        return self.var

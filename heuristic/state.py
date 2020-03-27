@@ -6,4 +6,5 @@ class State:
         self.w = var["w"]
 
     def get_objective_value(self):
+        # todo: will be implemented after Håkon's PR is approved. See https://trello.com/c/baWqgH1d.
         raise NotImplementedError
