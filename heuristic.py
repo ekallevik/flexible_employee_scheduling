@@ -1,4 +1,5 @@
 from model.feasibility_model import FeasibilityModel
+from model.optimality_model import OptimalityModel
 from heuristic_calculations import *
 from repair_algorithms import *
 from destroy_algorithms import *
@@ -14,42 +15,42 @@ from converter import convert
 
 
 def main():
-    model = FeasibilityModel("esp")
+    model = OptimalityModel("esp")
     model.run_model()
-
+    model.model.write("test.sol")
     x,y,w = convert(model) 
     model.x = x
     model.y = y
     model.w = w
-    print("############## Deviation from Demand ##############")
-    print(calculate_deviation_from_demand(model))
+    # print("############## Deviation from Demand ##############")
+    # print(calculate_deviation_from_demand(model))
 
-    print("############## Partial Weekends ##############")
-    print(calculate_partial_weekends(model))
+    # print("############## Partial Weekends ##############")
+    # print(calculate_partial_weekends(model))
 
-    print("############## Isolated Working Days ##############")
-    print(calculate_isolated_working_days(model))
+    # print("############## Isolated Working Days ##############")
+    # print(calculate_isolated_working_days(model))
 
-    print("############## Isolated Off Days ##############")
-    print(calculate_isolated_off_days(model))
+    # print("############## Isolated Off Days ##############")
+    # print(calculate_isolated_off_days(model))
 
-    print("############## Consecutive Working Days ##############")
-    print(calculate_consecutive_days(model))
+    # print("############## Consecutive Working Days ##############")
+    # print(calculate_consecutive_days(model))
 
-    print("############## Employees F ##############")
-    print(calculate_f(model))
+    # print("############## Employees F ##############")
+    # print(calculate_f(model))
 
     print("############## Objective Function ##############")
     print(calculate_objective_function(model))
 
-    partial = remove_partial_weekends(model)
-    add_random_weekends(model, partial)
-    add_greedy_weekends(model, partial)
+    # partial = remove_partial_weekends(model)
+    # add_random_weekends(model, partial)
+    # add_greedy_weekends(model, partial)
 
-    iso = remove_isolated_working_day(model)
-    add_previously_isolated_days_randomly(model, iso)
-    add_previously_isolated_days_greedy(model, iso)
-    print(calculate_objective_function(model))
+    # iso = remove_isolated_working_day(model)
+    # add_previously_isolated_days_randomly(model, iso)
+    # add_previously_isolated_days_greedy(model, iso)
+    # print(calculate_objective_function(model))
 
 
 """Possibilities now.
