@@ -5,3 +5,4 @@ coverage==5.0.4
 pytest-cov==2.8.1
 gurobipy==9.0.0
 pygments==2.6.1
+fire==0.2.1
