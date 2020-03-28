@@ -1,6 +1,5 @@
 from random import choice, sample, choices
 from converter import set_x
-from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup, get_time_periods_in_day
 from heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
 
 

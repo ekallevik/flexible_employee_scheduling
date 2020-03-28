@@ -34,7 +34,7 @@ class BaseModel:
         self.sundays = data["time"]["sundays"]
         self.employees = data["staff"]["employees"]
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
-        self.time_periods_in_day = data["heuristic"]["time_periods_in_day"]
+        self.time_periods_in_day = data["time"]["periods"][2]
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_at_day = data["shifts"]["shifts_per_day"]
         self.weeks = data["time"]["weeks"]

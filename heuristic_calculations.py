@@ -3,9 +3,6 @@ def calculate_deviation_from_demand(model):
     for c in model.competencies:
         for t in model.time_periods:
             delta[c,t] = abs(sum(model.y[c,e,t] for e in model.employee_with_competencies[c]) - model.demand["ideal"][c,t])
-            if(delta[c,t] - abs(model.var.delta["plus"][c,t].x - model.var.delta["minus"][c,t].x)) != 0:
-               print(delta[c,t] - abs(model.var.delta["plus"][c,t].x - model.var.delta["minus"][c,t].x))
-               print("Different Delta")
     return delta
 
 
@@ -17,9 +14,6 @@ def calculate_negative_deviation_from_demand(model, days=None):
         for i in days:
             for t in model.time_periods_in_day[i]:
                 delta[c,t] = max(0, model.demand["ideal"][c,t] - sum(model.y[c,e,t] for e in model.employee_with_competencies[c]))
-                if(delta[c,t] - abs(model.var.delta["plus"][c,t].x - model.var.delta["minus"][c,t].x)) != 0:
-                    print(delta[c,t] - abs(model.var.delta["plus"][c,t].x - model.var.delta["minus"][c,t].x))
-                    print("Different Delta")
     return delta
 
 def calculate_negative_deviation_from_contracted_hours(model):
@@ -45,10 +39,6 @@ def calculate_partial_weekends(model):
                                     for t,v in model.shifts_at_day[i]) 
                                     - sum(model.x[e,t,v] 
                                     for t,v in model.shifts_at_day[i+1]))
-            if(partial_weekend[e,i] != abs(model.var.rho["sat"][e,i].x - model.var.rho["sun"][e,(i+1)].x)):
-                print(str(partial_weekend) + "," + str(abs(model.var.rho["sat"][e,i].x - model.var.rho["sun"][e,(i+1)].x)))
-                print(i)
-                print("Different partial weekends")
     return partial_weekend, partial_weekend_shifts
 
 
@@ -59,8 +49,6 @@ def calculate_isolated_working_days(model):
             isolated_working_days[e,i+1] = max(0,(-sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) 
             + sum(model.x[e,t,v] for t,v in model.shifts_at_day[i+1]) 
             - sum(model.x[e,t,v] for t,v in model.shifts_at_day[i+2])))
-            if(isolated_working_days[e,i+1] != model.var.q["iso_work"][e,i].x):
-                print("Different isolated working days")
     return isolated_working_days
 
 
@@ -71,8 +59,6 @@ def calculate_isolated_off_days(model):
             isolated_off_days[e,i+1] = max(0,(sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) 
             - sum(model.x[e,t,v] for t,v in model.shifts_at_day[i+1]) 
             + sum(model.x[e,t,v] for t,v in model.shifts_at_day[i+2])-1))
-        if(isolated_off_days[e,i+1] != model.var.q["iso_off"][e,i].x):
-            print("Different isolated off days")
     return isolated_off_days
 
 
@@ -83,8 +69,6 @@ def calculate_consecutive_days(model):
             consecutive_days[e,i] = max(0,(sum(
                 sum(model.x[e,t,v] for t,v in model.shifts_at_day[i_marked]) 
             for i_marked in range(i,i+model.limit_on_consecutive_days)))- model.limit_on_consecutive_days)
-            if(consecutive_days[e,i] != model.var.q["con"][e,i].x):
-                print("Different consecutive days")
     return consecutive_days
 
 def cover_minimum_demand(model):
@@ -156,14 +140,6 @@ def calculate_f(model, employees=None):
     q_iso_work = calculate_isolated_working_days(model)
     q_iso_off = calculate_isolated_off_days(model)
     q_con = calculate_consecutive_days(model)
-    #print(sum(q_con.values()))
-    #print(sum(q_iso_off.values()))
-    #print(sum(q_iso_work.values()))
-    #print(partial_weekend)
-    test = {(e,t,v) for e in employees for t,v in model.off_shifts if model.w[e,t,v] == 1}
-    for ele in test:
-        if(model.w[ele] != model.var.w[ele].x):
-            print("different off shifts")
     delta_c = calculate_negative_deviation_from_contracted_hours(model)
     f = {}
     for e in employees:

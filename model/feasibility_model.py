@@ -16,6 +16,8 @@ class FeasibilityModel(BaseModel):
             self.off_shifts_set,
             self.time["periods"],
             self.days,
+            self.saturdays,
+            self.sundays
         )
 
         self.constraints = BaseConstraints(

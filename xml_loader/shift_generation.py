@@ -38,7 +38,9 @@ def get_time_periods(root):
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
     time_periods_in_week = tupledict()
+    time_periods_in_day = defaultdict(list)
     week = 0
+    day = 0
     time_periods_in_week[week] = tuplelist()
     for dem in demands:
         for i in range(len(demands[dem].start)):
@@ -51,12 +53,14 @@ def get_time_periods(root):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[week] = []
+                if(time > (day+1)*24):
+                    day += 1
                 if time not in time_periods:
                     time_periods.append(time)
                     time_periods_in_week[week].append(time)
+                    time_periods_in_day[day].append(time)
                 time += time_step
-    return [time_periods, time_periods_in_week]
-
+    return [time_periods, time_periods_in_week, time_periods_in_day]
 
 def get_demand_periods(root):
     demand = {}
@@ -280,26 +284,6 @@ def get_shifts_covered_by_off_shifts(root):
                 shifts_covered[off_shift].append(shift)
     return shifts_covered
 
-def get_time_periods_in_day(root):
-    time_step = get_time_steps(root)
-    demands = get_days_with_demand(root)
-    time_periods_in_day = defaultdict(list)
-    day = 0
-    for dem in demands:
-        for i in range(len(demands[dem].start)):
-            time = demands[dem].start[i] + 24*(dem)
-            end = demands[dem].end[i] + 24*dem
-            #Håndterer special cases hvor demand end er mindre enn demand start
-            if(end <= time):
-                end += 24
-            while(time < end):
-                if(time > (day+1)*24):
-                    day += 1
-                if(time not in time_periods_in_day[day]):
-                    time_periods_in_day[day].append(time)
-                time += time_step
-    return time_periods_in_day
-
 
 def load_data(problem_name):
     data_folder = (
@@ -341,7 +325,6 @@ def load_data(problem_name):
         },
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(root),
-            "time_periods_in_day": get_time_periods_in_day(root),
             "shift_lookup": shift_lookup(root),
         }
     }
