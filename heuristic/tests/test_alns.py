@@ -22,63 +22,79 @@ def alns(state):
     return ALNS(state)
 
 
-def placeholder_func_one():
+def func_one():
     """ Placeholder function to use in operator testing """
     return "1"
 
 
-def placeholder_func_two():
+def func_two():
     """ Placeholder function to use in operator testing """
     return "2"
 
 
 def test_add_destroy_operator(alns):
 
-    alns.add_destroy_operator(placeholder_func_one)
-    alns.add_destroy_operator(placeholder_func_two)
+    alns.add_destroy_operator(func_one)
+    alns.add_destroy_operator(func_two)
 
-    operators = alns.destroy_operators
-
-    assert len(operators.keys()) == 2
-    assert operators["placeholder_func_one"] == placeholder_func_one
-    assert operators["placeholder_func_two"] == placeholder_func_two
+    assert alns.destroy_operators == {"func_one": func_one, "func_two": func_two}
+    assert alns.repair_operators == {}
 
 
 def test_add_repair_operator(alns):
 
-    alns.add_repair_operator(placeholder_func_one)
-    alns.add_repair_operator(placeholder_func_two)
+    alns.add_repair_operator(func_one)
+    alns.add_repair_operator(func_two)
 
-    operators = alns.destroy_operators
-
-    assert len(operators.keys()) == 2
-    assert operators["placeholder_func_one"] == placeholder_func_one
-    assert operators["placeholder_func_two"] == placeholder_func_two
+    assert alns.destroy_operators == {}
+    assert alns.repair_operators == {"func_one": func_one, "func_two": func_two}
 
 
 def test_add_operator_with_destroy_argument(alns):
 
-    alns.add_operator(alns.destroy_operators, placeholder_func_one)
+    alns.add_operator(alns.destroy_operators, func_one)
 
-    destroy_operators = alns.destroy_operators
-    repair_operators = alns.repair_operators
-
-    assert len(destroy_operators.keys()) == 1
-    assert len(repair_operators.keys()) == 0
-    assert destroy_operators["placeholder_func_one"] == placeholder_func_one
-    assert destroy_operators["placeholder_func_one"]() == "1"
+    assert alns.destroy_operators == {"func_one": func_one}
+    assert alns.repair_operators == {}
+    assert alns.destroy_operators["func_one"]() == "1"
 
 
 def test_add_operator_with_repair_argument(alns):
 
-    alns.add_operator(alns.repair_operators, placeholder_func_one)
+    alns.add_operator(alns.repair_operators, func_one)
 
-    destroy_operators = alns.destroy_operators
-    repair_operators = alns.repair_operators
-
-    assert len(destroy_operators.keys()) == 0
-    assert len(repair_operators.keys()) == 1
-    assert destroy_operators["placeholder_func_one"] == placeholder_func_one
-    assert destroy_operators["placeholder_func_one"]() == "1"
+    assert alns.destroy_operators == {}
+    assert alns.repair_operators == {"func_one": func_one}
+    assert alns.repair_operators["func_one"]() == "1"
 
 
+def test_initialize_destroy_weights(alns):
+
+    alns.add_destroy_operator(func_one)
+    alns.add_destroy_operator(func_two)
+
+    alns.initialize_destroy_weights()
+
+    assert alns.destroy_weights == {"func_one": 0.5, "func_two": 0.5}
+
+
+def test_initialize_destroy_weights_raises_error_on_no_operators(alns):
+
+    with pytest.raises(ValueError):
+        alns.initialize_destroy_weights()
+
+
+def test_initialize_repair_weights(alns):
+
+    alns.add_repair_operator(func_one)
+    alns.add_repair_operator(func_two)
+
+    alns.initialize_repair_weights()
+
+    assert alns.repair_weights == {"func_one": 0.5, "func_two": 0.5}
+
+
+def test_initialize_repair_weights_raises_error_on_no_operators(alns):
+
+    with pytest.raises(ValueError):
+        alns.initialize_repair_weights()
