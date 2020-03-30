@@ -9,7 +9,7 @@ class OptimalityVariables(BaseVariables):
     ):
 
         super(OptimalityVariables, self).__init__(
-            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays
+            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays)
 
 
         self.rho = self.add_rho()
