@@ -9,7 +9,8 @@ def add_previously_isolated_days_randomly(model, iso_days):
     for day, k in iso_days.items():
         delta = calculate_negative_deviation_from_demand(model, [day])
         emps = sample(employees[day], k) 
-        #Needed for fully random:
+        #An alternative implementation. It is a totally random implementation instead of a semi-random
+        #implementation as used otherwise. The lines 15-17 would have to be commented out.
         #shifts = choices(model.shifts_at_day[day], k=k)
         shifts = [sum(delta[c,t] for c in model.competencies for t in model.t_covered_by_shift[shift]) for shift in model.shifts_at_day[day]]
         shifts_sorted = sorted(shifts, reverse=True)
