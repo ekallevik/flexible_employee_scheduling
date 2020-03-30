@@ -1,23 +1,23 @@
 from model.base_constraints import BaseConstraints
 from model.base_model import BaseModel
 from model.base_variables import BaseVariables
-from model.feasibility_objective import FeasibilityObjective
+from model.construction_objective import ConstructionObjective
+from utils import weights
 
 
-class FeasibilityModel(BaseModel):
+class ConstructionModel(BaseModel):
     def __init__(self, name, problem):
-        super(FeasibilityModel, self).__init__(name, problem)
+        super(ConstructionModel, self).__init__(name, problem)
+
+        self.weights = weights.get_weights()
 
         self.var = BaseVariables(
-            self.model,
-            self.competencies,
-            self.staff,
-            self.shifts_set,
-            self.off_shifts_set,
-            self.time["periods"],
-            self.days,
-            self.saturdays,
-            self.sundays
+            model=self.model,
+            competencies=self.competencies,
+            staff=self.staff,
+            time_set=self.time_set,
+            shift_set=self.shift_set,
+            off_shift_set=self.off_shift_set,
         )
 
         self.constraints = BaseConstraints(
@@ -31,13 +31,11 @@ class FeasibilityModel(BaseModel):
             off_shift_set=self.off_shift_set,
         )
 
-        self.objective = FeasibilityObjective(
+        self.objective = ConstructionObjective(
             model=self.model,
-            y=self.var.y,
+            var=self.var,
+            weights=self.weights,
             competencies=self.competencies,
             staff=self.staff,
             time_set=self.time_set,
         )
-
-        #For heuristic
-        self.x, self.y, self.w = [None, None, None]

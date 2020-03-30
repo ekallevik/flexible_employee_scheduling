@@ -3,14 +3,14 @@ from gurobipy.gurobipy import GRB, quicksum
 
 class OptimalityObjective:
     def __init__(self, model, var, weights, competencies, staff, time, off_shift_set, saturdays):
-
         self.model = model
 
         self.competencies = competencies
         self.employees = staff["employees"]
-        self.days = time["days"]
-        self.weeks = time["weeks"]
-        self.time_periods = time["periods"]
+
+        self.time_periods = time_set["periods"][0]
+        self.days = time_set["days"]
+        self.weeks = time_set["weeks"]
         self.off_shifts = off_shift_set["off_shifts"]
         self.saturdays = saturdays
 
@@ -32,9 +32,6 @@ class OptimalityObjective:
                 - weights["isolated off days"] * quicksum(q["iso_off"][e, i] for i in self.days)
                 - weights["consecutive days"] * quicksum(q["con"][e, i] for i in self.days)
                 for e in self.employees
-                # todo: fiks dette.
-                # - weights["backward rotation"] * k[e,i]
-                # +weights["preferences"] * quicksum(pref[e,t] for t in time_periods) * quicksum(y[c,e,t] for c in sets["competencies"])
             ),
             name="fairness_score",
         )

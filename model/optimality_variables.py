@@ -10,13 +10,16 @@ class OptimalityVariables(BaseVariables):
 
         super(OptimalityVariables, self).__init__(
             model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays
-        )
+
 
         self.rho = self.add_rho()
         self.q = self.add_q()
         self.gamma = self.add_gamma()
         self.f = self.add_f()
         self.g = self.add_g()
+
+    def add_gamma(self):
+        return self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="gamma")
 
     def add_rho(self):
 

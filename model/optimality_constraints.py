@@ -5,20 +5,18 @@ from model.base_constraints import BaseConstraints
 
 class OptimalityConstraints(BaseConstraints):
     def __init__(
-        self,
-        model,
-        var,
-        staff,
-        demand,
-        competencies,
-        time,
-        shift_set,
-        off_shift_set,
-        limit_on_consecutive_days,
+        self, model, var, staff, demand, competencies, time_set, shift_set, off_shift_set, limit_on_consecutive_days,
     ):
 
         super(OptimalityConstraints, self).__init__(
-            model, var, staff, demand, competencies, time, shift_set, off_shift_set
+            model=model,
+            var=var,
+            staff=staff,
+            demand=demand,
+            competencies=competencies,
+            time_set=time_set,
+            shift_set=shift_set,
+            off_shift_set=off_shift_set,
         )
 
         self.limit_on_consecutive_days = limit_on_consecutive_days
@@ -30,7 +28,6 @@ class OptimalityConstraints(BaseConstraints):
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
         self.add_helping_variable_gamma(var.x, var.gamma)
-
 
     def add_minimum_weekly_work_hours(self, y):
 
@@ -62,11 +59,14 @@ class OptimalityConstraints(BaseConstraints):
         )
 
     def add_partial_weekends(self, gamma, rho):
+
         self.model.addConstrs(
             (
-                gamma[e, i] - gamma[e, (i + 1)] == rho["sat"][e, i] - rho["sun"][e, (i + 1)]
+                gamma[e, j * DAYS_IN_WEEK + SATURDAY_INDEX]
+                - gamma[e, j * DAYS_IN_WEEK + SUNDAY_INDEX]
+                == rho["sat"][e, j] - rho["sun"][e, j]
                 for e in self.employees
-                for i in self.saturdays
+                for j in self.weeks
             ),
             name="partial_weekends",
         )
@@ -92,13 +92,13 @@ class OptimalityConstraints(BaseConstraints):
         )
 
     def add_consecutive_days(self, gamma, q):
-        self.model.addConstrs(
+        return self.model.addConstrs(
             (
                 quicksum(
-                    gamma[e, i_marked] for i_marked in range(i, i + self.limit_on_consecutive_days)
+                    gamma[e, i_marked] for i_marked in self.get_consecutive_days_time_window(i)
                 )
                 - self.limit_on_consecutive_days
-                <= q["con"][e, i]
+                <= q["con"][e, i] - 1
                 for e in self.employees
                 for i in range(len(self.days) - self.limit_on_consecutive_days)
             ),
@@ -114,3 +114,6 @@ class OptimalityConstraints(BaseConstraints):
             ),
             name="if_employee_e_works_day_i",
         )
+
+    def get_consecutive_days_time_window(self, day):
+        return range(day, day + self.limit_on_consecutive_days)

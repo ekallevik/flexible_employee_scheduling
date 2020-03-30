@@ -2,26 +2,31 @@ from gurobipy import *
 
 
 class BaseConstraints:
-    def __init__(self, model, var, staff, demand, competencies, time, shift_set, off_shift_set):
+    def __init__(self, model, var, competencies, staff, demand, time_set, shift_set, off_shift_set):
 
         self.model = model
 
-        self.employees_with_competencies = staff["employees_with_competencies"]
-        self.employees = staff["employees"]
-        self.contracted_hours = staff["employee_contracted_hours"]
-        self.demand = demand
         self.competencies = competencies
-        self.time_periods = time["periods"][0]
-        self.time_periods_per_week = time["periods"][1]
-        self.days = time["days"]
-        self.weeks = time["weeks"]
+
+        self.employees = staff["employees"]
+        self.employees_with_competencies = staff["employees_with_competencies"]
+        self.contracted_hours = staff["employee_contracted_hours"]
+
+        self.demand = demand
+
+        self.time_step = time_set["step"]
+        self.time_periods = time_set["periods"][0]
+        self.time_periods_per_week = time_set["periods"][1]
+        self.days = time_set["days"]
+        self.weeks = time_set["weeks"]
+        self.saturdays = time_set["saturdays"]
+
         self.shifts_per_day = shift_set["shifts_per_day"]
         self.shifts_overlapping_t = shift_set["shifts_overlapping_t"]
+        self.shifts_covered_by_off_shift = shift_set["shifts_covered_by_off_shift"]
         self.off_shifts_in_week = off_shift_set["off_shifts_per_week"]
         self.t_in_off_shifts = off_shift_set["t_in_off_shifts"]
         self.off_shifts = off_shift_set["off_shifts"]
-        self.time_step = time["step"]
-        self.saturdays = time["saturdays"]
 
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)
@@ -29,7 +34,9 @@ class BaseConstraints:
         self.add_mapping_of_shift_to_demand(var.x, var.y)
         self.add_maximum_one_shift_each_day(var.x)
         self.add_weekly_rest(var.w)
-        self.add_no_demand_cover_during_off_shift(var.w, var.y)
+
+        self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y, version="original")
+
         self.add_contracted_hours(var.y, var.lam)
 
     def add_minimum_demand_coverage(self, y, mu):
@@ -106,7 +113,16 @@ class BaseConstraints:
             name="one_weekly_off_shift_per_week",
         )
 
-    def add_no_demand_cover_during_off_shift(self, w, y):
+    def add_no_demand_cover_during_off_shift(self, w, x, y, version):
+
+        if version == "original":
+            return self.add_no_demand_cover_during_off_shift_original(w, y)
+        elif version == "alternative":
+            return self.add_no_demand_cover_during_off_shift_alternative(w, x)
+        else:
+            raise ValueError("Unknown version of no_demand_while_off-constraint")
+
+    def add_no_demand_cover_during_off_shift_original(self, w, y):
         self.model.addConstrs(
             (
                 len(self.t_in_off_shifts[t, v]) * w[e, t, v]
@@ -117,7 +133,22 @@ class BaseConstraints:
                 for e in self.employees
                 for t, v in self.off_shifts
             ),
-            name="no_work_during_off_shift",
+            name="no_work_during_off_shift_original",
+        )
+
+    def add_no_demand_cover_during_off_shift_alternative(self, w, x):
+
+        self.model.addConstrs(
+            (
+                len(self.shifts_covered_by_off_shift[t, v]) * w[e, t, v]
+                <= quicksum(
+                    1 - x[e, t_marked, v_marked]
+                    for t_marked, v_marked in self.shifts_covered_by_off_shift[t, v]
+                )
+                for e in self.employees
+                for t, v in self.off_shifts
+            ),
+            name="no_work_during_off_shift_alternative",
         )
 
     def add_contracted_hours(self, y, lam):

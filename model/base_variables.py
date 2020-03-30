@@ -14,6 +14,7 @@ class BaseVariables:
         self.saturdays = saturdays
         self.sundays = sundays
 
+
         
         self.y = self.add_y()
         self.x = self.add_x()
@@ -48,9 +49,6 @@ class BaseVariables:
                 self.competencies, self.time_periods, vtype=GRB.INTEGER, name="delta_minus"
             ),
         }
-
-    def add_gamma(self):
-        return self.model.addVars(self.employees, self.days, vtype=GRB.BINARY, name="gamma")
 
     def add_lambda(self):
         return self.model.addVars(self.employees, vtype=GRB.CONTINUOUS, name="lambda")

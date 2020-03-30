@@ -1,53 +1,39 @@
 import pytest
 
-from xml_loader.shift_generation import *
-
-loader_path = Path(__file__).resolve().parents[1]
-sys.path.insert(1, str(loader_path))
-
-data_folder = (
-        Path(__file__).resolve().parents[2]
-        / "flexible_employee_scheduling_data/xml data/Artifical Test Instances/"
-)
+import xml_loader.xml_loader as xml_loader
+from xml_loader import shift_generation
 
 
-@pytest.fixture
-def time_step():
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    time_step = get_time_steps(root)
-    return time_step
+def get_root(problem_name):
+    return xml_loader.get_root(problem_name)
 
 
 @pytest.fixture
 def time_periods():
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    days = get_days(root)
-    time_periods, time_periods_in_week = get_time_periods(root)
+    root = get_root("problem12")
+    days = shift_generation.get_days(root)
+    time_periods, time_periods_in_week = shift_generation.get_time_periods(root)
     return time_periods, time_periods_in_week, days
 
 
 @pytest.fixture
 def durations():
     # Possible to run on any dataset. Depends on get_events being correct
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    return get_durations(root), get_events(root)
+    root = get_root("problem12")
+    return shift_generation.get_durations(root), shift_generation.get_events(root)
 
 
 @pytest.fixture
 def events():
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    return get_events(root)
+    root = get_root("problem12")
+    return shift_generation.get_events(root)
 
 
 @pytest.fixture
 def shifts():
     # Possible to run on any dataset. Dependent on get_durations being correct
-    root = ET.parse(data_folder / "problem12.xml").getroot()
-    return get_shift_lists(root), get_durations(root)
-
-
-def test_time_step(time_step):
-    assert time_step == 1, "Expected time step of 1 hour got %d" % time_step
+    root = get_root("problem12")
+    return shift_generation.get_shift_lists(root), shift_generation.get_durations(root)
 
 
 def test_time_periods(time_periods):
@@ -71,3 +57,40 @@ def test_shifts(shifts):
     for shift in shifts[0][0]:
         assert shift[0] in shifts[1]
         assert shift[1] in shifts[1][shift[0]]
+
+
+@pytest.mark.parametrize("problem_name, expected", [
+    ("problem12", 1),
+])
+def test_time_step(problem_name, expected):
+
+    root = get_root(problem_name)
+    time_step = shift_generation.get_time_steps(root)
+
+    assert time_step == expected
+
+
+@pytest.mark.parametrize("problem_name, expected", [
+    ("rproblem2", [0]),
+    ("rproblem3", [0])
+])
+def test_get_competencies(problem_name, expected):
+
+    root = get_root(problem_name)
+    competencies = shift_generation.get_competencies(root)
+
+    assert competencies == expected
+
+
+@pytest.mark.parametrize("problem_name, expected_length, expected_start", [
+    ("rproblem2", 1170, [8.0, 8.5, 9, 9.5]),
+    ("rproblem3", 1176, [7.75, 8.0, 8.25, 8.5])
+
+])
+def test_get_time_periods(problem_name, expected_length, expected_start):
+
+    root = get_root(problem_name)
+    time_periods = shift_generation.get_time_periods(root)[0]
+
+    assert len(time_periods) == expected_length
+    assert time_periods[:4] == expected_start

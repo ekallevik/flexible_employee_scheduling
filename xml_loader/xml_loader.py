@@ -1,5 +1,7 @@
-import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
@@ -27,7 +29,7 @@ def get_competencies(root):
         competencies.append(id)
 
     if not competencies:
-        competencies = [0]
+        competencies = DEFAULT_COMPETENCY
 
     return competencies
 
@@ -70,43 +72,97 @@ def get_daily_rest_rules(root):
     return daily_rest_rules
 
 
-def get_employees(root, competencies):
+def get_staff(root, competencies):
     weekly_rest_rules = get_weekly_rest_rules(root)
     daily_rest_rules = get_daily_rest_rules(root)
-    employees = []
+    staff = []
     for schedule_row in root.findall("SchedulePeriod/ScheduleRows/ScheduleRow"):
-        employee_id = schedule_row.find("RowNbr").text
-        emp = Employee(employee_id)
+        employee = Employee(schedule_row.find("RowNbr").text)
+
+        set_contracted_hours_for_employee(employee, schedule_row)
+        set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
+        set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
+        set_competency_for_employee(competencies, employee, schedule_row)
+
+        staff.append(employee)
+    return staff
+
+
+def set_contracted_hours_for_employee(employee, schedule_row):
+    try:
+        employee.set_contracted_hours(float(schedule_row.find("WeekHours").text))
+    except AttributeError:
+        print(f"ScheduleRow {employee.id} don't have a set WeekHours tag. Using DEFAULT_CONTRACTED_HOURS")
+        employee.set_contracted_hours(DEFAULT_CONTRACTED_HOURS)
+
+
+def set_daily_rest_rule(daily_rest_rules, employee, schedule_row):
+    try:
+        daily_rest_rule = schedule_row.find("DayRestRule").text
+        for daily_rule in daily_rest_rules:
+            if daily_rule.rest_id == daily_rest_rule:
+                employee.set_daily_rest(daily_rule.hours)
+    except AttributeError:
+        print(f"ScheduleRow {employee.id} don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST")
+        employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
+
+
+def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules):
+    try:
+        weekly_rest_rule = schedule_row.find("WeeklyRestRule").text
+        for weekly_rule in weekly_rest_rules:
+            if weekly_rule.rest_id == weekly_rest_rule:
+                employee.set_weekly_rest(weekly_rule.hours)
+    except AttributeError:
+        print(f"ScheduleRow {employee.id} don't have a set WeeklyRestRule tag. Using DEFAULT_WEEKLY_REST")
+        employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
+
+
+def set_competency_for_employee(competencies, employee, schedule_row):
+    """
+    Sets the competencies for the given employee
+
+    :param competencies: a list of all competencies there is demand for
+    :param employee: the relevant Employee-object
+    :param schedule_row: the row in XML for the given employee
+    """
+
+    # there is not defined any competencies for demand
+    if not competencies:
+        employee.set_competency(DEFAULT_COMPETENCY)
+    else:
         try:
-            contracted_hours = float(schedule_row.find("WeekHours").text)
+            for competence in schedule_row.find("Competences").findall("CompetenceId"):
+                if competence.text in competencies:
+                    employee.append_competency(competence.text)
         except AttributeError:
-            print("ScheduleRow %s don't have a set WeekHours tag" % employee_id)
-            contracted_hours = 36
+            print(f"ScheduleRow {employee.id} don't have a set Competence tag. DEFAULT_COMPETENCY will be applied")
 
-        if len(competencies) == 0:
-            emp.set_competency(0)
-        else:
-            try:
-                for competence in schedule_row.find("Competences").findall("CompetenceId"):
-                    if competence.text in competencies:
-                        emp.set_competency(competence.text)
-            except AttributeError:
-                print("ScheduleRow %s don't have a set Competence tag" % employee_id)
-        try:
-            weekly_rest_rule = schedule_row.find("WeeklyRestRule").text
-            for weekly_rule in weekly_rest_rules:
-                if weekly_rule.rest_id == weekly_rest_rule:
-                    emp.add_weekly_rest(weekly_rule.hours)
-        except:
-            pass
-        try:
-            daily_rest_rule = schedule_row.find("DayRestRule").text
-            for daily_rule in daily_rest_rules:
-                if daily_rule.rest_id == daily_rest_rule:
-                    emp.add_daily_rest(daily_rule.hours)
-        except:
-            pass
+    # Add DEFAULT_COMPETENCY if the employee does not have any competencies
+    if not employee.competencies:
+        employee.set_competency(DEFAULT_COMPETENCY)
 
-        emp.set_contracted_hours(contracted_hours)
-        employees.append(emp)
-    return employees
+
+def get_root(problem):
+
+    data_folder = get_data_folder(problem)
+
+    return ET.parse(data_folder / (problem + ".xml")).getroot()
+
+
+def get_data_folder(problem):
+
+    if "rproblem" in problem:
+        data_folder = (
+                Path(__file__).resolve().parents[2]
+                / "flexible_employee_scheduling_data/xml data/Real Instances/"
+        )
+    elif "problem" in problem:
+        data_folder = (
+                Path(__file__).resolve().parents[2]
+                / "flexible_employee_scheduling_data/xml data/Artificial Instances/"
+        )
+    else:
+        raise ValueError("Not a valid problem! The problem_name should include 'problem' or 'rproblem'")
+
+    return data_folder
