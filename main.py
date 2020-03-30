@@ -28,3 +28,4 @@ def run_model(model="construction", problem="rproblem3"):
 
 if __name__ == "__main__":
     fire.Fire()
+    run_model()
