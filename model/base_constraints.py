@@ -21,6 +21,7 @@ class BaseConstraints:
         self.weeks = time_set["weeks"]
         self.saturdays = time_set["saturdays"]
 
+
         self.shifts_per_day = shift_set["shifts_per_day"]
         self.shifts_overlapping_t = shift_set["shifts_overlapping_t"]
         self.shifts_covered_by_off_shift = shift_set["shifts_covered_by_off_shift"]
