@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from heuristic.alns import ALNS
+from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.state import State
 
 
@@ -18,9 +19,14 @@ def state(var):
 
 
 @pytest.fixture()
-def alns(state):
+def critertion():
+    return GreedyCriterion()
+
+
+@pytest.fixture()
+def alns(state, critertion):
     """ Placeholder fixture until a better solution is implemented """
-    return ALNS(state)
+    return ALNS(state, critertion)
 
 
 def func_one():
@@ -128,3 +134,14 @@ def test_initialize_repair_weights_raises_error_on_no_operators(alns):
 
     with pytest.raises(ValueError):
         alns.initialize_repair_weights()
+
+
+def test_initialize_random_state_returns_a_consistent_random_state(alns):
+    """ The random state should always return the same sequence of numbers to ensure deterministic output """
+
+    random_state = alns.initialize_random_state()
+
+    assert random_state.randint(0, 10) == 5
+    assert random_state.randint(0, 10) == 0
+    assert random_state.randint(0, 10) == 3
+    assert random_state.randint(0, 10) == 3

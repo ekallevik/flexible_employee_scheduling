@@ -10,14 +10,12 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
 
-        # todo: fix seed so it provides consistent random data to ensure a deterministic output over different runs
-        self.random_state = np.random.RandomState()
+        self.random_state = self.initialize_random_state()
         self.criterion = criterion
 
         self.destroy_operators = {}
-        self.repair_operators = {}
-
         self.destroy_weights = {}
+        self.repair_operators = {}
         self.repair_weights = {}
 
     def iterate(self, iterations):
@@ -102,3 +100,8 @@ class ALNS:
             raise ValueError("You cannot initialize weights before adding at least one operator")
 
         self.repair_weights = {operator: 1.0 for operator in self.repair_operators}
+
+    @staticmethod
+    def initialize_random_state():
+        """ Provides a seeded random state to ensure a deterministic output over different runs """
+        return np.random.RandomState(seed=0)
