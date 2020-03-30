@@ -10,9 +10,11 @@ class BaseModel:
     This abstract class will take care of all common code that is to be shared across all model variants.
     """
 
-    def __init__(self, name, problem="rproblem2"):
+    def __init__(self, name, problem="rproblem2", mip_focus = 0):
+
         self.name = name
         self.model = self.create_model()
+        self.mip_focus = mip_focus
 
         data = shift_generation.load_data(problem)
 
@@ -28,4 +30,5 @@ class BaseModel:
         return Model(name=self.name)
 
     def run_model(self):
+        self.model.Params.MIPFocus = self.mip_focus
         self.model.optimize()
