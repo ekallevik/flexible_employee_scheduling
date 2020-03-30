@@ -23,7 +23,6 @@ def calculate_negative_deviation_from_contracted_hours(model):
             - sum(model.time_step * model.y[c,e,t] 
             for t in model.time_periods
             for c in model.competencies))
-    print(delta_negative_contracted_hours)
     return delta_negative_contracted_hours
 
 def calculate_partial_weekends(model):
@@ -170,9 +169,7 @@ def hard_constraint_penalties(model):
 def calculate_objective_function(model):
     delta = calculate_deviation_from_demand(model)
     f = calculate_f(model)
-    print(f)
     g = min(f.values())
-    print(g)
     #Regular objective function
     objective = (sum(f[e] for e in model.employees)
                     + g

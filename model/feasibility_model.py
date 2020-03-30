@@ -12,9 +12,9 @@ class FeasibilityModel(BaseModel):
             self.model,
             self.competencies,
             self.staff,
-            self.shifts_set,
-            self.off_shifts_set,
-            self.time["periods"],
+            self.shift_set,
+            self.off_shift_set,
+            self.time_set["periods"],
             self.days,
             self.saturdays,
             self.sundays

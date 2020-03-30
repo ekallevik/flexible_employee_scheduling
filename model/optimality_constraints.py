@@ -62,11 +62,11 @@ class OptimalityConstraints(BaseConstraints):
 
         self.model.addConstrs(
             (
-                gamma[e, j * DAYS_IN_WEEK + SATURDAY_INDEX]
-                - gamma[e, j * DAYS_IN_WEEK + SUNDAY_INDEX]
-                == rho["sat"][e, j] - rho["sun"][e, j]
+                gamma[e, i]
+                - gamma[e, i+1]
+                == rho["sat"][e, i] - rho["sun"][e, i+1]
                 for e in self.employees
-                for j in self.weeks
+                for i in self.saturdays
             ),
             name="partial_weekends",
         )

@@ -2,7 +2,7 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-    def __init__(self, model, var, weights, competencies, staff, time, off_shift_set, saturdays):
+    def __init__(self, model, var, weights, competencies, staff, time_set, off_shift_set, saturdays):
         self.model = model
 
         self.competencies = competencies
@@ -60,7 +60,7 @@ class OptimalityObjective:
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
             - weights["demand_deviation"]
             * quicksum(
-                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods[0])
+                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,
