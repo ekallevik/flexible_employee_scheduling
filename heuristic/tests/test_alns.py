@@ -39,15 +39,24 @@ def func_two():
     return "2"
 
 
+def test_iterate():
+    raise NotImplementedError
+
+
+def test_consider_candidate_and_update_weights():
+    raise NotImplementedError
+
+
 def test_select_operator(alns):
 
     alns.add_destroy_operator(func_one)
     alns.add_destroy_operator(func_two)
-    alns.initialize_destroy_weights()
+    weights = alns.initialize_weights(alns.destroy_operators)
+    alns.destroy_weights = weights
     selected_operator = alns.select_operator(alns.destroy_operators, alns.destroy_weights)
 
-    assert selected_operator[0] in alns.destroy_operators.keys()
-    assert selected_operator[1] == selected_operator.__name__
+    assert selected_operator[0] in alns.destroy_operators.values()
+    assert selected_operator[1] == selected_operator[0].__name__
 
 
 @pytest.mark.parametrize("weights, expected", [
@@ -59,6 +68,54 @@ def test_select_operator(alns):
 def test_get_probabilities(alns, weights, expected):
 
     assert alns.get_probabilities(weights) == pytest.approx(expected)
+
+
+def test_update_weights(alns):
+
+    alns.add_destroy_operator(func_one)
+    alns.add_repair_operator(func_two)
+    alns.initialize_destroy_and_repair_weights()
+
+    alns.update_weights(1.1, func_one.__name__, func_two.__name__)
+
+    assert alns.destroy_weights == {func_one.__name__: 1.1}
+    assert alns.repair_weights == {func_two.__name__: 1.1}
+
+
+def test_initialize_weights(alns):
+
+    alns.add_destroy_operator(func_one)
+    alns.add_repair_operator(func_two)
+    alns.initialize_destroy_and_repair_weights()
+
+    assert alns.destroy_weights == {func_one.__name__: 1.0}
+    assert alns.repair_weights == {func_two.__name__: 1.0}
+
+
+def test_initialize_weights_for_destroy_operators(alns):
+
+    alns.add_destroy_operator(func_one)
+    alns.add_destroy_operator(func_two)
+
+    weights = alns.initialize_weights(alns.destroy_operators)
+
+    assert weights == {"func_one": 1, "func_two": 1}
+
+
+def test_initialize_weights_raises_error_on_no_operators(alns):
+
+    with pytest.raises(ValueError):
+        alns.initialize_weights(alns.destroy_operators)
+
+
+def test_initialize_weights_for_repair_operators(alns):
+
+    alns.add_repair_operator(func_one)
+    alns.add_repair_operator(func_two)
+
+    weights = alns.initialize_weights(alns.repair_operators)
+
+    assert weights == {"func_one": 1, "func_two": 1}
 
 
 def test_add_destroy_operator(alns):
@@ -102,38 +159,6 @@ def test_add_operator_without_function_raises_error(alns, variable):
 
     with pytest.raises(ValueError):
         alns.add_operator(alns.destroy_operators, variable)
-
-
-def test_initialize_destroy_weights(alns):
-
-    alns.add_destroy_operator(func_one)
-    alns.add_destroy_operator(func_two)
-
-    alns.initialize_destroy_weights()
-
-    assert alns.destroy_weights == {"func_one": 1, "func_two": 1}
-
-
-def test_initialize_destroy_weights_raises_error_on_no_operators(alns):
-
-    with pytest.raises(ValueError):
-        alns.initialize_destroy_weights()
-
-
-def test_initialize_repair_weights(alns):
-
-    alns.add_repair_operator(func_one)
-    alns.add_repair_operator(func_two)
-
-    alns.initialize_repair_weights()
-
-    assert alns.repair_weights == {"func_one": 1, "func_two": 1}
-
-
-def test_initialize_repair_weights_raises_error_on_no_operators(alns):
-
-    with pytest.raises(ValueError):
-        alns.initialize_repair_weights()
 
 
 def test_initialize_random_state_returns_a_consistent_random_state(alns):
