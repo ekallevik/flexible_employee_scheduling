@@ -176,7 +176,7 @@ def get_day_demand_intervals(demand, day):
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
-            for pair in demand_pairs[index + 1 :]:
+            for pair in demand_pairs[index + 1:]:
                 if temp_related_intervals[-1] == pair[0]:
                     temp_related_intervals.append(pair[1])
                     demand_pairs.remove(pair)
@@ -203,7 +203,7 @@ def get_demand_intervals(root):
 
 def combine_demand_intervals(root):
     """ Returns a complete list including all demand intervals and connecting all demand intervals that could be
-        conneceted. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
+        connected. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
         next day. """
 
     demand_intervals = get_demand_intervals(root)
@@ -246,7 +246,7 @@ def get_shift_lists(root):
         else:
             for time in intervals:
                 found_shift = False
-                for t in intervals[intervals.index(time) :]:
+                for t in intervals[intervals.index(time):]:
                     dur = t - time
                     if min(desired_dur) <= dur <= max(desired_dur):
                         shifts.append((time, dur))
