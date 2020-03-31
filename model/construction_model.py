@@ -7,7 +7,7 @@ from utils import weights
 
 class ConstructionModel(BaseModel):
     def __init__(self, name, problem):
-        super(ConstructionModel, self).__init__(name, problem)
+        super(ConstructionModel, self).__init__(name, problem, mip_focus=1, solution_limit=1)
 
         self.weights = weights.get_weights()
 
