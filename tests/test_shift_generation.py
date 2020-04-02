@@ -73,9 +73,7 @@ def test_durations(durations):
     for t in durations[0]:
         ind = durations[1].index(t)
         for length in range(len(durations[0][t])):
-            assert durations[0][t][length] == (
-                durations[1][ind + (length + 1)] - durations[1][ind]
-            )
+            assert durations[0][t][length] == (durations[1][ind + (length + 1)] - durations[1][ind])
 
 
 def test_shifts(shifts):
@@ -93,9 +91,7 @@ def test_time_step(problem_name, expected):
     assert time_step == expected
 
 
-@pytest.mark.parametrize(
-    "problem_name, expected", [("rproblem2", [0]), ("rproblem3", [0])]
-)
+@pytest.mark.parametrize("problem_name, expected", [("rproblem2", [0]), ("rproblem3", [0])])
 def test_get_competencies(problem_name, expected):
 
     root = get_root(problem_name)
@@ -106,10 +102,7 @@ def test_get_competencies(problem_name, expected):
 
 @pytest.mark.parametrize(
     "problem_name, expected_length, expected_start",
-    [
-        ("rproblem2", 1170, [8.0, 8.5, 9, 9.5]),
-        ("rproblem3", 1176, [7.75, 8.0, 8.25, 8.5]),
-    ],
+    [("rproblem2", 1170, [8.0, 8.5, 9, 9.5]), ("rproblem3", 1176, [7.75, 8.0, 8.25, 8.5]),],
 )
 def test_get_time_periods(problem_name, expected_length, expected_start):
 
@@ -124,8 +117,21 @@ def test_get_time_periods(problem_name, expected_length, expected_start):
     "problem_name, day, expected",
     [
         ("rproblem2", 0, [(8.0, 8.5), (8.5, 15.5), (15.5, 16.0)]),
-        ("rproblem3", 0, [(7.75, 9.0), (9.0, 14.0), (14.0, 14.5), (14.5, 15.0), (15.0, 15.5), (15.5, 16.0),
-                          (16.0, 16.5), (16.5, 17.0), (17.0, 18.25)], ),
+        (
+            "rproblem3",
+            0,
+            [
+                (7.75, 9.0),
+                (9.0, 14.0),
+                (14.0, 14.5),
+                (14.5, 15.0),
+                (15.0, 15.5),
+                (15.5, 16.0),
+                (16.0, 16.5),
+                (16.5, 17.0),
+                (17.0, 18.25),
+            ],
+        ),
     ],
 )
 def test_get_demand_pairs(problem_name, day, expected):
@@ -141,8 +147,9 @@ def test_get_demand_pairs(problem_name, day, expected):
 @pytest.mark.parametrize(
     "problem_name, day, expected",
     [
-        ("rproblem2", 0, [8.0, 8.5, 15.5, 16.0]),
-        ("rproblem3", 0, [7.75, 9.0, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 18.25]),
+        ("rproblem2", 0, [[8.0, 8.5, 15.5, 16.0]]),
+        ("rproblem3", 0, [[7.75, 9.0, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 18.25]]),
+        ("rproblem4", 0, [[0.0, 6.75], [21.75, 24.0]]),
     ],
 )
 def test_get_day_demand_intervals(problem_name, day, expected):
@@ -158,8 +165,8 @@ def test_get_day_demand_intervals(problem_name, day, expected):
 @pytest.mark.parametrize(
     "problem_name, day, expected",
     [
-        ("rproblem2", 0, [8.0, 8.5, 15.5, 16.0]),
-        ("rproblem3", 0, [7.75, 9.0, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 18.25]),
+        ("rproblem2", 0, [[8.0, 8.5, 15.5, 16.0]]),
+        ("rproblem3", 0, [[7.75, 9.0, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 18.25]]),
     ],
 )
 def test_get_demand_intervals(problem_name, day, expected):
@@ -171,29 +178,47 @@ def test_get_demand_intervals(problem_name, day, expected):
 
 
 @pytest.mark.parametrize(
-    "problem_name, day, expected",
+    "problem_name, index, expected",
     [
         ("rproblem2", 0, [8.0, 8.5, 15.5, 16.0]),
         ("rproblem3", 0, [7.75, 9.0, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 18.25]),
+        ("rproblem4", 1, [21.75, 24.0, 30.75]),
     ],
 )
-def test_combine_demand_intervals(problem_name, day, expected):
+def test_combine_demand_intervals(problem_name, index, expected):
 
     root = get_root(problem_name)
     combined_demand_intervals = shift_generation.combine_demand_intervals(root)
 
-    assert combined_demand_intervals[day] == expected
+    assert combined_demand_intervals[index] == expected
 
 
 @pytest.mark.parametrize(
-    "problem_name, day, expected", [
-        ("rproblem2", 0, []),
-        ("rproblem3", 0, []),
-])
+    "problem_name, day, expected",
+    [
+        ("rproblem2", 0, [(8.0, 7.5), (8.0, 8.0), (8.5, 7.0), (8.5, 7.5)]),
+        ("rproblem3", 0, [
+                (7.75, 6.25),
+                (7.75, 6.75),
+                (7.75, 7.25),
+                (7.75, 7.75),
+                (7.75, 8.25),
+                (7.75, 8.75),
+                (7.75, 9.25),
+                (7.75, 10.5),
+                (9.0, 6.0),
+                (9.0, 6.5),
+                (9.0, 7.0),
+                (9.0, 7.5),
+                (9.0, 8.0),
+                (9.0, 9.25)]
+         ),
+    ],
+)
 def test_get_shift_lists(problem_name, day, expected):
 
     root = get_root(problem_name)
-    shift_lists = shift_generation.get_shift_lists(root)
+    shift_lists, shift_lists_per_day = shift_generation.get_shift_lists(root)
 
-    assert shift_lists[0][0] == shift_lists[1]
-    assert shift_lists[1] == expected
+    assert shift_lists[0] == shift_lists_per_day[0][0]
+    assert shift_lists_per_day[0] == expected

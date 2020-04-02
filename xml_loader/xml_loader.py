@@ -92,7 +92,9 @@ def set_contracted_hours_for_employee(employee, schedule_row):
     try:
         employee.set_contracted_hours(float(schedule_row.find("WeekHours").text))
     except AttributeError:
-        print(f"ScheduleRow {employee.id} don't have a set WeekHours tag. Using DEFAULT_CONTRACTED_HOURS")
+        print(
+            f"ScheduleRow {employee.id} don't have a set WeekHours tag. Using DEFAULT_CONTRACTED_HOURS"
+        )
         employee.set_contracted_hours(DEFAULT_CONTRACTED_HOURS)
 
 
@@ -103,7 +105,9 @@ def set_daily_rest_rule(daily_rest_rules, employee, schedule_row):
             if daily_rule.rest_id == daily_rest_rule:
                 employee.set_daily_rest(daily_rule.hours)
     except AttributeError:
-        print(f"ScheduleRow {employee.id} don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST")
+        print(
+            f"ScheduleRow {employee.id} don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST"
+        )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
 
 
@@ -114,7 +118,9 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
             if weekly_rule.rest_id == weekly_rest_rule:
                 employee.set_weekly_rest(weekly_rule.hours)
     except AttributeError:
-        print(f"ScheduleRow {employee.id} don't have a set WeeklyRestRule tag. Using DEFAULT_WEEKLY_REST")
+        print(
+            f"ScheduleRow {employee.id} don't have a set WeeklyRestRule tag. Using DEFAULT_WEEKLY_REST"
+        )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
 
 
@@ -136,7 +142,9 @@ def set_competency_for_employee(competencies, employee, schedule_row):
                 if competence.text in competencies:
                     employee.append_competency(competence.text)
         except AttributeError:
-            print(f"ScheduleRow {employee.id} don't have a set Competence tag. DEFAULT_COMPETENCY will be applied")
+            print(
+                f"ScheduleRow {employee.id} don't have a set Competence tag. DEFAULT_COMPETENCY will be applied"
+            )
 
     # Add DEFAULT_COMPETENCY if the employee does not have any competencies
     if not employee.competencies:
@@ -154,15 +162,17 @@ def get_data_folder(problem):
 
     if "rproblem" in problem:
         data_folder = (
-                Path(__file__).resolve().parents[2]
-                / "flexible_employee_scheduling_data/xml data/Real Instances/"
+            Path(__file__).resolve().parents[2]
+            / "flexible_employee_scheduling_data/xml data/Real Instances/"
         )
     elif "problem" in problem:
         data_folder = (
-                Path(__file__).resolve().parents[2]
-                / "flexible_employee_scheduling_data/xml data/Artificial Instances/"
+            Path(__file__).resolve().parents[2]
+            / "flexible_employee_scheduling_data/xml data/Artificial Instances/"
         )
     else:
-        raise ValueError("Not a valid problem! The problem_name should include 'problem' or 'rproblem'")
+        raise ValueError(
+            "Not a valid problem! The problem_name should include 'problem' or 'rproblem'"
+        )
 
     return data_folder

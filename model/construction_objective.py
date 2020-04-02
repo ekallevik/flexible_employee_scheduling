@@ -15,7 +15,7 @@ class ConstructionObjective:
     def add_objective(self, weights, delta):
 
         self.model.setObjective(
-            - weights["demand_deviation"]
+            -weights["demand_deviation"]
             * quicksum(
                 quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
                 for c in self.competencies

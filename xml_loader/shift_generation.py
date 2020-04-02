@@ -176,7 +176,7 @@ def get_day_demand_intervals(demand, day):
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
-            for pair in demand_pairs[index + 1:]:
+            for pair in demand_pairs[index + 1 :]:
                 if temp_related_intervals[-1] == pair[0]:
                     temp_related_intervals.append(pair[1])
                     demand_pairs.remove(pair)
@@ -246,7 +246,7 @@ def get_shift_lists(root):
         else:
             for time in intervals:
                 found_shift = False
-                for t in intervals[intervals.index(time):]:
+                for t in intervals[intervals.index(time) :]:
                     dur = t - time
                     if min(desired_dur) <= dur <= max(desired_dur):
                         shifts.append((time, dur))
@@ -428,5 +428,3 @@ def load_data(problem_name):
     }
 
     return data
-
-

@@ -1,4 +1,3 @@
-
 def get_weights():
     return {
         "rest": 1,
