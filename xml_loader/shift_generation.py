@@ -1,7 +1,7 @@
 from gurobipy import *
-
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
+from utils import const
 from collections import defaultdict
 
 
@@ -68,7 +68,7 @@ def get_time_periods(root):
                 time += time_step
     return [time_periods, time_periods_in_week, time_periods_in_day]
 
-def get_demand_periods(root, competencies):
+def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
 
     time_step = get_time_steps(root)
@@ -92,12 +92,15 @@ def get_demand_periods(root, competencies):
                     except:
                         demand["max"][c, t] = demands[dem].maximum[i]
                     t += time_step
+
     return demand
 
 
 def get_events(root):
+
     events = []
     demand_days = get_days_with_demand(root)
+
     for day in demand_days:
         for t in range(len(demand_days[day].start)):
             if demand_days[day].end[t] == 0:
@@ -110,6 +113,7 @@ def get_events(root):
                     events.append(demand_days[day].start[t] + 24 * day + diff)
             if demand_days[day].end[t] + 24 * day not in events:
                 events.append((demand_days[day].end[t] + 24 * day))
+
     return events
 
 
@@ -145,69 +149,145 @@ def get_employee_lists(root, competencies):
     }
 
 
-def get_durations(root):
+def get_demand_pairs(demand, day):
+    """ Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand
+        rows in a DemandID """
 
-    events = get_events(root)
-    durations = {}
+    start_times = [t + 24 * int(day) for t in demand.start]
+    end_times = [t + 24 * int(day) for t in demand.end]
+    demand_pairs = []
 
-    # Possible durations are between 6.0 hours and 12.0 hours
-    possible_durations = [t / 4 for t in range(6 * 4, (12 * 4 + 1))]
+    for i in range(len(start_times)):
+        demand_pairs.append((start_times[i], end_times[i]))
 
-    for t in events:
-        for dur in possible_durations:
-            if t + dur in events:
-                try:
-                    durations[t].append(dur)
-                except:
-                    durations[t] = [dur]
-    return durations
+    return demand_pairs
+
+
+def get_day_demand_intervals(demand, day):
+    """ Returns a list of related demand pairs. Demand pairs like (07:00, 10:00) and (10:00, 14:00) are merged to
+        form the the related interval [07:00, 10:00, 14:00].  Unrelated demand pairs, like (07:00, 10:00) and
+        (20:00, 24:00) are kept separate, forming [[07:00, 10:00],[20:00, 24:00]]"""
+
+    demand_pairs = get_demand_pairs(demand, day)
+    related_intervals = []
+
+    if len(demand_pairs) == 1:
+        related_intervals.append([demand_pairs[0][0], demand_pairs[0][1]])
+    else:
+        for index in range(len(demand_pairs)):
+            temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
+            for pair in demand_pairs[index + 1 :]:
+                if temp_related_intervals[-1] == pair[0]:
+                    temp_related_intervals.append(pair[1])
+                    demand_pairs.remove(pair)
+                else:
+                    break
+            related_intervals.append(temp_related_intervals)
+            if index is len(demand_pairs) - 1:
+                break
+
+    return related_intervals
+
+
+def get_demand_intervals(root):
+    """ Returns a dict, representing the day_demand_intervals for each day """
+
+    daily_demand = get_days_with_demand(root)
+    daily_demand_intervals = {}
+
+    for day in daily_demand:
+        daily_demand_intervals[day] = get_day_demand_intervals(daily_demand[day], day)
+
+    return daily_demand_intervals
+
+
+def combine_demand_intervals(root):
+    """ Returns a complete list including all demand intervals and connecting all demand intervals that could be
+        connected. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
+        next day. """
+
+    demand_intervals = get_demand_intervals(root)
+    interval_list = []
+    combined_demand_intervals = []
+
+    for day in demand_intervals:
+        for interval in demand_intervals[day]:
+            interval_list.append(interval)
+
+    while len(interval_list) != 0:
+        end_time = interval_list[0][-1]
+        temp_interval = interval_list[0]
+        for other_intervals in interval_list[1:]:
+            if other_intervals[0] == end_time:
+                for time in other_intervals[1:]:
+                    temp_interval.append(time)
+                interval_list.remove(other_intervals)
+                break
+        combined_demand_intervals.append(temp_interval)
+        interval_list.pop(0)
+
+    return combined_demand_intervals
 
 
 def get_shift_lists(root):
 
-    durations = get_durations(root)
+    desired_dur = const.DESIRED_SHIFT_DURATION
+    demand_intervals = combine_demand_intervals(root)
+    shifts = tuplelist()
+
+    for intervals in demand_intervals:
+        if len(intervals) == 2:
+            start_time = intervals[0]
+            dur = intervals[1] - start_time
+            if dur >= max(desired_dur):
+                shifts.append((start_time, dur))
+            else:
+                shifts.append((start_time, intervals[1] - start_time))
+        else:
+            for time in intervals:
+                found_shift = False
+                for t in intervals[intervals.index(time) :]:
+                    dur = t - time
+                    if min(desired_dur) <= dur <= max(desired_dur):
+                        shifts.append((time, dur))
+                        found_shift = True
+                    if dur > max(desired_dur) and not found_shift:
+                        shifts.append((time, dur))
+
     shifts_per_day = tupledict()
-    shifts = tuplelist()
-    days = get_days(root)
-    time_step = get_time_steps(root)
+    time_defining_shift_day = const.TIME_DEFINING_SHIFT_DAY
 
-    for d in days:
-        shifts_per_day[d] = []
-        for t in durations:
-            if d * 24 <= t <= (24 * (d + 1) - time_step):
-                for dur in durations[t]:
-                    shifts_per_day[d].append((t, dur))
-                    shifts.append((t, dur))
-            if t > 24 * d:
-                continue
+    for day in get_days(root):
+        shifts_per_day[day] = []
+        for shift in shifts:
+            if (
+                24 * (int(day) - 1) + time_defining_shift_day
+                <= shift[0]
+                < 24 * int(day) + time_defining_shift_day
+            ):
+                shifts_per_day[day].append(shift)
+            if shift[0] >= 24 * int(day) + time_defining_shift_day:
+                if day == get_days(root)[-1]:
+                    shifts_per_day[day].append(shift)
+                break
+
     return [shifts, shifts_per_day]
-
-
-def get_shift_list(root):
-    shifts = tuplelist()
-    dur = get_durations(root)
-    i = 0
-    for t in dur:
-        for v in dur[t]:
-            shifts.append(i)
-            i += 1
-    return shifts
 
 
 def get_shifts_overlapping_t(root):
 
     time_periods = get_time_periods(root)[0]
     shifts_overlapping_t = {}
-    shifts = get_durations(root)
+    shifts = get_shift_lists(root)[0]
 
-    for t in time_periods:
-        for time in shifts:
-            for dur in shifts[time]:
-                if time <= t < time + dur:
-                    try:
-                        shifts_overlapping_t[t].append((time, dur))
-                    except:
-                        shifts_overlapping_t[t] = [(time, dur)]
+    for time in time_periods:
+        for shift in shifts:
+            if shift[0] <= time < shift[0] + shift[1]:
+                try:
+                    shifts_overlapping_t[time].append(shift)
+                except:
+                    shifts_overlapping_t[time] = [shift]
+
     return shifts_overlapping_t
 
 
@@ -223,6 +303,7 @@ def get_start_events(root):
                 if diff >= 6:
                     events.append((demand_days[day].start[t] + 24 * day))
                     break
+
     return events
 
 
@@ -262,6 +343,7 @@ def get_t_covered_by_off_shifts(root):
         end = time_periods.index(shift[0] + shift[1])
         start = time_periods.index(shift[0])
         t_covered[shift[0], shift[1]] = time_periods[start:end]
+
     return t_covered
 
 
@@ -298,6 +380,7 @@ def get_shifts_covered_by_off_shifts(root):
                 shift[0] + shift[1]
             ) < (off_shift[0] + off_shift[1]):
                 shifts_covered[off_shift].append(shift)
+
     return shifts_covered
 
 
@@ -315,7 +398,7 @@ def load_data(problem_name):
 
     data = {
         "competencies": competencies,
-        "demand": get_demand_periods(root, competencies),
+        "demand": get_demand(root, competencies),
         "staff": get_employee_lists(root, competencies),
         "limit_on_consecutive_days": 5,
         "shifts": {
@@ -345,5 +428,3 @@ def load_data(problem_name):
     }
 
     return data
-
-

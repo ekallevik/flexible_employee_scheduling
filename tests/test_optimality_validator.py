@@ -126,12 +126,8 @@ def test_count_partial_weekend_violations(validator, saturdays, working_days, ex
 def test_count_partial_weekend_violations_raises_error_on_wrong_input():
     pass
 
-@pytest.mark.parametrize("weekend, expected", [
-    ([1, 1], 0),
-    ([1, 0], 1),
-    ([0, 1], 1),
-    ([0, 0], 0),
-])
+
+@pytest.mark.parametrize("weekend, expected", [([1, 1], 0), ([1, 0], 1), ([0, 1], 1), ([0, 0], 0),])
 def test_violates_isolated_working_days(validator, weekend, expected):
 
     assert validator.violates_partial_weekends(weekend) == expected
