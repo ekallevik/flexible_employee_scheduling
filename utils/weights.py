@@ -1,7 +1,7 @@
 
 def get_weights():
     return {
-        "rest": 5,
+        "rest": 1,
         "contracted hours": 1,
         "partial weekends": 1,
         "isolated working days": 1,
@@ -10,5 +10,5 @@ def get_weights():
         "backward rotation": 1,
         "preferences": 1,
         "lowest fairness score": 1,
-        "demand_deviation": 5,
+        "demand_deviation": 1,
     }
