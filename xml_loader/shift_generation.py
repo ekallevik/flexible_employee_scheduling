@@ -5,7 +5,6 @@ from utils import const
 from collections import defaultdict
 
 
-
 def get_time_steps(root):
 
     demands = get_demand_definitions(root)
@@ -59,7 +58,7 @@ def get_time_periods(root):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[week] = []
-                if(time > (day+1)*24):
+                if time > (day + 1) * 24:
                     day += 1
                 if time not in time_periods:
                     time_periods.append(time)
@@ -67,6 +66,7 @@ def get_time_periods(root):
                     time_periods_in_day[day].append(time)
                 time += time_step
     return [time_periods, time_periods_in_week, time_periods_in_day]
+
 
 def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
@@ -150,8 +150,10 @@ def get_employee_lists(root, competencies):
 
 
 def get_demand_pairs(demand, day):
-    """ Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand
-        rows in a DemandID """
+    """
+    Return a list of demand pair tuples in a day, representing the time intervals (TimeStart, TimeEnd) for demand
+    rows in a DemandID
+    """
 
     start_times = [t + 24 * int(day) for t in demand.start]
     end_times = [t + 24 * int(day) for t in demand.end]
@@ -164,9 +166,11 @@ def get_demand_pairs(demand, day):
 
 
 def get_day_demand_intervals(demand, day):
-    """ Returns a list of related demand pairs. Demand pairs like (07:00, 10:00) and (10:00, 14:00) are merged to
-        form the the related interval [07:00, 10:00, 14:00].  Unrelated demand pairs, like (07:00, 10:00) and
-        (20:00, 24:00) are kept separate, forming [[07:00, 10:00],[20:00, 24:00]]"""
+    """
+    Returns a list of related demand pairs. Demand pairs like (07:00, 10:00) and (10:00, 14:00) are merged to
+    form the the related interval [07:00, 10:00, 14:00].  Unrelated demand pairs, like (07:00, 10:00) and
+    (20:00, 24:00) are kept separate, forming [[07:00, 10:00],[20:00, 24:00]]
+    """
 
     demand_pairs = get_demand_pairs(demand, day)
     related_intervals = []
@@ -202,9 +206,11 @@ def get_demand_intervals(root):
 
 
 def combine_demand_intervals(root):
-    """ Returns a complete list including all demand intervals and connecting all demand intervals that could be
-        connected. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
-        next day. """
+    """
+    Returns a complete list including all demand intervals and connecting all demand intervals that could be
+    connected. The latter makes it possible to connect a 24-hour demand in one day to the 24-hour demand the
+    next day.
+    """
 
     demand_intervals = get_demand_intervals(root)
     interval_list = []
@@ -254,6 +260,8 @@ def get_shift_lists(root):
                     if dur > max(desired_dur) and not found_shift:
                         shifts.append((time, dur))
 
+    shifts = remove_duplicate_elements_from_tuplelist(shifts)
+
     shifts_per_day = tupledict()
     time_defining_shift_day = const.TIME_DEFINING_SHIFT_DAY
 
@@ -272,6 +280,24 @@ def get_shift_lists(root):
                 break
 
     return [shifts, shifts_per_day]
+
+
+def remove_duplicate_elements_from_tuplelist(data):
+    """
+    Remove duplicate elements by converting to a set and then back to tuplelist.
+    A set follows the mathematical definition, so it will neither hold any duplicate elements or have ordered elements.
+    The resulting tuplelist is therefore sorted before return.
+
+    :param data: any tuplelist with possible redundant data
+    :return: a sorted tuplelist without any duplicate elements.
+    """
+
+    unique_set = set(data)
+
+    sorted_tuplelist = tuplelist(unique_set)
+    sorted_tuplelist.sort()
+
+    return sorted_tuplelist
 
 
 def get_shifts_overlapping_t(root):
@@ -355,8 +381,9 @@ def get_t_covered_by_shift(root):
     for shift in shifts:
         end = time_periods.index(shift[0] + shift[1] - time_step)
         start = time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[start : (end + 1)]
     return t_covered_by_shift
+
 
 def shift_lookup(root):
     shifts = get_shift_lists(root)[1]
@@ -393,8 +420,8 @@ def load_data(problem_name):
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
     weeks = [i for i in range(number_of_weeks)]
-    saturdays = [5+i*7 for i in range(number_of_weeks)]
-    sundays = [6+i*7 for i in range(number_of_weeks)]
+    saturdays = [5 + i * 7 for i in range(number_of_weeks)]
+    sundays = [6 + i * 7 for i in range(number_of_weeks)]
 
     data = {
         "competencies": competencies,
@@ -418,13 +445,12 @@ def load_data(problem_name):
             "days": days,
             "weeks": weeks,
             "saturdays": saturdays,
-            "sundays": sundays
-
+            "sundays": sundays,
         },
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(root),
             "shift_lookup": shift_lookup(root),
-        }
+        },
     }
 
     return data

@@ -1,5 +1,7 @@
 import pytest
 
+from gurobipy import *
+
 import xml_loader.xml_loader as xml_loader
 from xml_loader import shift_generation
 
@@ -197,7 +199,10 @@ def test_combine_demand_intervals(problem_name, index, expected):
     "problem_name, day, expected",
     [
         ("rproblem2", 0, [(8.0, 7.5), (8.0, 8.0), (8.5, 7.0), (8.5, 7.5)]),
-        ("rproblem3", 0, [
+        (
+            "rproblem3",
+            0,
+            [
                 (7.75, 6.25),
                 (7.75, 6.75),
                 (7.75, 7.25),
@@ -211,8 +216,9 @@ def test_combine_demand_intervals(problem_name, index, expected):
                 (9.0, 7.0),
                 (9.0, 7.5),
                 (9.0, 8.0),
-                (9.0, 9.25)]
-         ),
+                (9.0, 9.25),
+            ],
+        ),
     ],
 )
 def test_get_shift_lists(problem_name, day, expected):
@@ -220,5 +226,55 @@ def test_get_shift_lists(problem_name, day, expected):
     root = get_root(problem_name)
     shift_lists, shift_lists_per_day = shift_generation.get_shift_lists(root)
 
-    assert shift_lists[0] == shift_lists_per_day[0][0]
-    assert shift_lists_per_day[0] == expected
+    assert shift_lists[day] == shift_lists_per_day[day][0]
+    assert shift_lists_per_day[day] == expected
+
+
+@pytest.mark.parametrize(
+    "problem_name, day, expected",
+    [
+        (
+            "problem12",
+            0,
+            [
+                (96.0, 6.0),
+                (96.0, 12.0),
+                (102.0, 6.0),
+                (102.0, 12.0),
+                (108.0, 6.0),
+                (120.0, 6.0),
+                (120.0, 12.0),
+                (126.0, 6.0),
+                (126.0, 12.0),
+                (132.0, 6.0),
+                (144.0, 6.0),
+                (144.0, 12.0),
+                (150.0, 6.0),
+                (150.0, 12.0),
+                (156.0, 6.0),
+            ],
+        ),
+    ],
+)
+def test_get_shift_lists_does_not_contain_duplicates(problem_name, day, expected):
+
+    root = get_root(problem_name)
+    shift_lists, shift_lists_per_day = shift_generation.get_shift_lists(root)
+
+    assert len(set(shift_lists)) == len(shift_lists)
+    assert len(set(shift_lists_per_day)) == len(shift_lists_per_day)
+    assert shift_lists == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [([(6, 6), (6, 6), (6, 12)], [(6, 6), (6, 12)]), ([(6, 6), (6, 12)], [(6, 6), (6, 12)]),],
+)
+def test_remove_duplicate_elements_from_tuplelist(data, expected):
+
+    shifts = tuplelist(data)
+
+    shifts = shift_generation.remove_duplicate_elements_from_tuplelist(shifts)
+
+    assert shifts == expected
+    assert type(shifts) == tuplelist
