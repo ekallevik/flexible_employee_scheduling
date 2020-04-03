@@ -1,5 +1,7 @@
 import fire
 
+from heuristic.alns import ALNS
+from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.state import State
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
@@ -19,10 +21,12 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
 
     converter = Converter(candidate_solution)
     converted_solution = converter.get_converted_variables()
-
     state = State(converted_solution)
 
-    # add instantiation and running of ALNS
+    criterion = GreedyCriterion()
+
+    alns = ALNS(state, criterion)
+    solution = alns.iterate(iterations=1000)
 
 
 def run_model(model="feasibility", problem="rproblem2"):
