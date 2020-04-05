@@ -1,6 +1,6 @@
 from collections import defaultdict
-from converter import set_x
-from heuristic_calculations import calculate_isolated_working_days, calculate_partial_weekends
+from heuristic.converter import set_x
+from heuristic.heuristic_calculations import calculate_isolated_working_days, calculate_partial_weekends
 
 #Destroy and repair algorithm targeting partial weekends
 def remove_partial_weekends(model):

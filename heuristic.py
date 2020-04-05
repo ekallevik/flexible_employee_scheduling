@@ -1,8 +1,12 @@
 from model.model_class import Optimization_model
-from heuristic_calculations import *
-from converter import convert
-from destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
-from repair_algorithms import *
+#from heuristic.heuristic_calculations import *
+from heuristic.destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
+from heuristic.repair_algorithms import *
+from heuristic.state import State 
+from heuristic.alns_calculator import Alns_calculator
+from heuristic.converter import convert
+from heuristic.alns import ALNS
+from heuristic.heuristic_calculations import *
 
 
 #employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v] != 0] for em in model.employees}
@@ -17,34 +21,62 @@ def main():
     model.set_objective()
     model.optimize()
     x,y,w = convert(model) 
+
+
+
+
+
+    #calculator = Alns_calculator(model)
+    soft_variables = {
+        "negative_deviation_from_demand": calculate_negative_deviation_from_demand(model, y),
+        "partial_weekends": calculate_partial_weekends(model, x),
+        "consecutive_days": calculate_consecutive_days(model, x),
+        "isolated_off_days": calculate_isolated_off_days(model, x),
+        "isolated_working_days": calculate_isolated_working_days(model, x),
+        "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y),
+        "cover_min_demand": cover_minimum_demand(model, y),
+        "cover_max_demand": under_maximum_demand(model, y),
+        "one_demand_per_time": cover_only_one_demand_per_time_period(model, y),
+        "one_shift_per_day": maximum_one_shift_per_day(model, x),
+        "one_weekly_off": one_weekly_off_shift(model, w),
+        "work_during_off": no_work_during_off_shift2(model, w, y),
+        "shift_demand_map": mapping_shift_to_demand(model, x, y),
+        "break_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y),
+    }
+
+    initial_state = State({"x": x, "y":y, "w":w}, soft_variables)
+    
+    alns = ALNS(initial_state, model)
+    alns.iterate(10000)
+    
     model.x = x
     model.y = y
     model.w = w
     #print(calculate_objective_function(model))
 
-    print("############## Deviation from Demand ##############")
-    print(calculate_deviation_from_demand(model))
-    
-    print(calculate_negative_deviation_from_contracted_hours(model))
-    print(calculate_positive_deviation_from_contracted_hours(model))
+    # print("############## Deviation from Demand ##############")
+    # print(calculate_deviation_from_demand(model))
 
-    print("############## Partial Weekends ##############")
-    print(calculate_partial_weekends(model))
+    # print(calculate_negative_deviation_from_contracted_hours(model))
+    # print(calculate_positive_deviation_from_contracted_hours(model))
 
-    print("############## Isolated Working Days ##############")
-    print(calculate_isolated_working_days(model))
+    # print("############## Partial Weekends ##############")
+    # print(calculate_partial_weekends(model))
 
-    print("############## Isolated Off Days ##############")
-    print(calculate_isolated_off_days(model))
+    # print("############## Isolated Working Days ##############")
+    # print(calculate_isolated_working_days(model))
 
-    print("############## Consecutive Working Days ##############")
-    print(calculate_consecutive_days(model))
+    # print("############## Isolated Off Days ##############")
+    # print(calculate_isolated_off_days(model))
 
-    print("############## Employees F ##############")
-    print(calculate_f(model))
+    # print("############## Consecutive Working Days ##############")
+    # print(calculate_consecutive_days(model))
 
-    print("############## Objective Function ##############")
-    print(calculate_objective_function(model))
+    # print("############## Employees F ##############")
+    # print(calculate_f(model))
+
+    #print("############## Objective Function ##############")
+    #print(calculate_objective_function(model))
 
     # remove_partial_weekends(model)
     # iso_days = remove_isolated_working_day(model)

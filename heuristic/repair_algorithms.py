@@ -1,9 +1,7 @@
 from random import choice, sample, choices
-from converter import set_x
+from heuristic.converter import set_x
 from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup, get_time_periods_in_day
-from heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
-
-
+from heuristic.heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
 
 def add_previously_isolated_days_randomly(model, iso_days):
     employees = {i: [e for e in model.employees if sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
