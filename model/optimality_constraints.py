@@ -6,7 +6,7 @@ from utils.const import DAYS_IN_WEEK, SATURDAY_INDEX, SUNDAY_INDEX
 
 class OptimalityConstraints(BaseConstraints):
     def __init__(
-        self, model, var, staff, demand, competencies, time_set, shift_set, off_shift_set, limit_on_consecutive_days,
+        self, model, var, staff, demand, competencies, time_set, shifts_set, off_shifts_set, limit_on_consecutive_days,
     ):
 
         super(OptimalityConstraints, self).__init__(
@@ -16,8 +16,8 @@ class OptimalityConstraints(BaseConstraints):
             demand=demand,
             competencies=competencies,
             time_set=time_set,
-            shift_set=shift_set,
-            off_shift_set=off_shift_set,
+            shifts_set=shifts_set,
+            off_shifts_set=off_shifts_set,
         )
 
         self.limit_on_consecutive_days = limit_on_consecutive_days

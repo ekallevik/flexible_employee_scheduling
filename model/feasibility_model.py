@@ -9,15 +9,12 @@ class FeasibilityModel(BaseModel):
         super(FeasibilityModel, self).__init__(name, problem)
 
         self.var = BaseVariables(
-            self.model,
-            self.competencies,
-            self.staff,
-            self.shift_set,
-            self.off_shift_set,
-            self.time_set["periods"],
-            self.days,
-            self.saturdays,
-            self.sundays
+            model=self.model,
+            competencies=self.competencies,
+            staff=self.staff,
+            time_set=self.time_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
         )
 
         self.constraints = BaseConstraints(
@@ -27,8 +24,8 @@ class FeasibilityModel(BaseModel):
             staff=self.staff,
             demand=self.demand,
             time_set=self.time_set,
-            shift_set=self.shift_set,
-            off_shift_set=self.off_shift_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
         )
 
         self.objective = FeasibilityObjective(

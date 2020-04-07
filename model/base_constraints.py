@@ -2,7 +2,7 @@ from gurobipy import *
 
 
 class BaseConstraints:
-    def __init__(self, model, var, competencies, staff, demand, time_set, shift_set, off_shift_set):
+    def __init__(self, model, var, competencies, staff, demand, time_set, shifts_set, off_shifts_set):
 
         self.model = model
 
@@ -22,12 +22,12 @@ class BaseConstraints:
         self.saturdays = time_set["saturdays"]
 
 
-        self.shifts_per_day = shift_set["shifts_per_day"]
-        self.shifts_overlapping_t = shift_set["shifts_overlapping_t"]
-        self.shifts_covered_by_off_shift = shift_set["shifts_covered_by_off_shift"]
-        self.off_shifts_in_week = off_shift_set["off_shifts_per_week"]
-        self.t_in_off_shifts = off_shift_set["t_in_off_shifts"]
-        self.off_shifts = off_shift_set["off_shifts"]
+        self.shifts_per_day = shifts_set["shifts_per_day"]
+        self.shifts_overlapping_t = shifts_set["shifts_overlapping_t"]
+        self.shifts_covered_by_off_shift = shifts_set["shifts_covered_by_off_shift"]
+        self.off_shifts_in_week = off_shifts_set["off_shifts_per_week"]
+        self.t_in_off_shifts = off_shifts_set["t_in_off_shifts"]
+        self.off_shifts = off_shifts_set["off_shifts"]
 
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)

@@ -5,6 +5,7 @@ from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.state import State
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
+from model.construction_model import ConstructionModel
 from results.converter import Converter
 
 

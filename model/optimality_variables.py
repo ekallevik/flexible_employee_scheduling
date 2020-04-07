@@ -5,13 +5,14 @@ from model.base_variables import BaseVariables
 
 class OptimalityVariables(BaseVariables):
     def __init__(
-        self, model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays
+        self, model, competencies, staff, time_set, shifts_set, off_shifts_set
     ):
 
         super(OptimalityVariables, self).__init__(
-            model, competencies, employees, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays)
+            model=model, competencies=competencies, staff=staff, time_set=time_set, shifts_set=shifts_set, off_shifts_set=off_shifts_set)
 
-
+        self.saturdays = time_set["saturdays"]
+        self.sundays = time_set["sundays"]
         self.rho = self.add_rho()
         self.q = self.add_q()
         self.gamma = self.add_gamma()
