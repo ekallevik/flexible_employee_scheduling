@@ -2,17 +2,17 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-    def __init__(self, model, var, weights, competencies, staff, time_set, off_shift_set, saturdays):
+    def __init__(self, model, var, weights, competencies, staff, time_set, off_shifts_set):
         self.model = model
 
         self.competencies = competencies
         self.employees = staff["employees"]
 
         self.time_periods = time_set["periods"][0]
+        self.saturdays = time_set["saturdays"]
         self.days = time_set["days"]
         self.weeks = time_set["weeks"]
-        self.off_shifts = off_shift_set["off_shifts"]
-        self.saturdays = saturdays
+        self.off_shifts = off_shifts_set["off_shifts"]
 
         self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q)
         self.add_lowest_fairness_score(var.f, var.g)

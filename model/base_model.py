@@ -22,15 +22,10 @@ class BaseModel:
         self.competencies = data["competencies"]
         self.demand = data["demand"]
         self.staff = data["staff"]
-        self.shift_set = data["shifts"]
-        self.off_shift_set = data["off_shifts"]
         self.time_set = data["time"]
-        self.time_step = data["time"]["step"]
-        self.time_periods = data["time"]["periods"]
-        self.days = data["time"]["days"]
-
+        self.shifts_set = data["shifts"]
+        self.off_shifts_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
-
         self.var = None
 
         #Heuristic
@@ -49,6 +44,8 @@ class BaseModel:
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.employee_with_competencies = data["staff"]["employees_with_competencies"]
+        self.days = data["time"]["days"]
+        self.time_step = data["time"]["step"]
 
 
     def create_model(self):

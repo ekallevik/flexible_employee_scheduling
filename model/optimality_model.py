@@ -12,15 +12,12 @@ class OptimalityModel(BaseModel):
         self.weights = get_weights()
 
         self.var = OptimalityVariables(
-            self.model,
-            self.competencies,
-            self.staff,
-            self.shift_set,
-            self.off_shift_set,
-            self.time_set["periods"],
-            self.days,
-            self.saturdays,
-            self.sundays,
+            model=self.model,
+            competencies=self.competencies,
+            staff=self.staff,
+            time_set=self.time_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
         )
 
         self.constraints = OptimalityConstraints(
@@ -30,18 +27,17 @@ class OptimalityModel(BaseModel):
             demand=self.demand,
             competencies=self.competencies,
             time_set=self.time_set,
-            shift_set=self.shift_set,
-            off_shift_set=self.off_shift_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
             limit_on_consecutive_days=self.limit_on_consecutive_days,
         )
 
         self.objective = OptimalityObjective(
-            self.model,
-            self.var,
-            self.weights,
-            self.competencies,
-            self.staff,
-            self.time_set,
-            self.off_shift_set,
-            self.saturdays,
+            model=self.model,
+            var=self.var,
+            weights=self.weights,
+            competencies=self.competencies,
+            staff=self.staff,
+            time_set=self.time_set,
+            off_shifts_set=self.off_shifts_set,
         )

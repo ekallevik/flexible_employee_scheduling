@@ -10,7 +10,7 @@ from converter import convert
 
 
 def main():
-    model = OptimalityModel("esp", "rproblem3")
+    model = FeasibilityModel("esp", "rproblem2")
     model.run_model()
     x,y,w = convert(model) 
     model.x = x

@@ -16,8 +16,8 @@ class ConstructionModel(BaseModel):
             competencies=self.competencies,
             staff=self.staff,
             time_set=self.time_set,
-            shift_set=self.shift_set,
-            off_shift_set=self.off_shift_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
         )
 
         self.constraints = BaseConstraints(
@@ -27,8 +27,8 @@ class ConstructionModel(BaseModel):
             staff=self.staff,
             demand=self.demand,
             time_set=self.time_set,
-            shift_set=self.shift_set,
-            off_shift_set=self.off_shift_set,
+            shifts_set=self.shifts_set,
+            off_shifts_set=self.off_shifts_set,
         )
 
         self.objective = ConstructionObjective(

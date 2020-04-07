@@ -2,17 +2,17 @@ from gurobipy import *
 
 
 class BaseVariables:
-    def __init__(self, model, competencies, staff, shifts_set, off_shifts_set, time_periods, days, saturdays, sundays):
+    def __init__(self, model, competencies, staff, time_set, shifts_set, off_shifts_set):
         self.model = model
 
         self.competencies = competencies
         self.employees = staff["employees"]
         self.shifts = shifts_set["shifts"]
         self.off_shifts = off_shifts_set["off_shifts"]
-        self.time_periods = time_periods[0]
-        self.days = days
-        self.saturdays = saturdays
-        self.sundays = sundays
+        self.time_periods = time_set["periods"][0]
+        self.days = time_set["days"]
+        self.saturdays = time_set["saturdays"]
+        self.sundays = time_set["sundays"]
 
 
         
@@ -25,8 +25,7 @@ class BaseVariables:
 
     def add_y(self):
         return self.model.addVars(
-            self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y"
-        )
+            self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y")
 
     def add_x(self):
         return self.model.addVars(self.employees, self.shifts, vtype=GRB.BINARY, name="x")
