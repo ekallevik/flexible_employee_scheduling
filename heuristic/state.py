@@ -35,4 +35,4 @@ class State:
         raise NotImplementedError
 
     def copy(self):
-        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, self.soft_vars)
+        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, copy(self.soft_vars))

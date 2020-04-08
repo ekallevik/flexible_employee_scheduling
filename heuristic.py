@@ -1,4 +1,5 @@
 from model.model_class import Optimization_model
+from model.hard_constraint_model_class import Optimization_model as Feasibility_model
 #from heuristic.heuristic_calculations import *
 from heuristic.destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
 from heuristic.repair_algorithms import *
@@ -7,6 +8,8 @@ from heuristic.alns_calculator import Alns_calculator
 from heuristic.converter import convert
 from heuristic.alns import ALNS
 from heuristic.heuristic_calculations import *
+import cProfile
+import pstats
 
 
 #employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v] != 0] for em in model.employees}
@@ -15,7 +18,7 @@ from heuristic.heuristic_calculations import *
 
 def main():
     problem_name = "rproblem2" 
-    model = Optimization_model(problem_name)
+    model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
@@ -43,11 +46,12 @@ def main():
         "shift_demand_map": mapping_shift_to_demand(model, x, y),
         "break_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y),
     }
+    print(soft_variables["partial_weekends"])
 
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables)
     
     alns = ALNS(initial_state, model)
-    alns.iterate(10000)
+    alns.iterate(1)
     
     model.x = x
     model.y = y
@@ -91,8 +95,10 @@ def main():
 1. Could use the same shifts over again. Set random or greedy employees on these shifts
 2. Could use the days over again, but use random or greedy shifts and employees
 """
-
-main()
+cProfile.run('main()', 'stats')
+p = pstats.Stats('stats')
+p.strip_dirs().sort_stats('time').print_stats(10)
+#main()
 # partial = remove_partial_weekends()
 # add_greedy_weekends(partial)
 

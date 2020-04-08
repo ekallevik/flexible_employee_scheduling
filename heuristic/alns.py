@@ -1,5 +1,8 @@
 import numpy as np
 from heuristic.heuristic_calculations import *
+#from heuristic.destroy_algorithms import remove_isolated_working_day, remove_partial_weekends
+#from heuristic.repair_algorithms import add_previously_isolated_days_randomly, add_previously_isolated_days_greedy, add_random_weekends, add_greedy_weekends
+from heuristic.new_destroy_algorithms import remove_partial_weekends
 #from heuristic.utils import WeightUpdate
 
 
@@ -11,6 +14,7 @@ class ALNS:
         self.best_solution = state
 
         #self.criterion = criterion
+        self.random_state =  self.initialize_random_state()
         
         self.destroy_operators = {}
         self.destroy_weights = {}
@@ -32,51 +36,119 @@ class ALNS:
         self.off_shifts = model.off_shifts
         self.days = model.days
         self.time_step = model.time_step
+        self.t_covered_by_shift = model.t_covered_by_shift
+
+        #self.add_destroy_operator([remove_partial_weekends, remove_isolated_working_day])
+        #self.add_repair_operator([add_previously_isolated_days_randomly, add_previously_isolated_days_greedy, add_random_weekends, add_greedy_weekends])
+        #self.initialize_destroy_and_repair_weights()
+       
 
 
     def iterate(self, iterations):
         for iteration in range(iterations):
+            destroy_operator = remove_partial_weekends
+            repair_operator = add_random_weekends
             #destroy_operator = self.select_operator(self.destroy_operators, self.destroy_weights)
             #repair_operator = self.select_operator(self.repair_operators, self.repair_weights)
             candidate_solution = self.current_solution.copy()
-            #destroyed_set = destroy_operator(candidate_solution, sets)
-            #repair_set = repair_operator(candidate_solution, sets, destroyed_set)
+            destroyed_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
+            repair_set = repair_operator(candidate_solution, {"employees":self.employees, "shifts_at_day":self.shifts_at_day}, destroyed_set)
 
             self.calculate_objective(candidate_solution)
 
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
-        pass
+        """
+        Considers the candidate based on self.critertion, and will update the weights according to the outcome
+        :param candidate_solution: The solution to consider
+        :param destroy_id: the id (name) of the destroy function used to create this state
+        :param repair_id: the id (name) of the repair function used to create this state
+        """
+
+        # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
+
+        if self.criterion.accept(candidate_solution, self.current_solution):
+            self.current_solution = candidate_solution
+
+            if candidate_solution.get_objectice_value() >= self.current_solution.get_objectice_value():
+                weight_update = WeightUpdate.IS_BETTER
+            else:
+                weight_update = WeightUpdate.IS_ACCEPTED
+        else:
+            weight_update = WeightUpdate.IS_REJECTED
+
+        if candidate_solution.get_objectice_value() >= self.best_solution.get_objective_value():
+
+            # todo: this is copied from the Github-repo, but unsure if this is the correct way to do it.
+            weight_update = WeightUpdate.IS_BEST
+            self.best_solution = candidate_solution
+            self.current_solution = candidate_solution
+
+        self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
-        pass
+        """
+        Randomly selects an operator from a probability distribution based on the operators weights.
+        :param operators: self.destroy_operators or self.repair_operators
+        :param weights: the weights associated with the operators
+        :return: the operator function, and it´s ID.
+        """
 
+        probabilities = self.get_probabilities(weights)
+        selected_operator_id = self.random_state.choice(list(operators.keys()), p=probabilities)
+        return operators[selected_operator_id], selected_operator_id
 
-    def get_probabilities(self, weights):
-        pass
+    @staticmethod
+    def get_probabilities(weights):
+        total_weight = sum(weights.values())
+        return [weight / total_weight for weight in weights.values()]
+
 
     def update_weights(self, weight_update, destroy_id, repair_id):
-        pass
+        """ Updates the value of the operator pair by multiplying both with weight_update """
+
+        self.destroy_weights[destroy_id] *= weight_update
+        self.repair_weights[repair_id] *= weight_update
 
     def initialize_destroy_and_repair_weights(self):
-        pass
+        self.destroy_weights = self.initialize_weights(self.destroy_operators)
+        self.repair_weights = self.initialize_weights(self.repair_operators)
 
-    def initialize_weights(self, operators):
-        pass
+    @staticmethod
+    def initialize_weights(operators):
 
-    def initialize_random_state(self):
-        pass
+        if not operators:
+            raise ValueError("You cannot initialize weights before adding at least one operator")
 
-    def add_destroy_operator(self, operator):
-        pass
+        return {operator: 1.0 for operator in operators}
 
-    def add_repair_operator(self, operator):
-        pass
+    @staticmethod
+    def initialize_random_state():
+        """ Provides a seeded random state to ensure a deterministic output over different runs """
+        return np.random.RandomState(seed=0)
+
+    def add_destroy_operator(self, operators):
+        for operator in operators:
+            self.add_operator(self.destroy_operators, operator)
+
+    def add_repair_operator(self, operators):
+        for operator in operators:
+            self.add_operator(self.repair_operators, operator)
+
+    @staticmethod
+    def add_operator(operators, new_operator):
+        """
+        Adds a new operator to the given set. If new_operator is not a function a ValueError is raised.
+        :param operators: either self.destroy_operators or self.repair_operators
+        :param new_operator: the operator to add to the sets
+        """
+
+        if not callable(new_operator):
+            raise ValueError("new_operator must be a function")
+
+        operators[new_operator.__name__] = new_operator
 
     def calculate_objective(self, state):
-        pass
-
-    def add_operator(self, operators, new_operator):
         pass
 
     def initialize_state_variables(self, model):
