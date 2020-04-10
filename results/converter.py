@@ -3,36 +3,38 @@ class Converter:
 
         self.gurobi_variables = gurobi_solution.get_variables()
 
-        self.x = self.convert_x()
-        self.y = self.convert_y()
-        self.w = self.convert_w()
+        self.x = self.convert(self.gurobi_variables.x)
+        self.y = self.convert(self.gurobi_variables.y)
+        self.w = self.convert(self.gurobi_variables.w)
 
     def get_converted_variables(self):
         return {"x": self.x, "y": self.y, "w": self.w}
 
-    def convert_x(self):
-        """
-        Converts the x-variable to a simple dict.
-        Could be swapped with NumPy or Pandas in future work
-        """
+    @staticmethod
+    def convert(var):
 
-        var = self.gurobi_variables
-        return {(e, t, v): abs(var.x[e, t, v].x) for e, t, v in var.x}
+        key_tuples = var.keys()
 
-    def convert_y(self):
-        """
-        Converts the y-variable to a simple dict.
-        Could be swapped with NumPy or Pandas in future work
-        """
+        if len(key_tuples[0]) != 3:
+            raise ValueError("This variable is not a 3D dict")
 
-        var = self.gurobi_variables
-        return {(c, e, t): abs(var.y[c, e, t].x) for c, e, t in var.y}
+        converted_dict = {}
 
-    def convert_w(self):
-        """
-        Converts the w-variable to a simple dict.
-        Could be swapped with NumPy or Pandas in future work
-        """
+        for key1, key2, key3 in key_tuples:
 
-        var = self.gurobi_variables
-        return {(e, t, v): abs(var.w[e, t, v].x) for e, t, v in var.w}
+            # if the 1st dict does not exists, create it
+            if key1 not in converted_dict:
+                converted_dict[key1] = {}
+
+            # if the 2nd dict does not exist, create it
+            if key2 not in converted_dict[key1]:
+                converted_dict[key1][key2] = {}
+
+            # if the 3rd dict does not exist, create it
+            if key3 not in converted_dict[key1][key2]:
+                converted_dict[key1][key2][key3] = {}
+
+            # Make sure that values are always positive
+            converted_dict[key1][key2][key3] = abs(var[key1, key2, key3].x)
+
+        return converted_dict

@@ -4,9 +4,9 @@ from results.converter import Converter
 from model.feasibility_model import FeasibilityModel
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def gurobi_model():
-    gurobi_model = FeasibilityModel(name="test_converter_fixture", problem="rproblem2")
+    gurobi_model = FeasibilityModel(name="test_converter_fixture", problem="rproblem3_one_week")
     gurobi_model.run_model()
     return gurobi_model
 
@@ -23,22 +23,23 @@ def test_get_converted_variables(converter):
     assert converter.get_converted_variables() == expected_variables
 
 
-def test_convert_x(gurobi_model, converter):
+def test_convert(gurobi_model, converter):
 
-    assert type(converter.x) == dict
-    assert len(converter.x) == len(gurobi_model.var.x)
-    assert not any(value < 0 for value in converter.x.values())
+    variable = converter.gurobi_variables.w
 
+    key_dict = Converter.convert(variable)
 
-def test_convert_y(gurobi_model, converter):
-
-    assert type(converter.y) == dict
-    assert len(converter.y) == len(gurobi_model.var.y)
-    assert not any(value < 0 for value in converter.y.values())
+    for key1 in key_dict.keys():
+        for key2 in key_dict[key1].keys():
+            for key3 in key_dict[key1][key2].keys():
+                assert key_dict[key1][key2][key3] == variable[key1, key2, key3]
 
 
-def test_convert_w(gurobi_model, converter):
+def test_convert_raises_error_on_2d_var(gurobi_model):
 
-    assert type(converter.w) == dict
-    assert len(converter.w) == len(gurobi_model.var.w)
-    assert not any(value < 0 for value in converter.w.values())
+    variable = gurobi_model.var.mu
+
+    with pytest.raises(ValueError) as e:
+        Converter.convert(variable)
+
+    assert str(e.value) == "This variable is not a 3D dict"
