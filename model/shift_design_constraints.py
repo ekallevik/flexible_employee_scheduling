@@ -1,10 +1,9 @@
+
 from gurobipy import *
 
 
 class ShiftDesignConstraints:
-    def __init__(
-        self, model, var, competencies, demand, time_periods, shifts, shifts_overlapping_t
-    ):
+    def __init__(self, model, var, competencies, demand, time_periods, shifts, shifts_overlapping_t):
 
         self.model = model
         self.competencies = competencies
@@ -22,29 +21,29 @@ class ShiftDesignConstraints:
     def add_minimum_demand_coverage(self, x):
         self.model.addConstrs(
             (
-                quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                >= quicksum(self.demand["min"][c, t] for c in self.competencies)
+                quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t]) >=
+                quicksum(self.demand["min"][c, t] for c in self.competencies)
                 for t in self.time_periods
             ),
-            name="minimum_demand_coverage",
+            name="minimum_demand_coverage"
         )
 
     def add_deviation_from_demand(self, x, delta):
         self.model.addConstrs(
             (
-                quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                - quicksum(self.demand["ideal"][c, t] for c in self.competencies)
-                == delta["plus"][t] - delta["minus"][t]
+                quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t]) -
+                quicksum(self.demand["ideal"][c, t] for c in self.competencies) ==
+                delta["plus"][t] - delta["minus"][t]
                 for t in self.time_periods
             ),
-            name="deviation_from_ideal_demand",
+            name="deviation_from_ideal_demand"
         )
 
     def add_mapping_x_to_y(self, x, y):
-
-        # A big M to make the constraint work properly
-        M = 1000
-
         self.model.addConstrs(
-            (x[t, v] <= M * y[t, v] for t, v in self.shifts), name="mapping_x_to_y"
+            (
+                x[t, v] <= 1000 * y[t, v]
+                for t, v in self.shifts
+            ),
+            name="mapping_x_to_y"
         )

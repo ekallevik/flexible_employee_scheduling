@@ -1,3 +1,4 @@
+
 from gurobipy.gurobipy import GRB, quicksum
 
 
@@ -11,8 +12,8 @@ class ShiftDesignObjective:
 
     def add_objective(self, weights, y, delta):
         self.model.setObjective(
-            quicksum(y[t_marked, v] for t_marked, v in self.shifts)
-            + weights["demand_deviation"]
-            * quicksum(delta["plus"][t] + delta["minus"][t] for t in self.time_periods),
+            quicksum(y[t_marked, v] for t_marked, v in self.shifts) +
+            weights["demand_deviation"] * quicksum(delta["plus"][t] + delta["minus"][t] for t in self.time_periods),
             GRB.MINIMIZE,
         )
+
