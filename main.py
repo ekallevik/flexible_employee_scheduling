@@ -6,7 +6,17 @@ from heuristic.state import State
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
 from model.construction_model import ConstructionModel
+from model.shift_design_model import ShiftDesignModel
 from results.converter import Converter
+
+
+def run_shift_design_model(problem="rproblem5"):
+
+    esp = ShiftDesignModel(name="esp_shift_design", problem=problem)
+    esp.run_model()
+
+    return esp
+
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
@@ -59,3 +69,4 @@ if __name__ == "__main__":
         python main.py FUNCTION_NAME *ARGS
     """
     fire.Fire()
+    run_shift_design_model()

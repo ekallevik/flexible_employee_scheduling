@@ -30,6 +30,7 @@ class BaseConstraints:
         self.shifts_combinations_violating_daily_rest = shifts_set["shifts_combinations_violating_daily_rest"]
         self.invalid_shifts_violating_daily_rest = shifts_set["invalid_shifts_violating_daily_rest"]
 
+        # Adding constraints
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
@@ -42,6 +43,7 @@ class BaseConstraints:
             self.add_daily_rest_shift_combinations(var.x, e)
         self.add_daily_rest_invalid_shifts(var.x)
 
+    # Constraint definitions
     def add_minimum_demand_coverage(self, y, mu):
         self.model.addConstrs(
             (

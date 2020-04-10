@@ -5,7 +5,6 @@ from utils import const
 from collections import defaultdict
 
 
-
 def get_time_steps(root):
 
     demands = get_demand_definitions(root)
@@ -67,6 +66,7 @@ def get_time_periods(root):
                     time_periods_in_day[day].append(time)
                 time += time_step
     return [time_periods, time_periods_in_week, time_periods_in_day]
+
 
 def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
@@ -491,6 +491,7 @@ def get_t_covered_by_shift(root):
         start = time_periods.index(shift[0])
         t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
     return t_covered_by_shift
+
 
 def shift_lookup(root):
     shifts = get_shift_lists(root)[1]
