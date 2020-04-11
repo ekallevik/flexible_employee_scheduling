@@ -1,12 +1,12 @@
 from copy import copy
 
 class State:
-    def __init__(self, hard_vars, soft_vars):
+    def __init__(self, decision_vars, soft_vars, hard_vars):
 
         #Hard decision variables
-        self.x = hard_vars["x"]
-        self.y = hard_vars["y"]
-        self.w = hard_vars["w"]
+        self.x = decision_vars["x"]
+        self.y = decision_vars["y"]
+        self.w = decision_vars["w"]
 
         #Soft Variables
         self.soft_vars = soft_vars
@@ -19,6 +19,8 @@ class State:
         # self.contracted_hours
 
         # #Hard Penalty Variables
+        self.hard_vars = hard_vars
+
         # self.cover_min_demand
         # self.cover_max_demand
         # self.one_demand_per_time
@@ -28,11 +30,16 @@ class State:
         # self.shift_demand_map
         # self.break_contracted_hours
 
+        self.objective_function_value = None
+        self.f = None
 
 
     def get_objective_value(self):
-        # todo: will be implemented after Håkon's PR is approved. See https://trello.com/c/baWqgH1d.
-        raise NotImplementedError
+        return self.objective_function_value
 
     def copy(self):
-        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, copy(self.soft_vars))
+        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, copy(self.soft_vars), copy(self.hard_vars))
+
+
+
+    

@@ -155,22 +155,17 @@ def calculate_positive_deviation_from_contracted_hours(model, y):
                 -  len(model.weeks) * model.contracted_hours[e]))
     return delta_positive_contracted_hours
 
-def calculate_f(model, employees=None):
+def calculate_f(model, state, employees=None):
     if(employees == None):
         employees = model.employees
-    partial_weekend = calculate_partial_weekends(model)[0]
-    q_iso_work = calculate_isolated_working_days(model)
-    q_iso_off = calculate_isolated_off_days(model)
-    q_con = calculate_consecutive_days(model)
-    delta_c = calculate_negative_deviation_from_contracted_hours(model)
     f = {}
     for e in employees:
-        f[e] = (sum(v * model.w[e,t,v] for t,v in model.off_shifts)
-            - delta_c[e]
-            - sum(partial_weekend[e,i] for i in model.saturdays)
-            - sum(q_iso_work[e,i+1] for i in range(len(model.days)-2))
-            - sum(q_iso_off[e,i+1] for i in range(len(model.days)-2))
-            - sum(q_con[e,i] for i in range(len(model.days)-model.L_C_D)))
+        f[e] = (sum(v * state.w[e,t,v] for t,v in model.off_shifts)
+            - state.soft_vars["contracted_hours"][e]
+            - sum(state.soft_vars["partial_weekends"][e,i] for i in model.saturdays)
+            - sum(state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(model.days)-2))
+            - sum(state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(model.days)-2))
+            - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(model.days)-model.L_C_D)))
     return f
 
 def hard_constraint_penalties(model):
@@ -188,17 +183,13 @@ def hard_constraint_penalties(model):
                         break_contracted_hours)
     return hard_penalties
 
-def calculate_objective_function(model):
-    delta = calculate_deviation_from_demand(model)
-    f = calculate_f(model)
-    g = min(f.values())
+def calculate_objective_function(model, state):
+    state.f = calculate_f(model, state)
+    g = min(state.f.values())
     #Regular objective function
-    objective = (sum(f[e] for e in model.employees)
-                    + g
-                    - sum(delta[c,t] for t in model.time_periods for c in model.competencies))
+    state.objective_function_value = (sum(state.f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()))
     
     #Penalty from breaking hard constraints
-    objective -= hard_constraint_penalties(model)
+    #objective -= hard_constraint_penalties(model)
 
-    return objective
 

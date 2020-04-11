@@ -46,12 +46,24 @@ def main():
         "shift_demand_map": mapping_shift_to_demand(model, x, y),
         "break_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y),
     }
-    print(soft_variables["partial_weekends"])
 
-    initial_state = State({"x": x, "y":y, "w":w}, soft_variables)
+    hard_vars = {
+        "below_minimum_demand": {},
+        "above_maximum_demand": {},
+        "more_than_one_shift_per_day": {},
+        "cover_multiple_demand_periods": {},
+        "weekly_off_shift_error": {},
+        "no_work_during_off_shift": {},
+        "mapping_shift_to_demand": {},
+        "delta_positive_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y)
+    }
+
+    #print(soft_variables["partial_weekends"])
+
+    initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars)
     
     alns = ALNS(initial_state, model)
-    alns.iterate(1)
+    alns.iterate(2)
     
     model.x = x
     model.y = y
