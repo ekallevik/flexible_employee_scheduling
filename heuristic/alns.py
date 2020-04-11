@@ -1,9 +1,10 @@
 import numpy as np
 from heuristic.heuristic_calculations import *
 #from heuristic.destroy_algorithms import remove_isolated_working_day, remove_partial_weekends
-#from heuristic.repair_algorithms import add_previously_isolated_days_randomly, add_previously_isolated_days_greedy, add_random_weekends, add_greedy_weekends
+from heuristic.new_repair_algorithms import add_previously_isolated_days_randomly, add_previously_isolated_days_greedy, add_random_weekends, add_greedy_weekends
 from heuristic.new_destroy_algorithms import remove_partial_weekends
 #from heuristic.utils import WeightUpdate
+from heuristic.delta_calculations import calculate_objective_function
 
 
 class ALNS:
@@ -51,10 +52,9 @@ class ALNS:
             #destroy_operator = self.select_operator(self.destroy_operators, self.destroy_weights)
             #repair_operator = self.select_operator(self.repair_operators, self.repair_weights)
             candidate_solution = self.current_solution.copy()
-            destroyed_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
-            repair_set = repair_operator(candidate_solution, {"employees":self.employees, "shifts_at_day":self.shifts_at_day}, destroyed_set)
-
-            self.calculate_objective(candidate_solution)
+            partial_set, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
+            repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift}, partial_set)
+            calculate_objective_function(candidate_solution, (repair_set + destroy_set), self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies)
 
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):

@@ -37,7 +37,7 @@ def calculate_partial_weekends(model, x):
              #   partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i] if x[e,t,v] == 1])
               #  partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i+1] if x[e,t,v] == 1])
 
-            partial_weekend[e,i] =  abs(sum(x[e,t,v] 
+            partial_weekend[e,i] =  (sum(x[e,t,v] 
                                     for t,v in model.shifts_at_day[i]) 
                                     - sum(x[e,t,v] 
                                     for t,v in model.shifts_at_day[i+1]))

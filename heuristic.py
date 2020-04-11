@@ -97,7 +97,7 @@ def main():
 """
 cProfile.run('main()', 'stats')
 p = pstats.Stats('stats')
-p.strip_dirs().sort_stats('time').print_stats(10)
+p.strip_dirs().sort_stats('time').print_stats(15)
 #main()
 # partial = remove_partial_weekends()
 # add_greedy_weekends(partial)
