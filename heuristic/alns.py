@@ -10,13 +10,10 @@ from heuristic.criterions.greedy_criterion import GreedyCriterion
 
 class ALNS:
     def __init__(self, state, model, ):
-        calc_ob(model, state)
-
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
 
-        
         self.criterion = GreedyCriterion()
         self.random_state =  self.initialize_random_state()
         
@@ -62,12 +59,12 @@ class ALNS:
     def iterate(self, iterations):
         for iteration in range(iterations):
             destroy_operator = self.destroy_operators["remove_partial_weekends"]
-            repair_operator = self.repair_operators["add_random_weekends"]
+            repair_operator = self.repair_operators["add_greedy_weekends"]
             #destroy_operator = self.select_operator(self.destroy_operators, self.destroy_weights)
             #repair_operator = self.select_operator(self.repair_operators, self.repair_weights)
             candidate_solution = self.current_solution.copy()
-            partial_set, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
-            repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift}, partial_set)
+            partial_weekends, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
+            repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies}, partial_weekends)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
             
@@ -80,11 +77,11 @@ class ALNS:
         :param repair_id: the id (name) of the repair function used to create this state
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
-
+        print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
         if self.criterion.accept(candidate_solution, self.current_solution):
             self.current_solution = candidate_solution
 
-            if self.get_objective_value() >= self.current_solution.get_objective_value():
+            if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
@@ -97,7 +94,6 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
-        print(weight_update)
         self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):

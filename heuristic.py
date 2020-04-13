@@ -1,6 +1,6 @@
 from model.model_class import Optimization_model
 from model.hard_constraint_model_class import Optimization_model as Feasibility_model
-#from heuristic.heuristic_calculations import *
+from heuristic.heuristic_calculations import calculate_objective_function as calc_ob
 from heuristic.destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
 from heuristic.repair_algorithms import *
 from heuristic.state import State 
@@ -58,12 +58,13 @@ def main():
         "delta_positive_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y)
     }
 
+    objective_function, f = calc_ob(model, soft_variables)
     #print(soft_variables["partial_weekends"])
 
-    initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars)
+    initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     
     alns = ALNS(initial_state, model)
-    alns.iterate(2)
+    alns.iterate(100)
     
     model.x = x
     model.y = y

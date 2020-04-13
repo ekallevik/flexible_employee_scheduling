@@ -56,15 +56,13 @@ def calculate_consecutive_days(state, repair_destroy_set, shifts_at_day, L_C_D, 
 
 
 def calculate_f(state, repair_destroy_set, off_shifts, saturdays, days, L_C_D):
-    f = {}
     for e,t1,v1 in repair_destroy_set:
-        f[e] = (sum(v * state.w[e,t,v] for t,v in off_shifts)
+        state.f[e] = (sum(v * state.w[e,t,v] for t,v in off_shifts)
             - state.soft_vars["contracted_hours"][e]
             - sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
             - sum(state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(days)-L_C_D)))
-    return f
 
 
 def cover_minimum_demand(state, repair_destroy_set, employee_with_competencies, demand, time_periods, competencies, t_covered_by_shift):
@@ -118,8 +116,8 @@ def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repai
 
 
 def calculate_objective_function(state, repair_destroy_set, off_shifts, saturdays, L_C_D, days, competencies):
-    f = calculate_f(state, repair_destroy_set, off_shifts, saturdays, days, L_C_D)
-    g = min(f.values())
+    calculate_f(state, repair_destroy_set, off_shifts, saturdays, days, L_C_D)
+    g = min(state.f.values())
     #Regular objective function
-    state.objective_function_value = (sum(f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()))
+    state.objective_function_value = (sum(state.f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()))
 

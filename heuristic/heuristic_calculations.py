@@ -155,17 +155,17 @@ def calculate_positive_deviation_from_contracted_hours(model, y):
                 -  len(model.weeks) * model.contracted_hours[e]))
     return delta_positive_contracted_hours
 
-def calculate_f(model, state, employees=None):
+def calculate_f(model, soft_vars, employees=None):
     if(employees == None):
         employees = model.employees
     f = {}
     for e in employees:
-        f[e] = (sum(v * state.w[e,t,v] for t,v in model.off_shifts)
-            - state.soft_vars["contracted_hours"][e]
-            - sum(state.soft_vars["partial_weekends"][e,i] for i in model.saturdays)
-            - sum(state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(model.days)-2))
-            - sum(state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(model.days)-2))
-            - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(model.days)-model.L_C_D)))
+        f[e] = (sum(v * model.w[e,t,v].x for t,v in model.off_shifts)
+            - soft_vars["contracted_hours"][e]
+            - sum(soft_vars["partial_weekends"][e,i] for i in model.saturdays)
+            - sum(soft_vars["isolated_working_days"][e,i+1] for i in range(len(model.days)-2))
+            - sum(soft_vars["isolated_off_days"][e,i+1] for i in range(len(model.days)-2))
+            - sum(soft_vars["consecutive_days"][e,i] for i in range(len(model.days)-model.L_C_D)))
     return f
 
 def hard_constraint_penalties(model):
@@ -183,12 +183,12 @@ def hard_constraint_penalties(model):
                         break_contracted_hours)
     return hard_penalties
 
-def calculate_objective_function(model, state):
-    state.f = calculate_f(model, state)
-    g = min(state.f.values())
+def calculate_objective_function(model, soft_vars):
+    f = calculate_f(model, soft_vars)
+    g = min(f.values())
     #Regular objective function
-    state.objective_function_value = (sum(state.f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()))
-    
+    objective_function_value = (sum(f.values()) + g - sum(soft_vars["negative_deviation_from_demand"].values()))
+    return objective_function_value, f
     #Penalty from breaking hard constraints
     #objective -= hard_constraint_penalties(model)
 

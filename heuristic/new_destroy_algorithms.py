@@ -5,16 +5,15 @@ from heuristic.heuristic_calculations import calculate_isolated_working_days, ca
 
 #Destroy and repair algorithm targeting partial weekends
 def remove_partial_weekends(state, sets):
-    partial_weekends = TupleDict()
+    partial_weekends = defaultdict(list)
     destroy_set = []
     for e,i in state.soft_vars["partial_weekends"]:
         if(state.soft_vars["partial_weekends"][e,i] != 0):
             for t,v in (sets["shifts_at_day"][i] + sets["shifts_at_day"][i+1]):
                 if(state.x[e,t,v] != 0):
-                    partial_weekends[e,i] = (t,v)
+                    partial_weekends[i].append((e,t,v))
                     destroy_set.append((e,t,v))
                     set_x(state, sets, e,t,v,0)
-    #print(partial_weekends)
     return partial_weekends, destroy_set
 
 

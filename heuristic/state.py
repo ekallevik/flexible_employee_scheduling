@@ -1,7 +1,7 @@
 from copy import copy
 
 class State:
-    def __init__(self, decision_vars, soft_vars, hard_vars):
+    def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
 
         #Hard decision variables
         self.x = decision_vars["x"]
@@ -30,15 +30,15 @@ class State:
         # self.shift_demand_map
         # self.break_contracted_hours
 
-        self.objective_function_value = None
-        self.f = None
+        self.objective_function_value = objective_function_value
+        self.f = f
 
 
     def get_objective_value(self):
         return self.objective_function_value
 
     def copy(self):
-        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, copy(self.soft_vars), copy(self.hard_vars))
+        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, copy(self.soft_vars), copy(self.hard_vars), copy(self.objective_function_value), copy(self.f))
 
 
 

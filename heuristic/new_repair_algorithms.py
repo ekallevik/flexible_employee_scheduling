@@ -1,7 +1,8 @@
 from random import choice, sample, choices
 from heuristic.converter import set_x
 from xml_loader.shift_generation import load_data, get_t_covered_by_shift, shift_lookup, get_time_periods_in_day
-from heuristic.heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
+#from heuristic.heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
+from heuristic.delta_calculations import delta_calculate_deviation_from_demand as calc_neg_dev
 
 def add_previously_isolated_days_randomly(state, sets, destroy_set):
     employees = {i: [e for e in sets["employees"] if sum(state.x[e,t,v] for t,v in sets["shifts_at_day"][i]) == 0] for i in iso_days.keys()}
@@ -31,9 +32,11 @@ def add_previously_isolated_days_greedy(model, iso_days):
 
 
 def add_random_weekends(state, sets, destroyed_set):
+    print(destroyed_set.values())
     repair_set = []
-    for i in sets["saturdays"]:
-        emp = choice([key[0] for key, value in destroyed_set.items() if value in destroyed_set[None, i]])
+    for i in destroyed_set.keys():
+        emp = choice([e for e,t,v in destroyed_set[i]])
+        #emp = choice([key[0] for key, value in destroyed_set.items() if value in destroyed_set[None, i]])
         t1,v1 = choice(sets["shifts_at_day"][i])
         t2,v2 = choice(sets["shifts_at_day"][i+1])
         set_x(state, sets, emp,t1,v1,1)
@@ -43,21 +46,37 @@ def add_random_weekends(state, sets, destroyed_set):
     return repair_set
 
 
-def add_greedy_weekends(model, partial):
-    actual_partial_weekends = [key for key, value in partial[0].items() if value != 0]
-    for e,i in actual_partial_weekends:
-        delta = calculate_negative_deviation_from_demand(model)
+def add_greedy_weekends(state, sets, destroyed_set):
+    repair_set = []
+    #Dette må gjøres smartere nå vi vet hvilken competency som velges
+    for c in sets["competencies"]:
+        for i in destroyed_set:
+            for e,t,v in destroyed_set[i]:
+                for t in sets["t_covered_by_shift"][t,v]:
+                    state.soft_vars["negative_deviation_from_demand"][c,t] += 1
+
+    for i in destroyed_set:
+        e = choice([e for e,t,v in destroyed_set[i]])
+
         avail_shifts = [[], []]
-        avail_shifts[0] = [sum(delta[c,t] for c in model.competencies for t in model.t_covered_by_shift[shift]) for shift in model.shifts_at_day[i]]
-        avail_shifts[1] = [sum(delta[c,t] for c in model.competencies for t in model.t_covered_by_shift[shift]) for shift in model.shifts_at_day[i+1]]
+        avail_shifts[0] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]]
+        avail_shifts[1] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i+1]]
         ind = [avail_shifts[0].index(max(avail_shifts[0])), avail_shifts[1].index(max(avail_shifts[1]))]
+
         if(ind[0] == 0 and ind[1] == 0):
             continue
 
-        t1,v1 = model.shifts_at_day[i][ind[0]]
-        t2,v2 = model.shifts_at_day[i+1][ind[1]]
-        set_x(model, e, t1, v1, 1)
-        set_x(model, e, t2, v2, 1)
+        t1,v1 = sets["shifts_at_day"][i][ind[0]]
+        t2,v2 = sets["shifts_at_day"][i+1][ind[1]]
+        set_x(state, sets, e, t1, v1, 1)
+        set_x(state, sets, e, t2, v2, 1)
+
+        repair_set.append((e,t1,v1))
+        repair_set.append((e,t2,v2))
+
+        for t in (sets["t_covered_by_shift"][t1,v1] + sets["t_covered_by_shift"][t2,v2]):
+            state.soft_vars["negative_deviation_from_demand"][0,t] -= 1
+    return repair_set
 
 
 def lowest_contracted_hours(model, delta_c, delta):
