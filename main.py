@@ -23,7 +23,6 @@ def run_shift_design_model(problem="rproblem5"):
 
     return sdp
 
-
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     """
     Non-complete skeleton for running ALNS.
@@ -74,4 +73,3 @@ if __name__ == "__main__":
         python main.py FUNCTION_NAME *ARGS
     """
     fire.Fire()
-    run_shift_design_model()
