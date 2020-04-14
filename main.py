@@ -11,12 +11,17 @@ from results.converter import Converter
 
 
 def run_shift_design_model(problem="rproblem5"):
+    """
+    Runs the shift design model.
+
+    :param problem: the problem instance to run.
+    :return: the solved model instance.
+    """
 
     esp = ShiftDesignModel(name="esp_shift_design", problem=problem)
     esp.run_model()
 
     return esp
-
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
@@ -69,4 +74,3 @@ if __name__ == "__main__":
         python main.py FUNCTION_NAME *ARGS
     """
     fire.Fire()
-    run_shift_design_model()
