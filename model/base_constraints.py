@@ -27,8 +27,6 @@ class BaseConstraints:
         self.off_shifts_in_week = off_shifts_set["off_shifts_per_week"]
         self.t_in_off_shifts = off_shifts_set["t_in_off_shifts"]
         self.off_shifts = off_shifts_set["off_shifts"]
-        self.shifts_combinations_violating_daily_rest = shifts_set["shifts_combinations_violating_daily_rest"]
-        self.invalid_shifts_violating_daily_rest = shifts_set["invalid_shifts_violating_daily_rest"]
 
         # Adding constraints
         self.add_minimum_demand_coverage(var.y, var.mu)
@@ -39,9 +37,6 @@ class BaseConstraints:
         self.add_weekly_rest(var.w)
         self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y, version="original")
         self.add_contracted_hours(var.y, var.lam)
-        for e in self.employees:
-            self.add_daily_rest_shift_combinations(var.x, e)
-        self.add_daily_rest_invalid_shifts(var.x)
 
     # Constraint definitions
     def add_minimum_demand_coverage(self, y, mu):
@@ -168,26 +163,4 @@ class BaseConstraints:
                 for e in self.employees
             ),
             name="contracted_hours",
-        )
-
-    def add_daily_rest_shift_combinations(self, x, e):
-        self.model.addConstrs(
-            (
-                x[e, t, v] +
-                quicksum(x[e, t_marked, v_marked] for t_marked, v_marked
-                         in self.shifts_combinations_violating_daily_rest[e][t, v])
-                <= min(2, len(self.shifts_combinations_violating_daily_rest[e][t, v]))
-                for t, v in self.shifts_combinations_violating_daily_rest[e]
-                if len(self.shifts_combinations_violating_daily_rest[e]) > 0
-            ),
-            name="daily_rest_shift_combinations"
-        )
-
-    def add_daily_rest_invalid_shifts(self, x):
-        self.model.addConstrs(
-            (
-                quicksum(x[e, t, v] for t, v in self.invalid_shifts_violating_daily_rest[e]) == 0
-                for e in self.employees
-            ),
-            name="daily_rest_invalid_shifts"
         )
