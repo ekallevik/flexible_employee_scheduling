@@ -17,7 +17,7 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem2" 
+    problem_name = "rproblem3" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
@@ -64,7 +64,7 @@ def main():
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     
     alns = ALNS(initial_state, model)
-    alns.iterate(100)
+    alns.iterate(1)
     
     model.x = x
     model.y = y

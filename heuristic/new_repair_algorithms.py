@@ -56,26 +56,41 @@ def add_greedy_weekends(state, sets, destroyed_set):
                     state.soft_vars["negative_deviation_from_demand"][c,t] += 1
 
     for i in destroyed_set:
-        e = choice([e for e,t,v in destroyed_set[i]])
+        #e = choice([e for e,t,v in destroyed_set[i]])
+        employees = sample([e for e,t,v in destroyed_set[i]], int(len([e for e,t,v in destroyed_set[i]])/2))
 
         avail_shifts = [[], []]
-        avail_shifts[0] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]]
-        avail_shifts[1] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i+1]]
-        ind = [avail_shifts[0].index(max(avail_shifts[0])), avail_shifts[1].index(max(avail_shifts[1]))]
+        #avail_shifts[0] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]]
+        #avail_shifts[1] = [sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i+1]]
 
+
+        avail_shifts[0] = {shift: sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]}
+        avail_shifts[1] = {shift: sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i+1]}
+
+        ind = [sorted(avail_shifts[0], key=avail_shifts[0].get, reverse=True)[:len(employees)], sorted(avail_shifts[1], key=avail_shifts[1].get, reverse=True)[:len(employees)]]
+        
+        #ind = [avail_shifts[0].index(max(avail_shifts[0])), avail_shifts[1].index(max(avail_shifts[1]))]
+
+       # print(avail_shifts)
+       # print(ind)
         if(ind[0] == 0 and ind[1] == 0):
             continue
 
-        t1,v1 = sets["shifts_at_day"][i][ind[0]]
-        t2,v2 = sets["shifts_at_day"][i+1][ind[1]]
-        set_x(state, sets, e, t1, v1, 1)
-        set_x(state, sets, e, t2, v2, 1)
+        #t1,v1 = sets["shifts_at_day"][i][ind[0]]
+        #t2,v2 = sets["shifts_at_day"][i+1][ind[1]]
+        for e in range(len(employees)):
+            t1, v1 = ind[0][e]
+            t2, v2 = ind[1][e]
+            emp = employees[e]
+            #print("shift1: %s, %s. Shift2: %s, %s" % (t1, v1, t2, v2))
+            set_x(state, sets, emp, t1, v1, 1)
+            set_x(state, sets, emp, t2, v2, 1)
 
-        repair_set.append((e,t1,v1))
-        repair_set.append((e,t2,v2))
+            repair_set.append((emp,t1,v1))
+            repair_set.append((emp,t2,v2))
 
-        for t in (sets["t_covered_by_shift"][t1,v1] + sets["t_covered_by_shift"][t2,v2]):
-            state.soft_vars["negative_deviation_from_demand"][0,t] -= 1
+            for t in (sets["t_covered_by_shift"][t1,v1] + sets["t_covered_by_shift"][t2,v2]):
+                state.soft_vars["negative_deviation_from_demand"][0,t] -= 1
     return repair_set
 
 
