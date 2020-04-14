@@ -30,7 +30,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     solution = alns.iterate(iterations=1000)
 
 
-def run_model(model="feasibility", problem="rproblem2"):
+def run_model(model="construction", problem="rproblem3"):
     """
     Runs the specified model on the given problem.
 

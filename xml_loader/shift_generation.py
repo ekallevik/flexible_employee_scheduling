@@ -124,6 +124,7 @@ def get_employee_lists(root, competencies):
     employee_weekly_rest = tupledict()
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
+    employee_daily_offset = tupledict()
 
     emp = get_staff(root, competencies)
 
@@ -139,6 +140,7 @@ def get_employee_lists(root, competencies):
         employee_daily_rest[id] = e.daily_rest_hours
         employee_weekly_rest[id] = e.daily_rest_hours
         employee_contracted_hours[id] = e.contracted_hours
+        employee_daily_offset[id] = e.daily_offset
 
     return {
         "employees": employees,
@@ -146,6 +148,7 @@ def get_employee_lists(root, competencies):
         "employee_with_weekly_rest": employee_weekly_rest,
         "employee_daily_rest": employee_daily_rest,
         "employee_contracted_hours": employee_contracted_hours,
+        "employee_daily_offset": employee_daily_offset,
     }
 
 
@@ -229,6 +232,87 @@ def combine_demand_intervals(root):
     return combined_demand_intervals
 
 
+def get_no_demand_intervals(demand_interval, day):
+    """
+    Returns a list of intervals during a day where there is no demand
+    """
+
+    end_time = 24 * (int(day) + 1)
+    no_demand_intervals = []
+
+    for intervals in demand_interval:
+        start_time = intervals[0]
+        if start_time > 24 * int(day) and intervals == demand_interval[0]:
+            no_demand_intervals.append([24 * int(day), start_time])
+        if start_time > end_time:
+            overlapping_intervals = False
+            for no_intervals in no_demand_intervals:
+                if no_intervals[-1] > start_time:
+                    overlapping_intervals = True
+                    if no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] > intervals[-1]:
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] = intervals[-1]
+            if not overlapping_intervals:
+                no_demand_intervals.append([end_time, start_time])
+        end_time = intervals[-1]
+    if end_time < 24 * (int(day) + 1):
+        no_demand_intervals.append([end_time, 24 * (int(day) + 1)])
+
+    return no_demand_intervals
+
+
+def combine_no_demand_inetervals(root):
+    """
+    Returns a complete list including all intervals with no demand and connecting all demand intervals that could
+    be connected.
+    """
+
+    demand_intervals = get_demand_intervals(root)
+    interval_list = []
+    combined_no_demand_intervals = []
+
+    for day in demand_intervals:
+        no_demand_intervals = get_no_demand_intervals(demand_intervals[day], day)
+        for intervals in no_demand_intervals:
+            interval_list.append(intervals)
+
+    while len(interval_list) != 0:
+        end_time = interval_list[0][-1]
+        temp_interval = interval_list[0]
+        for other_intervals in interval_list[1:]:
+            if other_intervals[0] == end_time:
+                for time in other_intervals[1:]:
+                    temp_interval.append(time)
+                interval_list.remove(other_intervals)
+                break
+        combined_no_demand_intervals.append([temp_interval[0], temp_interval[-1]])
+        interval_list.pop(0)
+
+    return combined_no_demand_intervals
+
+
+def already_daily_off_shift(root, employee_offset, employee_rest, day):
+    """
+    Checks if an employee specific day has a interval without demand that exceeds the daily rest hours. If so,
+    there is no need to ensure that daily rest is satisfied, as this is ensured naturally. Returns True or False.
+    """
+
+    no_demand_periods = combine_no_demand_inetervals(root)
+    days = get_days(root)
+
+    for interval in no_demand_periods:
+        if day == len(days) - 1 and interval == no_demand_periods[-1] and interval[1] == 24 * len(days):
+            temp_val = interval[1]
+            interval[1] = temp_val + employee_offset
+        if employee_offset + (24 * int(day)) <= interval[0] <= employee_offset + (24 * (int(day) + 1)):
+            if interval[1] - interval[0] >= employee_rest:
+                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) +1)):
+                    return True
+        if interval[0] > employee_offset + (24 * (int(day) + 1)):
+            break
+
+    return False
+
+
 def get_shift_lists(root):
 
     desired_dur = const.DESIRED_SHIFT_DURATION
@@ -272,6 +356,56 @@ def get_shift_lists(root):
                 break
 
     return [shifts, shifts_per_day]
+
+
+def get_shifts_violating_daily_rest(root, staff):
+    """
+    Returns to values:
+        * violating_shifts: Returns a dict, with "employee" as key and another dict as value. The new dict uses "shift"
+                            as key and have a list of shifts that violates daily rest for "employee" if "shift" is
+                            worked.
+        * invalid_shifts:   Returns a dict with "employee" as key and a list of shifts that is not allowed due to daily
+                            rest as value.
+    """
+
+    employees = staff["employees"]
+    daily_rest = staff["employee_daily_rest"]
+    daily_offset = staff["employee_daily_offset"]
+    daily_shifts = get_shift_lists(root)[1]
+    violating_shifts = tupledict()
+    invalid_shifts = tupledict()
+
+    for e in employees:
+        violating_shifts[e] = tupledict()
+        invalid_shifts[e] = tuplelist()
+        for day in daily_shifts:
+            if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
+                for shift in daily_shifts[day]:
+                    if day != 0:
+                        for s in daily_shifts[day - 1]:
+                            if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
+                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (s[0] + s[1]):
+                                    try:
+                                        violating_shifts[e][shift].append(s)
+                                    except:
+                                        violating_shifts[e][shift] = [s]
+                    if day != daily_shifts.keys()[-1]:
+                        for s in daily_shifts[day + 1]:
+                            if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
+                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (shift[0] + shift[1]):
+                                    try:
+                                        violating_shifts[e][shift].append(s)
+                                    except:
+                                        violating_shifts[e][shift] = [s]
+
+                    if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
+                        if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
+                            try:
+                                invalid_shifts[e].append(shift)
+                            except:
+                                invalid_shifts[e] = [shift]
+
+    return [violating_shifts, invalid_shifts]
 
 
 def get_shifts_overlapping_t(root):
@@ -395,17 +529,20 @@ def load_data(problem_name):
     weeks = [i for i in range(number_of_weeks)]
     saturdays = [5+i*7 for i in range(number_of_weeks)]
     sundays = [6+i*7 for i in range(number_of_weeks)]
+    staff = get_employee_lists(root, competencies)
 
     data = {
         "competencies": competencies,
         "demand": get_demand(root, competencies),
-        "staff": get_employee_lists(root, competencies),
+        "staff": staff,
         "limit_on_consecutive_days": 5,
         "shifts": {
             "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(root),
             "shifts_overlapping_t": get_shifts_overlapping_t(root),
             "shifts": shift_set[0],
             "shifts_per_day": shift_set[1],
+            "shifts_combinations_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[0],
+            "invalid_shifts_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[1],
         },
         "off_shifts": {
             "t_in_off_shifts": get_t_covered_by_off_shifts(root),

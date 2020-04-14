@@ -1,3 +1,5 @@
+
+
 class Employee:
     def __init__(self, nbr):
         self.id = nbr
@@ -5,6 +7,7 @@ class Employee:
         self.daily_rest_hours = None
         self.competencies = []
         self.contracted_hours = None
+        self.daily_offset = None
 
     def set_weekly_rest(self, weekly_rest):
         self.weekly_rest_hours = weekly_rest
@@ -18,8 +21,11 @@ class Employee:
     def append_competency(self, competency):
         self.competencies.append(competency)
 
-    def set_contracted_hours(self, hours=38):
+    def set_contracted_hours(self, hours):
         self.contracted_hours = hours
+
+    def set_daily_offset(self, offset):
+        self.daily_offset = offset
 
     def __str__(self):
         return self.id

@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS
+from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS, DEFAULT_DAILY_OFFSET
 from xml_loader.demand import Demand
 from xml_loader.employee import Employee
 from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
@@ -83,8 +83,10 @@ def get_staff(root, competencies):
         set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
         set_competency_for_employee(competencies, employee, schedule_row)
+        set_daily_offset_for_employee(employee)
 
         staff.append(employee)
+
     return staff
 
 
@@ -122,6 +124,11 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
             f"ScheduleRow {employee.id} don't have a set WeeklyRestRule tag. Using DEFAULT_WEEKLY_REST"
         )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
+
+
+def set_daily_offset_for_employee(employee):
+    #TODO: Implement try-block, trying to collect daily offset from file.
+    employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
 
 
 def set_competency_for_employee(competencies, employee, schedule_row):
