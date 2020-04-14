@@ -233,7 +233,9 @@ def combine_demand_intervals(root):
 
 
 def get_no_demand_intervals(demand_interval, day):
-    """ Returns a list of intervals during a day where there is no demand """
+    """
+    Returns a list of intervals during a day where there is no demand
+    """
 
     end_time = 24 * (int(day) + 1)
     no_demand_intervals = []
@@ -259,8 +261,10 @@ def get_no_demand_intervals(demand_interval, day):
 
 
 def combine_no_demand_inetervals(root):
-    """ Returns a complete list including all intervals with no demand and connecting all demand intervals that could
-        be connected. """
+    """
+    Returns a complete list including all intervals with no demand and connecting all demand intervals that could
+    be connected.
+    """
 
     demand_intervals = get_demand_intervals(root)
     interval_list = []
@@ -287,8 +291,10 @@ def combine_no_demand_inetervals(root):
 
 
 def already_daily_off_shift(root, employee_offset, employee_rest, day):
-    """ Checks if an employee specific day has a interval without demand that exceeds the daily rest hours. If so,
-        there is no need to ensure that daily rest is satisfied, as this is ensured naturally. Returns True or False."""
+    """
+    Checks if an employee specific day has a interval without demand that exceeds the daily rest hours. If so,
+    there is no need to ensure that daily rest is satisfied, as this is ensured naturally. Returns True or False.
+    """
 
     no_demand_periods = combine_no_demand_inetervals(root)
     days = get_days(root)
@@ -354,10 +360,14 @@ def get_shift_lists(root):
 
 def get_shifts_violating_daily_rest(root, staff):
     """
-    employees = get_employee_lists(root, get_competencies(root))["employees"]
-    daily_rest = get_employee_lists(root, get_competencies(root))["employee_daily_rest"]
-    daily_offset = get_employee_lists(root, get_competencies(root))["employee_daily_offset"]
+    Returns to values:
+        * violating_shifts: Returns a dict, with "employee" as key and another dict as value. The new dict uses "shift"
+                            as key and have a list of shifts that violates daily rest for "employee" if "shift" is
+                            worked.
+        * invalid_shifts:   Returns a dict with "employee" as key and a list of shifts that is not allowed due to daily
+                            rest as value.
     """
+
     employees = staff["employees"]
     daily_rest = staff["employee_daily_rest"]
     daily_offset = staff["employee_daily_offset"]
@@ -395,7 +405,8 @@ def get_shifts_violating_daily_rest(root, staff):
                             except:
                                 invalid_shifts[e] = [shift]
 
-    return violating_shifts, invalid_shifts
+    return [violating_shifts, invalid_shifts]
+
 
 def get_shifts_overlapping_t(root):
 
