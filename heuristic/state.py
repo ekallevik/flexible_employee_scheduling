@@ -41,5 +41,21 @@ class State:
         return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, deepcopy(self.soft_vars), copy(self.hard_vars), copy(self.objective_function_value), copy(self.f))
 
 
+    def write(self, filename):
+        f= open(filename + ".sol","w+")
+        f.write(f"# Objective value = {self.objective_function_value}\n")
 
-    
+        for c,e,t in self.y:
+            f.write(f"y[{c},{e},{t}] {int(self.y[c,e,t])}\n")
+            
+        for e, t, v in self.x:
+            f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
+        
+        for e,t,v in self.w:
+            f.write(f"w[{e},{t},{v}] {int(self.w[e,t,v])}\n")
+
+        for key in self.soft_vars.keys():
+            for key2 in self.soft_vars[key]:
+                f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
+
+        f.close()
