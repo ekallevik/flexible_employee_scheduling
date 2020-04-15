@@ -10,5 +10,6 @@ def convert(model):
 def set_x(state, sets, e, t, v, value):
     state.x[e,t,v] = value
     #Need a smarter solution for choosing competency
-    for t in sets["t_covered_by_shift"][t,v]:
-        state.y[0,e,t] = value
+    for t1 in sets["t_covered_by_shift"][t,v]:
+        state.y[0,e,t1] = value
+    return (e,t,v)

@@ -8,15 +8,22 @@ def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shif
                 state.soft_vars["negative_deviation_from_demand"][c,t] = abs(sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t])
 
 
-def delta_calculate_negative_deviation_from_contracted_hours(state, repair_set, destroy_set, employees, contracted_hours):
-    for e,t,v in destroy_set:
-        state.soft_vars["contracted_hours"][e] -= v
+def delta_calculate_negative_deviation_from_contracted_hours(state, repair_set, destroy_set, employees, contracted_hours, weeks, time_periods, competencies, time_step):
+    for e,t,v in (repair_set + destroy_set):
+        state.soft_vars["contracted_hours"][e] = (len(weeks) * contracted_hours[e]
+            - sum(time_step * state.y[c,e,t] 
+            for t in time_periods
+            for c in competencies))
 
-    for e,t,v in repair_set:
-        state.soft_vars["contracted_hours"][e] += v
+
+    # for e,t,v in destroy_set:
+    #     state.soft_vars["contracted_hours"][e] += v
+
+    # for e,t,v in repair_set:
+    #     state.soft_vars["contracted_hours"][e] -= v
 
     for e in employees:
-        state.hard_vars["delta_positive_contracted_hours"][e] = max(state.soft_vars["contracted_hours"][e] - contracted_hours[e], 0)
+        state.hard_vars["delta_positive_contracted_hours"][e] = min(state.soft_vars["contracted_hours"][e], 0)
 
 #Weaknesses: 
 # 1. It could possibly check the same employee twice

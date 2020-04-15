@@ -18,21 +18,33 @@ def add_previously_isolated_days_randomly(state, sets, destroy_set):
             set_x(model, e, shift[0], shift[1], 1)
     
     
-def add_previously_isolated_days_greedy(model, iso_days):
-    employees = {i: [e for e in model.employees if sum(model.x[e,t,v] for t,v in model.shifts_at_day[i]) == 0] for i in iso_days.keys()}
-    for i,k in iso_days.items():
-        delta = calculate_negative_deviation_from_demand(model, [i])
-        f = calculate_f(model, employees[i])
-        f_sorted = {k: v for k, v in sorted(f.items(), key=lambda item: item[1])}
-        emps = [e for e in f_sorted.keys()][:k]
-        shifts = [sum(delta[c,t] for c in model.competencies for t in model.t_covered_by_shift[shift]) for shift in model.shifts_at_day[i]]
-        shifts_sorted = sorted(shifts, reverse=True)
-        shifts_2 = [model.shifts_at_day[i][shifts.index(shifts_sorted[place])] for place in range(k)]
-        [set_x(model, e,t,v,1) for e in emps for t,v in shifts_2]
+def add_previously_isolated_days_greedy(state, sets, iso_days, destroy_set):
+    repair_set = []
+    for e,t,v in destroy_set:
+        state.soft_vars["contracted_hours"][e] += v
+        #Må gjøres smartere når vi vet mer om competencies
+        for t in sets["t_covered_by_shift"][t,v]:
+                    state.soft_vars["negative_deviation_from_demand"][0,t] += 1
 
+    
+    for i,k in iso_days.items():
+        employees = {i: {e: state.soft_vars["contracted_hours"][e] for e in sets["employees"] if sum(state.x[e,t,v] for t,v in sets["shifts_at_day"][i]) == 0} for i in iso_days.keys()}
+        emps = sorted(employees[i], key=employees[i].get, reverse=True)[:k]
+        shifts = {shift: sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]}
+        #print(shifts)
+        shifts_sorted = sorted(shifts, key=shifts.get, reverse=True)[:k]
+        #print("Shifts Sorted:")
+        #print(shifts_sorted)
+        #shifts_2 = [model.shifts_at_day[i][shifts.index(shifts_sorted[place])] for place in range(k)]
+        repair_set.extend([set_x(state, sets, e,shift[0],shift[1],1) for e, shift in zip(emps, shifts_sorted)])
+
+        for e, shift in zip(emps, shifts_sorted):
+            for t1 in sets["t_covered_by_shift"][shift[0],shift[1]]:
+                state.soft_vars["negative_deviation_from_demand"][0,t1] -= 1
+            state.soft_vars["contracted_hours"][e] -= shift[1]
+    return repair_set
 
 def add_random_weekends(state, sets, destroyed_set):
-    print(destroyed_set.values())
     repair_set = []
     for i in destroyed_set.keys():
         emp = choice([e for e,t,v in destroyed_set[i]])
@@ -113,4 +125,22 @@ def lowest_contracted_hours(model, delta_c, delta):
    # delta2 = calculate_deviation_from_contracted_hours()
    # print(employee)
    # print(min(delta2, key=delta2.get))
-    
+
+
+"""
+    Possible repair operator to explore:
+    Spesific:
+        1.  Connected with isolated working days:
+            When removing an isolated working day we get three days in a row that an employee does not work. 
+            We then have the possibility to assign both an off shift as well as a working shift. We would have
+            to some spesific destruction to be able to do this. First of all we would have to destroy that weeks
+            off shift. This would be best if the isolated working day is not in the weekend. Perhaps related operator.
+
+
+    Relatedness:
+        1. 
+
+
+    General:
+
+"""

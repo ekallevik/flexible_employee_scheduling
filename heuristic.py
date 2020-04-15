@@ -28,7 +28,6 @@ def main():
 
 
 
-
     #calculator = Alns_calculator(model)
     soft_variables = {
         "negative_deviation_from_demand": calculate_negative_deviation_from_demand(model, y),
@@ -36,15 +35,7 @@ def main():
         "consecutive_days": calculate_consecutive_days(model, x),
         "isolated_off_days": calculate_isolated_off_days(model, x),
         "isolated_working_days": calculate_isolated_working_days(model, x),
-        "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y),
-        "cover_min_demand": cover_minimum_demand(model, y),
-        "cover_max_demand": under_maximum_demand(model, y),
-        "one_demand_per_time": cover_only_one_demand_per_time_period(model, y),
-        "one_shift_per_day": maximum_one_shift_per_day(model, x),
-        "one_weekly_off": one_weekly_off_shift(model, w),
-        "work_during_off": no_work_during_off_shift2(model, w, y),
-        "shift_demand_map": mapping_shift_to_demand(model, x, y),
-        "break_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y),
+        "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
     }
 
     hard_vars = {

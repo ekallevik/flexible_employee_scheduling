@@ -57,20 +57,29 @@ class ALNS:
 
 
     def iterate(self, iterations):
+
         for iteration in range(iterations):
-            destroy_operator = self.destroy_operators["remove_partial_weekends"]
-            repair_operator = self.repair_operators["add_greedy_weekends"]
+            destroy_operator = self.destroy_operators["remove_isolated_working_day"]
+            repair_operator = self.repair_operators["add_previously_isolated_days_greedy"]
             #destroy_operator = self.select_operator(self.destroy_operators, self.destroy_weights)
             #repair_operator = self.select_operator(self.repair_operators, self.repair_weights)
             candidate_solution = self.current_solution.copy()
             #print(candidate_solution.soft_vars["partial_weekends"])
-            partial_weekends, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
-            repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies}, partial_weekends)
+            iso_working_days, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
+            #print(str(destroy_set) + "\n")
+            #print(candidate_solution.soft_vars["isolated_working_days"])
+            #partial_weekends, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
+            #repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies}, partial_weekends)
+            repair_set = repair_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies, "employees": self.employees}, iso_working_days, destroy_set)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
+            #print(repair_set)
             #print(candidate_solution.soft_vars["negative_deviation_from_demand"])
             #print([(e,t,v) for e,t,v in candidate_solution.x if candidate_solution.x[e,t,v] == 1])
-            print(candidate_solution.hard_vars)
+            #print(candidate_solution.soft_vars["contracted_hours"])
+            #print(candidate_solution.hard_vars["delta_positive_contracted_hours"])
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
+        candidate_solution.write("heuristic_solution")
+        print(candidate_solution.soft_vars["isolated_working_days"])
             
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -168,7 +177,7 @@ class ALNS:
 
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
-        delta_calculate_negative_deviation_from_contracted_hours(state, repair, destroy, employees, self.contracted_hours)
+        delta_calculate_negative_deviation_from_contracted_hours(state, repair, destroy, employees, self.contracted_hours, self.weeks, self.time_periods, self.competencies, self.time_step)
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
