@@ -1,8 +1,6 @@
 from model.model_class import Optimization_model
 from model.hard_constraint_model_class import Optimization_model as Feasibility_model
 from heuristic.heuristic_calculations import calculate_objective_function as calc_ob
-from heuristic.destroy_algorithms import remove_partial_weekends, remove_isolated_working_day
-from heuristic.repair_algorithms import *
 from heuristic.state import State 
 from heuristic.alns_calculator import Alns_calculator
 from heuristic.converter import convert
@@ -17,14 +15,13 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem3" 
+    problem_name = "rproblem2" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
     model.optimize()
     x,y,w = convert(model) 
-
 
 
 
@@ -44,7 +41,7 @@ def main():
         "more_than_one_shift_per_day": {},
         "cover_multiple_demand_periods": {},
         "weekly_off_shift_error": {},
-        "no_work_during_off_shift": {},
+        #"no_work_during_off_shift": {},
         "mapping_shift_to_demand": {},
         "delta_positive_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y)
     }
@@ -53,13 +50,9 @@ def main():
     #print(soft_variables["partial_weekends"])
 
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
-    
     alns = ALNS(initial_state, model)
     alns.iterate(1)
-    
-    model.x = x
-    model.y = y
-    model.w = w
+
     #print(calculate_objective_function(model))
 
     # print("############## Deviation from Demand ##############")

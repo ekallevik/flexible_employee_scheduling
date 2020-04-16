@@ -29,7 +29,8 @@ class Optimization_model():
         self.shifts_covered_by_off_shift,
         self.shifts_overlapping_t,
         self.shifts, 
-        self.shifts_at_day) = data["shifts"]
+        self.shifts_at_day,
+        self.shifts_at_week) = data["shifts"]
 
         (
         self.t_in_off_shifts,

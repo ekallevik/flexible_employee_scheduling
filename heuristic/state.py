@@ -51,8 +51,8 @@ class State:
         for e, t, v in self.x:
             f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
         
-        for e,t,v in self.w:
-            f.write(f"w[{e},{t},{v}] {int(self.w[e,t,v])}\n")
+        for e,j in self.w:
+            f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
             for key2 in self.soft_vars[key]:

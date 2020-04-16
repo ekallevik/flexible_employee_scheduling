@@ -167,6 +167,7 @@ def get_durations(root):
 def get_shift_lists(root):
     durations = get_durations(root)
     shifts_per_day = tupledict()
+    shifts_at_week = defaultdict(list)
     shifts = tuplelist()
     days = get_days(root)
     time_step = get_time_steps(root)
@@ -176,10 +177,11 @@ def get_shift_lists(root):
             if(t >=d*24 and t <= (24*(d+1) - time_step)):
                 for dur in durations[t]:
                     shifts_per_day[d].append((t,dur))
+                    shifts_at_week[int(d/7)].append((t,dur))
                     shifts.append((t,dur))
             if(t > 24*d):
                 continue
-    return [shifts, shifts_per_day]
+    return [shifts, shifts_per_day, shifts_at_week]
 
 def get_shift_list(root):
     shifts = tuplelist()

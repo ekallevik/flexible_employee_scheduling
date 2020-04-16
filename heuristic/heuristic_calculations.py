@@ -1,3 +1,6 @@
+from collections import defaultdict
+from operator import itemgetter
+
 def calculate_deviation_from_demand(model, y):
     delta = {}
     for c in model.competencies:
@@ -7,6 +10,28 @@ def calculate_deviation_from_demand(model, y):
             #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
             #     print("Different Delta")
     return delta
+
+def calculate_weekly_rest(model, x, w):
+    actual_shifts = {(e, j): [(t,v) for t,v in model.shifts_at_week[j] if x[e,t,v] == 1] for e in model.employees for j in model.weeks}
+    off_shift_periods = defaultdict(list)
+    important = [7*24*i for i in range(len(model.weeks)+1)]
+    for key in actual_shifts.keys():
+        week = int(key[1])
+        if(actual_shifts[key][0][0] - important[week] >= 36):
+            off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+
+        if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
+            off_shift_periods[key].append((actual_shifts[key][-1][0], important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+
+        for i in range(len(actual_shifts[key])-1):
+            if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
+                off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
+
+    print(str(off_shift_periods) + "\n")
+    for key in off_shift_periods:
+        w[key] = max(off_shift_periods[key],key=itemgetter(1))
+
+
 
 def calculate_negative_deviation_from_demand(model, y):
     delta = {}
@@ -128,7 +153,7 @@ def no_work_during_off_shift2(model, w, y):
         if w[e,t1,v1] == 1:
             no_work_during_off_shift[e,t1] = sum(y[c,e,t] for c in model.competencies for t in model.t_in_off_shifts[t1,v1])
     return no_work_during_off_shift
-    
+
 #Version 1
 def no_work_during_off_shift1(model, w, x):
     no_work_during_off_shift = {}
