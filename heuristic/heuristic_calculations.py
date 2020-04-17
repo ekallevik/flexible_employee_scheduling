@@ -127,7 +127,8 @@ def no_work_during_off_shift2(model, w, y):
     for e,t1,v1 in model.w: 
         if w[e,t1,v1] == 1:
             no_work_during_off_shift[e,t1] = sum(y[c,e,t] for c in model.competencies for t in model.t_in_off_shifts[t1,v1])
-
+    return no_work_during_off_shift
+    
 #Version 1
 def no_work_during_off_shift1(model, w, x):
     no_work_during_off_shift = {}
