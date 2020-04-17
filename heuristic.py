@@ -38,7 +38,7 @@ def main():
         "consecutive_days": calculate_consecutive_days(model, x),
         "isolated_off_days": calculate_isolated_off_days(model, x),
         "isolated_working_days": calculate_isolated_working_days(model, x),
-        "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
+        "deviation_contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
     }
 
     hard_vars = {

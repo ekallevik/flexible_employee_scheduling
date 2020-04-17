@@ -5,12 +5,12 @@ def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shif
     for c in competencies:
         for e2,t,v in destroy_repair_set:
             for t in t_covered_by_shift[t,v]:
-                state.soft_vars["negative_deviation_from_demand"][c,t] = (sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t])
+                state.soft_vars["negative_deviation_from_demand"][c,t] = abs(sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t])
 
 
 def delta_calculate_negative_deviation_from_contracted_hours(state, repair_set, destroy_set, employees, contracted_hours, weeks, time_periods, competencies, time_step):
     for e,t,v in (repair_set + destroy_set):
-        state.soft_vars["contracted_hours"][e] = (len(weeks) * contracted_hours[e]
+        state.soft_vars["deviation_contracted_hours"][e] = (len(weeks) * contracted_hours[e]
             - sum(time_step * state.y[c,e,t] 
             for t in time_periods
             for c in competencies))
@@ -23,7 +23,7 @@ def delta_calculate_negative_deviation_from_contracted_hours(state, repair_set, 
     #     state.soft_vars["contracted_hours"][e] -= v
 
     for e in employees:
-        state.hard_vars["delta_positive_contracted_hours"][e] = min(state.soft_vars["contracted_hours"][e], 0)
+        state.hard_vars["delta_positive_contracted_hours"][e] = min(state.soft_vars["deviation_contracted_hours"][e], 0)
 
 #Weaknesses: 
 # 1. It could possibly check the same employee twice
@@ -67,7 +67,7 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
 def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D):
     for e in employees:
         state.f[e] = (sum(v * state.w[e,t,v] for t,v in off_shifts)
-            - state.soft_vars["contracted_hours"][e]
+            - state.soft_vars["deviation_contracted_hours"][e]
             - sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
             - sum(state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
@@ -87,7 +87,7 @@ def above_maximum_demand(state, repair_destroy_set, employee_with_competencies, 
             for t in t_covered_by_shift[t1,v1]:
                 state.hard_vars["above_maximum_demand"][c,t] = max(0, (sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["max"][c,t]))
     
-def maximum_one_shift_per_day(state, employees, demand, shifts_at_day, days):
+def more_than_one_shift_per_day(state, employees, demand, shifts_at_day, days):
     for e in employees:
         for i in days:
             state.hard_vars["more_than_one_shift_per_day"][e,i] = max(0, (sum(state.x[e,t,v] for t,v in shifts_at_day[i]) - 1))
@@ -97,7 +97,7 @@ def cover_multiple_demand_periods(state, repair_set, t_covered_by_shift, compete
         for t in t_covered_by_shift[t1,v1]:
             state.hard_vars["cover_multiple_demand_periods"][e,t] = max(0,(sum(state.y[c,e,t] for c in competencies) - 1))
 
-def one_weekly_off_shift(state, employees, weeks, off_shift_in_week):
+def weekly_off_shift_error(state, employees, weeks, off_shift_in_week):
     for e in employees:
         for j in weeks:
             state.hard_vars["weekly_off_shift_error"][e,j] = max(0,(abs(sum(state.w[e,t,v] for t,v in off_shift_in_week[j]) - 1)))

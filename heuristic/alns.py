@@ -79,7 +79,7 @@ class ALNS:
             #print(candidate_solution.hard_vars["delta_positive_contracted_hours"])
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
         candidate_solution.write("heuristic_solution")
-        print(candidate_solution.soft_vars["isolated_working_days"])
+        print(candidate_solution.soft_vars)
             
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -186,10 +186,10 @@ class ALNS:
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
+        more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
-        weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
-        no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
+        weekly_off_shift_error(state, employees, self.weeks, self.off_shift_in_week)
+        no_work_during_off_shift(state, employees, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
         mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
         #calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
 

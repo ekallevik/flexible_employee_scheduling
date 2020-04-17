@@ -21,14 +21,14 @@ def add_previously_isolated_days_randomly(state, sets, destroy_set):
 def add_previously_isolated_days_greedy(state, sets, iso_days, destroy_set):
     repair_set = []
     for e,t,v in destroy_set:
-        state.soft_vars["contracted_hours"][e] += v
+        state.soft_vars["deviation_contracted_hours"][e] += v
         #Må gjøres smartere når vi vet mer om competencies
         for t in sets["t_covered_by_shift"][t,v]:
                     state.soft_vars["negative_deviation_from_demand"][0,t] += 1
 
     
     for i,k in iso_days.items():
-        employees = {i: {e: state.soft_vars["contracted_hours"][e] for e in sets["employees"] if sum(state.x[e,t,v] for t,v in sets["shifts_at_day"][i]) == 0} for i in iso_days.keys()}
+        employees = {i: {e: state.soft_vars["deviation_contracted_hours"][e] for e in sets["employees"] if sum(state.x[e,t,v] for t,v in sets["shifts_at_day"][i]) == 0} for i in iso_days.keys()}
         emps = sorted(employees[i], key=employees[i].get, reverse=True)[:k]
         shifts = {shift: sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in sets["competencies"] for t in sets["t_covered_by_shift"][shift]) for shift in sets["shifts_at_day"][i]}
         #print(shifts)
@@ -41,7 +41,7 @@ def add_previously_isolated_days_greedy(state, sets, iso_days, destroy_set):
         for e, shift in zip(emps, shifts_sorted):
             for t1 in sets["t_covered_by_shift"][shift[0],shift[1]]:
                 state.soft_vars["negative_deviation_from_demand"][0,t1] -= 1
-            state.soft_vars["contracted_hours"][e] -= shift[1]
+            state.soft_vars["deviation_contracted_hours"][e] -= shift[1]
     return repair_set
 
 def add_random_weekends(state, sets, destroyed_set):

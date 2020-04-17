@@ -37,7 +37,7 @@ def calculate_partial_weekends(model, x):
              #   partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i] if x[e,t,v] == 1])
               #  partial_weekend_shifts.extend([(e,t,v) for t,v in model.shifts_at_day[i+1] if x[e,t,v] == 1])
 
-            partial_weekend[e,i] =  (sum(x[e,t,v] 
+            partial_weekend[e,i] =  abs(sum(x[e,t,v] 
                                     for t,v in model.shifts_at_day[i]) 
                                     - sum(x[e,t,v] 
                                     for t,v in model.shifts_at_day[i+1]))
@@ -162,7 +162,7 @@ def calculate_f(model, soft_vars, employees=None):
     f = {}
     for e in employees:
         f[e] = (sum(v * model.w[e,t,v].x for t,v in model.off_shifts)
-            - soft_vars["contracted_hours"][e]
+            - soft_vars["deviation_contracted_hours"][e]
             - sum(soft_vars["partial_weekends"][e,i] for i in model.saturdays)
             - sum(soft_vars["isolated_working_days"][e,i+1] for i in range(len(model.days)-2))
             - sum(soft_vars["isolated_off_days"][e,i+1] for i in range(len(model.days)-2))
