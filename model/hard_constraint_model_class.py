@@ -1,12 +1,13 @@
 from gurobipy import *
 from xml_loader.shift_generation import *
-
 #MODEL
 
 
 
 class Optimization_model():
     def __init__(self, problem_name):
+        self.problem_name = problem_name
+
         self.model = Model("Employee_scheduling")
         data = load_data(problem_name)
         (
@@ -184,7 +185,7 @@ class Optimization_model():
 
     def optimize(self):
         self.model.optimize()
-        self.model.write("solution.sol")
+        self.model.write(self.problem_name + "_solution.sol")
         print("#############RESTRICTIONS ADDED#############")
 
 

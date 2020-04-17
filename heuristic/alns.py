@@ -60,12 +60,22 @@ class ALNS:
         for iteration in range(iterations):
             destroy_operator = self.destroy_operators["remove_partial_weekends"]
             repair_operator = self.repair_operators["add_greedy_weekends"]
+            
             #destroy_operator = self.select_operator(self.destroy_operators, self.destroy_weights)
             #repair_operator = self.select_operator(self.repair_operators, self.repair_weights)
             candidate_solution = self.current_solution.copy()
+            
+            #print(candidate_solution.soft_vars["partial_weekends"])
+
             partial_weekends, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
             repair_set = repair_operator(candidate_solution, {"saturdays":self.saturdays, "shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies}, partial_weekends)
+            print("Repair Set:")
+            print(repair_set)
+            print("\n Destroy Set:")
+            print(destroy_set)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
+            #print(candidate_solution.x)
+            #print({(c,t): [candidate_solution.soft_vars["negative_deviation_from_demand"][c,t], self.current_solution.soft_vars["negative_deviation_from_demand"][c,t]] for c,t in candidate_solution.soft_vars["negative_deviation_from_demand"]})
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
             
 
@@ -160,27 +170,28 @@ class ALNS:
 
     def calculate_objective(self, state, destroy, repair):
         destroy_repair_set = destroy + repair
+        employees = set([e for e,t,v in destroy_repair_set])
 
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
         delta_calculate_negative_deviation_from_contracted_hours(state, repair, destroy)
-        calculate_partial_weekends(state, destroy_repair_set, self.shifts_at_day, self.saturdays)
-        calculate_isolated_working_days(state, destroy_repair_set, self.shifts_at_day, self.days)
-        calculate_isolated_off_days(state, destroy_repair_set, self.shifts_at_day, self.days)
-        calculate_consecutive_days(state, destroy_repair_set, self.shifts_at_day, self.L_C_D, self.days)
+        calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
+        calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
+        calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
+        calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
 
         #Updates the current states hard variables based on changed decision variables
-        cover_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        under_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        maximum_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
-        cover_only_one_demand_per_time_period(state, repair, self.t_covered_by_shift, self.competencies)
-        one_weekly_off_shift(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
-        no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
-        mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
-        calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
+        # cover_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
+        # under_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
+        # maximum_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
+        # cover_only_one_demand_per_time_period(state, repair, self.t_covered_by_shift, self.competencies)
+        # one_weekly_off_shift(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
+        # no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
+        # mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
+        # calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
 
 
-        return calculate_objective_function(state, destroy_repair_set, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies)
+        return calculate_objective_function(state, destroy_repair_set, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies, employees)
 
     # def initialize_state_variables(self, model):
     #     #Soft Variables

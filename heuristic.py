@@ -10,6 +10,7 @@ from heuristic.alns import ALNS
 from heuristic.heuristic_calculations import *
 import cProfile
 import pstats
+from visualisation.solution_visualizer import Visualizer
 
 
 #employee_shifts = {em: [(t,v) for t,v in model.shifts if x[em,t,v] != 0] for em in model.employees}
@@ -25,6 +26,8 @@ def main():
     model.optimize()
     x,y,w = convert(model) 
 
+    #visualizer = Visualizer(problem_name)
+    #visualizer.create_gantt_chart()
 
 
 
@@ -64,7 +67,7 @@ def main():
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     
     alns = ALNS(initial_state, model)
-    alns.iterate(100)
+    alns.iterate(1)
     
     model.x = x
     model.y = y
