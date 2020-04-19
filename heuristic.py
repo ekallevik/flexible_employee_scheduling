@@ -25,7 +25,6 @@ def main():
 
 
 
-    #calculator = Alns_calculator(model)
     soft_variables = {
         "negative_deviation_from_demand": calculate_negative_deviation_from_demand(model, y),
         "partial_weekends": calculate_partial_weekends(model, x),
@@ -43,15 +42,16 @@ def main():
         "weekly_off_shift_error": {},
         #"no_work_during_off_shift": {},
         "mapping_shift_to_demand": {},
-        "delta_positive_contracted_hours": calculate_positive_deviation_from_contracted_hours(model, y)
+        "delta_positive_contracted_hours": {}
     }
 
     objective_function, f = calc_ob(model, soft_variables)
     #print(soft_variables["partial_weekends"])
-
+    calculate_weekly_rest(model, x, w)
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
+    initial_state.write("heuristic_solution_1")
     alns = ALNS(initial_state, model)
-    alns.iterate(1)
+    alns.iterate(3)
 
     #print(calculate_objective_function(model))
 

@@ -4,6 +4,8 @@ from heuristic.heuristic_calculations import calculate_objective_function as cal
 from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.destroy_operators import worst_week_removal
+from heuristic.repair_operators import worst_week_repair
 
 
 class ALNS:
@@ -42,18 +44,25 @@ class ALNS:
         self.weeks = model.weeks
         self.off_shifts = model.off_shifts
         self.off_shift_in_week = model.off_shift_in_week
+        self.shifts_in_week = model.shifts_at_week
         self.days = model.days
         self.time_step = model.time_step
         self.t_covered_by_shift = model.t_covered_by_shift
         self.shifts_overlapping_t = model.shifts_overlapping_t
         self.t_covered_by_off_shift = model.t_in_off_shifts
+        self.time_periods_in_week = model.time_periods_in_week
 
 
     def iterate(self, iterations):
-        
         for iteration in range(iterations):
-            pass
-            
+            candidate_solution = self.current_solution.copy()
+            destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
+            print("Week destroyed: " + str(week[0]))
+            repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks)
+            self.calculate_objective(candidate_solution, destroy_set, repair_set)
+            self.consider_candidate_and_update_weights(candidate_solution, "something", "something")
+        candidate_solution.write("heuristic_solution_2")
+        
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -80,7 +89,7 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
-        self.update_weights(weight_update, destroy_id, repair_id)
+        #self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
         """
@@ -150,12 +159,12 @@ class ALNS:
 
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
-        delta_calculate_negative_deviation_from_contracted_hours(state, repair, destroy, employees, self.contracted_hours, self.weeks, self.time_periods, self.competencies, self.time_step)
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, destroy_repair_set, self.shifts_at_week, employees, self.weeks)
+        calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
 
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)

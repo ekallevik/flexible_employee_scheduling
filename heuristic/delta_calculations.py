@@ -7,25 +7,24 @@ def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shif
     for c in competencies:
         for e2,t,v in destroy_repair_set:
             for t in t_covered_by_shift[t,v]:
-                state.soft_vars["negative_deviation_from_demand"][c,t] = abs(sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t])
+                state.soft_vars["negative_deviation_from_demand"][c,t] = max(0,demand["ideal"][c,t] - sum(state.y[c,e,t] for e in employee_with_competencies[c]))
 
 
-def delta_calculate_negative_deviation_from_contracted_hours(state, repair_set, destroy_set, employees, contracted_hours, weeks, time_periods, competencies, time_step):
-    for e,t,v in (repair_set + destroy_set):
-        state.soft_vars["contracted_hours"][e] = (len(weeks) * contracted_hours[e]
-            - sum(time_step * state.y[c,e,t] 
-            for t in time_periods
-            for c in competencies))
-
-
+def delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step):
+    for e in employees:
+        for j in weeks:
+            deviation_contracted_hours = (contracted_hours[e] - sum(time_step * state.y[c,e,t] for t in time_periods_in_week[j]
+                for c in competencies))
+            if(deviation_contracted_hours >= 0):
+                state.soft_vars["contracted_hours"][e,j] = deviation_contracted_hours
+            else:  
+                state.hard_vars["delta_positive_contracted_hours"][e,j] = -deviation_contracted_hours
+            
     # for e,t,v in destroy_set:
     #     state.soft_vars["contracted_hours"][e] += v
 
     # for e,t,v in repair_set:
     #     state.soft_vars["contracted_hours"][e] -= v
-
-    for e in employees:
-        state.hard_vars["delta_positive_contracted_hours"][e] = min(state.soft_vars["contracted_hours"][e], 0)
 
 
 def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, weeks):
@@ -49,16 +48,17 @@ def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, 
             off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
         if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
-            off_shift_periods[key].append((actual_shifts[key][-1][0], important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
 
         for i in range(len(actual_shifts[key])-1):
             if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
                 off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
 
         if(len(off_shift_periods[key]) != 0):
-            w[key] = max(off_shift_periods[key],key=itemgetter(1))
+            state.w[key] = max(off_shift_periods[key],key=itemgetter(1))
         else:
-            state.hard_vars[weekly_off_shift_error][key] = 1
+            state.hard_vars["weekly_off_shift_error"][key] = 1
+            state.w[key] = (0, 0.0)
 
         
 
@@ -103,11 +103,9 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
 
 def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks):
     for e in employees:
-        state.f[e] = (sum(state.w[e,j][1] for j in weeks)
-            - state.soft_vars["contracted_hours"][e]
+        state.f[e] = (sum(state.w[e,j][1] - state.soft_vars["contracted_hours"][e,j] for j in weeks)
             - sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
-            - sum(state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(days)-2))
-            - sum(state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
+            - sum(state.soft_vars["isolated_working_days"][e,i+1] + state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(days)-L_C_D)))
 
 
@@ -182,3 +180,23 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
     #Regular objective function
     state.objective_function_value = (sum(state.f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()) - hard_constraint_penalties(state))
 
+def calc_weekly_objective_function(state, competencies, time_periods_in_week, employees, weeks, L_C_D, k):
+    value = {}
+    for j in weeks:
+        days_in_week = [i for i in range(j*7,(j+1)*7)]
+        #print(days_in_week)
+        value[j] = (
+                    sum(state.w[e,j][1] for e in employees)
+                    - sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in time_periods_in_week[j])
+                    - sum(state.soft_vars["partial_weekends"][e, (5 + j * 7)] for e in employees)
+                    - sum(state.soft_vars["isolated_working_days"][e, i + 1] + state.soft_vars["isolated_off_days"][e, i + 1] for e in employees for i in range(len(days_in_week)-2))
+                    - sum(state.soft_vars["consecutive_days"][e,i] for e in employees for i in range(len(days_in_week)-L_C_D))
+                    #- sum(state.hard_vars["below_minimum_demand"][c, t] + state.hard_vars["above_maximum_demand"][c, t] for c in competencies for j in weeks for t in time_periods_in_week[j])
+                    #- sum(state.hard_vars["more_than_one_shift_per_day"][e, i] for e in employees for i in days_in_week)
+                    #- sum(state.hard_vars["cover_multiple_demand_periods"][e,t] for e in employees for j in weeks for t in time_periods_in_week[j])
+                    - sum(state.soft_vars["contracted_hours"][e,j] for e in employees)
+                    # + state.hard_vars["delta_positive_contracted_hours"][e,j]
+        )
+    print(value)
+    value = sorted(value, key=value.get, reverse=False)[:k]
+    return value
