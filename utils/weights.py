@@ -11,3 +11,9 @@ def get_weights():
         "lowest fairness score": 1,
         "demand_deviation": 5,
     }
+
+
+def get_shift_design_weights():
+    return {
+        "demand_deviation": 5,
+    }
