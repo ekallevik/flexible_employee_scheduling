@@ -36,5 +36,5 @@ class FeasibilityModel(BaseModel):
             time_set=self.time_set,
         )
 
-        #For heuristic
+        # For heuristic
         self.x, self.y, self.w = [None, None, None]

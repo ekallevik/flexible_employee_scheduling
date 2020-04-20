@@ -14,8 +14,6 @@ class BaseVariables:
         self.saturdays = time_set["saturdays"]
         self.sundays = time_set["sundays"]
 
-
-        
         self.y = self.add_y()
         self.x = self.add_x()
         self.w = self.add_w()
@@ -25,7 +23,8 @@ class BaseVariables:
 
     def add_y(self):
         return self.model.addVars(
-            self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y")
+            self.competencies, self.employees, self.time_periods, vtype=GRB.BINARY, name="y"
+        )
 
     def add_x(self):
         return self.model.addVars(self.employees, self.shifts, vtype=GRB.BINARY, name="x")

@@ -10,7 +10,7 @@ class BaseModel:
     This abstract class will take care of all common code that is to be shared across all model variants.
     """
 
-    def __init__(self, name, problem="rproblem2", mip_focus='default', solution_limit='default'):
+    def __init__(self, name, problem="rproblem2", mip_focus="default", solution_limit="default"):
 
         self.name = name
         self.model = self.create_model()
@@ -28,7 +28,7 @@ class BaseModel:
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
         self.var = None
 
-        #Heuristic
+        # Heuristic
         self.saturdays = data["time"]["saturdays"]
         self.sundays = data["time"]["sundays"]
         self.employees = data["staff"]["employees"]
@@ -46,7 +46,6 @@ class BaseModel:
         self.employee_with_competencies = data["staff"]["employees_with_competencies"]
         self.days = data["time"]["days"]
         self.time_step = data["time"]["step"]
-
 
     def create_model(self):
         return Model(name=self.name)

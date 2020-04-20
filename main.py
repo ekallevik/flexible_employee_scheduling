@@ -6,7 +6,22 @@ from heuristic.state import State
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
 from model.construction_model import ConstructionModel
+from model.shift_design_model import ShiftDesignModel
 from results.converter import Converter
+
+
+def run_shift_design_model(problem="rproblem5"):
+    """
+    Runs the shift design model.
+
+    :param problem: the problem instance to run.
+    :return: the solved model instance.
+    """
+
+    sdp = ShiftDesignModel(name="sdp", problem=problem)
+    sdp.run_model()
+
+    return sdp
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
