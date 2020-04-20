@@ -34,9 +34,9 @@ class ShiftDesignVariables:
     def add_rho(self):
         return {
             "low": self.model.addVars(
-                self.low_dur_shifts, vtype=GRB.INTEGER, name="rho_low"
+                self.low_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_low"
             ),
             "long": self.model.addVars(
-                self.long_dur_shifts, vtype=GRB.INTEGER, name="rho_long"
+                self.long_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_long"
             ),
         }
