@@ -16,4 +16,5 @@ def get_weights():
 def get_shift_design_weights():
     return {
         "demand_deviation": 5,
+        "shift_dur": 15
     }
