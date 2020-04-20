@@ -23,6 +23,7 @@ def run_shift_design_model(problem="rproblem3"):
 
     return sdp
 
+
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     """
     Non-complete skeleton for running ALNS.

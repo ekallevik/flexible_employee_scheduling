@@ -34,7 +34,7 @@ class ShiftDesignModel:
             shifts=self.shifts,
             low_dur_shifts=self.low_dur_shifts,
             long_dur_shifts=self.long_dur_shifts,
-            time_periods=self.time_periods
+            time_periods=self.time_periods,
         )
 
         self.constraints = ShiftDesignConstraints(
@@ -48,7 +48,7 @@ class ShiftDesignModel:
             low_dur_shifts=self.low_dur_shifts,
             long_dur_shifts=self.long_dur_shifts,
             desired_shift_dur_low=self.desired_shift_dur_low,
-            desired_shift_dur_long=self.desired_shift_dur_long
+            desired_shift_dur_long=self.desired_shift_dur_long,
         )
 
         self.objective = ShiftDesignObjective(
@@ -58,7 +58,7 @@ class ShiftDesignModel:
             shifts=self.shifts,
             time_periods=self.time_periods,
             low_dur_shifts=self.low_dur_shifts,
-            long_dur_shifts=self.long_dur_shifts
+            long_dur_shifts=self.long_dur_shifts,
         )
 
     def run_model(self):

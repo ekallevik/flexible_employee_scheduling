@@ -1,4 +1,3 @@
-
 from gurobipy import *
 
 
@@ -23,20 +22,12 @@ class ShiftDesignVariables:
 
     def add_delta(self):
         return {
-            "plus": self.model.addVars(
-                self.time_periods, vtype=GRB.INTEGER, name="delta_plus"
-            ),
-            "minus": self.model.addVars(
-                self.time_periods, vtype=GRB.INTEGER, name="delta_minus"
-            ),
+            "plus": self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="delta_plus"),
+            "minus": self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="delta_minus"),
         }
 
     def add_rho(self):
         return {
-            "low": self.model.addVars(
-                self.low_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_low"
-            ),
-            "long": self.model.addVars(
-                self.long_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_long"
-            ),
+            "low": self.model.addVars(self.low_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_low"),
+            "long": self.model.addVars(self.long_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_long"),
         }
