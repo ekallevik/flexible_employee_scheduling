@@ -9,7 +9,6 @@ from utils.weights import *
 
 
 class ShiftDesignModel:
-
     def __init__(self, name, problem="rproblem3"):
 
         self.name = name
@@ -26,9 +25,7 @@ class ShiftDesignModel:
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
 
         self.var = ShiftDesignVariables(
-            model=self.model,
-            shifts=self.shifts,
-            time_periods=self.time_periods
+            model=self.model, shifts=self.shifts, time_periods=self.time_periods
         )
 
         self.constraints = ShiftDesignConstraints(
@@ -38,8 +35,7 @@ class ShiftDesignModel:
             demand=self.demand,
             time_periods=self.time_periods,
             shifts=self.shifts,
-            shifts_overlapping_t=self.shifts_overlapping_t
-
+            shifts_overlapping_t=self.shifts_overlapping_t,
         )
 
         self.objective = ShiftDesignObjective(
@@ -47,7 +43,7 @@ class ShiftDesignModel:
             var=self.var,
             weights=self.weights,
             shifts=self.shifts,
-            time_periods=self.time_periods
+            time_periods=self.time_periods,
         )
 
     def run_model(self):

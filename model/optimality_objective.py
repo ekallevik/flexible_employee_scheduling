@@ -26,7 +26,7 @@ class OptimalityObjective:
                 == weights["rest"] * quicksum(v * w[e, t, v] for t, v in self.off_shifts)
                 - weights["contracted hours"] * lam[e]
                 - weights["partial weekends"]
-                * quicksum(rho["sat"][e, i] + rho["sun"][e, i+1] for i in self.saturdays)
+                * quicksum(rho["sat"][e, i] + rho["sun"][e, i + 1] for i in self.saturdays)
                 - weights["isolated working days"]
                 * quicksum(q["iso_work"][e, i] for i in self.days)
                 - weights["isolated off days"] * quicksum(q["iso_off"][e, i] for i in self.days)

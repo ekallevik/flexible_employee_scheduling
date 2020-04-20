@@ -1,4 +1,3 @@
-
 from gurobipy import *
 
 
@@ -20,11 +19,6 @@ class ShiftDesignVariables:
 
     def add_delta(self):
         return {
-            "plus": self.model.addVars(
-                self.time_periods, vtype=GRB.INTEGER, name="delta_plus"
-            ),
-            "minus": self.model.addVars(
-                self.time_periods, vtype=GRB.INTEGER, name="delta_minus"
-            ),
+            "plus": self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="delta_plus"),
+            "minus": self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="delta_minus"),
         }
-
