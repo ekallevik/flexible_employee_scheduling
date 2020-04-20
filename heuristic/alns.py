@@ -48,11 +48,13 @@ class ALNS:
         self.weeks = model.weeks
         self.off_shifts = model.off_shifts
         self.off_shift_in_week = model.off_shift_in_week
+        self.shifts_in_week = model.shifts_at_week
         self.days = model.days
         self.time_step = model.time_step
         self.t_covered_by_shift = model.t_covered_by_shift
         self.shifts_overlapping_t = model.shifts_overlapping_t
         self.t_covered_by_off_shift = model.t_in_off_shifts
+        self.time_periods_in_week = model.time_periods_in_week
 
 
     def iterate(self, iterations):
@@ -179,19 +181,19 @@ class ALNS:
 
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
-        delta_calculate_negative_deviation_from_contracted_hours(state, repair, destroy, employees, self.contracted_hours, self.weeks, self.time_periods, self.competencies, self.time_step)
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, destroy_repair_set, self.shifts_at_week, employees, self.weeks)
+        calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
 
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
         more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
-        
+
         #Don't think these checks are needed. Left here as I am not a 100% sure at the moment. 
         #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
         #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)

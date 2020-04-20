@@ -42,11 +42,9 @@ def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, 
     """
         A function that calculates the longest possible weekly rest an employe can have
         based on the shifts that employee is assigned. 
-
         If no weekly rest is possible (meaning no rest period is longer than the required number of hours)
         the hard constraint is broken and the hard variable corresponding to weekly rest gets a
         value of 1 for the week the constraint is broken. 
-
     """
 
     actual_shifts = {(e, j): [(t,v) for t,v in shifts_at_week[j] if state.x[e,t,v] == 1] for e in employees for j in weeks}
@@ -59,16 +57,17 @@ def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, 
             off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
         if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
-            off_shift_periods[key].append((actual_shifts[key][-1][0], important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
 
         for i in range(len(actual_shifts[key])-1):
             if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
                 off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
 
         if(len(off_shift_periods[key]) != 0):
-            w[key] = max(off_shift_periods[key],key=itemgetter(1))
+            state.w[key] = max(off_shift_periods[key],key=itemgetter(1))
         else:
-            state.hard_vars[weekly_off_shift_error][key] = 1
+            state.hard_vars["weekly_off_shift_error"][key] = 1
+            state.w[key] = (0, 0.0)
 
         
 

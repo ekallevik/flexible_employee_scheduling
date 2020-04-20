@@ -18,7 +18,7 @@ def calculate_weekly_rest(model, x, w):
             off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
         if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
-            off_shift_periods[key].append((actual_shifts[key][-1][0], important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
 
         for i in range(len(actual_shifts[key])-1):
             if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
