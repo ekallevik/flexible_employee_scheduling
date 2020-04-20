@@ -18,10 +18,10 @@ def run_shift_design_model(problem="rproblem5"):
     :return: the solved model instance.
     """
 
-    esp = ShiftDesignModel(name="esp_shift_design", problem=problem)
-    esp.run_model()
+    sdp = ShiftDesignModel(name="sdp", problem=problem)
+    sdp.run_model()
 
-    return esp
+    return sdp
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
