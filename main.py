@@ -26,7 +26,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
 
     criterion = GreedyCriterion()
 
-    alns = ALNS(state, criterion)
+    alns = ALNS(state, candidate_solution, criterion)
     solution = alns.iterate(iterations=1000)
 
 
