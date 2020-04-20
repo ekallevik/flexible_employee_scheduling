@@ -40,9 +40,13 @@ class ShiftDesignConstraints:
         )
 
     def add_mapping_x_to_y(self, x, y):
+
+        # A big M to make the constraint work properly
+        M = 1000
+
         self.model.addConstrs(
             (
-                x[t, v] <= 1000 * y[t, v]
+                x[t, v] <= M * y[t, v]
                 for t, v in self.shifts
             ),
             name="mapping_x_to_y"
