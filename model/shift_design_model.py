@@ -21,16 +21,12 @@ class ShiftDesignModel:
         self.competencies = data["competencies"]
         self.demand = data["demand"]
         self.time_periods = data["time"]["periods"][0]
-        self.shifts = data["shifts"]["shifts"]
-        self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
-        self.short_shifts = data["shifts"]["short_shifts"]
-        self.long_shifts = data["shifts"]["long_shifts"]
+
+        self.shift_sets = data["shifts"]
 
         self.var = ShiftDesignVariables(
             model=self.model,
-            shifts=self.shifts,
-            short_shifts=self.short_shifts,
-            long_shifts=self.long_shifts,
+            shift_sets=self.shift_sets,
             time_periods=self.time_periods,
         )
 
@@ -40,20 +36,15 @@ class ShiftDesignModel:
             competencies=self.competencies,
             demand=self.demand,
             time_periods=self.time_periods,
-            shifts=self.shifts,
-            shifts_overlapping_t=self.shifts_overlapping_t,
-            short_shifts=self.short_shifts,
-            long_shifts=self.long_shifts,
+            shift_sets=self.shift_sets,
         )
 
         self.objective = ShiftDesignObjective(
             model=self.model,
             var=self.var,
             weights=self.weights,
-            shifts=self.shifts,
+            shift_sets=self.shift_sets,
             time_periods=self.time_periods,
-            short_shifts=self.short_shifts,
-            long_shifts=self.long_shifts,
         )
 
     def run_model(self):

@@ -11,22 +11,21 @@ class ShiftDesignConstraints:
         competencies,
         demand,
         time_periods,
-        shifts,
-        shifts_overlapping_t,
-        short_shifts,
-        long_shifts,
+        shift_sets,
     ):
 
         self.model = model
         self.competencies = competencies
         self.demand = demand
         self.time_periods = time_periods
-        self.shifts = shifts
-        self.shifts_overlapping_t = shifts_overlapping_t
-        self.short_shifts = short_shifts
-        self.long_shifts = long_shifts
-        self.desired_shift_dur_low = DESIRED_SHIFT_DURATION[0]
-        self.desired_shift_dur_long = DESIRED_SHIFT_DURATION[1]
+
+        self.shifts = shift_sets["shifts"]
+        self.shifts_overlapping_t = shift_sets["shifts_overlapping_t"]
+        self.short_shifts = shift_sets["short_shifts"]
+        self.long_shifts = shift_sets["long_shifts"]
+
+        self.desired_short_shift_duration = DESIRED_SHIFT_DURATION[0]
+        self.desired_long_shift_duration = DESIRED_SHIFT_DURATION[1]
 
         # Adding constraints
         self.add_minimum_demand_coverage(var.x)
@@ -69,17 +68,17 @@ class ShiftDesignConstraints:
     def add_short_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                self.desired_shift_dur_low - v * y[t, v] == rho["low"][t, v]
+                DESIRED_SHIFT_DURATION[0] - v * y[t, v] == rho["short"][t, v]
                 for t, v in self.short_shifts
             ),
-            name="penalizing_low_dur_shifts",
+            name="penalizing_short_shift_duration",
         )
 
     def add_long_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                v * y[t, v] - self.desired_shift_dur_long == rho["long"][t, v]
+                v * y[t, v] - self.desired_long_shift_duration == rho["long"][t, v]
                 for t, v in self.long_shifts
             ),
-            name="penalizing_long_dur_shifts",
+            name="penalizing_long_shift_duration",
         )
