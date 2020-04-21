@@ -7,8 +7,8 @@ class ShiftDesignObjective:
         self.time_periods = time_periods
 
         self.shifts = shift_sets["shifts"]
-        self.short_shifts = shift_sets["short_shirts"]
-        self.long_shifts = shift_sets["long_shirts"]
+        self.short_shifts = shift_sets["short_shifts"]
+        self.long_shifts = shift_sets["long_shifts"]
 
         self.add_objective(weights, var.y, var.delta, var.rho)
 
@@ -19,7 +19,7 @@ class ShiftDesignObjective:
             * quicksum(delta["plus"][t] + delta["minus"][t] for t in self.time_periods)
             + weights["shift_dur"]
             * (
-                quicksum(rho["low"][t, v] for t, v in self.short_shifts)
+                quicksum(rho["short"][t, v] for t, v in self.short_shifts)
                 + quicksum(rho["long"][t, v] for t, v in self.long_shifts)
             ),
             GRB.MINIMIZE,

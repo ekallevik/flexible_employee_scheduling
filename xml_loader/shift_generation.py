@@ -1,6 +1,6 @@
 from gurobipy import *
 
-from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION
+from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
 from collections import defaultdict
@@ -341,7 +341,7 @@ def get_shift_lists(root):
                         shifts.append((time, dur))
 
     shifts_per_day = tupledict()
-    time_defining_shift_day = const.TIME_DEFINING_SHIFT_DAY
+    time_defining_shift_day = TIME_DEFINING_SHIFT_DAY
 
     for day in get_days(root):
         shifts_per_day[day] = []
