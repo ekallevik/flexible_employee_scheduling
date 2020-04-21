@@ -58,10 +58,11 @@ class ALNS:
             candidate_solution = self.current_solution.copy()
             destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
             print("Week destroyed: " + str(week[0]))
-            repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks)
+            repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, "something", "something")
         candidate_solution.write("heuristic_solution_2")
+        print(candidate_solution.hard_vars)
         
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):

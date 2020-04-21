@@ -13,12 +13,10 @@ def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shif
 def delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step):
     for e in employees:
         for j in weeks:
-            deviation_contracted_hours = (contracted_hours[e] - sum(time_step * state.y[c,e,t] for t in time_periods_in_week[j]
+            state.soft_vars["contracted_hours"][e,j] = deviation_contracted_hours = (contracted_hours[e] - sum(time_step * state.y[c,e,t] for t in time_periods_in_week[j]
                 for c in competencies))
-            if(deviation_contracted_hours >= 0):
-                state.soft_vars["contracted_hours"][e,j] = deviation_contracted_hours
-            else:  
-                state.hard_vars["delta_positive_contracted_hours"][e,j] = -deviation_contracted_hours
+        
+        state.hard_vars["delta_positive_contracted_hours"][e] = -min(0, sum(state.soft_vars["contracted_hours"][e,j] for j in weeks))
             
     # for e,t,v in destroy_set:
     #     state.soft_vars["contracted_hours"][e] += v
@@ -41,18 +39,21 @@ def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, 
     actual_shifts = {(e, j): [(t,v) for t,v in shifts_at_week[j] if state.x[e,t,v] == 1] for e in employees for j in weeks}
     off_shift_periods = defaultdict(list)
     important = [7*24*i for i in range(len(weeks)+1)]
-
     for key in actual_shifts.keys():
         week = int(key[1])
-        if(actual_shifts[key][0][0] - important[week] >= 36):
-            off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+        if(len(actual_shifts[key]) == 0):
+            off_shift_periods[key] = [(important[week], float((important[week + 1] - important[week])))]
 
-        if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
-            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+        else:
+            if(actual_shifts[key][0][0] - important[week] >= 36):
+                off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
-        for i in range(len(actual_shifts[key])-1):
-            if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
-                off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
+            if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
+                off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+
+            for i in range(len(actual_shifts[key])-1):
+                if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
+                    off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
 
         if(len(off_shift_periods[key]) != 0):
             state.w[key] = max(off_shift_periods[key],key=itemgetter(1))

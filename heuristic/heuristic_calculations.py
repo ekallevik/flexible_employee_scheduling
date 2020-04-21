@@ -181,12 +181,12 @@ def calculate_positive_deviation_from_contracted_hours(model, y):
                 -  len(model.weeks) * model.contracted_hours[e]))
     return delta_positive_contracted_hours
 
-def calculate_f(model, soft_vars, employees=None):
+def calculate_f(model, soft_vars, w, employees=None):
     if(employees == None):
         employees = model.employees
     f = {}
     for e in employees:
-        f[e] = (sum(v * model.w[e,t,v].x for t,v in model.off_shifts)
+        f[e] = (sum(w[e,j][1] for j in model.weeks)
             - sum(soft_vars["contracted_hours"][e,j] for j in model.weeks)
             - sum(soft_vars["partial_weekends"][e,i] for i in model.saturdays)
             - sum(soft_vars["isolated_working_days"][e,i+1] + soft_vars["isolated_off_days"][e,i+1] for i in range(len(model.days)-2))
@@ -208,8 +208,8 @@ def hard_constraint_penalties(model):
                         break_contracted_hours)
     return hard_penalties
 
-def calculate_objective_function(model, soft_vars):
-    f = calculate_f(model, soft_vars)
+def calculate_objective_function(model, soft_vars, w):
+    f = calculate_f(model, soft_vars, w)
     g = min(f.values())
     #Regular objective function
     objective_function_value = (sum(f.values()) + g - sum(soft_vars["negative_deviation_from_demand"].values()))
