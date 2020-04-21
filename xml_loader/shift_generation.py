@@ -1,4 +1,6 @@
 from gurobipy import *
+
+from utils.const import DESIRED_SHIFT_DURATION
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
 from utils import const
@@ -356,8 +358,8 @@ def get_shift_lists(root):
                     shifts_per_day[day].append(shift)
                 break
 
-    min_desired_shift_dur = min(const.DESIRED_SHIFT_DURATION)
-    max_desired_shift_dur = max(const.DESIRED_SHIFT_DURATION)
+    min_desired_shift_dur = DESIRED_SHIFT_DURATION[0]
+    max_desired_shift_dur = DESIRED_SHIFT_DURATION[1]
     low_duration_shifts = tuplelist()
     long_duration_shifts = tuplelist()
 
