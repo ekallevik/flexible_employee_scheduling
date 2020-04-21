@@ -2,7 +2,9 @@ from gurobipy import *
 
 
 class BaseConstraints:
-    def __init__(self, model, var, competencies, staff, demand, time_set, shifts_set, off_shifts_set):
+    def __init__(
+        self, model, var, competencies, staff, demand, time_set, shifts_set, off_shifts_set
+    ):
 
         self.model = model
 

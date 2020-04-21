@@ -1,7 +1,8 @@
 from gurobipy import *
+
+from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
-from utils import const
 from collections import defaultdict
 
 
@@ -315,7 +316,8 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
 
 def get_shift_lists(root):
 
-    desired_dur = const.DESIRED_SHIFT_DURATION
+    min_shift_dur = min(ALLOWED_SHIFT_DURATION)
+    max_shift_dur = max(ALLOWED_SHIFT_DURATION)
     demand_intervals = combine_demand_intervals(root)
     shifts = tuplelist()
 
@@ -323,7 +325,7 @@ def get_shift_lists(root):
         if len(intervals) == 2:
             start_time = intervals[0]
             dur = intervals[1] - start_time
-            if dur >= max(desired_dur):
+            if dur >= max_shift_dur:
                 shifts.append((start_time, dur))
             else:
                 shifts.append((start_time, intervals[1] - start_time))
@@ -332,14 +334,14 @@ def get_shift_lists(root):
                 found_shift = False
                 for t in intervals[intervals.index(time) :]:
                     dur = t - time
-                    if min(desired_dur) <= dur <= max(desired_dur):
+                    if min_shift_dur <= dur <= max_shift_dur:
                         shifts.append((time, dur))
                         found_shift = True
-                    if dur > max(desired_dur) and not found_shift:
+                    if dur > max_shift_dur and not found_shift:
                         shifts.append((time, dur))
 
     shifts_per_day = tupledict()
-    time_defining_shift_day = const.TIME_DEFINING_SHIFT_DAY
+    time_defining_shift_day = TIME_DEFINING_SHIFT_DAY
 
     for day in get_days(root):
         shifts_per_day[day] = []
@@ -355,7 +357,16 @@ def get_shift_lists(root):
                     shifts_per_day[day].append(shift)
                 break
 
-    return [shifts, shifts_per_day]
+    short_shifts = tuplelist()
+    long_shifts = tuplelist()
+
+    for s in shifts:
+        if s[1] < DESIRED_SHIFT_DURATION[0]:
+            short_shifts.append(s)
+        elif s[1] > DESIRED_SHIFT_DURATION[1]:
+            long_shifts.append(s)
+
+    return [shifts, shifts_per_day, short_shifts, long_shifts]
 
 
 def get_shifts_violating_daily_rest(root, staff):
@@ -542,6 +553,8 @@ def load_data(problem_name):
             "shifts_overlapping_t": get_shifts_overlapping_t(root),
             "shifts": shift_set[0],
             "shifts_per_day": shift_set[1],
+            "short_shifts": shift_set[2],
+            "long_shifts": shift_set[3],
             "shifts_combinations_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[0],
             "invalid_shifts_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[1],
         },

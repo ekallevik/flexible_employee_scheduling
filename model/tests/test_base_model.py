@@ -16,9 +16,8 @@ def test_model_competencies(problem_name, expected):
 
 
 @pytest.mark.parametrize(
-    "problem_name, expected_length, expected_start", [
-        ("rproblem2", 1170, [8.0, 8.5, 9, 9.5]),
-        ("rproblem3", 1176, [7.75, 8.0, 8.25, 8.5])],
+    "problem_name, expected_length, expected_start",
+    [("rproblem2", 1170, [8.0, 8.5, 9, 9.5]), ("rproblem3", 1176, [7.75, 8.0, 8.25, 8.5])],
 )
 def test_model_time_periods(problem_name, expected_length, expected_start):
 
@@ -30,9 +29,8 @@ def test_model_time_periods(problem_name, expected_length, expected_start):
 
 
 @pytest.mark.parametrize(
-    "problem_name, expected_length, expected_start", [
-        ("rproblem2", 10, [8.0, 8.5, 9, 9.5]),
-        ("rproblem3", 4, [7.75, 8.0, 8.25, 8.5])],
+    "problem_name, expected_length, expected_start",
+    [("rproblem2", 10, [8.0, 8.5, 9, 9.5]), ("rproblem3", 4, [7.75, 8.0, 8.25, 8.5])],
 )
 def test_model_time_periods_in_week(problem_name, expected_length, expected_start):
 

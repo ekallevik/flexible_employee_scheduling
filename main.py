@@ -10,7 +10,7 @@ from model.shift_design_model import ShiftDesignModel
 from results.converter import Converter
 
 
-def run_shift_design_model(problem="rproblem5"):
+def run_shift_design_model(problem="rproblem3"):
     """
     Runs the shift design model.
 
