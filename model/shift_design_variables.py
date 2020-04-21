@@ -2,12 +2,15 @@ from gurobipy import *
 
 
 class ShiftDesignVariables:
-    def __init__(self, model, shifts, low_dur_shifts, long_dur_shifts, time_periods):
+    def __init__(self, model, shift_sets, time_periods):
+
         self.model = model
-        self.shifts = shifts
+
+        self.shifts = shift_sets["shifts"]
+        self.short_shifts = shift_sets["short_shifts"]
+        self.long_shifts = shift_sets["long_shifts"]
+
         self.time_periods = time_periods
-        self.low_dur_shifts = low_dur_shifts
-        self.long_dur_shifts = long_dur_shifts
 
         self.x = self.add_x()
         self.y = self.add_y()
@@ -28,6 +31,6 @@ class ShiftDesignVariables:
 
     def add_rho(self):
         return {
-            "low": self.model.addVars(self.low_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_low"),
-            "long": self.model.addVars(self.long_dur_shifts, vtype=GRB.CONTINUOUS, name="rho_long"),
+            "short": self.model.addVars(self.short_shifts, vtype=GRB.CONTINUOUS, name="rho_low"),
+            "long": self.model.addVars(self.long_shifts, vtype=GRB.CONTINUOUS, name="rho_long"),
         }

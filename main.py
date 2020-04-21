@@ -74,4 +74,3 @@ if __name__ == "__main__":
         python main.py FUNCTION_NAME *ARGS
     """
     fire.Fire()
-    run_shift_design_model()

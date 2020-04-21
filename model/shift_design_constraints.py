@@ -1,5 +1,7 @@
 from gurobipy import *
 
+from utils.const import DESIRED_SHIFT_DURATION
+
 
 class ShiftDesignConstraints:
     def __init__(
@@ -9,31 +11,25 @@ class ShiftDesignConstraints:
         competencies,
         demand,
         time_periods,
-        shifts,
-        shifts_overlapping_t,
-        low_dur_shifts,
-        long_dur_shifts,
-        desired_shift_dur_low,
-        desired_shift_dur_long,
+        shift_sets,
     ):
 
         self.model = model
         self.competencies = competencies
         self.demand = demand
         self.time_periods = time_periods
-        self.shifts = shifts
-        self.shifts_overlapping_t = shifts_overlapping_t
-        self.low_dur_shifts = low_dur_shifts
-        self.long_dur_shifts = long_dur_shifts
-        self.desired_shift_dur_low = desired_shift_dur_low
-        self.desired_shift_dur_long = desired_shift_dur_long
+
+        self.shifts = shift_sets["shifts"]
+        self.shifts_overlapping_t = shift_sets["shifts_overlapping_t"]
+        self.short_shifts = shift_sets["short_shifts"]
+        self.long_shifts = shift_sets["long_shifts"]
 
         # Adding constraints
         self.add_minimum_demand_coverage(var.x)
         self.add_deviation_from_demand(var.x, var.delta)
         self.add_mapping_x_to_y(var.x, var.y)
-        self.add_low_shift_dur(var.y, var.rho)
-        self.add_long_shift_dur(var.y, var.rho)
+        self.add_short_shift_duration(var.y, var.rho)
+        self.add_long_shift_duration(var.y, var.rho)
 
     # Constraint definitions
     def add_minimum_demand_coverage(self, x):
@@ -66,20 +62,20 @@ class ShiftDesignConstraints:
             (x[t, v] <= M * y[t, v] for t, v in self.shifts), name="mapping_x_to_y"
         )
 
-    def add_low_shift_dur(self, y, rho):
+    def add_short_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                self.desired_shift_dur_low - v * y[t, v] == rho["low"][t, v]
-                for t, v in self.low_dur_shifts
+                (DESIRED_SHIFT_DURATION[0] - v) * y[t, v] == rho["short"][t, v]
+                for t, v in self.short_shifts
             ),
-            name="penalizing_low_dur_shifts",
+            name="penalizing_short_shift_duration",
         )
 
-    def add_long_shift_dur(self, y, rho):
+    def add_long_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                v * y[t, v] - self.desired_shift_dur_long == rho["long"][t, v]
-                for t, v in self.long_dur_shifts
+                (v - DESIRED_SHIFT_DURATION[1]) * y[t, v] == rho["long"][t, v]
+                for t, v in self.long_shifts
             ),
-            name="penalizing_long_dur_shifts",
+            name="penalizing_long_shift_duration",
         )
