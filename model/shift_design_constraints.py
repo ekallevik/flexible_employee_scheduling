@@ -1,5 +1,7 @@
 from gurobipy import *
 
+from utils.const import DESIRED_SHIFT_DURATION
+
 
 class ShiftDesignConstraints:
     def __init__(
@@ -13,8 +15,6 @@ class ShiftDesignConstraints:
         shifts_overlapping_t,
         short_shifts,
         long_shifts,
-        desired_shift_dur_low,
-        desired_shift_dur_long,
     ):
 
         self.model = model
@@ -25,8 +25,8 @@ class ShiftDesignConstraints:
         self.shifts_overlapping_t = shifts_overlapping_t
         self.short_shifts = short_shifts
         self.long_shifts = long_shifts
-        self.desired_shift_dur_low = desired_shift_dur_low
-        self.desired_shift_dur_long = desired_shift_dur_long
+        self.desired_shift_dur_low = DESIRED_SHIFT_DURATION[0]
+        self.desired_shift_dur_long = DESIRED_SHIFT_DURATION[1]
 
         # Adding constraints
         self.add_minimum_demand_coverage(var.x)

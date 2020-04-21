@@ -1,6 +1,5 @@
 from gurobipy import *
 
-from utils.const import DESIRED_SHIFT_DURATION
 from utils.weights import get_shift_design_weights
 from xml_loader import shift_generation
 
@@ -45,8 +44,6 @@ class ShiftDesignModel:
             shifts_overlapping_t=self.shifts_overlapping_t,
             short_shifts=self.short_shifts,
             long_shifts=self.long_shifts,
-            desired_shift_dur_low=DESIRED_SHIFT_DURATION[0],
-            desired_shift_dur_long=DESIRED_SHIFT_DURATION[1],
         )
 
         self.objective = ShiftDesignObjective(
