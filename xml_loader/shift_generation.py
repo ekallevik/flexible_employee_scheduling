@@ -1,9 +1,8 @@
 from gurobipy import *
 
-from utils.const import DESIRED_SHIFT_DURATION
+from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
-from utils import const
 from collections import defaultdict
 
 
@@ -317,8 +316,8 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
 
 def get_shift_lists(root):
 
-    min_shift_dur = min(const.ALLOWED_SHIFT_DURATION)
-    max_shift_dur = max(const.ALLOWED_SHIFT_DURATION)
+    min_shift_dur = min(ALLOWED_SHIFT_DURATION)
+    max_shift_dur = max(ALLOWED_SHIFT_DURATION)
     demand_intervals = combine_demand_intervals(root)
     shifts = tuplelist()
 
@@ -358,18 +357,16 @@ def get_shift_lists(root):
                     shifts_per_day[day].append(shift)
                 break
 
-    min_desired_shift_dur = DESIRED_SHIFT_DURATION[0]
-    max_desired_shift_dur = DESIRED_SHIFT_DURATION[1]
-    low_duration_shifts = tuplelist()
-    long_duration_shifts = tuplelist()
+    short_shifts = tuplelist()
+    long_shifts = tuplelist()
 
     for s in shifts:
-        if s[1] < min_desired_shift_dur:
-            low_duration_shifts.append(s)
-        elif s[1] > max_desired_shift_dur:
-            long_duration_shifts.append(s)
+        if s[1] < DESIRED_SHIFT_DURATION[0]:
+            short_shifts.append(s)
+        elif s[1] > DESIRED_SHIFT_DURATION[1]:
+            long_shifts.append(s)
 
-    return [shifts, shifts_per_day, low_duration_shifts, long_duration_shifts]
+    return [shifts, shifts_per_day, short_shifts, long_shifts]
 
 
 def get_shifts_violating_daily_rest(root, staff):
