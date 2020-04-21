@@ -12,7 +12,7 @@ import pstats
 
 def main():
     problem_name = "rproblem2" 
-    model = Optimization_model(problem_name)
+    model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
