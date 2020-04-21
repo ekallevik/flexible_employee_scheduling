@@ -24,9 +24,6 @@ class ShiftDesignConstraints:
         self.short_shifts = shift_sets["short_shifts"]
         self.long_shifts = shift_sets["long_shifts"]
 
-        self.desired_short_shift_duration = DESIRED_SHIFT_DURATION[0]
-        self.desired_long_shift_duration = DESIRED_SHIFT_DURATION[1]
-
         # Adding constraints
         self.add_minimum_demand_coverage(var.x)
         self.add_deviation_from_demand(var.x, var.delta)
@@ -68,7 +65,7 @@ class ShiftDesignConstraints:
     def add_short_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                DESIRED_SHIFT_DURATION[0] - v * y[t, v] == rho["short"][t, v]
+                (DESIRED_SHIFT_DURATION[0] - v) * y[t, v] == rho["short"][t, v]
                 for t, v in self.short_shifts
             ),
             name="penalizing_short_shift_duration",
@@ -77,7 +74,7 @@ class ShiftDesignConstraints:
     def add_long_shift_duration(self, y, rho):
         self.model.addConstrs(
             (
-                v * y[t, v] - self.desired_long_shift_duration == rho["long"][t, v]
+                (v - DESIRED_SHIFT_DURATION[1]) * y[t, v] == rho["long"][t, v]
                 for t, v in self.long_shifts
             ),
             name="penalizing_long_shift_duration",
