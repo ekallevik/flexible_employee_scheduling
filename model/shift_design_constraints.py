@@ -11,8 +11,8 @@ class ShiftDesignConstraints:
         time_periods,
         shifts,
         shifts_overlapping_t,
-        low_dur_shifts,
-        long_dur_shifts,
+        short_shifts,
+        long_shifts,
         desired_shift_dur_low,
         desired_shift_dur_long,
     ):
@@ -23,8 +23,8 @@ class ShiftDesignConstraints:
         self.time_periods = time_periods
         self.shifts = shifts
         self.shifts_overlapping_t = shifts_overlapping_t
-        self.low_dur_shifts = low_dur_shifts
-        self.long_dur_shifts = long_dur_shifts
+        self.short_shifts = short_shifts
+        self.long_shifts = long_shifts
         self.desired_shift_dur_low = desired_shift_dur_low
         self.desired_shift_dur_long = desired_shift_dur_long
 
@@ -70,7 +70,7 @@ class ShiftDesignConstraints:
         self.model.addConstrs(
             (
                 self.desired_shift_dur_low - v * y[t, v] == rho["low"][t, v]
-                for t, v in self.low_dur_shifts
+                for t, v in self.short_shifts
             ),
             name="penalizing_low_dur_shifts",
         )
@@ -79,7 +79,7 @@ class ShiftDesignConstraints:
         self.model.addConstrs(
             (
                 v * y[t, v] - self.desired_shift_dur_long == rho["long"][t, v]
-                for t, v in self.long_dur_shifts
+                for t, v in self.long_shifts
             ),
             name="penalizing_long_dur_shifts",
         )

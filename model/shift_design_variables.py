@@ -2,12 +2,12 @@ from gurobipy import *
 
 
 class ShiftDesignVariables:
-    def __init__(self, model, shifts, low_dur_shifts, long_dur_shifts, time_periods):
+    def __init__(self, model, shifts, short_shifts, long_shifts, time_periods):
         self.model = model
         self.shifts = shifts
         self.time_periods = time_periods
-        self.low_dur_shifts = low_dur_shifts
-        self.long_dur_shifts = long_dur_shifts
+        self.low_dur_shifts = short_shifts
+        self.long_dur_shifts = long_shifts
 
         self.x = self.add_x()
         self.y = self.add_y()

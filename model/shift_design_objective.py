@@ -2,12 +2,12 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class ShiftDesignObjective:
-    def __init__(self, model, var, weights, shifts, time_periods, low_dur_shifts, long_dur_shifts):
+    def __init__(self, model, var, weights, shifts, time_periods, short_shifts, long_shifts):
         self.model = model
         self.shifts = shifts
         self.time_periods = time_periods
-        self.low_dur_shifts = low_dur_shifts
-        self.long_dur_shifts = long_dur_shifts
+        self.low_dur_shifts = short_shifts
+        self.long_dur_shifts = long_shifts
 
         self.add_objective(weights, var.y, var.delta, var.rho)
 
