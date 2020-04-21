@@ -17,7 +17,7 @@ class ShiftDesignObjective:
             quicksum(y[t, v] for t, v in self.shifts)
             + weights["demand_deviation"]
             * quicksum(delta["plus"][t] + delta["minus"][t] for t in self.time_periods)
-            + weights["shift_dur"]
+            + weights["shift_duration"]
             * (
                 quicksum(rho["short"][t, v] for t, v in self.short_shifts)
                 + quicksum(rho["long"][t, v] for t, v in self.long_shifts)
