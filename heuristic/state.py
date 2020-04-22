@@ -38,7 +38,7 @@ class State:
         return self.objective_function_value
 
     def copy(self):
-        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, deepcopy(self.soft_vars), copy(self.hard_vars), copy(self.objective_function_value), copy(self.f))
+        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, deepcopy(self.soft_vars), deepcopy(self.hard_vars), copy(self.objective_function_value), copy(self.f))
 
 
     def write(self, filename):

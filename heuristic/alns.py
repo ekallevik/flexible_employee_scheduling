@@ -5,7 +5,7 @@ from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.destroy_operators import worst_week_removal
-from heuristic.repair_operators import worst_week_repair
+from heuristic.repair_operators import worst_week_repair, worst_week_regret_repair
 
 
 class ALNS:
@@ -58,7 +58,7 @@ class ALNS:
             candidate_solution = self.current_solution.copy()
             destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
             print("Week destroyed: " + str(week[0]))
-            repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
+            repair_set = worst_week_regret_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, "something", "something")
         candidate_solution.write("heuristic_solution_2")
@@ -157,7 +157,6 @@ class ALNS:
     def calculate_objective(self, state, destroy, repair):
         destroy_repair_set = destroy + repair
         employees = set([e for e,t,v in destroy_repair_set])
-
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
@@ -165,18 +164,17 @@ class ALNS:
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
+        calculate_weekly_rest(state, self.shifts_in_week, employees, self.weeks)
 
         #Updates the current states hard variables based on changed decision variables
-        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
+        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
+        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
         #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
         mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
         #calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
-
 
         return calculate_objective_function(state, employees, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies, self.weeks)
 

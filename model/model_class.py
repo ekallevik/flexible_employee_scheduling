@@ -29,7 +29,8 @@ class Optimization_model():
         self.shifts_covered_by_off_shift,
         self.shifts_overlapping_t,
         self.shifts, 
-        self.shifts_at_day) = data["shifts"]
+        self.shifts_at_day,
+        self.shifts_at_week) = data["shifts"]
 
         (
         self.t_in_off_shifts,
@@ -38,10 +39,11 @@ class Optimization_model():
 
         self.competencies = [0]
         self.time_periods_in_day = data["heuristics"][1]
-        self.t_covered_by_shift = data["heuristics"][0]
+
         self.weeks = [w for w in range(int(len(self.days)/7))]
         self.saturdays = [5 + (i*7) for i in range(len(self.weeks))]
         self.L_C_D = 5
+        self.t_covered_by_shift, self.time_periods_in_day, self.shift_lookup = data["heuristics"][:3]
 
         self.weights =   {
                 "rest": 1,

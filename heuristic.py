@@ -12,7 +12,7 @@ import pstats
 
 def main():
     problem_name = "rproblem2" 
-    model = Optimization_model(problem_name)
+    model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
@@ -47,7 +47,7 @@ def main():
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     initial_state.write("heuristic_solution_1")
     alns = ALNS(initial_state, model)
-    alns.iterate(1)
+    alns.iterate(10)
 
 
 """Possibilities now.
