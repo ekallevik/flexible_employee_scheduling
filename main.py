@@ -20,8 +20,7 @@ def run_shift_design_model(problem="rproblem3"):
 
     sdp = ShiftDesignModel(name="sdp", problem=problem)
     sdp.run_model()
-
-    return sdp
+    sdp.get_used_shifts()
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):

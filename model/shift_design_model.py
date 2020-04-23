@@ -1,7 +1,7 @@
 from gurobipy import *
 
 from utils.weights import get_shift_design_weights
-from xml_loader import shift_generation
+from preprocessing import shift_generation
 
 from model.shift_design_constraints import ShiftDesignConstraints
 from model.shift_design_objective import ShiftDesignObjective
@@ -49,3 +49,25 @@ class ShiftDesignModel:
 
     def run_model(self):
         self.model.optimize()
+
+    def get_used_shifts(self):
+
+        y = self.convert()
+
+        for key, value in y.items():
+            print(f"Key: {key}, value: {value}")
+
+        return [shift for shift, used in y.items() if used == 1]
+
+    def convert(self):
+        """ Converts a tupledict of Gurobi variables to a tupledict of ints """
+
+        converted_dict = tupledict()
+
+        var = self.var.y
+
+        for key in var.keys():
+            # Make sure that values are always positive
+            converted_dict[key] = abs(var[key].x)
+
+        return converted_dict
