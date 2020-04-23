@@ -5,7 +5,7 @@ from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
-from heuristic.repair_operators import worst_week_repair, worst_employee_repair
+from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_employee_regret_repair
 
 
 class ALNS:
@@ -57,8 +57,10 @@ class ALNS:
     def iterate(self, iterations):
         for iteration in range(iterations):
             candidate_solution = self.current_solution.copy()
+            print(candidate_solution.f)
             destroy_set, employees = worst_employee_removal(candidate_solution, 1, self.shifts, self.t_covered_by_shift)
-            repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
+            repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
+            #repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
             print(candidate_solution.f)
             
             
@@ -172,12 +174,12 @@ class ALNS:
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
+        calculate_weekly_rest(state, self.shifts_in_week, employees, self.weeks)
 
         #Updates the current states hard variables based on changed decision variables
-        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
+        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
+        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
+        more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
         #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)

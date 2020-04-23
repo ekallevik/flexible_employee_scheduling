@@ -57,5 +57,8 @@ class State:
         for key in self.soft_vars.keys():
             for key2 in self.soft_vars[key]:
                 f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
+        
+        for key in self.f:
+            f.write(f"f[{key}] {self.f[key]}\n")
 
         f.close()

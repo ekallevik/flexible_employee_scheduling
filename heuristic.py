@@ -47,7 +47,7 @@ def main():
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     initial_state.write("heuristic_solution_1")
     alns = ALNS(initial_state, model)
-    alns.iterate(1)
+    alns.iterate(10)
 
 
 """Possibilities now.
