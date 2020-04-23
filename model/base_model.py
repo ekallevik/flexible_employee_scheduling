@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from gurobipy import *
 
-from xml_loader import shift_generation
+from preprocessing import shift_generation
 
 
 class BaseModel:

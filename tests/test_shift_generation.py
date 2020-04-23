@@ -1,7 +1,8 @@
 import pytest
 
-import xml_loader.xml_loader as xml_loader
-from xml_loader import shift_generation
+import preprocessing.demand_processing
+import preprocessing.xml_loader as xml_loader
+from preprocessing import shift_generation
 
 
 def get_root(problem_name):
@@ -12,7 +13,7 @@ def get_root(problem_name):
 def time_periods():
     root = get_root("problem12")
     days = shift_generation.get_days(root)
-    time_periods, time_periods_in_week = shift_generation.get_time_periods(root)
+    time_periods, time_periods_in_week = preprocessing.demand_processing.get_time_periods(root)
     return time_periods, time_periods_in_week, days
 
 
@@ -20,13 +21,13 @@ def time_periods():
 def durations():
     # Possible to run on any dataset. Depends on get_events being correct
     root = get_root("problem12")
-    return shift_generation.get_durations(root), shift_generation.get_events(root)
+    return shift_generation.get_durations(root), preprocessing.demand_processing.get_events(root)
 
 
 @pytest.fixture
 def events():
     root = get_root("problem12")
-    return shift_generation.get_events(root)
+    return preprocessing.demand_processing.get_events(root)
 
 
 @pytest.fixture
@@ -86,7 +87,7 @@ def test_shifts(shifts):
 def test_time_step(problem_name, expected):
 
     root = get_root(problem_name)
-    time_step = shift_generation.get_time_steps(root)
+    time_step = preprocessing.demand_processing.get_time_steps(root)
 
     assert time_step == expected
 
@@ -107,7 +108,7 @@ def test_get_competencies(problem_name, expected):
 def test_get_time_periods(problem_name, expected_length, expected_start):
 
     root = get_root(problem_name)
-    time_periods = shift_generation.get_time_periods(root)[0]
+    time_periods = preprocessing.demand_processing.get_time_periods(root)[0]
 
     assert len(time_periods) == expected_length
     assert time_periods[:4] == expected_start
@@ -139,7 +140,7 @@ def test_get_demand_pairs(problem_name, day, expected):
     root = get_root(problem_name)
     daily_demand = shift_generation.get_days_with_demand(root)
 
-    demand_pairs = shift_generation.get_demand_pairs(daily_demand[day], day)
+    demand_pairs = preprocessing.demand_processing.get_demand_pairs(daily_demand[day], day)
 
     assert demand_pairs == expected
 
@@ -157,7 +158,7 @@ def test_get_day_demand_intervals(problem_name, day, expected):
     root = get_root(problem_name)
     daily_demand = shift_generation.get_days_with_demand(root)
 
-    day_demand_intervals = shift_generation.get_day_demand_intervals(daily_demand[day], day)
+    day_demand_intervals = preprocessing.demand_processing.get_day_demand_intervals(daily_demand[day], day)
 
     assert day_demand_intervals == expected
 
@@ -172,7 +173,7 @@ def test_get_day_demand_intervals(problem_name, day, expected):
 def test_get_demand_intervals(problem_name, day, expected):
 
     root = get_root(problem_name)
-    day_demand_intervals = shift_generation.get_demand_intervals(root)
+    day_demand_intervals = preprocessing.demand_processing.get_demand_intervals(root)
 
     assert day_demand_intervals[day] == expected
 
@@ -188,7 +189,7 @@ def test_get_demand_intervals(problem_name, day, expected):
 def test_combine_demand_intervals(problem_name, index, expected):
 
     root = get_root(problem_name)
-    combined_demand_intervals = shift_generation.combine_demand_intervals(root)
+    combined_demand_intervals = preprocessing.demand_processing.combine_demand_intervals(root)
 
     assert combined_demand_intervals[index] == expected
 
@@ -222,3 +223,4 @@ def test_get_shift_lists(problem_name, day, expected):
 
     assert shift_lists[0] == shift_lists_per_day[0][0]
     assert shift_lists_per_day[0] == expected
+
