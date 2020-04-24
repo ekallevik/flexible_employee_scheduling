@@ -36,9 +36,28 @@ class State:
 
     def get_objective_value(self):
         return self.objective_function_value
-
+    
     def copy(self):
-        return State({"x": copy(self.x), "y": copy(self.y), "w": copy(self.w)}, deepcopy(self.soft_vars), deepcopy(self.hard_vars), copy(self.objective_function_value), copy(self.f))
+        return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
+
+        {
+        "negative_deviation_from_demand": self.soft_vars["negative_deviation_from_demand"].copy(),
+        "partial_weekends": self.soft_vars["partial_weekends"].copy(),
+        "consecutive_days": self.soft_vars["consecutive_days"].copy(),
+        "isolated_off_days": self.soft_vars["isolated_off_days"].copy(),
+        "isolated_working_days": self.soft_vars["isolated_working_days"].copy(),
+        "contracted_hours": self.soft_vars["contracted_hours"].copy()
+        }, 
+        {
+        "below_minimum_demand": self.hard_vars["below_minimum_demand"].copy(),
+        "above_maximum_demand": self.hard_vars["above_maximum_demand"].copy(),
+        "more_than_one_shift_per_day": self.hard_vars["more_than_one_shift_per_day"].copy(),
+        "cover_multiple_demand_periods": self.hard_vars["cover_multiple_demand_periods"].copy(),
+        "weekly_off_shift_error": self.hard_vars["weekly_off_shift_error"].copy(),
+        "mapping_shift_to_demand": self.hard_vars["mapping_shift_to_demand"].copy(),
+        "delta_positive_contracted_hours": self.hard_vars["delta_positive_contracted_hours"].copy()
+        },
+        copy(self.objective_function_value), copy(self.f))
 
 
     def write(self, filename):
