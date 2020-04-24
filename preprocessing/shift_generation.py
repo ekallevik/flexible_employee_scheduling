@@ -73,11 +73,11 @@ def get_short_and_long_shifts(shifts):
     return long_shifts, short_shifts
 
 
-def get_shifts_per_day(shifts, time_sets):
+def get_shifts_per_day(shifts, days):
 
     shifts_per_day = tupledict()
 
-    for day in time_sets["days"]:
+    for day in days:
         shifts_per_day[day] = []
 
         for shift in shifts:
@@ -90,7 +90,7 @@ def get_shifts_per_day(shifts, time_sets):
                 shifts_per_day[day].append(shift)
 
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
-                if day == time_sets["days"][-1]:
+                if day == days[-1]:
                     shifts_per_day[day].append(shift)
                 break
     return shifts_per_day
@@ -205,7 +205,7 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets):
 def get_t_covered_by_shift(shifts, time_sets):
 
     time_step = time_sets["step"]
-    time_periods = time_sets["time_periods"][0]
+    time_periods = time_sets["periods"][0]
     t_covered_by_shift = tupledict()
 
     for shift in shifts:
