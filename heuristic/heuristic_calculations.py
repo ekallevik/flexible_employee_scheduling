@@ -27,7 +27,6 @@ def calculate_weekly_rest(model, x, w):
     for key in off_shift_periods:
         w[key] = max(off_shift_periods[key],key=itemgetter(1))
 
-
 def calculate_negative_deviation_from_demand(model, y):
     delta = {}
     for c in model.competencies:
@@ -86,10 +85,8 @@ def calculate_consecutive_days(model, x):
             for i_marked in range(i,i+model.L_C_D)))- model.L_C_D)
     return consecutive_days
 
-
 #From here on down I do not think these are used. Might be good to have later, but might also be deleted. 
 # This is ofc except calculate f and objective function calculations 
-
 def cover_minimum_demand(model, y):
     below_minimum_demand = {}
     for c in model.competencies:
@@ -134,7 +131,7 @@ def no_work_during_off_shift2(model, w, y):
             no_work_during_off_shift[e,t1] = sum(y[c,e,t] for c in model.competencies for t in model.t_in_off_shifts[t1,v1])
     return no_work_during_off_shift
 
-#Version 1
+#Version 1. Not used at the moment. Need testing to see which one is better. 
 def no_work_during_off_shift1(model, w, x):
     no_work_during_off_shift = {}
     for e in model.employees:

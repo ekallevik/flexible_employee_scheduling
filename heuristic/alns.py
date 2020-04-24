@@ -49,6 +49,7 @@ class ALNS:
         self.off_shifts = model.off_shifts
         self.off_shift_in_week = model.off_shift_in_week
         self.shifts_in_week = model.shifts_at_week
+
         self.days = model.days
         self.time_step = model.time_step
         self.t_covered_by_shift = model.t_covered_by_shift
@@ -62,6 +63,7 @@ class ALNS:
             Mostly the same structure as Even had put up. Start by selecting a destroy and repair operator.
             I have not used the select function as I only test one at a time here. The select function do work though.
             The destroy and repair operators are commented out on purpose as I have decided to include these in another PR
+
             Candidate solution is created by copying the current solution state.
             Problem not fixed is how to send the correct sets together with the destroy and repair operator. 
             All my destroy operators have two values they are returning:
@@ -69,21 +71,17 @@ class ALNS:
                 2. Some spesific information about what were destroyed for example weeks, isolated days and so on. 
             Calculate objective function is new. It is in charge of updating the soft variables, hard variables, f and objective function
             based on the destroy and repair operator (the shifts that were destroyed and repaired)
+
             Lastly consider candidate is run.
         """
         for iteration in range(iterations):
             
             #destroy_operator = self.destroy_operators["remove_isolated_working_day"]
             #repair_operator = self.repair_operators["add_previously_isolated_days_greedy"]
-
             candidate_solution = self.current_solution.copy()
-
-            #iso_working_days, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
-            #repair_set = repair_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies, "employees": self.employees}, iso_working_days, destroy_set)
-
-            #self.calculate_objective(candidate_solution, destroy_set, repair_set)
-
+            self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
+
             
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -188,6 +186,7 @@ class ALNS:
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
         calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
 
+
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
@@ -201,3 +200,4 @@ class ALNS:
 
 
         return calculate_objective_function(state, employees, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies, self.weeks)
+
