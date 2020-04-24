@@ -9,12 +9,10 @@ from model.shift_design_variables import ShiftDesignVariables
 
 
 class ShiftDesignModel:
-    def __init__(self, name, problem="rproblem3"):
+    def __init__(self, name, problem="rproblem3", data=None):
 
         self.name = name
         self.model = Model(name=self.name)
-
-        data = shift_generation.load_data(problem)
 
         self.weights = get_shift_design_weights()
 
@@ -53,14 +51,14 @@ class ShiftDesignModel:
     def get_used_shifts(self):
 
         y = self.convert()
+        shifts = [shift for shift, used in y.items() if used == 1]
 
-        for key, value in y.items():
-            print(f"Key: {key}, value: {value}")
-
-        return [shift for shift, used in y.items() if used == 1]
+        return tuplelist(shifts)
 
     def convert(self):
         """ Converts a tupledict of Gurobi variables to a tupledict of ints """
+
+        #todo: move this into separate file for greater re-use
 
         converted_dict = tupledict()
 

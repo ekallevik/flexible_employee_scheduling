@@ -12,11 +12,11 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
     naturally. Returns True or False.
     """
 
-    no_demand_periods = combine_no_demand_intervals(root)
+    no_demand_intervals = combine_no_demand_intervals(root)
     days = get_days(root)
 
-    for interval in no_demand_periods:
-        if day == len(days) - 1 and interval == no_demand_periods[-1] and interval[1] == 24 * len(days):
+    for interval in no_demand_intervals:
+        if day == len(days) - 1 and interval == no_demand_intervals[-1] and interval[1] == 24 * len(days):
             temp_val = interval[1]
             interval[1] = temp_val + employee_offset
         if employee_offset + (24 * int(day)) <= interval[0] <= employee_offset + (24 * (int(day) + 1)):
@@ -250,7 +250,10 @@ def load_data(problem_name):
     time_sets = get_time_sets(root)
 
     off_shift_sets = get_off_shift_sets(root, time_sets)
-    shift_sets = get_shift_sets(root, staff, time_sets, off_shift_sets["off_shifts"])
+
+    shifts = get_shifts(root)
+
+    shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"])
 
     data = {
         "competencies": competencies,
@@ -295,9 +298,7 @@ def get_off_shift_sets(root, time_sets):
     }
 
 
-def get_shift_sets(root, staff, time_sets, off_shifts):
-
-    shifts = get_shifts(root)
+def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
 
     shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
@@ -313,3 +314,11 @@ def get_shift_sets(root, staff, time_sets, off_shifts):
         "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest[0],
         "invalid_shifts_violating_daily_rest": shifts_violating_daily_rest[1],
     }
+
+
+def get_updated_shift_sets(problem_name, data, shifts):
+
+    root = xml_loader.get_root(problem_name)
+
+    return get_shift_sets(root, data["staff"], data["time"], shifts, data["off_shifts"][
+        "off_shifts"])

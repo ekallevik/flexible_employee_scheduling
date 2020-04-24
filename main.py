@@ -7,20 +7,35 @@ from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
 from model.construction_model import ConstructionModel
 from model.shift_design_model import ShiftDesignModel
+from preprocessing import shift_generation
 from results.converter import Converter
 
 
-def run_shift_design_model(problem="rproblem3"):
+def run_shift_design_model(problem="rproblem3", data=None):
     """
     Runs the shift design model.
 
+    :param data: the dataset
     :param problem: the problem instance to run.
     :return: the solved model instance.
     """
 
-    sdp = ShiftDesignModel(name="sdp", problem=problem)
+    if not data:
+        data = shift_generation.load_data(problem)
+
+    original_shifts = data["shifts"]["shifts"]
+
+    sdp = ShiftDesignModel(name="sdp", problem=problem, data=data)
     sdp.run_model()
-    sdp.get_used_shifts()
+
+    used_shifts = sdp.get_used_shifts()
+    data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts)
+
+    print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
+    percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
+    print(f"This is a reduction of {100*percentage_reduction:.2f}%")
+
+    return data
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):
@@ -44,14 +59,20 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     solution = alns.iterate(iterations=1000)
 
 
-def run_model(model="construction", problem="rproblem3"):
+def run_model(model="construction", problem="rproblem3", with_sdp=True):
     """
     Runs the specified model on the given problem.
 
     :param model: The model version to be run.
     :param problem: the problem instance to run.
+    :param with_sdp: Flag to control running of Shift Design Problem
     :return: the solved model instance.
     """
+
+    data = shift_generation.load_data(problem)
+
+    if with_sdp:
+        data = run_shift_design_model(problem=problem, data=data)
 
     if model == "feasibility":
         esp = FeasibilityModel(name="esp_feasibility", problem=problem)
