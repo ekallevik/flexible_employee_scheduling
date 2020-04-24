@@ -1,11 +1,9 @@
 import numpy as np
-from heuristic.heuristic_calculations import calculate_objective_function as calc_ob
-#from heuristic.destroy_algorithms import remove_isolated_working_day, remove_partial_weekends
 from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
-from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_employee_regret_repair
+from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_week_regret_repair, worst_employee_regret_repair
 
 
 class ALNS:
@@ -57,24 +55,21 @@ class ALNS:
     def iterate(self, iterations):
         for iteration in range(iterations):
             candidate_solution = self.current_solution.copy()
-            destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
-            print("Week destroyed: " + str(week[0]))
-            repair_set = worst_week_regret_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D)
-            print(candidate_solution.f)
+
+            #destroy_set, worst_k_weeks = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
+            #print(worst_k_weeks)
+            #repair_set = worst_week_regret_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
+            #repair_set = worst_week_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
+            
             destroy_set, employees = worst_employee_removal(candidate_solution, 1, self.shifts, self.t_covered_by_shift)
-            repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
-            #repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
-            print(candidate_solution.f)
+            #repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
+            repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
             
             
-            #destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
-            #print("Week destroyed: " + str(week[0]))
-            #repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(candidate_solution, "something", "something")
-        print(candidate_solution.f)
+            self.consider_candidate_and_update_weights(candidate_solution, "something", "something_else")
+       # print(candidate_solution.hard_vars)
         candidate_solution.write("heuristic_solution_2")
-        print(candidate_solution.hard_vars)
         
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):

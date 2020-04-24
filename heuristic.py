@@ -31,14 +31,14 @@ def main():
     }
 
     hard_vars = {
-        "below_minimum_demand": {},
-        "above_maximum_demand": {},
-        "more_than_one_shift_per_day": {},
-        "cover_multiple_demand_periods": {},
-        "weekly_off_shift_error": {},
+        "below_minimum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
+        "above_maximum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
+        "more_than_one_shift_per_day": {(e,i): 0 for e in model.employees for i in model.days},
+        "cover_multiple_demand_periods": {(e,t): 0 for e in model.employees for t in model.time_periods},
+        "weekly_off_shift_error": {(e,j): 0 for e in model.employees for j in model.weeks},
         #"no_work_during_off_shift": {},
-        "mapping_shift_to_demand": {},
-        "delta_positive_contracted_hours": {}
+        "mapping_shift_to_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
+        "delta_positive_contracted_hours": {e: 0 for e in model.employees}
     }
 
     calculate_weekly_rest(model, x, w)
@@ -47,7 +47,7 @@ def main():
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
     initial_state.write("heuristic_solution_1")
     alns = ALNS(initial_state, model)
-    alns.iterate(10)
+    alns.iterate(1)
 
 
 """Possibilities now.

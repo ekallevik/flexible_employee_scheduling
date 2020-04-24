@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import copy
 
 class State:
     def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
