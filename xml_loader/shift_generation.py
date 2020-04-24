@@ -341,7 +341,10 @@ def get_shift_lists(root):
                         shifts.append((time, dur))
 
     shifts_per_day = tupledict()
+
+    shifts_in_week = defaultdict(list)
     time_defining_shift_day = TIME_DEFINING_SHIFT_DAY
+
 
     for day in get_days(root):
         shifts_per_day[day] = []
@@ -352,6 +355,7 @@ def get_shift_lists(root):
                 < 24 * int(day) + time_defining_shift_day
             ):
                 shifts_per_day[day].append(shift)
+                shifts_in_week[int(day/7)].append(shift)
             if shift[0] >= 24 * int(day) + time_defining_shift_day:
                 if day == get_days(root)[-1]:
                     shifts_per_day[day].append(shift)
@@ -366,7 +370,7 @@ def get_shift_lists(root):
         elif s[1] > DESIRED_SHIFT_DURATION[1]:
             long_shifts.append(s)
 
-    return [shifts, shifts_per_day, short_shifts, long_shifts]
+    return [shifts, shifts_per_day, shifts_in_week, short_shifts, long_shifts]
 
 
 def get_shifts_violating_daily_rest(root, staff):
@@ -553,8 +557,9 @@ def load_data(problem_name):
             "shifts_overlapping_t": get_shifts_overlapping_t(root),
             "shifts": shift_set[0],
             "shifts_per_day": shift_set[1],
-            "short_shifts": shift_set[2],
-            "long_shifts": shift_set[3],
+            "shifts_in_week": shift_set[2],
+            "short_shifts": shift_set[3],
+            "long_shifts": shift_set[4],
             "shifts_combinations_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[0],
             "invalid_shifts_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[1],
         },

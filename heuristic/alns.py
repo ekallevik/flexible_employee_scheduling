@@ -48,16 +48,14 @@ class ALNS:
         self.weeks = model.weeks
         self.off_shifts = model.off_shifts
         self.off_shift_in_week = model.off_shift_in_week
+        self.shifts_in_week = model.shifts_at_week
+
         self.days = model.days
         self.time_step = model.time_step
         self.t_covered_by_shift = model.t_covered_by_shift
         self.shifts_overlapping_t = model.shifts_overlapping_t
         self.t_covered_by_off_shift = model.t_in_off_shifts
-
-
-        #self.add_destroy_operator([remove_partial_weekends, remove_isolated_working_day])
-        #self.add_repair_operator([add_previously_isolated_days_randomly, add_previously_isolated_days_greedy, add_random_weekends, add_greedy_weekends])
-        self.initialize_destroy_and_repair_weights()
+        self.time_periods_in_week = model.time_periods_in_week
 
 
     def iterate(self, iterations):
@@ -66,13 +64,11 @@ class ALNS:
             I have not used the select function as I only test one at a time here. The select function do work though.
             The destroy and repair operators are commented out on purpose as I have decided to include these in another PR
 
-
             Candidate solution is created by copying the current solution state.
             Problem not fixed is how to send the correct sets together with the destroy and repair operator. 
             All my destroy operators have two values they are returning:
                 1. A destroy set that includes shifts (e,t,v) that are destroyed
                 2. Some spesific information about what were destroyed for example weeks, isolated days and so on. 
-
             Calculate objective function is new. It is in charge of updating the soft variables, hard variables, f and objective function
             based on the destroy and repair operator (the shifts that were destroyed and repaired)
 
@@ -82,14 +78,8 @@ class ALNS:
             
             #destroy_operator = self.destroy_operators["remove_isolated_working_day"]
             #repair_operator = self.repair_operators["add_previously_isolated_days_greedy"]
-
             candidate_solution = self.current_solution.copy()
-
-            #iso_working_days, destroy_set = destroy_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift})
-            #repair_set = repair_operator(candidate_solution, {"shifts_at_day":self.shifts_at_day, "t_covered_by_shift":self.t_covered_by_shift, "competencies": self.competencies, "employees": self.employees}, iso_working_days, destroy_set)
-
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
-
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator.__name__, repair_operator.__name__)
 
             
@@ -102,6 +92,7 @@ class ALNS:
         :param repair_id: the id (name) of the repair function used to create this state
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
+        print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
         if self.criterion.accept(candidate_solution, self.current_solution):
             self.current_solution = candidate_solution
 
@@ -188,21 +179,25 @@ class ALNS:
 
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
-        delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods, self.competencies, self.time_step)
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
+        calculate_weekly_rest(state, destroy_repair_set, self.shifts_in_week, employees, self.weeks)
+
 
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.time_periods, self.competencies, self.t_covered_by_shift)
-        more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
+        more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
-        weekly_off_shift_error(state, employees, self.weeks, self.off_shift_in_week)
-        no_work_during_off_shift(state, employees, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
+
+        #Don't think these checks are needed. Left here as I am not a 100% sure at the moment. 
+        #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
+        #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
         mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
-        #calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
 
 
-        return calculate_objective_function(state, employees, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies)
+        return calculate_objective_function(state, employees, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies, self.weeks)
+
