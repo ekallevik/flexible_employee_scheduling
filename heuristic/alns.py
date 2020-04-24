@@ -4,8 +4,8 @@ from heuristic.heuristic_calculations import calculate_objective_function as cal
 from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from heuristic.criterions.greedy_criterion import GreedyCriterion
-from heuristic.destroy_operators import worst_week_removal
-from heuristic.repair_operators import worst_week_repair, worst_week_regret_repair
+from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
+from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_employee_regret_repair
 
 
 class ALNS:
@@ -31,6 +31,7 @@ class ALNS:
 
 
         #Sets
+        self.shifts = model.shifts
         self.competencies = model.competencies
         self.demand = model.demand
         self.time_periods = model.time_periods
@@ -59,8 +60,19 @@ class ALNS:
             destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
             print("Week destroyed: " + str(week[0]))
             repair_set = worst_week_regret_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D)
+            print(candidate_solution.f)
+            destroy_set, employees = worst_employee_removal(candidate_solution, 1, self.shifts, self.t_covered_by_shift)
+            repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
+            #repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
+            print(candidate_solution.f)
+            
+            
+            #destroy_set, week = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
+            #print("Week destroyed: " + str(week[0]))
+            #repair_set = worst_week_repair(candidate_solution, week, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, "something", "something")
+        print(candidate_solution.f)
         candidate_solution.write("heuristic_solution_2")
         print(candidate_solution.hard_vars)
         
@@ -169,7 +181,7 @@ class ALNS:
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
-        more_than_one_shift_per_day(state, destroy_repair_set, self.demand, self.shifts_at_day, self.days)
+        more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
         #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
