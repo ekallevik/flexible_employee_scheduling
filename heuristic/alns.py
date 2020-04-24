@@ -53,7 +53,7 @@ class ALNS:
 
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
 
-        if self.criterion.accept(candidate_solution, self.current_solution):
+        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
 
             if candidate_solution.get_objectice_value() >= self.current_solution.get_objectice_value():
