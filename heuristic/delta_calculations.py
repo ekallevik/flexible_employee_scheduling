@@ -1,6 +1,8 @@
+from operator import itemgetter
+from collections import defaultdict
 
 #Different Delta strategies:
-#Strategy 1:
+#Strategi 1:
 def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set):
     for c in competencies:
         for e2,t,v in destroy_repair_set:
@@ -35,6 +37,36 @@ def delta_calculate_negative_deviation_from_contracted_hours(state, employees, c
     # for e,t,v in repair_set:
     #     state.soft_vars["contracted_hours"][e] -= v
 
+def calculate_weekly_rest(state, destroy_repair_set, shifts_at_week, employees, weeks):
+    """
+        A function that calculates the longest possible weekly rest an employe can have
+        based on the shifts that employee is assigned. 
+        If no weekly rest is possible (meaning no rest period is longer than the required number of hours)
+        the hard constraint is broken and the hard variable corresponding to weekly rest gets a
+        value of 1 for the week the constraint is broken. 
+    """
+
+    actual_shifts = {(e, j): [(t,v) for t,v in shifts_at_week[j] if state.x[e,t,v] == 1] for e in employees for j in weeks}
+    off_shift_periods = defaultdict(list)
+    important = [7*24*i for i in range(len(weeks)+1)]
+
+    for key in actual_shifts.keys():
+        week = int(key[1])
+        if(actual_shifts[key][0][0] - important[week] >= 36):
+            off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+
+        if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
+            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+
+        for i in range(len(actual_shifts[key])-1):
+            if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
+                off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
+
+        if(len(off_shift_periods[key]) != 0):
+            state.w[key] = max(off_shift_periods[key],key=itemgetter(1))
+        else:
+            state.hard_vars["weekly_off_shift_error"][key] = 1
+            state.w[key] = (0, 0.0)
 
 #Weaknesses: 
 # 1. It checks every weekend instead of only the weekends that have been destroyed or repaired
@@ -108,30 +140,35 @@ def cover_multiple_demand_periods(state, repair_set, t_covered_by_shift, compete
         for t in t_covered_by_shift[t1,v1]:
             state.hard_vars["cover_multiple_demand_periods"][e,t] = max(0,(sum(state.y[c,e,t] for c in competencies) - 1))
 
-def weekly_off_shift_error(state, employees, weeks, off_shift_in_week):
-    for e in employees:
-        for j in weeks:
-            state.hard_vars["weekly_off_shift_error"][e,j] = max(0,(abs(sum(state.w[e,t,v] for t,v in off_shift_in_week[j]) - 1)))
 
-def no_work_during_off_shift(state, employees, competencies, t_covered_by_off_shift, off_shifts):
-    for e in employees:
-        for t1,v1 in off_shifts: 
-            if state.w[e,t1,v1] != 0:
-                state.hard_vars["no_work_during_off_shift"][e,t1] = sum(state.y[c,e,t] for c in competencies for t in t_covered_by_off_shift[t1,v1])
+# I think this is not needed, but I am not sure yet
+#def weekly_off_shift_error(state, repair_destroy_set, weeks, off_shift_in_week):
+ #   for e,t,v in repair_destroy_set:
+  #      for j in weeks:
+   #         state.hard_vars["weekly_off_shift_error"][e,j] = max(0,(abs(sum(state.w[e,t,v] for t,v in off_shift_in_week[j]) - 1)))
 
+#This check might also not be needed as our off-shifts are based on time between shifts. As with the constraint above I am not sure
+# def no_work_during_off_shift(state, repair_destroy_set, competencies, t_covered_by_off_shift, off_shifts):
+#     for e,t2,v2 in repair_destroy_set:
+#         for t1,v1 in off_shifts: 
+#             if state.w[e,t1,v1] != 0:
+#                 state.hard_vars["no_work_during_off_shift"][e,t1] = sum(state.y[c,e,t] for c in competencies for t in t_covered_by_off_shift[t1,v1])
+
+# This check might not be needed if we always set y's when we set x.
 
 def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies):
     for e,t1,v1 in repair_destroy_set:
         for t in t_covered_by_shift[t1,v1]:
            state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies)))
 
-
-def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):
-    for e,t,v in destroy_set:
-        state.hard_vars["delta_positive_contracted_hours"][e] -= v
+#This is also not needed as this is done in another function. Left here as we might need it later. 
+# def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):
+#     for e,t,v in destroy_set:
+#         state.hard_vars["delta_positive_contracted_hours"][e] -= v
     
-    for e,t,v in repair_set:
-        state.hard_vars["delta_positive_contracted_hours"][e] += v
+#     for e,t,v in repair_set:
+#         state.hard_vars["delta_positive_contracted_hours"][e] += v
+
 
 # This is needed here to calculate a new objective function with penalty part included. 
 def hard_constraint_penalties(state):
@@ -139,13 +176,15 @@ def hard_constraint_penalties(state):
     above_demand = sum(state.hard_vars["above_maximum_demand"].values())
     break_one_shift_per_day = sum(state.hard_vars["more_than_one_shift_per_day"].values())
     break_one_demand_per_time = sum(state.hard_vars["cover_multiple_demand_periods"].values())
+    #Might not be needed, but not 100% sure. 
+    #break_no_work_during_off_shift = sum(state.hard_vars["no_work_during_off_shift"].values())
     break_weekly_off = sum(state.hard_vars["weekly_off_shift_error"].values())
-    break_no_work_during_off_shift = sum(state.hard_vars["no_work_during_off_shift"].values())
     break_shift_to_demand = sum(state.hard_vars["mapping_shift_to_demand"].values())
     break_contracted_hours = sum(state.hard_vars["delta_positive_contracted_hours"].values())
 
     hard_penalties = (  below_demand +  above_demand + break_one_shift_per_day + break_one_demand_per_time + 
-                        break_weekly_off + break_no_work_during_off_shift + break_shift_to_demand +
+                        break_shift_to_demand + break_contracted_hours)
+                        break_weekly_off + break_shift_to_demand +
                         break_contracted_hours)
     return hard_penalties
 
@@ -154,4 +193,3 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
     g = min(state.f.values())
     #Regular objective function
     state.objective_function_value = (sum(state.f.values()) + g - sum(state.soft_vars["negative_deviation_from_demand"].values()) - hard_constraint_penalties(state))
-
