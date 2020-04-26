@@ -4,6 +4,7 @@ from heuristic.delta_calculations import *
 from collections import defaultdict
 from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
 from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_week_regret_repair, worst_employee_regret_repair
+from heuristic.local_search_operators import illegal_week_swap
 from functools import partial
 
 
@@ -75,11 +76,12 @@ class ALNS:
                                                 self.employee_with_competencies, self.demand, self.contracted_hours, 
                                                 self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
 
+        #, repair_worst_employee_greedy
         #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
         #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
+                        remove_worst_employee: [repair_worst_employee_regret],
+                        #remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         for key in self.repair_operators.keys():
@@ -99,6 +101,7 @@ class ALNS:
 
 
             destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
+            print(destroy_spesific_set)
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
 
             #destroy_set, employees = 
@@ -118,7 +121,8 @@ class ALNS:
             #print(self.destroy_weights)
             #print(self.repair_weights)
         #print(candidate_solution.hard_vars)
-        self.best_solution.write("heuristic_solution_2")
+
+        candidate_solution.write("heuristic_solution_2")
         
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -130,11 +134,21 @@ class ALNS:
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
         print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
-        if(candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value() and hard_constraint_penalties(candidate_solution) == 0):
-                self.best_legal_solution = candidate_solution
-                self.best_legal_solution.write("best_legal_solution")
         if self.criterion.accept(candidate_solution, self.current_solution):
             self.current_solution = candidate_solution
+            
+            if(sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0):
+                print("Breaking weekly_off_shift_error")
+                candidate_solution.write("before_breaking_weekly")
+                destroy_set, repair_set = illegal_week_swap(self.shifts_in_week, self.employees, self.shifts_at_day, self.t_covered_by_shift, self.competencies, self.contracted_hours, self.time_periods_in_week, self.time_step, self.L_C_D, self.weeks, candidate_solution)
+                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                candidate_solution.write("After_breaking_weekly")
+
+
+            if(candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value() and hard_constraint_penalties(candidate_solution) == 0):
+                self.best_legal_solution = candidate_solution
+                print("Is legal")
+                self.best_legal_solution.write("best_legal_solution")
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
@@ -149,6 +163,7 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
+            self.best_solution.write("heuristic_solution_2")
         self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
@@ -228,7 +243,7 @@ class ALNS:
         employees = set([e for e,t,v in destroy_repair_set])
 
         #Updates the current states soft variables based on changed decision variables
-        delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
+        calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)

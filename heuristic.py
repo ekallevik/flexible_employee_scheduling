@@ -13,8 +13,8 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem3" 
-    model = Optimization_model(problem_name)
+    problem_name = "rproblem2" 
+    model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
@@ -25,14 +25,13 @@ def main():
 
 
     soft_variables = {
-        "negative_deviation_from_demand": calculate_negative_deviation_from_demand(model, y),
+        "deviation_from_ideal_demand": calculate_deviation_from_demand(model, y),
         "partial_weekends": calculate_partial_weekends(model, x),
         "consecutive_days": calculate_consecutive_days(model, x),
         "isolated_off_days": calculate_isolated_off_days(model, x),
         "isolated_working_days": calculate_isolated_working_days(model, x),
         "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
     }
-
     hard_vars = {
         "below_minimum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
         "above_maximum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
@@ -48,12 +47,11 @@ def main():
     objective_function, f = calc_ob(model, soft_variables, w)
 
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
-    initial_state.write("optimality_model_rproblem3_heuristic_rest")
-    return
+    #initial_state.write("optimality_model_rproblem3_heuristic_rest")
     #simulated_annealing_criterion = SimulatedAnnealingCriterion()
     greedy_criterion = GreedyCriterion()
     alns = ALNS(initial_state, model, greedy_criterion)
-    alns.iterate(100)
+    alns.iterate(10)
 
 
 """Possibilities now.

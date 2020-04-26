@@ -42,7 +42,7 @@ class State:
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
 
         {
-        "negative_deviation_from_demand": self.soft_vars["negative_deviation_from_demand"].copy(),
+        "deviation_from_ideal_demand": self.soft_vars["deviation_from_ideal_demand"].copy(),
         "partial_weekends": self.soft_vars["partial_weekends"].copy(),
         "consecutive_days": self.soft_vars["consecutive_days"].copy(),
         "isolated_off_days": self.soft_vars["isolated_off_days"].copy(),

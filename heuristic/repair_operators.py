@@ -1,5 +1,4 @@
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, regret_objective_function, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, below_minimum_demand, above_maximum_demand, more_than_one_shift_per_day, cover_multiple_demand_periods, mapping_shift_to_demand
+from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice
@@ -11,17 +10,19 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
     changed = destroy_set
 
     while(True):
-        delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed)
+        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-        deviation_from_demand = sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in time_periods_in_week[week[0]])
+        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in time_periods_in_week[week[0]] if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
         
-        if(deviation_from_demand < 20):
+        if(deviation_from_demand < 6):
             return repair_set
 
-        shifts = {(t1, v1): sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in shifts_in_week[week[0]]}
+        shifts = {(t1, v1): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in shifts_in_week[week[0]]}
         shift = max(shifts.items(), key=itemgetter(1))[0]
 
         deviation_contracted_hours = {e: sum(state.soft_vars["contracted_hours"][e,j] for j in week) for e in employees if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
+        if(len(deviation_contracted_hours.keys()) == 0):
+            return repair_set
         e = max(deviation_contracted_hours.items(), key=itemgetter(1))[0]
         repair_set.append(set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1))
         employees_changed = [e]
@@ -73,10 +74,10 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
     while(True):
         #Initial phase to recalculate soft and hard variables of the destroyed weeks
         #Calculates deviation from demand first to see if we are done and can return
-        delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
-        deviation_from_demand = sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in time_periods_in_week[week[0]])
+        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
+        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in time_periods_in_week[week[0]] if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
 
-        shifts = {(t1, v1): sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in shifts_in_week[week[0]]}
+        shifts = {(t1, v1): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in shifts_in_week[week[0]]}
         shift = max(shifts.items(), key=itemgetter(1))[0]
 
         possible_employees = [e for e in employees if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
@@ -112,7 +113,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             repaired = [set_x(current_state, t_covered_by_shift, e, shift[0], shift[1], 1)]
 
             #Soft restriction calculations
-            delta_calculate_deviation_from_demand(current_state, competencies, t_covered_by_shift, employee_with_competencies, demand, repaired)
+            calculate_deviation_from_demand(current_state, competencies, t_covered_by_shift, employee_with_competencies, demand, repaired)
             calculate_weekly_rest(current_state, shifts_in_week, [e], week)
             calculate_partial_weekends(current_state, [e], shifts_at_day, saturdays)
             calculate_isolated_working_days(current_state, [e], shifts_at_day, days)
@@ -128,7 +129,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             below_minimum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
 
             #Calculate the objective function when the employee e is assigned the shift
-            objective_values[e] = calc_weekly_objective_function(current_state, competencies, time_periods_in_week, employees, week, L_C_D, 1)[0]
+            objective_values[e] = calc_weekly_objective_function(current_state, competencies, time_periods_in_week, employees, week, L_C_D)[0]
 
         #print(objective_values)
         max_value = max(objective_values.items(), key=itemgetter(1))[1]
@@ -148,17 +149,20 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
     employees_changed = employees
     
     while(True):
-        delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
-        deviation_from_demand = sum(state.soft_vars["negative_deviation_from_demand"].values())
-        if(deviation_from_demand < 20):
+        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
+        shifts = {(t1, v1): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in all_shifts}
+        shift = max(shifts.items(), key=itemgetter(1))[0]
+
+        #deviation_from_demand = sum(min(0, state.soft_vars["deviation_from_ideal_demand"].values()))
+        deviation_from_demand = -sum(min(0, state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in t_covered_by_shift[shift[0], shift[1]])
+        if(deviation_from_demand < 6):
             return repair_set
 
-        shifts = {(t1, v1): sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in all_shifts}
-        shift = max(shifts.items(), key=itemgetter(1))[0]
+        
 
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         deviation_contracted_hours = {e: sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) for e in employees if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
-        #print(deviation_contracted_hours)
+        
 
         if(len(deviation_contracted_hours.keys()) == 0):
             return repair_set
@@ -176,13 +180,16 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
     destroy_set = destroy_set
 
     while(True):
-        delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
-        shifts = {(t1, v1): sum(state.soft_vars["negative_deviation_from_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in all_shifts}
-        shift = max(shifts.items(), key=itemgetter(1))[0]
-        deviation_from_demand = sum(state.soft_vars["negative_deviation_from_demand"].values())
+        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
 
-        if(deviation_from_demand < 20):
-            return repair_set
+        shifts = {(t1, v1): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1]) - v1 for t1, v1 in all_shifts}
+        #print(shifts)
+        shift = max(shifts.items(), key=itemgetter(1))[0]
+
+        deviation_from_demand = -sum(min(0, state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in t_covered_by_shift[shift[0], shift[1]])
+        possible_employees = [e for e in employees_changed if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
+        if(deviation_from_demand < 6 or max([sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) for e in possible_employees]) < shift[1]):
+            return repair_set 
 
         #Initial phase to recalculate soft and hard variables of the destroyed weeks
         #Hard Restrictions/Variables
@@ -208,7 +215,7 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
 
         #When we have found which shift should be assigned we have to choose the employee to take this shift.
         # This time I am doing this by setting and removing instead of deepcopy. 
-        possible_employees = [e for e in employees_changed if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
+        
         employee_objective_functions = {}
         for e in possible_employees:
             repaired = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1)]
@@ -233,8 +240,8 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
             #Is needed to set the decision variable back to 0
             set_x(state, t_covered_by_shift, e, shift[0], shift[1], 0)
         
-        if(len(employee_objective_functions.keys()) == 0):
-            return repair_set
+        #if(len(employee_objective_functions.keys()) == 0):
+         #   return repair_set
 
         max_value = max(employee_objective_functions.items(), key=itemgetter(1))[1]
         e = choice([key for key, value in employee_objective_functions.items() if value == max_value])
