@@ -4,6 +4,18 @@ from heuristic.converter import set_x
 from random import choice
 
 def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee_with_competencies, demand, time_step, time_periods_in_week, employees, contracted_hours, weeks, shifts_at_day, state, destroy_set, week):
+    """
+        A greedy repair operator based on destroying the worst week.
+        The last three arguments are passed from its corresponding destroy operator.
+
+        It finds the shift with highest deviation from demand.
+        This shift is then assigned to the employee with highest deviation from contracted hours
+        as long as that employee does not work on the day of the shift we are assigning. 
+
+        It continues to do so until either the total negative deviation from demand is below a threshold (6)
+        or we do not have any employees to assign to this shift as all employees are working this day 
+    """
+    
     #print("worst_week_repair is running")
     repair_set = []
     employees_changed = employees
@@ -32,16 +44,6 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
 
 
 def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, employee_with_competencies, demand, time_step, time_periods_in_week, employees, contracted_hours, weeks, shifts_at_day, L_C_D, shifts_overlapping_t, state, destroy_set, week):
-    #print("worst_week_regret_repair is running")
-    repair_set = []
-    #All employees gets changed in this operator atm. Employees changed are therefore set to all employees at the beginning. 
-    employees_changed = employees
-    #Destroy_set is the shifts that have been destroyed.
-    destroy_set = destroy_set
-    saturdays = [5 + j * 7 for j in week]
-    days = [i + (7 * j) for j in week for i in range(7)]
-
-
     """
         The decision variables are set in the destroy operator. This only applies to the x and y variables as w now is a implisit variable that should be calculated
         At the beginning of a repair operator the soft variables and hard penalizing variables have not been updated to reflect the current changes to the decision variables
@@ -70,6 +72,16 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             2. The same is true for isolated working days, isolated off days and consecutive days
 
     """
+    
+    
+    #print("worst_week_regret_repair is running")
+    repair_set = []
+    #All employees gets changed in this operator atm. Employees changed are therefore set to all employees at the beginning. 
+    employees_changed = employees
+    #Destroy_set is the shifts that have been destroyed.
+    destroy_set = destroy_set
+    saturdays = [5 + j * 7 for j in week]
+    days = [i + (7 * j) for j in week for i in range(7)]
 
     while(True):
         #Initial phase to recalculate soft and hard variables of the destroyed weeks
@@ -101,7 +113,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
         
 
         #Now we have to decide on which employee should be assigned this shift. 
-        #Since we want to do this through regret we have to calculate the objective function of the state with that shift taken for each employee. 
+        #Since we want to do this through regret we have to calculate the objective function of the state with that shift assigned to each employee. 
         #We have two options here: 
         # 1. We could copy the state we are working with. We would have to use deepcopy which takes time and resources.
         # 2. We could set the x value and then remove it again after calculation. Might take a lot of time and resources. 
@@ -131,7 +143,6 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             #Calculate the objective function when the employee e is assigned the shift
             objective_values[e] = calc_weekly_objective_function(current_state, competencies, time_periods_in_week, employees, week, L_C_D)[0]
 
-        #print(objective_values)
         max_value = max(objective_values.items(), key=itemgetter(1))[1]
         employee = choice([key for key, value in objective_values.items() if value == max_value])
         
@@ -143,6 +154,19 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
 
 
 def worst_employee_repair(competencies, t_covered_by_shift, employee_with_competencies, demand, contracted_hours, weeks, time_periods_in_week, time_step, all_shifts, shifts_at_day, state, destroy_set, employees):
+    """
+        A greedy repair operator based on destroying the worst employee.
+        The last three arguments are passed from its corresponding destroy operator.
+
+        It finds the shift with highest deviation from demand.
+        This shift is then assigned to the employee with highest deviation from contracted hours
+        as long as that employee does not work on the day of the shift we are assigning. 
+        The difference between this operator and the worst week is that we only look at the employees we have destroyed in the destroy operator
+
+        It continues to do so until either the total negative deviation from demand is below a threshold (6)
+        or we do not have any employees to assign to this shift as all employees are working this day 
+    """
+    
     #print("worst_employee_repair is running")
     repair_set = []
     destroy_set = destroy_set
