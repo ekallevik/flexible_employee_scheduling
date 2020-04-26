@@ -1,23 +1,25 @@
 import numpy as np
 from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
-from heuristic.criterions.greedy_criterion import GreedyCriterion
+from collections import defaultdict
 from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
 from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_week_regret_repair, worst_employee_regret_repair
+from functools import partial
 
 
 class ALNS:
-    def __init__(self, state, model, ):
+    def __init__(self, state, model, criterion):
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
+        self.best_legal_solution = state
 
-        self.criterion = GreedyCriterion()
+        self.criterion = criterion
         self.random_state =  self.initialize_random_state()
         
         self.destroy_operators = {}
         self.destroy_weights = {}
-        self.repair_operators = {}
+        self.repair_operators = defaultdict(dict)
         self.repair_weights = {}
 
         self.WeightUpdate = {
@@ -51,25 +53,72 @@ class ALNS:
         self.t_covered_by_off_shift = model.t_in_off_shifts
         self.time_periods_in_week = model.time_periods_in_week
 
+        remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
+        remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift)
+
+        repair_worst_week_regret = partial(worst_week_regret_repair, self.shifts_in_week, 
+                                            self.competencies, self.t_covered_by_shift, self.employee_with_competencies, 
+                                            self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, 
+                                            self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
+
+        repair_worst_employee_regret = partial(worst_employee_regret_repair, self.competencies, 
+                                            self.t_covered_by_shift, self.employee_with_competencies, self.demand, 
+                                            self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, 
+                                            self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, 
+                                            self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
+
+        repair_worst_week_greedy = partial(worst_week_repair, self.shifts_in_week, self.competencies, self.t_covered_by_shift,
+                                            self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, 
+                                            self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
+
+        repair_worst_employee_greedy = partial(worst_employee_repair, self.competencies, self.t_covered_by_shift, 
+                                                self.employee_with_competencies, self.demand, self.contracted_hours, 
+                                                self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
+
+        #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
+        #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
+        operators = {
+                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
+                    }
+        self.add_destroy_and_repair_operators(operators)
+        for key in self.repair_operators.keys():
+            for operator in self.repair_operators[key]:
+                print(str(key) + ": " + str(operator))
+        self.initialize_destroy_and_repair_weights()
+        print(self.destroy_weights)
+        print(self.repair_weights)
+
 
     def iterate(self, iterations):
         for iteration in range(iterations):
             candidate_solution = self.current_solution.copy()
 
-            #destroy_set, worst_k_weeks = worst_week_removal(candidate_solution, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
-            #print(worst_k_weeks)
+            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+
+
+            destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
+            repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
+
+            #destroy_set, employees = 
+            #destroy_set, worst_k_weeks 
+
+
             #repair_set = worst_week_regret_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
             #repair_set = worst_week_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
             
-            destroy_set, employees = worst_employee_removal(candidate_solution, 1, self.shifts, self.t_covered_by_shift)
+            
             #repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
-            repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
+            #repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
             
             
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(candidate_solution, "something", "something_else")
-       # print(candidate_solution.hard_vars)
-        candidate_solution.write("heuristic_solution_2")
+            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+            #print(self.destroy_weights)
+            #print(self.repair_weights)
+        #print(candidate_solution.hard_vars)
+        self.best_solution.write("heuristic_solution_2")
         
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -81,6 +130,9 @@ class ALNS:
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
         print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
+        if(candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value() and hard_constraint_penalties(candidate_solution) == 0):
+                self.best_legal_solution = candidate_solution
+                self.best_legal_solution.write("best_legal_solution")
         if self.criterion.accept(candidate_solution, self.current_solution):
             self.current_solution = candidate_solution
 
@@ -97,7 +149,7 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
-        #self.update_weights(weight_update, destroy_id, repair_id)
+        self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
         """
@@ -121,15 +173,16 @@ class ALNS:
         """ Updates the value of the operator pair by multiplying both with weight_update """
 
         self.destroy_weights[destroy_id] *= weight_update
-        self.repair_weights[repair_id] *= weight_update
+        self.repair_weights[destroy_id][repair_id] *= weight_update
 
     def initialize_destroy_and_repair_weights(self):
         self.destroy_weights = self.initialize_weights(self.destroy_operators)
-        self.repair_weights = self.initialize_weights(self.repair_operators)
+        for destroy_operator in self.destroy_operators:
+            self.repair_weights[destroy_operator] = self.initialize_weights(self.repair_operators[destroy_operator])
+
 
     @staticmethod
     def initialize_weights(operators):
-
         if not operators:
             raise ValueError("You cannot initialize weights before adding at least one operator")
 
@@ -144,9 +197,18 @@ class ALNS:
         for operator in operators:
             self.add_operator(self.destroy_operators, operator)
 
-    def add_repair_operator(self, operators):
-        for operator in operators:
-            self.add_operator(self.repair_operators, operator)
+    #def add_repair_operator(self, operators):
+     #   for operator in operators:
+      #      self.add_operator(self.repair_operators, operator)
+    
+    def add_repair_operator(self, destroy_operator_id, repair_operators):
+        for new_operator in repair_operators:
+            self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
+
+    def add_destroy_and_repair_operators(self, operators):
+        for key in operators.keys():
+            self.add_destroy_operator([key])
+            self.add_repair_operator(key.func.__name__, operators[key])
 
     @staticmethod
     def add_operator(operators, new_operator):
@@ -159,11 +221,12 @@ class ALNS:
         if not callable(new_operator):
             raise ValueError("new_operator must be a function")
 
-        operators[new_operator.__name__] = new_operator
+        operators[new_operator.func.__name__] = new_operator
 
     def calculate_objective(self, state, destroy, repair):
         destroy_repair_set = destroy + repair
         employees = set([e for e,t,v in destroy_repair_set])
+
         #Updates the current states soft variables based on changed decision variables
         delta_calculate_deviation_from_demand(state, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, destroy_repair_set)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees, self.contracted_hours, self.weeks, self.time_periods_in_week, self.competencies, self.time_step)
@@ -178,28 +241,9 @@ class ALNS:
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
-        #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
-        #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
         mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
         #calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
+        #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
+        #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
 
         return calculate_objective_function(state, employees, self.off_shifts, self.saturdays, self.L_C_D, self.days, self.competencies, self.weeks)
-
-    # def initialize_state_variables(self, model):
-    #     #Soft Variables
-    #     negative_deviation_from_demand = calculate_negative_deviation_from_demand(model)
-    #     partial_weekends = calculate_partial_weekends(model)
-    #     consecutive_days = calculate_consecutive_days(model)
-    #     isolated_off_days = calculate_isolated_off_days(model)
-    #     isolated_working_days = calculate_isolated_working_days(model)
-    #     contracted_hours = calculate_negative_deviation_from_contracted_hours(model)
-
-    #     #Hard Penalty Variables
-    #     cover_min_demand = cover_minimum_demand(model)
-    #     cover_max_demand = under_maximum_demand(model)
-    #     one_demand_per_time = cover_only_one_demand_per_time_period(model)
-    #     one_shift_per_day = maximum_one_shift_per_day()
-    #     one_weekly_off = one_weekly_off_shift(model)
-    #     work_during_off = no_work_during_off_shift2(model)
-    #     shift_demand_map = mapping_shift_to_demand(model)
-    #     break_contracted_hours = calculate_positive_deviation_from_contracted_hours(model)

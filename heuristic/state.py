@@ -1,4 +1,5 @@
 from copy import copy
+from collections import defaultdict
 
 class State:
     def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
@@ -61,6 +62,7 @@ class State:
 
 
     def write(self, filename):
+        summasjon = defaultdict(float)
         f= open(filename + ".sol","w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
@@ -74,10 +76,21 @@ class State:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
-            for key2 in self.soft_vars[key]:
-                f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
-        
+            if(key == "contracted_hours"):
+                for key2 in self.soft_vars[key]:
+                    summasjon[key2[0]] += float(self.soft_vars[key][key2])
+                for e in summasjon:
+                    f.write(f"contracted_hour[{e}] {summasjon[e]}\n")
+            else:
+                for key2 in self.soft_vars[key]:
+                    f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
+            
         for key in self.f:
             f.write(f"f[{key}] {self.f[key]}\n")
+
+        f.write("\nHard Variables Penalising Objective Function:\n")
+        for key in self.hard_vars.keys():
+            for key2 in self.hard_vars[key]:
+                f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.hard_vars[key][key2]))))
 
         f.close()

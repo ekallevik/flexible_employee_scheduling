@@ -1,6 +1,8 @@
 from model.model_class import Optimization_model
 from model.hard_constraint_model_class import Optimization_model as Feasibility_model
 from heuristic.heuristic_calculations import calculate_objective_function as calc_ob
+from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State 
 from heuristic.alns_calculator import Alns_calculator
 from heuristic.converter import convert
@@ -11,12 +13,13 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem2" 
-    model = Feasibility_model(problem_name)
+    problem_name = "rproblem3" 
+    model = Optimization_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
     model.optimize()
+    #model.model.write("solution_files/optimality_model_rproblem3.sol")
     x,y,w = convert(model) 
 
 
@@ -45,9 +48,12 @@ def main():
     objective_function, f = calc_ob(model, soft_variables, w)
 
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
-    initial_state.write("heuristic_solution_1")
-    alns = ALNS(initial_state, model)
-    alns.iterate(1)
+    initial_state.write("optimality_model_rproblem3_heuristic_rest")
+    return
+    #simulated_annealing_criterion = SimulatedAnnealingCriterion()
+    greedy_criterion = GreedyCriterion()
+    alns = ALNS(initial_state, model, greedy_criterion)
+    alns.iterate(100)
 
 
 """Possibilities now.
@@ -56,4 +62,4 @@ def main():
 """
 cProfile.run('main()', 'stats')
 p = pstats.Stats('stats')
-p.strip_dirs().sort_stats('time').print_stats(15)
+p.strip_dirs().sort_stats('time').print_stats(20)
