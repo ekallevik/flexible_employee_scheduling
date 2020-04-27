@@ -53,10 +53,10 @@ def calculate_partial_weekends(model, x):
     for i in model.saturdays:
         for e in model.employees:
 
-            partial_weekend[e,i] =  abs((sum(x[e,t,v] 
+            partial_weekend[e,i] =  abs(sum(x[e,t,v] 
                                     for t,v in model.shifts_at_day[i]) 
                                     - sum(x[e,t,v] 
-                                    for t,v in model.shifts_at_day[i+1])))
+                                    for t,v in model.shifts_at_day[i+1]))
     return partial_weekend
 
 def calculate_isolated_working_days(model, x):

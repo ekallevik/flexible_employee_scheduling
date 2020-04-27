@@ -12,24 +12,8 @@ class State:
         #Soft Variables
         self.soft_vars = soft_vars
 
-        # self.negative_deviation_from_demand
-        # self.partial_weekends
-        # self.consecutive_days
-        # self.isolated_off_days
-        # self.isolated_working_days
-        # self.contracted_hours
-
         # #Hard Penalty Variables
         self.hard_vars = hard_vars
-
-        # self.cover_min_demand
-        # self.cover_max_demand
-        # self.one_demand_per_time
-        # self.one_shift_per_day
-        # self.one_weekly_off
-        # self.work_during_off
-        # self.shift_demand_map
-        # self.break_contracted_hours
 
         self.objective_function_value = objective_function_value
         self.f = f

@@ -1,11 +1,6 @@
 from operator import itemgetter
 from collections import defaultdict
 from copy import copy
-def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set):
-    for c in competencies:
-        for e2,t,v in destroy_repair_set:
-            for t in t_covered_by_shift[t,v]:
-                state.soft_vars["negative_deviation_from_demand"][c,t] = max(0,demand["ideal"][c,t] - sum(state.y[c,e,t] for e in employee_with_competencies[c]))
 
 def calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set):
     for c in competencies:
@@ -15,6 +10,15 @@ def calculate_deviation_from_demand(state, competencies, t_covered_by_shift, emp
 
 
 def delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step):
+    """
+    Calculates both negative and positive contracted hours (The name should be updated but haven't had time yet)
+    It checks the employees where a change has been made whether destroyed or repaired. 
+    Then calculates the deviation only for these employees
+    
+    I have decided to also include checking the hard constraint if we are above contracted hours in this function as well
+    This is done as it is easy to do at the same time and saveds time.
+    Another update comes in another PR that updates the soft variables of contracted hours to weekly contracted hours
+    """
     for e in employees:
         for j in weeks:
             state.soft_vars["contracted_hours"][e,j] = deviation_contracted_hours = (contracted_hours[e] - sum(time_step * state.y[c,e,t] for t in time_periods_in_week[j]

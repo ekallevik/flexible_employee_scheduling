@@ -76,22 +76,29 @@ class ALNS:
                                                 self.employee_with_competencies, self.demand, self.contracted_hours, 
                                                 self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
 
-        #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
-        #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
         operators = {
                         remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
                         remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
-        for key in self.repair_operators.keys():
-            for operator in self.repair_operators[key]:
-                print(str(key) + ": " + str(operator))
         self.initialize_destroy_and_repair_weights()
-        print(self.destroy_weights)
-        print(self.repair_weights)
+
 
 
     def iterate(self, iterations):
+        """	
+            Mostly the same structure as Even had put up. Start by selecting a destroy and repair operator.	
+            I have not used the select function as I only test one at a time here. The select function do work though.	
+            The destroy and repair operators are commented out on purpose as I have decided to include these in another PR	
+            Candidate solution is created by copying the current solution state.	
+            Problem not fixed is how to send the correct sets together with the destroy and repair operator. 	
+            All my destroy operators have two values they are returning:	
+                1. A destroy set that includes shifts (e,t,v) that are destroyed	
+                2. Some spesific information about what were destroyed for example weeks, isolated days and so on. 	
+            Calculate objective function is new. It is in charge of updating the soft variables, hard variables, f and objective function	
+            based on the destroy and repair operator (the shifts that were destroyed and repaired)	
+            Lastly consider candidate is run.	
+        """
         for iteration in range(iterations):
             candidate_solution = self.current_solution.copy()
 
@@ -100,26 +107,10 @@ class ALNS:
 
 
             destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
-            print(destroy_spesific_set)
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
 
-            #destroy_set, employees = 
-            #destroy_set, worst_k_weeks 
-
-
-            #repair_set = worst_week_regret_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
-            #repair_set = worst_week_repair(candidate_solution, worst_k_weeks, self.shifts_in_week, self.competencies, destroy_set, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, self.weeks, self.shifts_at_day)
-            
-            
-            #repair_set = worst_employee_regret_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
-            #repair_set = worst_employee_repair(candidate_solution, destroy_set, employees, self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
-            
-            
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
             self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
-            #print(self.destroy_weights)
-            #print(self.repair_weights)
-        #print(candidate_solution.hard_vars)
 
         candidate_solution.write("heuristic_solution_2")
         
@@ -133,11 +124,11 @@ class ALNS:
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
         print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
-        if self.criterion.accept(candidate_solution, self.current_solution):
+        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
             
+            #Local search operator runs within this if statement. A better implementation should be decided on. 
             if(sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0):
-                print("Breaking weekly_off_shift_error")
                 candidate_solution.write("before_breaking_weekly")
                 destroy_set, repair_set = illegal_week_swap(self.shifts_in_week, self.employees, self.shifts_at_day, self.t_covered_by_shift, self.competencies, self.contracted_hours, self.time_periods_in_week, self.time_step, self.L_C_D, self.weeks, candidate_solution)
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
@@ -211,6 +202,7 @@ class ALNS:
         for operator in operators:
             self.add_operator(self.destroy_operators, operator)
 
+    #Removed the old add repair operator function. Left here for ease of access and understandability. 
     #def add_repair_operator(self, operators):
      #   for operator in operators:
       #      self.add_operator(self.repair_operators, operator)
@@ -256,6 +248,9 @@ class ALNS:
         more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         mapping_shift_to_demand(state, destroy_repair_set, self.t_covered_by_shift, self.shifts_overlapping_t, self.competencies)
+
+        #I believe these functions comment out below are not needed. If by your understanding you agree we can remove them. 
+
         #calculate_positive_deviation_from_contracted_hours(state, destroy, repair)
         #weekly_off_shift_error(state, destroy_repair_set, self.weeks, self.off_shift_in_week)
         #no_work_during_off_shift(state, destroy_repair_set, self.competencies, self.t_covered_by_off_shift, self.off_shifts)
