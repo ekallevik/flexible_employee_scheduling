@@ -1,10 +1,12 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from gurobipy.gurobipy import tuplelist, tupledict
+
 from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS, DEFAULT_DAILY_OFFSET
-from xml_loader.demand import Demand
-from xml_loader.employee import Employee
-from xml_loader.rest_rule import Weekly_rest_rule, Daily_rest_rule
+from preprocessing.demand import Demand
+from preprocessing.employee import Employee
+from preprocessing.rest_rule import Weekly_rest_rule, Daily_rest_rule
 
 
 def get_demand_definitions(root):
@@ -183,3 +185,38 @@ def get_data_folder(problem):
         )
 
     return data_folder
+
+
+def get_employee_lists(root, competencies):
+
+    employees = tuplelist()
+    employee_with_competencies = tupledict()
+    employee_weekly_rest = tupledict()
+    employee_daily_rest = tupledict()
+    employee_contracted_hours = tupledict()
+    employee_daily_offset = tupledict()
+
+    emp = get_staff(root, competencies)
+
+    for c in range(len(competencies)):
+        employee_with_competencies[c] = []
+        for e in emp:
+            if c in e.competencies:
+                employee_with_competencies[c].append(int(e.id))
+
+    for e in emp:
+        id = int(e.id)
+        employees.append(id)
+        employee_daily_rest[id] = e.daily_rest_hours
+        employee_weekly_rest[id] = e.daily_rest_hours
+        employee_contracted_hours[id] = e.contracted_hours
+        employee_daily_offset[id] = e.daily_offset
+
+    return {
+        "employees": employees,
+        "employees_with_competencies": employee_with_competencies,
+        "employee_with_weekly_rest": employee_weekly_rest,
+        "employee_daily_rest": employee_daily_rest,
+        "employee_contracted_hours": employee_contracted_hours,
+        "employee_daily_offset": employee_daily_offset,
+    }

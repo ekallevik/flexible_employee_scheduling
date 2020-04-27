@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from gurobipy import *
 
-from xml_loader import shift_generation
+from preprocessing import shift_generation
 
 
 class BaseModel:
@@ -10,14 +10,13 @@ class BaseModel:
     This abstract class will take care of all common code that is to be shared across all model variants.
     """
 
-    def __init__(self, name, problem="rproblem2", mip_focus="default", solution_limit="default"):
+    def __init__(self, name, problem, data, mip_focus="default",
+                 solution_limit="default"):
 
         self.name = name
         self.model = self.create_model()
         self.mip_focus = mip_focus
         self.solution_limit = solution_limit
-
-        data = shift_generation.load_data(problem)
 
         self.competencies = data["competencies"]
         self.demand = data["demand"]
