@@ -75,11 +75,11 @@ def run_model(model="construction", problem="rproblem3", with_sdp=True):
         data = run_shift_design_model(problem=problem, data=data)
 
     if model == "feasibility":
-        esp = FeasibilityModel(name="esp_feasibility", problem=problem)
+        esp = FeasibilityModel(name="esp_feasibility", problem=problem, data=data)
     elif model == "optimality":
-        esp = OptimalityModel(name="esp_optimality", problem=problem)
+        esp = OptimalityModel(name="esp_optimality", problem=problem, data=data)
     elif model == "construction":
-        esp = ConstructionModel(name="esp_construction", problem=problem)
+        esp = ConstructionModel(name="esp_construction", problem=problem, data=data)
     else:
         raise ValueError(f"The model choice '{model}' is not valid.")
 

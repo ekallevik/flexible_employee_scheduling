@@ -1,7 +1,6 @@
 from gurobipy import *
 
 from utils.weights import get_shift_design_weights
-from preprocessing import shift_generation
 
 from model.shift_design_constraints import ShiftDesignConstraints
 from model.shift_design_objective import ShiftDesignObjective
