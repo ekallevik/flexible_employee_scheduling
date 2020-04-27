@@ -76,12 +76,11 @@ class ALNS:
                                                 self.employee_with_competencies, self.demand, self.contracted_hours, 
                                                 self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
 
-        #, repair_worst_employee_greedy
         #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
         #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret],
-                        #remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
+                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         for key in self.repair_operators.keys():
