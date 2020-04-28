@@ -1,8 +1,10 @@
 from preprocessing.demand_processing import get_time_steps, get_time_periods, get_demand, \
     combine_demand_intervals, combine_no_demand_intervals, get_start_events
-from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
+from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY, \
+    NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
 from preprocessing import xml_loader
 from preprocessing.xml_loader import *
+from preprocessing.preferences import generate_preferences
 
 
 def already_daily_off_shift(root, employee_offset, employee_rest, day):
@@ -282,6 +284,7 @@ def load_data(problem_name):
         "demand": get_demand(root, competencies),
         "staff": staff,
         "limit_on_consecutive_days": 5,
+        "preferences": generate_preferences(staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES),
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,
