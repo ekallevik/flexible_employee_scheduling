@@ -7,12 +7,11 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
     """
     Generates random preferences for each employee. The result is normalized to 1
     Note: the result is identical between different runs, as using the same initial seed will guarantee the same result
-    :param employees: a list of all employees
-    :param time_periods: a dict containing all time periods
-    :param requests: a (min, max)-tuple representing bounds on the number of requests per employee
-    :param durations: a (min, max)-tuple representing bounds on the durations of the preference
-    :param number_of_weeks: the number of weeks the schedules should apply to
-    :return:
+    :param staff: data structure containing employees
+    :param time_set: data structure containing time_step, weeks and needed time_periods-sets
+    :param num_weekly_preferences: (min, max)-tuple representing bounds on the number of requests per employee per week
+    :param preferences_dur: a (min, max)-tuple representing bounds on the durations of the preference
+    :return: a dict with keys [e][t], representing employee and time respectively
     """
 
     # Ensuring persistent results between different runs. The seed can be any integer
@@ -25,6 +24,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
     time_periods_in_day = time_set["periods"][2]
     weeks = time_set["weeks"]
 
+    # Duration in hours is converted to duration in time_steps
     preferences_dur = [int(preferences_dur[0]/time_step), int(preferences_dur[1]/time_step)]
 
     # Initializing all preferences
@@ -34,6 +34,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
         for time in time_periods:
             preferences[employee][time] = 0
 
+    # Generating preferences
     for employee in employees:
         number_of_preferences = 0
 
@@ -46,6 +47,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
                 value = random.choice([-1, 1])
                 unique_preference = False
 
+                # While-block is ensuring that preferences do not overlap each other
                 while not unique_preference:
                     day = random.randint(week * 7, ((week + 1) * 7) - 1)
                     unique_preference = True
@@ -68,6 +70,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
         factor = 1.0/number_of_preferences
 
+        # Normalizing the preferences
         for elem in preferences[employee]:
             preferences[employee][elem] *= factor
 
