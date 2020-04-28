@@ -51,7 +51,6 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
                     unique_preference = True
                     try:
                         start_index = random.randint(0, len(time_periods_in_day[day]) - dur)
-                        dur = 99
                     except:
                         dur = time_periods_in_day[day][-1] - time_periods_in_day[day][0]
                         start_index = random.randint(0, len(time_periods_in_day[day]) - dur)
