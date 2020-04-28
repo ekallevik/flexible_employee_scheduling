@@ -30,6 +30,7 @@ def run_shift_design_model(problem="rproblem3", data=None):
 
     used_shifts = sdp.get_used_shifts()
     data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts)
+    data["off_shifts"] = shift_generation.get_updated_off_shift_sets(data, used_shifts)
 
     print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
     percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
