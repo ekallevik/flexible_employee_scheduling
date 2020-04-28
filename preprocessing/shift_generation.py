@@ -1,6 +1,6 @@
 from preprocessing.demand_processing import get_time_steps, get_time_periods, get_demand, \
     combine_demand_intervals, combine_no_demand_intervals, get_start_events
-from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
+from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY, MAX_LENGTH_WEEKLY_REST
 from preprocessing import xml_loader
 from preprocessing.xml_loader import *
 
@@ -201,7 +201,7 @@ def get_off_shifts(root):
                 off_shifts_in_week[week] = []
             if event >= (week + 1) * 24 * 7:
                 break
-            if duration > 70:
+            if duration > MAX_LENGTH_WEEKLY_REST:
                 break
             elif duration >= 36:
                 if (events[i], duration) not in off_shifts:
