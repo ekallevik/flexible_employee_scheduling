@@ -6,8 +6,12 @@ from gurobipy.gurobipy import tupledict, tuplelist
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
 from preprocessing.rest_rule import Daily_rest_rule, Weekly_rest_rule
-from utils.const import (DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS,
-                         DEFAULT_DAILY_OFFSET, DEFAULT_DAILY_REST_HOURS)
+from utils.const import (
+    DEFAULT_COMPETENCY,
+    DEFAULT_CONTRACTED_HOURS,
+    DEFAULT_DAILY_OFFSET,
+    DEFAULT_DAILY_REST_HOURS,
+)
 
 
 def get_demand_definitions(root):

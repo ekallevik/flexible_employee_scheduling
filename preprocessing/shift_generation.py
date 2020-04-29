@@ -1,14 +1,21 @@
 from preprocessing import xml_loader
-from preprocessing.demand_processing import (combine_demand_intervals,
-                                             combine_no_demand_intervals,
-                                             get_demand, get_start_events,
-                                             get_time_periods, get_time_steps)
+from preprocessing.demand_processing import (
+    combine_demand_intervals,
+    combine_no_demand_intervals,
+    get_demand,
+    get_start_events,
+    get_time_periods,
+    get_time_steps,
+)
 from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
-from utils.const import (ALLOWED_SHIFT_DURATION, DESIRED_SHIFT_DURATION,
-                         DURATION_OF_PREFERENCES,
-                         NUMBER_OF_PREFERENCES_PER_WEEK,
-                         TIME_DEFINING_SHIFT_DAY)
+from utils.const import (
+    ALLOWED_SHIFT_DURATION,
+    DESIRED_SHIFT_DURATION,
+    DURATION_OF_PREFERENCES,
+    NUMBER_OF_PREFERENCES_PER_WEEK,
+    TIME_DEFINING_SHIFT_DAY,
+)
 
 
 def already_daily_off_shift(root, employee_offset, employee_rest, day):
@@ -177,10 +184,13 @@ def get_invalid_shifts(root, staff, shifts_per_day):
                         invalid_shifts[e].append(shift)
                         shift_used = True
                 # INVALID SHIFTS DUE TO DAILY REST
-                if not(natural_rest):
+                if not (natural_rest):
                     if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
-                        if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
-                            if not(shift_used):
+                        if (
+                            24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
+                            < daily_rest[e]
+                        ):
+                            if not (shift_used):
                                 invalid_shifts[e].append(shift)
 
     return invalid_shifts

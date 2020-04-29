@@ -2,8 +2,7 @@ from collections import defaultdict
 
 from gurobipy import *
 
-from preprocessing.xml_loader import (get_days_with_demand,
-                                      get_demand_definitions)
+from preprocessing.xml_loader import get_days_with_demand, get_demand_definitions
 
 
 def get_time_steps(root):

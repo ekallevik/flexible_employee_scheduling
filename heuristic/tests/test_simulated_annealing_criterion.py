@@ -1,7 +1,6 @@
 import pytest
 
-from heuristic.criterions.simulated_annealing_criterion import \
-    SimulatedAnnealingCriterion
+from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 
 
 @pytest.mark.parametrize(
