@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from gurobipy import *
+from utils.weights import get_weights
 
 from preprocessing import shift_generation
 
@@ -26,6 +27,8 @@ class BaseModel:
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
         self.preferences = data["preferences"]
         self.var = None
+
+        self.weights = get_weights(self.staff, self.time_set)
 
         # Heuristic
         self.saturdays = data["time"]["saturdays"]
