@@ -2,7 +2,9 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-    def __init__(self, model, var, weights, competencies, staff, time_set, off_shifts_set):
+    def __init__(
+        self, model, var, weights, competencies, preferences, staff, time_set, off_shifts_set
+    ):
         self.model = model
 
         self.competencies = competencies
@@ -14,11 +16,11 @@ class OptimalityObjective:
         self.weeks = time_set["weeks"]
         self.off_shifts = off_shifts_set["off_shifts"]
 
-        self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q)
+        self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q, var.y, preferences)
         self.add_lowest_fairness_score(var.f, var.g)
         self.add_objective_for_optimal_solution(weights, var.f, var.g, var.delta)
 
-    def add_fairness_score(self, weights, f, w, lam, rho, q):
+    def add_fairness_score(self, weights, f, w, lam, rho, q, y, preferences):
 
         self.model.addConstrs(
             (
@@ -31,6 +33,11 @@ class OptimalityObjective:
                 * quicksum(q["iso_work"][e, i] for i in self.days)
                 - weights["isolated off days"] * quicksum(q["iso_off"][e, i] for i in self.days)
                 - weights["consecutive days"] * quicksum(q["con"][e, i] for i in self.days)
+                + weights["preferences"]
+                * quicksum(
+                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies)
+                    for t in self.time_periods
+                )
                 for e in self.employees
             ),
             name="fairness_score",

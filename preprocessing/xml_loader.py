@@ -1,12 +1,17 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from gurobipy.gurobipy import tuplelist, tupledict
+from gurobipy.gurobipy import tupledict, tuplelist
 
-from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS, DEFAULT_DAILY_OFFSET
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
-from preprocessing.rest_rule import Weekly_rest_rule, Daily_rest_rule
+from preprocessing.rest_rule import Daily_rest_rule, Weekly_rest_rule
+from utils.const import (
+    DEFAULT_COMPETENCY,
+    DEFAULT_CONTRACTED_HOURS,
+    DEFAULT_DAILY_OFFSET,
+    DEFAULT_DAILY_REST_HOURS,
+)
 
 
 def get_demand_definitions(root):

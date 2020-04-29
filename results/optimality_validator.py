@@ -1,5 +1,4 @@
 class OptimalityValidator:
-
     def __init__(self, gamma, employees, days):
         self.gamma = gamma
         self.employees = employees
@@ -10,7 +9,9 @@ class OptimalityValidator:
         violations = 0
 
         for day in range(len(working_days) - consecutive_day_limit + 1):
-            if self.violates_consecutive_days(working_days[day:day+consecutive_day_limit], consecutive_day_limit):
+            if self.violates_consecutive_days(
+                working_days[day : day + consecutive_day_limit], consecutive_day_limit
+            ):
                 violations += 1
 
         return violations
@@ -22,13 +23,12 @@ class OptimalityValidator:
 
         return sum(working_days) == consecutive_day_limit
 
-
     def count_isolated_days_violations(self, working_days):
 
         violations = {"working_days": 0, "off_days": 0}
 
         for day in range(len(working_days) - 2):
-            time_slice = working_days[day:day+3]
+            time_slice = working_days[day : day + 3]
             if self.violates_isolated_working_days(time_slice):
                 violations["working_days"] += 1
             elif self.violates_isolated_off_days(time_slice):
@@ -42,7 +42,6 @@ class OptimalityValidator:
             raise ValueError("The number of days must match the limit")
 
         return working_days[0] == 0 and working_days[1] == 1 and working_days[2] == 0
-
 
     def violates_isolated_off_days(self, working_days):
 
@@ -73,7 +72,7 @@ class OptimalityValidator:
         violations = 0
 
         for saturday in saturdays:
-            if self.violates_partial_weekends(working_days[saturday:saturday+2]):
+            if self.violates_partial_weekends(working_days[saturday : saturday + 2]):
                 violations += 1
 
         return violations

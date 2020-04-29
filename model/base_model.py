@@ -10,8 +10,7 @@ class BaseModel:
     This abstract class will take care of all common code that is to be shared across all model variants.
     """
 
-    def __init__(self, name, problem, data, mip_focus="default",
-                 solution_limit="default"):
+    def __init__(self, name, problem, data, mip_focus="default", solution_limit="default"):
 
         self.name = name
         self.model = self.create_model()
@@ -25,6 +24,7 @@ class BaseModel:
         self.shifts_set = data["shifts"]
         self.off_shifts_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
+        self.preferences = data["preferences"]
         self.var = None
 
         # Heuristic
