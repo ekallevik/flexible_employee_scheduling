@@ -41,27 +41,25 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
             for dur in realized_dur:
 
-                # Positive and negative values signifies preference for work and free,
-                # but unsure which value signifies what
+                # A positive value signifies preference for work, while
+                # a negative value signifies preference for a free
                 value = random.choice([-1, 1])
 
-                unique_preference = False
-
                 # While-block is ensuring that preferences do not overlap each other
-                while not unique_preference:
+                while True:
                     day = random.randint(week * 7, ((week + 1) * 7) - 1)
-                    unique_preference = True
+                    end = len(time_periods_in_day[day]) - dur
 
-                    try:
-                        start_index = random.randint(0, len(time_periods_in_day[day]) - dur)
-                    except:
+                    if end <= 0:
                         dur = time_periods_in_day[day][-1] - time_periods_in_day[day][0]
-                        start_index = random.randint(0, len(time_periods_in_day[day]) - dur)
+                        end = len(time_periods_in_day[day]) - dur
 
-                    for time in time_periods_in_day[day][start_index:start_index + dur]:
-                        if time in used_time_periods:
-                            unique_preference = False
-                            break
+                    start_index = random.randint(0, end)
+
+                    time_range = time_periods_in_day[day][start_index:start_index + dur]
+
+                    if is_unique_preference(time_range, used_time_periods):
+                        break
 
                 for t in time_periods_in_day[day][start_index:start_index + dur]:
                     preferences[employee][t] = value
@@ -72,6 +70,15 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
         preferences = normalize_preferences(employee, number_of_preferences, preferences)
 
     return preferences
+
+
+def is_unique_preference(time_range, used_time_periods):
+    """ Check if the preference overlaps with any other preferences"""
+
+    for time in time_range:
+        if time in used_time_periods:
+            return False
+    return True
 
 
 def normalize_preferences(employee, number_of_preferences, preferences):
