@@ -98,24 +98,19 @@ def get_shifts_per_day(shifts, days):
 
 def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     """
-    Returns two values:
-        * violating_shifts: Returns a dict, with "employee" as key and another dict as value. The
-        new dict uses "shift" as key and have a list of shifts that violates daily rest for
-        "employee" if "shift" is worked.
-
-        * invalid_shifts:   Returns a dict with "employee" as key and a list of shifts that is not
-        allowed due to daily rest as value.
+    Returns:
+        * violating_shifts:     Returns a dict, with "employee" as key and another dict as value. The
+                                new dict uses "shift" as key and have a list of shifts that violates daily rest for
+                                "employee" if "shift" is worked.
     """
 
     employees = staff["employees"]
     daily_rest = staff["employee_daily_rest"]
     daily_offset = staff["employee_daily_offset"]
     violating_shifts = tupledict()
-    invalid_shifts = tupledict()
 
     for e in employees:
         violating_shifts[e] = tupledict()
-        invalid_shifts[e] = tuplelist()
         for day in shifts_per_day:
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
@@ -136,14 +131,41 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
                                     except:
                                         violating_shifts[e][shift] = [s]
 
+    return violating_shifts
+
+
+def get_invalid_shifts(root, staff, shifts_per_day):
+    """
+    Returns:
+        * invalid_shifts:   Dict with employee as key, and all shifts that are invalid either due to blocked hours or
+                            daily rest as value.
+    """
+
+    employees = staff["employees"]
+    daily_rest = staff["employee_daily_rest"]
+    daily_offset = staff["employee_daily_offset"]
+    blocked_hours = staff["employee_blocked_hours"]
+    invalid_shifts = tupledict()
+
+    for e in employees:
+        invalid_shifts[e] = tuplelist()
+        for day in shifts_per_day:
+            natural_rest = already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)
+            for shift in shifts_per_day[day]:
+                shift_used = False
+                # BLOCKED HOURS
+                for time in blocked_hours[e]:
+                    if shift[0] <= time < shift[0] + shift[1]:
+                        invalid_shifts[e].append(shift)
+                        shift_used = True
+                # INVALID SHIFTS DUE TO DAILY REST
+                if not(natural_rest):
                     if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
                         if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
-                            try:
+                            if not(shift_used):
                                 invalid_shifts[e].append(shift)
-                            except:
-                                invalid_shifts[e] = [shift]
 
-    return [violating_shifts, invalid_shifts]
+    return invalid_shifts
 
 
 def get_shifts_overlapping_t(shifts, time_sets):
@@ -303,6 +325,7 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
     shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
+    invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
 
     return {
         "shifts": shifts,
@@ -311,8 +334,8 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
-        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest[0],
-        "invalid_shifts_violating_daily_rest": shifts_violating_daily_rest[1],
+        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
+        "invalid_shifts": invalid_shifts,
     }
 
 

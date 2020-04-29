@@ -30,7 +30,7 @@ class BaseConstraints:
         self.t_in_off_shifts = off_shifts_set["t_in_off_shifts"]
         self.off_shifts = off_shifts_set["off_shifts"]
         self.shifts_combinations_violating_daily_rest = shifts_set["shifts_combinations_violating_daily_rest"]
-        self.invalid_shifts_violating_daily_rest = shifts_set["invalid_shifts_violating_daily_rest"]
+        self.invalid_shifts = shifts_set["invalid_shifts"]
 
         # Adding constraints
         self.add_minimum_demand_coverage(var.y, var.mu)
@@ -189,8 +189,8 @@ class BaseConstraints:
     def add_daily_rest_invalid_shifts(self, x):
         self.model.addConstrs(
             (
-                quicksum(x[e, t, v] for t, v in self.invalid_shifts_violating_daily_rest[e]) == 0
+                quicksum(x[e, t, v] for t, v in self.invalid_shifts[e]) == 0
                 for e in self.employees
             ),
-            name="daily_rest_invalid_shifts"
+            name="invalid_shifts"
         )
