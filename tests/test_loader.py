@@ -1,7 +1,7 @@
 import pytest
 
-from utils.const import DEFAULT_COMPETENCY, DAYS_IN_WEEK
 from preprocessing import xml_loader
+from utils.const import DAYS_IN_WEEK, DEFAULT_COMPETENCY
 
 
 def test_loading_demand():

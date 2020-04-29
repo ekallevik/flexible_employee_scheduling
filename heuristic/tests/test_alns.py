@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion

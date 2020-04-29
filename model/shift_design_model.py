@@ -1,10 +1,9 @@
 from gurobipy import *
 
-from utils.weights import get_shift_design_weights
-
 from model.shift_design_constraints import ShiftDesignConstraints
 from model.shift_design_objective import ShiftDesignObjective
 from model.shift_design_variables import ShiftDesignVariables
+from utils.weights import get_shift_design_weights
 
 
 class ShiftDesignModel:

@@ -1,6 +1,8 @@
-from random import choice, sample, choices
+from random import choice, choices, sample
+
 from converter import set_x
-from heuristic_calculations import calculate_negative_deviation_from_demand, calculate_f
+from heuristic_calculations import (calculate_f,
+                                    calculate_negative_deviation_from_demand)
 
 
 def add_previously_isolated_days_randomly(model, iso_days):
