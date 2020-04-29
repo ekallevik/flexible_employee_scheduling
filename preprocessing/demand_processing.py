@@ -58,7 +58,7 @@ def get_time_periods(root):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[week] = []
-                if time > (day + 1)*24:
+                if time > (day + 1) * 24:
                     day += 1
                 if time not in time_periods:
                     time_periods.append(time)
@@ -214,8 +214,13 @@ def get_no_demand_intervals(demand_interval, day):
             for no_intervals in no_demand_intervals:
                 if no_intervals[-1] > start_time:
                     overlapping_intervals = True
-                    if no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] > intervals[-1]:
-                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] = intervals[-1]
+                    if (
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1]
+                        > intervals[-1]
+                    ):
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][
+                            -1
+                        ] = intervals[-1]
             if not overlapping_intervals:
                 no_demand_intervals.append([end_time, start_time])
         end_time = intervals[-1]

@@ -59,12 +59,15 @@ def test_select_operator(alns):
     assert selected_operator[1] == selected_operator[0].__name__
 
 
-@pytest.mark.parametrize("weights, expected", [
-    ({"first": 1.0, "second": 1.0}, [0.5, 0.5]),
-    ({"first": 3.0, "second": 1.0}, [0.75, 0.25]),
-    ({"first": 0.6, "second": 0.2}, [0.75, 0.25]),
-    ({"first": 999, "second": 1}, [0.999, 0.001]),
-])
+@pytest.mark.parametrize(
+    "weights, expected",
+    [
+        ({"first": 1.0, "second": 1.0}, [0.5, 0.5]),
+        ({"first": 3.0, "second": 1.0}, [0.75, 0.25]),
+        ({"first": 0.6, "second": 0.2}, [0.75, 0.25]),
+        ({"first": 999, "second": 1}, [0.999, 0.001]),
+    ],
+)
 def test_get_probabilities(alns, weights, expected):
 
     assert alns.get_probabilities(weights) == pytest.approx(expected)

@@ -2,7 +2,9 @@ from gurobipy.gurobipy import GRB, quicksum
 
 
 class OptimalityObjective:
-    def __init__(self, model, var, weights, competencies, preferences, staff, time_set, off_shifts_set):
+    def __init__(
+        self, model, var, weights, competencies, preferences, staff, time_set, off_shifts_set
+    ):
         self.model = model
 
         self.competencies = competencies
@@ -31,9 +33,11 @@ class OptimalityObjective:
                 * quicksum(q["iso_work"][e, i] for i in self.days)
                 - weights["isolated off days"] * quicksum(q["iso_off"][e, i] for i in self.days)
                 - weights["consecutive days"] * quicksum(q["con"][e, i] for i in self.days)
-                + weights["preferences"] * quicksum(preferences[e][t]
-                                                    * quicksum(y[c, e, t] for c in self.competencies)
-                                                    for t in self.time_periods)
+                + weights["preferences"]
+                * quicksum(
+                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies)
+                    for t in self.time_periods
+                )
                 for e in self.employees
             ),
             name="fairness_score",

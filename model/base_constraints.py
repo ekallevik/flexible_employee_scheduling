@@ -176,14 +176,16 @@ class BaseConstraints:
     def add_daily_rest_shift_combinations(self, x, e):
         self.model.addConstrs(
             (
-                x[e, t, v] +
-                quicksum(x[e, t_marked, v_marked] for t_marked, v_marked
-                         in self.shifts_combinations_violating_daily_rest[e][t, v])
+                x[e, t, v]
+                + quicksum(
+                    x[e, t_marked, v_marked]
+                    for t_marked, v_marked in self.shifts_combinations_violating_daily_rest[e][t, v]
+                )
                 <= min(2, len(self.shifts_combinations_violating_daily_rest[e][t, v]))
                 for t, v in self.shifts_combinations_violating_daily_rest[e]
                 if len(self.shifts_combinations_violating_daily_rest[e]) > 0
             ),
-            name="daily_rest_shift_combinations"
+            name="daily_rest_shift_combinations",
         )
 
     def add_daily_rest_invalid_shifts(self, x):

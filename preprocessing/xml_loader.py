@@ -3,7 +3,12 @@ from pathlib import Path
 
 from gurobipy.gurobipy import tuplelist, tupledict
 
-from utils.const import DEFAULT_COMPETENCY, DEFAULT_CONTRACTED_HOURS, DEFAULT_DAILY_REST_HOURS, DEFAULT_DAILY_OFFSET
+from utils.const import (
+    DEFAULT_COMPETENCY,
+    DEFAULT_CONTRACTED_HOURS,
+    DEFAULT_DAILY_REST_HOURS,
+    DEFAULT_DAILY_OFFSET,
+)
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
 from preprocessing.rest_rule import Weekly_rest_rule, Daily_rest_rule

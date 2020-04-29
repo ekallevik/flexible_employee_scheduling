@@ -22,9 +22,7 @@ class ShiftDesignModel:
         self.shift_sets = data["shifts"]
 
         self.var = ShiftDesignVariables(
-            model=self.model,
-            shift_sets=self.shift_sets,
-            time_periods=self.time_periods,
+            model=self.model, shift_sets=self.shift_sets, time_periods=self.time_periods,
         )
 
         self.constraints = ShiftDesignConstraints(
@@ -57,7 +55,7 @@ class ShiftDesignModel:
     def convert(self):
         """ Converts a tupledict of Gurobi variables to a tupledict of ints """
 
-        #todo: move this into separate file for greater re-use
+        # todo: move this into separate file for greater re-use
 
         converted_dict = tupledict()
 

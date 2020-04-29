@@ -1,4 +1,3 @@
-
 import random
 from preprocessing.xml_loader import *
 
@@ -26,7 +25,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
     weeks = time_set["weeks"]
 
     # Duration in hours is converted to duration in time_steps
-    preferences_dur = [int(preferences_dur[0]/time_step), int(preferences_dur[1]/time_step)]
+    preferences_dur = [int(preferences_dur[0] / time_step), int(preferences_dur[1] / time_step)]
     preferences = initialize_preferences(employees, time_periods)
 
     # Generating preferences
@@ -35,8 +34,9 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
         for week in weeks:
             used_time_periods = []
-            weekly_preferences = int(random.randint(num_weekly_preferences[0],
-                                                    num_weekly_preferences[1]))
+            weekly_preferences = int(
+                random.randint(num_weekly_preferences[0], num_weekly_preferences[1])
+            )
             realized_dur = get_realized_durations(preferences_dur, weekly_preferences)
 
             for dur in realized_dur:
@@ -56,12 +56,12 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
                     start_index = random.randint(0, end)
 
-                    time_range = time_periods_in_day[day][start_index:start_index + dur]
+                    time_range = time_periods_in_day[day][start_index : start_index + dur]
 
                     if is_unique_preference(time_range, used_time_periods):
                         break
 
-                for t in time_periods_in_day[day][start_index:start_index + dur]:
+                for t in time_periods_in_day[day][start_index : start_index + dur]:
                     preferences[employee][t] = value
                     used_time_periods.append(t)
 
@@ -98,8 +98,9 @@ def get_realized_durations(preferences_dur, weekly_preferences):
     employee
     """
 
-    realized_dur = [random.randint(preferences_dur[0], preferences_dur[1]) for _ in
-                    range(weekly_preferences)]
+    realized_dur = [
+        random.randint(preferences_dur[0], preferences_dur[1]) for _ in range(weekly_preferences)
+    ]
 
     return realized_dur
 
@@ -116,5 +117,3 @@ def initialize_preferences(employees, time_periods):
             preferences[employee][time] = 0
 
     return preferences
-
-

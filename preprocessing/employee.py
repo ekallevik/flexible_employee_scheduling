@@ -1,5 +1,3 @@
-
-
 class Employee:
     def __init__(self, nbr):
         self.id = nbr
