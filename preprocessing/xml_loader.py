@@ -216,7 +216,7 @@ def get_employee_lists(root, competencies):
         id = int(e.id)
         employees.append(id)
         employee_daily_rest[id] = e.daily_rest_hours
-        employee_weekly_rest[id] = e.daily_rest_hours
+        employee_weekly_rest[id] = e.weekly_rest_hours
         employee_contracted_hours[id] = e.contracted_hours
         employee_daily_offset[id] = e.daily_offset
         employee_blocked_hours[id] = e.blocked_hours

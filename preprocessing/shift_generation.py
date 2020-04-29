@@ -335,7 +335,7 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
         "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
-        "invalid_shifts_violating_daily_rest": invalid_shifts,
+        "invalid_shifts": invalid_shifts,
     }
 
 
