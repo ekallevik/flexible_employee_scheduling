@@ -30,7 +30,7 @@ def get_demand_definitions(root):
                     #     raise AttributeError("No employee with this competency")
                     competency_requirements = int(requirement.text)
             except:
-                competency_requirements = DEFAULT_COMPETENCY
+                competency_requirements = DEFAULT_COMPETENCY[0]
             dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
         demands.append(dem)
     return demands
@@ -107,10 +107,10 @@ def get_staff(root, all_competencies):
                     all_competencies.append(int(competency.text))
         except:
             competencies = DEFAULT_COMPETENCY
+            if(DEFAULT_COMPETENCY[0] not in all_competencies):
+                all_competencies.append(DEFAULT_COMPETENCY[0])
         employee.set_competencies(competencies)
-
         staff.append(employee)
-
     return staff
 
 
@@ -198,8 +198,9 @@ def get_employee_lists(root, competencies):
     employee_contracted_hours = tupledict()
     employee_daily_offset = tupledict()
     employee_blocked_hours = tupledict()
-
+    
     emp = get_staff(root, competencies)
+
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
         for e in emp:

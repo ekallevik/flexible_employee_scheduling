@@ -36,19 +36,22 @@ def get_time_steps(root):
     return time_step_length
 
 
-def get_time_periods(root):
+def get_time_periods(root, competencies):    
+    time_periods = tupledict()
+    for c in competencies:
+        time_periods[c] = []
 
-    time_periods = []
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
     time_periods_in_week = tupledict()
+    #Used in heuristic:
     time_periods_in_day = defaultdict(list)
     week = 0
     day = 0
-    time_periods_in_week[week] = tuplelist()
 
     for dem in demands:
         for i in range(len(demands[dem].start)):
+            c = demands[dem].requirements[i]
             time = demands[dem].start[i] + 24 * dem
             end = demands[dem].end[i] + 24 * dem
             # Håndterer special cases hvor demand end er mindre enn demand start
@@ -57,13 +60,16 @@ def get_time_periods(root):
             while time < end:
                 if time > (week + 1) * 24 * 7:
                     week += 1
-                    time_periods_in_week[week] = []
+                    time_periods_in_week[c, week] = tuplelist()
                 if time > (day + 1) * 24:
                     day += 1
-                if time not in time_periods:
-                    time_periods.append(time)
-                    time_periods_in_week[week].append(time)
-                    time_periods_in_day[day].append(time)
+                if time not in time_periods[c]:
+                    time_periods[c].append(time)
+                    try:
+                        time_periods_in_week[c, week].append(time)
+                    except:
+                        time_periods_in_week[c, week] = [time]
+                    time_periods_in_day[c, day].append(time)
                 time += time_step
     return [time_periods, time_periods_in_week, time_periods_in_day]
 

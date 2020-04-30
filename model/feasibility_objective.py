@@ -16,8 +16,10 @@ class FeasibilityObjective:
 
         self.model.setObjective(
             quicksum(
-                quicksum(quicksum(y[c, e, t] for e in self.employees) for c in self.competencies)
-                for t in self.time_periods
+                y[c, e, t] 
+                for e in self.employees 
+                for c in self.competencies
+                for t in self.time_periods[c]
             ),
             GRB.MINIMIZE,
         )

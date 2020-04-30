@@ -47,7 +47,7 @@ class BaseConstraints:
         for e in self.employees:
             self.add_daily_rest_shift_combinations(var.x, e)
         self.add_daily_rest_invalid_shifts(var.x)
-
+        
     # Constraint definitions
     def add_minimum_demand_coverage(self, y, mu):
         self.model.addConstrs(
@@ -55,7 +55,7 @@ class BaseConstraints:
                 quicksum(y[c, e, t] for e in self.employees_with_competencies[c])
                 == self.demand["min"][c, t] + mu[c, t]
                 for c in self.competencies
-                for t in self.time_periods
+                for t in self.time_periods[c]
             ),
             name="minimum_demand_coverage",
         )
@@ -65,7 +65,7 @@ class BaseConstraints:
             (
                 mu[c, t] <= self.demand["max"][c, t] - self.demand["min"][c, t]
                 for c in self.competencies
-                for t in self.time_periods
+                for t in self.time_periods[c]
             ),
             name="mu_less_than_difference",
         )
@@ -75,8 +75,8 @@ class BaseConstraints:
             (
                 mu[c, t] + self.demand["min"][c, t] - self.demand["ideal"][c, t]
                 == delta["plus"][c, t] - delta["minus"][c, t]
-                for t in self.time_periods
                 for c in self.competencies
+                for t in self.time_periods[c]
             ),
             name="deviation_from_ideal_demand",
         )
@@ -92,13 +92,13 @@ class BaseConstraints:
         )
 
     def add_mapping_of_shift_to_demand(self, x, y):
-
         self.model.addConstrs(
             (
                 quicksum(x[e, t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                == quicksum(y[c, e, t] for c in self.competencies)
+                == quicksum(y[c, e, t] for c in self.competencies if y.get((c,e,t)))
                 for e in self.employees
-                for t in self.time_periods
+                for c in self.competencies
+                for t in self.time_periods[c]
             ),
             name="mapping_shift_to_demand",
         )
@@ -135,10 +135,11 @@ class BaseConstraints:
     def add_no_demand_cover_during_off_shift_original(self, w, y):
         self.model.addConstrs(
             (
-                len(self.t_in_off_shifts[t, v]) * w[e, t, v]
-                <= quicksum(
-                    quicksum((1 - y[c, e, t_mark]) for c in self.competencies)
-                    for t_mark in self.t_in_off_shifts[t, v]
+                quicksum(len(self.t_in_off_shifts[t, v, c]) for c in self.competencies if self.t_in_off_shifts.get((t,v,c))) * w[e, t, v]
+                <= quicksum(1 - y[c, e, t_mark] 
+                    for c in self.competencies
+                    if self.t_in_off_shifts.get((t,v,c))
+                    for t_mark in self.t_in_off_shifts[t, v, c]
                 )
                 for e in self.employees
                 for t, v in self.off_shifts
@@ -165,7 +166,7 @@ class BaseConstraints:
         self.model.addConstrs(
             (
                 quicksum(
-                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods)
+                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods[c])
                     for c in self.competencies
                 )
                 + lam[e]

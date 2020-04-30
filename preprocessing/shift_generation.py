@@ -62,9 +62,11 @@ def get_shifts(root):
             duration = intervals[1] - start_time
 
             if duration >= ALLOWED_SHIFT_DURATION[1]:
-                shifts.append((start_time, duration))
+                if((start_time, duration) not in shifts):
+                    shifts.append((start_time, duration))
             else:
-                shifts.append((start_time, intervals[1] - start_time))
+                if((start_time, intervals[1] - start_time) not in shifts):
+                    shifts.append((start_time, intervals[1] - start_time))
 
         else:
 
@@ -74,8 +76,9 @@ def get_shifts(root):
                 for t in intervals[intervals.index(time) :]:
                     duration = t - time
                     if ALLOWED_SHIFT_DURATION[0] <= duration <= ALLOWED_SHIFT_DURATION[1]:
-                        shifts.append((time, duration))
-                        found_shift = True
+                        if((time, duration) not in shifts):
+                            shifts.append((time, duration))
+                            found_shift = True
                     if duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
                         shifts.append((time, duration))
     return shifts
@@ -196,19 +199,20 @@ def get_invalid_shifts(root, staff, shifts_per_day):
     return invalid_shifts
 
 
-def get_shifts_overlapping_t(shifts, time_sets):
+def get_shifts_overlapping_t(shifts, time_sets, competencies):
 
     time_periods = time_sets["periods"][0]
     shifts_overlapping_t = {}
 
-    for time in time_periods:
-        for shift in shifts:
-            if shift[0] <= time < shift[0] + shift[1]:
-                try:
-                    shifts_overlapping_t[time].append(shift)
-                except:
-                    shifts_overlapping_t[time] = [shift]
-
+    for c in competencies:
+        for time in time_periods[c]:
+            for shift in shifts:
+                if shift[0] <= time < shift[0] + shift[1]:
+                    try:
+                        if(shift not in shifts_overlapping_t[time]):
+                            shifts_overlapping_t[time].append(shift)
+                    except:
+                        shifts_overlapping_t[time] = [shift]
     return shifts_overlapping_t
 
 
@@ -239,16 +243,22 @@ def get_off_shifts(root):
     return [off_shifts, off_shifts_in_week]
 
 
-def get_t_covered_by_off_shifts(off_shifts, time_sets):
-
+def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
     t_covered = tupledict()
     time_periods = time_sets["periods"][0]
-
     for shift in off_shifts:
-        end = time_periods.index(shift[0] + shift[1])
-        start = time_periods.index(shift[0])
-        t_covered[shift[0], shift[1]] = time_periods[start:end]
+        for c in competencies: 
+            try:
+                end = time_periods[c].index(shift[0] + shift[1])
+                start = time_periods[c].index(shift[0])
+                t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
+            except:  
+                test = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                if(len(test) == 0):
+                    continue
+                t_covered[shift[0], shift[1], c] = test
 
+            
     return t_covered
 
 
@@ -257,11 +267,11 @@ def get_t_covered_by_shift(shifts, time_sets):
     time_step = time_sets["step"]
     time_periods = time_sets["periods"][0]
     t_covered_by_shift = tupledict()
-
+    c = 0
     for shift in shifts:
-        end = time_periods.index(shift[0] + shift[1] - time_step)
-        start = time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[start : (end + 1)]
+        end = time_periods[c].index(shift[0] + shift[1] - time_step)
+        start = time_periods[c].index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[c][start : (end + 1)]
 
     return t_covered_by_shift
 
@@ -300,22 +310,22 @@ def load_data(problem_name):
     #competencies = get_competencies(root)
     
     staff = get_employee_lists(root, competencies)
-    time_sets = get_time_sets(root)
+    time_sets = get_time_sets(root, competencies)
 
-    off_shift_sets = get_off_shift_sets(root, time_sets)
+    off_shift_sets = get_off_shift_sets(root, time_sets, competencies)
 
     shifts = get_shifts(root)
 
-    shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"])
+    shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"], competencies)
 
     data = {
         "competencies": competencies,
         "demand": get_demand(root, competencies),
         "staff": staff,
         "limit_on_consecutive_days": 5,
-        "preferences": generate_preferences(
-            staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
-        ),
+        # "preferences": generate_preferences(
+        #     staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
+        # ),
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,
@@ -328,14 +338,14 @@ def load_data(problem_name):
     return data
 
 
-def get_time_sets(root):
+def get_time_sets(root, competencies):
 
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
 
     return {
         "step": get_time_steps(root),
-        "periods": get_time_periods(root),
+        "periods": get_time_periods(root, competencies),
         "days": days,
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
@@ -343,18 +353,18 @@ def get_time_sets(root):
     }
 
 
-def get_off_shift_sets(root, time_sets):
+def get_off_shift_sets(root, time_sets, competencies):
 
     off_shift_set = get_off_shifts(root)
 
     return {
-        "t_in_off_shifts": get_t_covered_by_off_shifts(off_shift_set[0], time_sets),
+        "t_in_off_shifts": get_t_covered_by_off_shifts(off_shift_set[0], time_sets, competencies),
         "off_shifts": off_shift_set[0],
         "off_shifts_per_week": off_shift_set[1],
     }
 
 
-def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
+def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
 
     shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
@@ -366,17 +376,17 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
         "shifts_per_day": shifts_per_day,
         "short_shifts": short_shifts,
         "long_shifts": long_shifts,
-        "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
+        "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets, competencies),
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
         "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
         "invalid_shifts": invalid_shifts,
     }
 
 
-def get_updated_shift_sets(problem_name, data, shifts):
+def get_updated_shift_sets(problem_name, data, shifts, competencies):
 
     root = xml_loader.get_root(problem_name)
 
     return get_shift_sets(
-        root, data["staff"], data["time"], shifts, data["off_shifts"]["off_shifts"]
+        root, data["staff"], data["time"], shifts, data["off_shifts"]["off_shifts"], competencies
     )
