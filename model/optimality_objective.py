@@ -67,7 +67,9 @@ class OptimalityObjective:
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
             - weights["demand deviation"]
             * quicksum(
-                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
+                quicksum(weights["excess_demand_deviation_factor"] * delta["plus"][c, t] +
+                         weights["deficit_demand_deviation_factor"] * delta["minus"][c, t]
+                         for t in self.time_periods)
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,

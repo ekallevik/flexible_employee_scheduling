@@ -28,7 +28,7 @@ class BaseModel:
         self.preferences = data["preferences"]
         self.var = None
 
-        self.weights = get_weights(self.staff, self.time_set)
+        self.weights = get_weights(self.time_set, self.staff)
 
         # Heuristic
         self.saturdays = data["time"]["saturdays"]
