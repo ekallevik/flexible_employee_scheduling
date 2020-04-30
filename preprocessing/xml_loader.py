@@ -24,7 +24,14 @@ def get_demand_definitions(root):
             maximum = row.find("Max").text
             minimum = row.find("Min").text
             ideal = row.find("Ideal").text
-            dem.add_info(start, end, maximum, minimum, ideal)
+            try:
+                for requirement in row.find("CompetenceRequirements").findall("CompetenceId"):
+                    # if int(requirement.text) not in competencies:
+                    #     raise AttributeError("No employee with this competency")
+                    competency_requirements = int(requirement.text)
+            except:
+                competency_requirements = DEFAULT_COMPETENCY
+            dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
         demands.append(dem)
     return demands
 
@@ -79,7 +86,7 @@ def get_daily_rest_rules(root):
     return daily_rest_rules
 
 
-def get_staff(root, competencies):
+def get_staff(root, all_competencies):
     weekly_rest_rules = get_weekly_rest_rules(root)
     daily_rest_rules = get_daily_rest_rules(root)
     staff = []
@@ -89,9 +96,18 @@ def get_staff(root, competencies):
         set_contracted_hours_for_employee(employee, schedule_row)
         set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
-        set_competency_for_employee(competencies, employee, schedule_row)
         set_daily_offset_for_employee(employee)
         set_blocked_hours_for_employee(employee)
+
+        competencies = []
+        try:
+            for competency in schedule_row.find("competencies").findall("CompetenceId"):
+                competencies.append(int(competency.text))
+                if int(competency.text) not in all_competencies:
+                    all_competencies.append(int(competency.text))
+        except:
+            competencies = DEFAULT_COMPETENCY
+        employee.set_competencies(competencies)
 
         staff.append(employee)
 
@@ -145,32 +161,6 @@ def set_blocked_hours_for_employee(employee):
     pass
 
 
-def set_competency_for_employee(competencies, employee, schedule_row):
-    """
-    Sets the competencies for the given employee
-
-    :param competencies: a list of all competencies there is demand for
-    :param employee: the relevant Employee-object
-    :param schedule_row: the row in XML for the given employee
-    """
-
-    # there is not defined any competencies for demand
-    if not competencies:
-        employee.set_competency(DEFAULT_COMPETENCY)
-    else:
-        try:
-            for competence in schedule_row.find("Competences").findall("CompetenceId"):
-                if competence.text in competencies:
-                    employee.append_competency(competence.text)
-        except AttributeError:
-            print(
-                f"ScheduleRow {employee.id} don't have a set Competence tag. DEFAULT_COMPETENCY will be applied"
-            )
-
-    # Add DEFAULT_COMPETENCY if the employee does not have any competencies
-    if not employee.competencies:
-        employee.set_competency(DEFAULT_COMPETENCY)
-
 
 def get_root(problem):
 
@@ -210,7 +200,6 @@ def get_employee_lists(root, competencies):
     employee_blocked_hours = tupledict()
 
     emp = get_staff(root, competencies)
-
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
         for e in emp:

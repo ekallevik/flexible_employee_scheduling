@@ -295,7 +295,10 @@ def get_shifts_covered_by_off_shifts(shifts, off_shifts):
 def load_data(problem_name):
     root = xml_loader.get_root(problem_name)
 
-    competencies = get_competencies(root)
+    competencies = []
+    #Do not think we will use this anymore
+    #competencies = get_competencies(root)
+    
     staff = get_employee_lists(root, competencies)
     time_sets = get_time_sets(root)
 

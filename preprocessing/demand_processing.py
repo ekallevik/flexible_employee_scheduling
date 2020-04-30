@@ -73,25 +73,24 @@ def get_demand(root, competencies):
 
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
-
-    for c in competencies:
-        for dem in demands:
-            for i in range(len(demands[dem].start)):
-                t = demands[dem].start[i] + 24 * dem
-                while t < demands[dem].end[i] + 24 * dem:
-                    try:
-                        demand["min"][c, t] += demands[dem].minimum[i]
-                    except:
-                        demand["min"][c, t] = demands[dem].minimum[i]
-                    try:
-                        demand["ideal"][c, t] += demands[dem].ideal[i]
-                    except:
-                        demand["ideal"][c, t] = demands[dem].ideal[i]
-                    try:
-                        demand["max"][c, t] += demands[dem].maximum[i]
-                    except:
-                        demand["max"][c, t] = demands[dem].maximum[i]
-                    t += time_step
+    for dem in demands:
+        for i in range(len(demands[dem].start)):
+            t = demands[dem].start[i] + 24 * dem
+            while t < demands[dem].end[i] + 24 * dem:
+                c = demands[dem].requirements[i]
+                try:
+                    demand["min"][c, t] += demands[dem].minimum[i]
+                except:
+                    demand["min"][c, t] = demands[dem].minimum[i]
+                try:
+                    demand["ideal"][c, t] += demands[dem].ideal[i]
+                except:
+                    demand["ideal"][c, t] = demands[dem].ideal[i]
+                try:
+                    demand["max"][c, t] += demands[dem].maximum[i]
+                except:
+                    demand["max"][c, t] = demands[dem].maximum[i]
+                t += time_step
 
     return demand
 
