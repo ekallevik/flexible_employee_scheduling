@@ -1,7 +1,7 @@
 import pytest
 
-from utils.const import DEFAULT_COMPETENCY, DAYS_IN_WEEK
 from preprocessing import xml_loader
+from utils.const import DAYS_IN_WEEK, DEFAULT_COMPETENCY
 
 
 def test_loading_demand():
@@ -15,7 +15,12 @@ def test_loading_demand():
     dem2 = demand_definitions[1]
 
     assert dem1.start == [0, 0], "Demand 1 should have two demands starting at 00:00"
-    assert dem2.start == [0, 6, 12, 18], "Demand 2 should have demands starting at [00:00, 06:00, 12:00, 18:00]"
+    assert dem2.start == [
+        0,
+        6,
+        12,
+        18,
+    ], "Demand 2 should have demands starting at [00:00, 06:00, 12:00, 18:00]"
 
     assert dem1.end == [0, 0]
     assert dem2.end == [6, 12, 18, 0]
@@ -107,10 +112,23 @@ def test_get_staff(problem, expected_number, expected_contracted, expected_compe
     assert staff[0].competencies == expected_competencies
 
 
-@pytest.mark.parametrize("problem, expected", [
-    ("problem12",
-     ["DayDemandId1", "DayDemandId1", "DayDemandId1", "DayDemandId1", "DayDemandId2", "DayDemandId2", "DayDemandId2"])
-])
+@pytest.mark.parametrize(
+    "problem, expected",
+    [
+        (
+            "problem12",
+            [
+                "DayDemandId1",
+                "DayDemandId1",
+                "DayDemandId1",
+                "DayDemandId1",
+                "DayDemandId2",
+                "DayDemandId2",
+                "DayDemandId2",
+            ],
+        )
+    ],
+)
 def test_get_days_with_demand(problem, expected):
 
     root = xml_loader.get_root(problem)

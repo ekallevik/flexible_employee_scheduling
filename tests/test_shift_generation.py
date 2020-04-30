@@ -158,7 +158,9 @@ def test_get_day_demand_intervals(problem_name, day, expected):
     root = get_root(problem_name)
     daily_demand = shift_generation.get_days_with_demand(root)
 
-    day_demand_intervals = preprocessing.demand_processing.get_day_demand_intervals(daily_demand[day], day)
+    day_demand_intervals = preprocessing.demand_processing.get_day_demand_intervals(
+        daily_demand[day], day
+    )
 
     assert day_demand_intervals == expected
 
@@ -198,7 +200,10 @@ def test_combine_demand_intervals(problem_name, index, expected):
     "problem_name, day, expected",
     [
         ("rproblem2", 0, [(8.0, 7.5), (8.0, 8.0), (8.5, 7.0), (8.5, 7.5)]),
-        ("rproblem3", 0, [
+        (
+            "rproblem3",
+            0,
+            [
                 (7.75, 6.25),
                 (7.75, 6.75),
                 (7.75, 7.25),
@@ -212,8 +217,9 @@ def test_combine_demand_intervals(problem_name, index, expected):
                 (9.0, 7.0),
                 (9.0, 7.5),
                 (9.0, 8.0),
-                (9.0, 9.25)]
-         ),
+                (9.0, 9.25),
+            ],
+        ),
     ],
 )
 def test_get_shift_lists(problem_name, day, expected):
@@ -223,4 +229,3 @@ def test_get_shift_lists(problem_name, day, expected):
 
     assert shift_lists[0] == shift_lists_per_day[0][0]
     assert shift_lists_per_day[0] == expected
-

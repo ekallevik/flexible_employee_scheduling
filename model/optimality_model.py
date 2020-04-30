@@ -35,6 +35,7 @@ class OptimalityModel(BaseModel):
             var=self.var,
             weights=self.weights,
             competencies=self.competencies,
+            preferences=self.preferences,
             staff=self.staff,
             time_set=self.time_set,
             off_shifts_set=self.off_shifts_set,

@@ -3,9 +3,9 @@ import fire
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.state import State
+from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
-from model.construction_model import ConstructionModel
 from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter

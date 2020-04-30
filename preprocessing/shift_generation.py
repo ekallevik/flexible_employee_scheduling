@@ -1,8 +1,21 @@
-from preprocessing.demand_processing import get_time_steps, get_time_periods, get_demand, \
-    combine_demand_intervals, combine_no_demand_intervals, get_start_events
-from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
 from preprocessing import xml_loader
+from preprocessing.demand_processing import (
+    combine_demand_intervals,
+    combine_no_demand_intervals,
+    get_demand,
+    get_start_events,
+    get_time_periods,
+    get_time_steps,
+)
+from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
+from utils.const import (
+    ALLOWED_SHIFT_DURATION,
+    DESIRED_SHIFT_DURATION,
+    DURATION_OF_PREFERENCES,
+    NUMBER_OF_PREFERENCES_PER_WEEK,
+    TIME_DEFINING_SHIFT_DAY,
+)
 
 
 def already_daily_off_shift(root, employee_offset, employee_rest, day):
@@ -16,12 +29,20 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
     days = get_days(root)
 
     for interval in no_demand_intervals:
-        if day == len(days) - 1 and interval == no_demand_intervals[-1] and interval[1] == 24 * len(days):
+        if (
+            day == len(days) - 1
+            and interval == no_demand_intervals[-1]
+            and interval[1] == 24 * len(days)
+        ):
             temp_val = interval[1]
             interval[1] = temp_val + employee_offset
-        if employee_offset + (24 * int(day)) <= interval[0] <= employee_offset + (24 * (int(day) + 1)):
+        if (
+            employee_offset + (24 * int(day))
+            <= interval[0]
+            <= employee_offset + (24 * (int(day) + 1))
+        ):
             if interval[1] - interval[0] >= employee_rest:
-                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) +1)):
+                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) + 1)):
                     return True
         if interval[0] > employee_offset + (24 * (int(day) + 1)):
             break
@@ -50,7 +71,7 @@ def get_shifts(root):
             for time in intervals:
                 found_shift = False
 
-                for t in intervals[intervals.index(time):]:
+                for t in intervals[intervals.index(time) :]:
                     duration = t - time
                     if ALLOWED_SHIFT_DURATION[0] <= duration <= ALLOWED_SHIFT_DURATION[1]:
                         shifts.append((time, duration))
@@ -83,9 +104,9 @@ def get_shifts_per_day(shifts, days):
         for shift in shifts:
 
             if (
-                    24 * (int(day) - 1) + TIME_DEFINING_SHIFT_DAY
-                    <= shift[0]
-                    < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
+                24 * (int(day) - 1) + TIME_DEFINING_SHIFT_DAY
+                <= shift[0]
+                < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
 
@@ -98,31 +119,28 @@ def get_shifts_per_day(shifts, days):
 
 def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     """
-    Returns two values:
-        * violating_shifts: Returns a dict, with "employee" as key and another dict as value. The
-        new dict uses "shift" as key and have a list of shifts that violates daily rest for
-        "employee" if "shift" is worked.
-
-        * invalid_shifts:   Returns a dict with "employee" as key and a list of shifts that is not
-        allowed due to daily rest as value.
+    Returns:
+        * violating_shifts:     Returns a dict, with "employee" as key and another dict as value. The
+                                new dict uses "shift" as key and have a list of shifts that violates daily rest for
+                                "employee" if "shift" is worked.
     """
 
     employees = staff["employees"]
     daily_rest = staff["employee_daily_rest"]
     daily_offset = staff["employee_daily_offset"]
     violating_shifts = tupledict()
-    invalid_shifts = tupledict()
 
     for e in employees:
         violating_shifts[e] = tupledict()
-        invalid_shifts[e] = tuplelist()
         for day in shifts_per_day:
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
                     if day != 0:
                         for s in shifts_per_day[day - 1]:
                             if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
-                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (s[0] + s[1]):
+                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (
+                                    s[0] + s[1]
+                                ):
                                     try:
                                         violating_shifts[e][shift].append(s)
                                     except:
@@ -130,20 +148,52 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
                     if day != shifts_per_day.keys()[-1]:
                         for s in shifts_per_day[day + 1]:
                             if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
-                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (shift[0] + shift[1]):
+                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (
+                                    shift[0] + shift[1]
+                                ):
                                     try:
                                         violating_shifts[e][shift].append(s)
                                     except:
                                         violating_shifts[e][shift] = [s]
 
-                    if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
-                        if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
-                            try:
-                                invalid_shifts[e].append(shift)
-                            except:
-                                invalid_shifts[e] = [shift]
+    return violating_shifts
 
-    return [violating_shifts, invalid_shifts]
+
+def get_invalid_shifts(root, staff, shifts_per_day):
+    """
+    Returns:
+        * invalid_shifts:   Dict with employee as key, and all shifts that are invalid either due to blocked hours or
+                            daily rest as value.
+    """
+
+    employees = staff["employees"]
+    daily_rest = staff["employee_daily_rest"]
+    daily_offset = staff["employee_daily_offset"]
+    blocked_hours = staff["employee_blocked_hours"]
+    invalid_shifts = tupledict()
+
+    for e in employees:
+        invalid_shifts[e] = tuplelist()
+        for day in shifts_per_day:
+            natural_rest = already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)
+            for shift in shifts_per_day[day]:
+                shift_used = False
+                # BLOCKED HOURS
+                for time in blocked_hours[e]:
+                    if shift[0] <= time < shift[0] + shift[1]:
+                        invalid_shifts[e].append(shift)
+                        shift_used = True
+                # INVALID SHIFTS DUE TO DAILY REST
+                if not (natural_rest):
+                    if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
+                        if (
+                            24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
+                            < daily_rest[e]
+                        ):
+                            if not (shift_used):
+                                invalid_shifts[e].append(shift)
+
+    return invalid_shifts
 
 
 def get_shifts_overlapping_t(shifts, time_sets):
@@ -211,7 +261,7 @@ def get_t_covered_by_shift(shifts, time_sets):
     for shift in shifts:
         end = time_periods.index(shift[0] + shift[1] - time_step)
         start = time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[start : (end + 1)]
 
     return t_covered_by_shift
 
@@ -260,13 +310,16 @@ def load_data(problem_name):
         "demand": get_demand(root, competencies),
         "staff": staff,
         "limit_on_consecutive_days": 5,
+        "preferences": generate_preferences(
+            staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
+        ),
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(shift_sets["shifts"], time_sets),
             "shift_lookup": get_shift_lookup(shift_sets["shifts_per_day"]),
-        }
+        },
     }
 
     return data
@@ -283,7 +336,7 @@ def get_time_sets(root):
         "days": days,
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
-        "sundays": [6 + i * 7 for i in range(number_of_weeks)]
+        "sundays": [6 + i * 7 for i in range(number_of_weeks)],
     }
 
 
@@ -303,6 +356,7 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
     shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
+    invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
 
     return {
         "shifts": shifts,
@@ -311,8 +365,8 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
-        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest[0],
-        "invalid_shifts_violating_daily_rest": shifts_violating_daily_rest[1],
+        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
+        "invalid_shifts": invalid_shifts,
     }
 
 
@@ -320,5 +374,6 @@ def get_updated_shift_sets(problem_name, data, shifts):
 
     root = xml_loader.get_root(problem_name)
 
-    return get_shift_sets(root, data["staff"], data["time"], shifts, data["off_shifts"][
-        "off_shifts"])
+    return get_shift_sets(
+        root, data["staff"], data["time"], shifts, data["off_shifts"]["off_shifts"]
+    )

@@ -1,4 +1,4 @@
-from datetime import time, datetime, date
+from datetime import date, datetime, time
 
 
 class Demand:

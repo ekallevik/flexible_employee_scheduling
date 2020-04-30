@@ -32,8 +32,12 @@ class ALNS:
 
         for iteration in range(iterations):
 
-            destroy_operator, destroy_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-            repair_operator, repair_id = self.select_operator(self.repair_operators, self.repair_weights)
+            destroy_operator, destroy_id = self.select_operator(
+                self.destroy_operators, self.destroy_weights
+            )
+            repair_operator, repair_id = self.select_operator(
+                self.repair_operators, self.repair_weights
+            )
 
             destroyed_solution = destroy_operator(self.current_solution)
             candidate_solution = repair_operator(destroyed_solution)
@@ -56,7 +60,10 @@ class ALNS:
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
 
-            if candidate_solution.get_objectice_value() >= self.current_solution.get_objectice_value():
+            if (
+                candidate_solution.get_objectice_value()
+                >= self.current_solution.get_objectice_value()
+            ):
                 weight_update = WeightUpdate.IS_BETTER
             else:
                 weight_update = WeightUpdate.IS_ACCEPTED
