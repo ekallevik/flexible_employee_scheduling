@@ -59,7 +59,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     solution = alns.iterate(iterations=1000)
 
 
-def run_model(model="construction", problem="rproblem3", with_sdp=True):
+def run_model(model="construction", problem="rproblem3", with_sdp=False):
     """
     Runs the specified model on the given problem.
 
