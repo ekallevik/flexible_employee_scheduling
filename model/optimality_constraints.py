@@ -44,7 +44,7 @@ class OptimalityConstraints(BaseConstraints):
         self.model.addConstrs(
             (
                 quicksum(
-                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[j])
+                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[c, j])
                     for c in self.competencies
                 )
                 >= 0.1 * self.contracted_hours[e]
@@ -58,7 +58,7 @@ class OptimalityConstraints(BaseConstraints):
         self.model.addConstrs(
             (
                 quicksum(
-                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[j])
+                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[c, j])
                     for c in self.competencies
                 )
                 <= 1.4 * self.contracted_hours[e]

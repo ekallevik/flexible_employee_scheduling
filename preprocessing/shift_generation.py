@@ -323,9 +323,9 @@ def load_data(problem_name):
         "demand": get_demand(root, competencies),
         "staff": staff,
         "limit_on_consecutive_days": 5,
-        # "preferences": generate_preferences(
-        #     staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
-        # ),
+        "preferences": generate_preferences(
+            staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
+        ),
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,

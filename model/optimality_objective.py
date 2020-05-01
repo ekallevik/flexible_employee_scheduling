@@ -54,8 +54,8 @@ class OptimalityObjective:
 
         self.model.setObjective(
             quicksum(
-                quicksum(quicksum(y[c, e, t] for e in self.employees) for c in self.competencies)
-                for t in self.time_periods
+                y[c, e, t] for e in self.employees for c in self.competencies
+                for t in self.time_periods[c]
             ),
             GRB.MINIMIZE,
         )
@@ -67,7 +67,7 @@ class OptimalityObjective:
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
             - weights["demand_deviation"]
             * quicksum(
-                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
+                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods[c])
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,
