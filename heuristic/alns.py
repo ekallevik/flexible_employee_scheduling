@@ -3,14 +3,13 @@ from functools import partial
 import numpy as np
 
 from heuristic.delta_calculations import *
-from heuristic.destroy_operators import worst_employee_removal, worst_week_removal
+from heuristic.destroy_operators import (worst_employee_removal,
+                                         worst_week_removal)
 from heuristic.local_search_operators import illegal_week_swap
-from heuristic.repair_operators import (
-    worst_employee_regret_repair,
-    worst_employee_repair,
-    worst_week_regret_repair,
-    worst_week_repair,
-)
+from heuristic.repair_operators import (worst_employee_regret_repair,
+                                        worst_employee_repair,
+                                        worst_week_regret_repair,
+                                        worst_week_repair)
 
 
 class ALNS:

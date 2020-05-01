@@ -1,26 +1,35 @@
 from collections import defaultdict
 from operator import itemgetter
 
+# todo: convert to class and store data to reduce overhead?
 
-def calculate_deviation_from_demand(model, y):
+
+def calculate_deviation_from_demand(data, y):
     delta = {}
-    for c in model.competencies:
-        for t in model.time_periods:
+
+    employee_with_competencies = data["staff"]["employee_with_competencies"]
+
+    for c in data["competencies"]:
+        for t in data["time"]["periods"][0]:
             delta[c, t] = (
-                sum(y[c, e, t] for e in model.employee_with_competencies[c])
-                - model.demand["ideal"][c, t]
+                    sum(y[c, e, t] for e in employee_with_competencies[c])
+                    - data.demand["ideal"][c, t]
             )
     return delta
 
 
-def calculate_weekly_rest(model, x, w):
+def calculate_weekly_rest(data, x, w):
+
+    # todo: calculate and store this data earlier?
     actual_shifts = {
-        (e, j): [(t, v) for t, v in model.shifts_at_week[j] if x[e, t, v] == 1]
-        for e in model.employees
-        for j in model.weeks
+        (e, j): [(t, v) for t, v in data.shifts_at_week[j] if x[e, t, v] == 1]
+        for e in data["staff"]["employees"]
+        for j in data["time"]["weeks"]
     }
+
     off_shift_periods = defaultdict(list)
-    important = [7 * 24 * i for i in range(len(model.weeks) + 1)]
+    important = [7 * 24 * i for i in range(len(data.weeks) + 1)]
+
     for key in actual_shifts.keys():
         week = int(key[1])
         if actual_shifts[key][0][0] - important[week] >= 36:
