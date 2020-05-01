@@ -10,6 +10,7 @@ from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
+from utils.weights import get_weights
 
 
 def run_shift_design_model(problem="rproblem3", data=None):
@@ -48,7 +49,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     :return:
     """
 
-    candidate_solution = run_model(model=construction_model, problem=problem)
+    candidate_solution, data = run_model(model=construction_model, problem=problem)
 
     converter = Converter(candidate_solution)
     converted_solution = converter.get_converted_variables()
@@ -83,7 +84,10 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
         "mapping_shift_to_demand": {},
         "delta_positive_contracted_hours": {},
     }
-    objective_function, f = calculate_objective_function(model, soft_variables)
+
+    weights = get_weights()
+
+    objective_function, f = calculate_objective_function(data, soft_variables, weights)
 
     state = State(converted_solution, soft_variables, hard_variables, objective_function, f)
 
@@ -119,7 +123,7 @@ def run_model(model="construction", problem="rproblem3", with_sdp=False):
 
     esp.run_model()
 
-    return esp
+    return esp, data
 
 
 if __name__ == "__main__":
