@@ -13,7 +13,7 @@ from heuristic.delta_calculations import (
     calculate_partial_weekends,
     calculate_weekly_rest,
     cover_multiple_demand_periods,
-    delta_calculate_negative_deviation_from_contracted_hours,
+    delta_calculate_deviation_from_contracted_hours,
     mapping_shift_to_demand,
     more_than_one_shift_per_day,
     regret_objective_function,
@@ -57,7 +57,7 @@ def worst_week_repair(
         calculate_deviation_from_demand(
             state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed
         )
-        delta_calculate_negative_deviation_from_contracted_hours(
+        delta_calculate_deviation_from_contracted_hours(
             state,
             employees_changed,
             contracted_hours,
@@ -211,7 +211,7 @@ def worst_week_regret_repair(
         )
 
         # Soft Restrictions/Variables
-        delta_calculate_negative_deviation_from_contracted_hours(
+        delta_calculate_deviation_from_contracted_hours(
             state,
             employees_changed,
             contracted_hours,
@@ -252,7 +252,7 @@ def worst_week_regret_repair(
             calculate_isolated_working_days(current_state, [e], shifts_at_day, days)
             calculate_isolated_off_days(current_state, [e], shifts_at_day, days)
             calculate_consecutive_days(current_state, [e], shifts_at_day, L_C_D, days)
-            delta_calculate_negative_deviation_from_contracted_hours(
+            delta_calculate_deviation_from_contracted_hours(
                 current_state,
                 [e],
                 contracted_hours,
@@ -355,7 +355,7 @@ def worst_employee_repair(
         if deviation_from_demand < 6:
             return repair_set
 
-        delta_calculate_negative_deviation_from_contracted_hours(
+        delta_calculate_deviation_from_contracted_hours(
             state,
             employees_changed,
             contracted_hours,
@@ -458,7 +458,7 @@ def worst_employee_regret_repair(
         )
 
         # Soft Restrictions/Variables
-        delta_calculate_negative_deviation_from_contracted_hours(
+        delta_calculate_deviation_from_contracted_hours(
             state,
             employees_changed,
             contracted_hours,
@@ -492,7 +492,7 @@ def worst_employee_regret_repair(
             repaired = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1)]
 
             # Calculations needed for soft constraints to be updated after repair
-            delta_calculate_negative_deviation_from_contracted_hours(
+            delta_calculate_deviation_from_contracted_hours(
                 state, [e], contracted_hours, weeks, time_periods_in_week, competencies, time_step
             )
             calculate_weekly_rest(state, shifts_in_week, [e], weeks)

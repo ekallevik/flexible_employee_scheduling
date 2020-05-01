@@ -6,8 +6,9 @@ from operator import itemgetter
 def calculate_deviation_from_demand(
     state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set
 ):
+
     for c in competencies:
-        for e2, t, v in destroy_repair_set:
+        for e, t, v in destroy_repair_set:
             for t in t_covered_by_shift[t, v]:
                 state.soft_vars["deviation_from_ideal_demand"][c, t] = (
                     sum(state.y[c, e, t] for e in employee_with_competencies[c])
@@ -15,23 +16,23 @@ def calculate_deviation_from_demand(
                 )
 
 
-def delta_calculate_negative_deviation_from_contracted_hours(
+def delta_calculate_deviation_from_contracted_hours(
     state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step
 ):
     """
-    Calculates both negative and positive contracted hours (The name should be updated but haven't had time yet)
-    It checks the employees where a change has been made whether destroyed or repaired. 
-    Then calculates the deviation only for these employees
+    Calculates both negative and positive contracted hours. It checks the employees where a change
+    has been made whether destroyed or repaired. Then calculates the deviation only for these
+    employees
     
-    I have decided to also include checking the hard constraint if we are above contracted hours in this function as well
-    This is done as it is easy to do at the same time and saveds time.
-    Another update comes in another PR that updates the soft variables of contracted hours to weekly contracted hours
+    I have decided to also include checking the hard constraint if we are above contracted hours in
+    this function as well This is done as it is easy to do at the same time and saves time.
+    Another update comes in another PR that updates the soft variables of contracted hours to
+    weekly contracted hours
     """
     for e in employees:
         for j in weeks:
-            state.soft_vars["contracted_hours"][
-                e, j
-            ] = deviation_contracted_hours = contracted_hours[e] - sum(
+            state.soft_vars["contracted_hours"][e, j] \
+                = contracted_hours[e] - sum(
                 time_step * state.y[c, e, t] for t in time_periods_in_week[j] for c in competencies
             )
 
@@ -304,7 +305,13 @@ def calc_weekly_objective_function(
 ):
     value = {}
     for j in weeks:
+
+        # todo: moving this could potential increase performance
         days_in_week = [i for i in range(j * 7, (j + 1) * 7)]
+
+
+        # todo: hard_vars is not initialized anywhere. temp fix while looking
+        #  for compile time errors caused by merge conflicts. -Even
         if setting == "worst":
             value[j] = (
                 sum(state.w[e, j][1] for e in employees)
@@ -325,27 +332,27 @@ def calc_weekly_objective_function(
                     for e in employees
                     for i in range(len(days_in_week) - L_C_D)
                 )
-                - sum(
-                    state.hard_vars["below_minimum_demand"][c, t]
-                    + state.hard_vars["above_maximum_demand"][c, t]
-                    for c in competencies
-                    for j in weeks
-                    for t in time_periods_in_week[j]
-                )
-                - sum(
-                    state.hard_vars["more_than_one_shift_per_day"][e, i]
-                    for e in employees
-                    for i in days_in_week
-                )
-                - sum(
-                    state.hard_vars["cover_multiple_demand_periods"][e, t]
-                    for e in employees
-                    for j in weeks
-                    for t in time_periods_in_week[j]
-                )
-                - max(0, sum(state.soft_vars["contracted_hours"][e, j] for e in employees))
-                - 100
-                * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
+                #- sum(
+                #    state.hard_vars["below_minimum_demand"][c, t]
+                #    + state.hard_vars["above_maximum_demand"][c, t]
+                #    for c in competencies
+                    # for j in weeks
+                #    for t in time_periods_in_week[j]
+                #)
+                #- sum(
+                #    state.hard_vars["more_than_one_shift_per_day"][e, i]
+                #    for e in employees
+                #    for i in days_in_week
+                #)
+                #- sum(
+                #    state.hard_vars["cover_multiple_demand_periods"][e, t]
+                #    for e in employees
+                #    # for j in weeks
+                #    for t in time_periods_in_week[j]
+                #)
+                - max(0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for e in employees))
+                # - 100
+                #* sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
             )
         else:
             value[j] = (
@@ -387,7 +394,7 @@ def calc_weekly_objective_function(
                     for j in weeks
                     for t in time_periods_in_week[j]
                 )
-                - 10 * max(0, sum(state.soft_vars["contracted_hours"][e, j] for e in employees))
+                - 10 * max(0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for e in employees))
                 - 10 * sum(state.hard_vars["weekly_off_shift_error"][e, j] for e in employees)
                 - 100
                 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
@@ -414,7 +421,7 @@ def regret_objective_function(
 
     return (
         +sum(min(100, state.w[employee, j][1]) for j in weeks)
-        + max(0, sum(state.soft_vars["contracted_hours"][employee, j] for j in weeks))
+        + max(0, sum(state.soft_vars["deviation_contracted_hours"][employee, j] for j in weeks))
         - sum(state.soft_vars["partial_weekends"][employee, i] for i in saturdays)
         - sum(
             state.soft_vars["isolated_working_days"][employee, i + 1]

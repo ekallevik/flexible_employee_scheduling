@@ -9,7 +9,7 @@ from heuristic.delta_calculations import (
     calculate_isolated_working_days,
     calculate_partial_weekends,
     calculate_weekly_rest,
-    delta_calculate_negative_deviation_from_contracted_hours,
+    delta_calculate_deviation_from_contracted_hours,
     hard_constraint_penalties,
 )
 
@@ -44,7 +44,7 @@ def illegal_week_swap(
                 calculate_isolated_working_days(current_state, [emp], shifts_at_day, days_in_week)
                 calculate_isolated_off_days(current_state, [emp], shifts_at_day, days_in_week)
                 calculate_consecutive_days(current_state, [emp], shifts_at_day, L_C_D, days_in_week)
-                delta_calculate_negative_deviation_from_contracted_hours(
+                delta_calculate_deviation_from_contracted_hours(
                     current_state,
                     [emp],
                     contracted_hours,
@@ -74,7 +74,7 @@ def illegal_week_swap(
                     calculate_consecutive_days(
                         current_state, [e_p], shifts_at_day, L_C_D, days_in_week
                     )
-                    delta_calculate_negative_deviation_from_contracted_hours(
+                    delta_calculate_deviation_from_contracted_hours(
                         current_state,
                         [e_p],
                         contracted_hours,

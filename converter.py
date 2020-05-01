@@ -5,8 +5,8 @@ def convert(model):
     return x, y, w
 
 
-def set_x(model, e, t, v, value):
-    model.x[e, t, v] = value
+def set_x(state, t_covered_by_shift, e, t, v, value):
+    state.x[e, t, v] = value
     # Need a smarter solution for choosing competency
-    for t in model.t_covered_by_shift[t, v]:
-        model.y[0, e, t] = value
+    for t in t_covered_by_shift[t, v]:
+        state.y[0, e, t] = value

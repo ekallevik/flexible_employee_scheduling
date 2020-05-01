@@ -54,9 +54,6 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     converter = Converter(candidate_solution)
     converted_solution = converter.get_converted_variables()
 
-    # The soft variables, hard variables objective function and f is needed to do delta calculations later on.
-    # These calculations are done using heuristic calculations on the solution gotten from the construction model.
-    # This is why they are needed to be calculated here and placed in the initial state at the beginning.
     soft_variables = {
         "deviation_from_ideal_demand": calculate_deviation_from_demand(data, converted_solution[
             "y"]),
