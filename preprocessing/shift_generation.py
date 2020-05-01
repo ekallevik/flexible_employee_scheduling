@@ -193,8 +193,14 @@ def get_shifts_covered_by_off_shifts(shifts, off_shifts):
 
 def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     """
-    Returns a dict, with "employee" as key and another dict as value. The new dict uses "shift"
-    as key and have a list of shifts that violates daily rest for "employee" if "shift" is worked.
+    Returns:
+        * violating_shift_sequences:    A dict, with "employee" as key and another dict as value. The new dict
+                                        uses "shift" as key, with value: a list of shifts sequences that, if two or
+                                        more of them are worked, contributes to violating daily rest for "employee"
+                                        if "shift" is worked.
+        * violating_shift_combinations: A dict, with "employee" as key and another dict as value. The new dict uses
+                                        "shift" as key, with value: a list of shifts that violates daily rest for
+                                        "employee" if "shift" is worked.
     """
 
     employees = staff["employees"]
