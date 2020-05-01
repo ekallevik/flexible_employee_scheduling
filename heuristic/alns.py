@@ -1,4 +1,3 @@
-from collections import defaultdict
 from functools import partial
 
 import numpy as np
@@ -11,7 +10,6 @@ from heuristic.repair_operators import (worst_employee_regret_repair,
                                         worst_employee_repair,
                                         worst_week_regret_repair,
                                         worst_week_repair)
-from heuristic.utils import WeightUpdate
 
 
 class ALNS:

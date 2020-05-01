@@ -1,4 +1,4 @@
-from heuristic.converter import set_x
+from converter import set_x
 from heuristic.delta_calculations import calc_weekly_objective_function
 
 

@@ -1,13 +1,13 @@
 from operator import itemgetter
 from random import choice
 
-from heuristic.converter import set_x
+from converter import set_x
 from heuristic.delta_calculations import (
     above_maximum_demand, below_minimum_demand, calc_weekly_objective_function,
     calculate_consecutive_days, calculate_deviation_from_demand,
     calculate_isolated_off_days, calculate_isolated_working_days,
     calculate_partial_weekends, calculate_weekly_rest,
-    cover_multiple_demand_periods, delta_calculate_deviation_from_demand,
+    cover_multiple_demand_periods,
     delta_calculate_negative_deviation_from_contracted_hours,
     mapping_shift_to_demand, more_than_one_shift_per_day,
     regret_objective_function)

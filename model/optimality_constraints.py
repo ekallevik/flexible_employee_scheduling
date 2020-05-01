@@ -1,7 +1,6 @@
 from gurobipy import *
 
 from model.base_constraints import BaseConstraints
-from utils.const import DAYS_IN_WEEK, SATURDAY_INDEX, SUNDAY_INDEX
 
 
 class OptimalityConstraints(BaseConstraints):
