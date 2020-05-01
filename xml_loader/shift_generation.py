@@ -1,9 +1,11 @@
+from collections import defaultdict
+
 from gurobipy import *
 
-from utils.const import DESIRED_SHIFT_DURATION, ALLOWED_SHIFT_DURATION, TIME_DEFINING_SHIFT_DAY
+from utils.const import (ALLOWED_SHIFT_DURATION, DESIRED_SHIFT_DURATION,
+                         TIME_DEFINING_SHIFT_DAY)
 from xml_loader import xml_loader
 from xml_loader.xml_loader import *
-from collections import defaultdict
 
 
 def get_time_steps(root):
@@ -59,7 +61,7 @@ def get_time_periods(root):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[week] = []
-                if(time > (day+1)*24):
+                if time > (day + 1) * 24:
                     day += 1
                 if time not in time_periods:
                     time_periods.append(time)
@@ -250,8 +252,13 @@ def get_no_demand_intervals(demand_interval, day):
             for no_intervals in no_demand_intervals:
                 if no_intervals[-1] > start_time:
                     overlapping_intervals = True
-                    if no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] > intervals[-1]:
-                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] = intervals[-1]
+                    if (
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1]
+                        > intervals[-1]
+                    ):
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][
+                            -1
+                        ] = intervals[-1]
             if not overlapping_intervals:
                 no_demand_intervals.append([end_time, start_time])
         end_time = intervals[-1]
@@ -301,12 +308,20 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
     days = get_days(root)
 
     for interval in no_demand_periods:
-        if day == len(days) - 1 and interval == no_demand_periods[-1] and interval[1] == 24 * len(days):
+        if (
+            day == len(days) - 1
+            and interval == no_demand_periods[-1]
+            and interval[1] == 24 * len(days)
+        ):
             temp_val = interval[1]
             interval[1] = temp_val + employee_offset
-        if employee_offset + (24 * int(day)) <= interval[0] <= employee_offset + (24 * (int(day) + 1)):
+        if (
+            employee_offset + (24 * int(day))
+            <= interval[0]
+            <= employee_offset + (24 * (int(day) + 1))
+        ):
             if interval[1] - interval[0] >= employee_rest:
-                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) +1)):
+                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) + 1)):
                     return True
         if interval[0] > employee_offset + (24 * (int(day) + 1)):
             break
@@ -345,7 +360,6 @@ def get_shift_lists(root):
     shifts_in_week = defaultdict(list)
     time_defining_shift_day = TIME_DEFINING_SHIFT_DAY
 
-
     for day in get_days(root):
         shifts_per_day[day] = []
         for shift in shifts:
@@ -355,7 +369,7 @@ def get_shift_lists(root):
                 < 24 * int(day) + time_defining_shift_day
             ):
                 shifts_per_day[day].append(shift)
-                shifts_in_week[int(day/7)].append(shift)
+                shifts_in_week[int(day / 7)].append(shift)
             if shift[0] >= 24 * int(day) + time_defining_shift_day:
                 if day == get_days(root)[-1]:
                     shifts_per_day[day].append(shift)
@@ -399,7 +413,9 @@ def get_shifts_violating_daily_rest(root, staff):
                     if day != 0:
                         for s in daily_shifts[day - 1]:
                             if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
-                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (s[0] + s[1]):
+                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (
+                                    s[0] + s[1]
+                                ):
                                     try:
                                         violating_shifts[e][shift].append(s)
                                     except:
@@ -407,14 +423,19 @@ def get_shifts_violating_daily_rest(root, staff):
                     if day != daily_shifts.keys()[-1]:
                         for s in daily_shifts[day + 1]:
                             if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
-                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (shift[0] + shift[1]):
+                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (
+                                    shift[0] + shift[1]
+                                ):
                                     try:
                                         violating_shifts[e][shift].append(s)
                                     except:
                                         violating_shifts[e][shift] = [s]
 
                     if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
-                        if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
+                        if (
+                            24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
+                            < daily_rest[e]
+                        ):
                             try:
                                 invalid_shifts[e].append(shift)
                             except:
@@ -504,7 +525,7 @@ def get_t_covered_by_shift(root):
     for shift in shifts:
         end = time_periods.index(shift[0] + shift[1] - time_step)
         start = time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[start : (end + 1)]
     return t_covered_by_shift
 
 
@@ -543,8 +564,8 @@ def load_data(problem_name):
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
     weeks = [i for i in range(number_of_weeks)]
-    saturdays = [5+i*7 for i in range(number_of_weeks)]
-    sundays = [6+i*7 for i in range(number_of_weeks)]
+    saturdays = [5 + i * 7 for i in range(number_of_weeks)]
+    sundays = [6 + i * 7 for i in range(number_of_weeks)]
     staff = get_employee_lists(root, competencies)
 
     data = {
@@ -560,7 +581,9 @@ def load_data(problem_name):
             "shifts_in_week": shift_set[2],
             "short_shifts": shift_set[3],
             "long_shifts": shift_set[4],
-            "shifts_combinations_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[0],
+            "shifts_combinations_violating_daily_rest": get_shifts_violating_daily_rest(
+                root, staff
+            )[0],
             "invalid_shifts_violating_daily_rest": get_shifts_violating_daily_rest(root, staff)[1],
         },
         "off_shifts": {
@@ -574,13 +597,12 @@ def load_data(problem_name):
             "days": days,
             "weeks": weeks,
             "saturdays": saturdays,
-            "sundays": sundays
-
+            "sundays": sundays,
         },
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(root),
             "shift_lookup": shift_lookup(root),
-        }
+        },
     }
 
     return data
