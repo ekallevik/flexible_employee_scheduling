@@ -349,7 +349,7 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
             <= interval[0]
             <= employee_offset + (24 * (int(day) + 1))
         ):
-            if interval[1] - interval[0] - employee_offset >= employee_rest:
+            if interval[1] - interval[0] - max(employee_offset - interval[0], 0) >= employee_rest:
                 if interval[0] + employee_rest <= employee_offset + (24 * (int(day) + 1)):
                     return True
         if interval[0] > employee_offset + (24 * (int(day) + 1)):
