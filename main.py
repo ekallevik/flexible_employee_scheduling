@@ -59,18 +59,18 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     # This is why they are needed to be calculated here and placed in the initial state at the beginning.
     soft_variables = {
         "negative_deviation_from_demand": calculate_negative_deviation_from_demand(
-            candidate_solution, converted_solution["y"]
+            data, converted_solution["y"]
         ),
         "partial_weekends": calculate_partial_weekends(candidate_solution, converted_solution["x"]),
         "consecutive_days": calculate_consecutive_days(candidate_solution, converted_solution["x"]),
         "isolated_off_days": calculate_isolated_off_days(
-            candidate_solution, converted_solution["x"]
+            data, converted_solution["x"]
         ),
         "isolated_working_days": calculate_isolated_working_days(
-            candidate_solution, converted_solution["x"]
+            data, converted_solution["x"]
         ),
         "deviation_contracted_hours": calculate_negative_deviation_from_contracted_hours(
-            candidate_solution, converted_solution["y"]
+            data, converted_solution["y"]
         ),
     }
 

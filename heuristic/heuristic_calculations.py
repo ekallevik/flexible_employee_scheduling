@@ -62,120 +62,144 @@ def calculate_weekly_rest(data, x, w):
         w[key] = max(off_shift_periods[key], key=itemgetter(1))
 
 
-def calculate_negative_deviation_from_demand(model, y):
+def calculate_negative_deviation_from_demand(data, y):
+
+    employee_with_competencies = data["staff"]["employee_with_competencies"]
     delta = {}
-    for c in model.competencies:
-        for i in model.days:
-            for t in model.time_periods_in_day[i]:
+
+    for c in data["competencies"]:
+        for i in data["time"]["days"]:
+            for t in data.time_periods_in_day[i]:
                 delta[c, t] = max(
                     0,
-                    model.demand["ideal"][c, t]
-                    - sum(y[c, e, t] for e in model.employee_with_competencies[c]),
+                    data.demand["ideal"][c, t]
+                    - sum(y[c, e, t] for e in employee_with_competencies[c]),
                 )
     return delta
 
 
-def calculate_negative_deviation_from_contracted_hours(model, y):
+def calculate_negative_deviation_from_contracted_hours(data, y):
+
+    time_periods_in_week = data["time"]["periods"][2]
     delta_negative_contracted_hours = {}
-    for e in model.employees:
-        for j in model.weeks:
-            delta_negative_contracted_hours[e, j] = model.contracted_hours[e] - sum(
-                model.time_step * y[c, e, t]
-                for t in model.time_periods_in_week[j]
-                for c in model.competencies
+
+    for e in data["staff"]["employees"]:
+        for j in data["time"]["weeks"]:
+            delta_negative_contracted_hours[e, j] = data["staff"]["employee_contracted_hours"][e] - sum(
+                data["time"]["step"] * y[c, e, t]
+                for t in time_periods_in_week[j]
+                for c in data["competencies"]
             )
     return delta_negative_contracted_hours
 
 
-def calculate_partial_weekends(model, x):
+def calculate_partial_weekends(data, x):
+
     partial_weekend = {}
-    partial_weekend_shifts = []
-    for i in model.saturdays:
-        for e in model.employees:
+
+    for i in data["time"]["saturdays"]:
+        for e in data.employees:
 
             partial_weekend[e, i] = abs(
-                sum(x[e, t, v] for t, v in model.shifts_at_day[i])
-                - sum(x[e, t, v] for t, v in model.shifts_at_day[i + 1])
+                sum(x[e, t, v] for t, v in data["shifts"]["shifts_per_day"][i])
+                - sum(x[e, t, v] for t, v in data["shifts"]["shifts_at_day"][i + 1])
             )
     return partial_weekend
 
 
-def calculate_isolated_working_days(model, x):
+def calculate_isolated_working_days(data, x):
+
+    shifts_per_day = data["shifts"]["shifts_per_day"]
     isolated_working_days = {}
-    for e in model.employees:
-        for i in range(len(model.days) - 2):
+
+    for e in data["staff"]["employees"]:
+        for i in range(len(data["time"]["days"]) - 2):
             isolated_working_days[e, i + 1] = max(
                 0,
                 (
-                    -sum(x[e, t, v] for t, v in model.shifts_at_day[i])
-                    + sum(x[e, t, v] for t, v in model.shifts_at_day[i + 1])
-                    - sum(x[e, t, v] for t, v in model.shifts_at_day[i + 2])
+                    -sum(x[e, t, v] for t, v in shifts_per_day[i])
+                    + sum(x[e, t, v] for t, v in shifts_per_day[i + 1])
+                    - sum(x[e, t, v] for t, v in shifts_per_day[i + 2])
                 ),
             )
     return isolated_working_days
 
 
-def calculate_isolated_off_days(model, x):
+def calculate_isolated_off_days(data, x):
+
+    shifts_per_day = data["shifts"]["shifts_per_day"]
     isolated_off_days = {}
-    for e in model.employees:
-        for i in range(len(model.days) - 2):
+
+    for e in data["staff"]["employees"]:
+        for i in range(len(data["time"]["days"]) - 2):
             isolated_off_days[e, i + 1] = max(
                 0,
                 (
-                    sum(x[e, t, v] for t, v in model.shifts_at_day[i])
-                    - sum(x[e, t, v] for t, v in model.shifts_at_day[i + 1])
-                    + sum(x[e, t, v] for t, v in model.shifts_at_day[i + 2])
+                    sum(x[e, t, v] for t, v in shifts_per_day[i])
+                    - sum(x[e, t, v] for t, v in shifts_per_day[i + 1])
+                    + sum(x[e, t, v] for t, v in shifts_per_day[i + 2])
                     - 1
                 ),
             )
     return isolated_off_days
 
 
-def calculate_consecutive_days(model, x):
+def calculate_consecutive_days(data, x):
+
+    shifts_per_day = data["shifts"]["shifts_per_day"]
     consecutive_days = {}
-    for e in model.employees:
-        for i in range(len(model.days) - model.L_C_D):
+
+    for e in data["staff"]["employees"]:
+        for i in range(len(data["time"]["days"]) - data["limit_on_consecutive_days"]):
             consecutive_days[e, i] = max(
                 0,
                 (
                     sum(
-                        sum(x[e, t, v] for t, v in model.shifts_at_day[i_marked])
-                        for i_marked in range(i, i + model.L_C_D)
+                        sum(x[e, t, v] for t, v in shifts_per_day)
+                        for i_marked in range(i, i + data["limit_on_consecutive_days"])
                     )
                 )
-                - model.L_C_D,
+                - data["limit_on_consecutive_days"],
             )
     return consecutive_days
 
 
-def calculate_f(model, soft_vars, w, employees=None):
-    if employees == None:
-        employees = model.employees
+def calculate_f(data, soft_vars, w, employees=None):
+
+    if not employees:
+        employees = data["staff"]["employees"]
+
     f = {}
+
+    # todo: add number_of_days to save calculations?
+    days = data["time"]["days"]
+
     for e in employees:
         f[e] = (
-            sum(w[e, j][1] for j in model.weeks)
-            - sum(soft_vars["contracted_hours"][e, j] for j in model.weeks)
-            - sum(soft_vars["partial_weekends"][e, i] for i in model.saturdays)
+            sum(w[e, j][1] for j in data["time"]["weeks"])
+            - sum(soft_vars["contracted_hours"][e, j] for j in data["time"]["weeks"])
+            - sum(soft_vars["partial_weekends"][e, i] for i in data["time"]["saturdays"])
             - sum(
                 soft_vars["isolated_working_days"][e, i + 1]
                 + soft_vars["isolated_off_days"][e, i + 1]
-                for i in range(len(model.days) - 2)
+                for i in range(len(days) - 2)
             )
-            - sum(soft_vars["consecutive_days"][e, i] for i in range(len(model.days) - model.L_C_D))
+            - sum(soft_vars["consecutive_days"][e, i] for i in range(len(days) - data["limit_on_consecutive_days"]))
         )
     return f
 
 
 def calculate_objective_function(model, soft_vars, w):
+
     f = calculate_f(model, soft_vars, w)
     g = min(f.values())
+
     objective_function_value = (
         sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
     return objective_function_value, f
 
-
+# todo: I am regarding all of the following as out of use. -Even
 # Not needed at the moment and are not in use. Might be deleted at a later time when I know for sure.
 def cover_minimum_demand(model, y):
     below_minimum_demand = {}
