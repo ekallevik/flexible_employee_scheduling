@@ -239,8 +239,8 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
                                     try:
                                         violating_shift_sequences[e][shift].append(s)
                                     except:
+                                        # If there are no violating shifts from day before, nothing should be done
                                         pass
-                                        #violating_shift_sequences[e][shift] = [s]
 
                                     # Check if shift combination forces violation of daily rest
                                     if shift[0] - (24 * int(day) + daily_offset[e]) < daily_rest[e]:
