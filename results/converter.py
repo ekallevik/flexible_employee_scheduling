@@ -35,5 +35,10 @@ class Converter:
         """
 
         var = self.gurobi_variables
-        return {(e,j): (t,v) for e in self.model.employees for j in self.model.weeks for t,v in self.model.off_shift_in_week[j] if var.w[e,t,v].x == 1}
-
+        return {
+            (e, j): (t, v)
+            for e in self.model.employees
+            for j in self.model.weeks
+            for t, v in self.model.off_shift_in_week[j]
+            if var.w[e, t, v].x == 1
+        }
