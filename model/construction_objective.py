@@ -17,8 +17,8 @@ class ConstructionObjective:
         self.model.setObjective(
             -weights["demand deviation"]
             * quicksum(
-                quicksum(weights["excess_demand_deviation_factor"] * delta["plus"][c, t] +
-                         weights["deficit_demand_deviation_factor"] * delta["minus"][c, t]
+                quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
+                         weights["deficit demand deviation factor"] * delta["minus"][c, t]
                          for t in self.time_periods)
                 for c in self.competencies
             ),

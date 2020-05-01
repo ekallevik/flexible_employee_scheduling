@@ -2,6 +2,7 @@
 from utils.const import DEFAULT_CONTRACTED_HOURS
 from gurobipy.gurobipy import tupledict
 
+# Set weighting of Optimality Model
 
 def set_weights():
     """
@@ -25,8 +26,22 @@ def set_weights():
         "lowest fairness score": 0.5,
 
         # Scaling excess and deficit of demand
-        "excess_demand_deviation_factor": 1.0,
-        "deficit_demand_deviation_factor": 1.0,
+        "excess demand deviation factor": 1.0,
+        "deficit demand deviation factor": 1.0,
+    }
+
+
+# Weighting of Shift Design Model
+
+def get_shift_design_weights():
+    return {
+        "demand_deviation": 5,
+        "shift_duration": 15,
+
+        # Scaling excess and deficit of demand
+        "excess demand deviation factor": 1.0,
+        "deficit demand deviation factor": 1.0,
+
     }
 
 
@@ -150,14 +165,6 @@ def scale_up_weights(weights, staff):
 
     return weights
 
-
-# Weighting of Shift Design Model
-
-def get_shift_design_weights():
-    return {
-        "demand_deviation": 5,
-        "shift_duration": 15
-    }
 
 
 

@@ -16,7 +16,9 @@ class ShiftDesignObjective:
         self.model.setObjective(
             quicksum(y[t, v] for t, v in self.shifts)
             + weights["demand_deviation"]
-            * quicksum(delta["plus"][t] + delta["minus"][t] for t in self.time_periods)
+            * quicksum(weights["excess demand deviation factor"] * delta["plus"][t] +
+                       weights["deficit demand deviation factor"] * delta["minus"][t]
+                       for t in self.time_periods)
             + weights["shift_duration"]
             * (
                 quicksum(rho["short"][t, v] for t, v in self.short_shifts)
