@@ -1,7 +1,7 @@
 from operator import itemgetter
 from random import choice
 
-from heuristic.converter import set_x
+from converter import set_x
 from heuristic.delta_calculations import (
     calc_weekly_objective_function, calculate_consecutive_days,
     calculate_isolated_off_days, calculate_isolated_working_days,

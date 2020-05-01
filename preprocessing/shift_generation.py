@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from preprocessing import xml_loader
 from preprocessing.demand_processing import (
     combine_demand_intervals,
@@ -125,7 +127,10 @@ def get_shifts(root):
 
 
 def get_shifts_per_day(shifts, days):
+
+    # todo: bruke defaultdict for begge?
     shifts_per_day = tupledict()
+    shifts_in_week = defaultdict(list)
 
     for day in days:
         shifts_per_day[day] = []
@@ -138,13 +143,14 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
+                shifts_in_week[int(day / 7)].append(shift)
 
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
                 break
-    return shifts_per_day
 
+    return shifts_per_day, shifts_in_week
 
 def get_short_and_long_shifts(shifts):
     short_shifts = tuplelist()
