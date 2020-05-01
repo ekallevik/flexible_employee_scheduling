@@ -13,7 +13,7 @@ from heuristic.repair_operators import (worst_employee_regret_repair,
 
 
 class ALNS:
-    def __init__(self, state, model, criterion):
+    def __init__(self, state, model, criterion, data):
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
@@ -35,27 +35,42 @@ class ALNS:
         }
 
         # Sets
-        self.shifts = model.shifts
-        self.competencies = model.competencies
-        self.demand = model.demand
-        self.time_periods = model.time_periods
-        self.employee_with_competencies = model.employee_with_competencies
-        self.time_periods_in_day = model.time_periods_in_day
-        self.contracted_hours = model.contracted_hours
-        self.saturdays = model.saturdays
-        self.employees = model.employees
-        self.shifts_at_day = model.shifts_at_day
-        self.L_C_D = model.L_C_D
-        self.weeks = model.weeks
-        self.off_shifts = model.off_shifts
-        self.off_shift_in_week = model.off_shift_in_week
-        self.shifts_in_week = model.shifts_at_week
-        self.days = model.days
-        self.time_step = model.time_step
-        self.t_covered_by_shift = model.t_covered_by_shift
-        self.shifts_overlapping_t = model.shifts_overlapping_t
-        self.t_covered_by_off_shift = model.t_in_off_shifts
-        self.time_periods_in_week = model.time_periods_in_week
+        self.competencies = data["competencies"]
+        self.demand = data["demand"]
+
+        self.days = data["time"]["days"]
+        self.weeks = data["time"]["weeks"]
+        self.saturdays = data["time"]["saturdays"]
+        self.time_step = data["time"]["step"]
+        self.time_periods = data["time"]["periods"][0]
+        self.time_periods_in_week = data["time"]["periods"][1]
+        self.time_periods_in_day = data["time"]["periods"][2]
+        self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
+
+        self.shifts = data["shifts"]["shifts"]
+
+        self.employees = data["staff"]["employees"]
+        self.employee_with_competencies = data["staff"]["employees_with_competencies"]
+        self.contracted_hours = data["staff"]["employee_contracted_hours"]
+
+        self.shifts_at_day = data["shifts"]["shifts_per_day"]
+        self.off_shifts = data["off_shifts"]["off_shifts"]
+        self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
+        self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
+        self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
+
+        self.L_C_D = data["limit_on_consecutive_days"]
+
+        self.shifts_per_week = data["shifts"]["shifts_per_week"]
+
+        # todo: these seems to be unused. Delete?
+        self.sundays = data["time"]["sundays"]
+        self.shift_lookup = data["heuristic"]["shift_lookup"]
+        self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
+
+
+
+
 
         remove_worst_week = partial(
             worst_week_removal,
@@ -64,7 +79,7 @@ class ALNS:
             self.employees,
             self.weeks,
             self.L_C_D,
-            self.shifts_in_week,
+            self.shifts_per_week,
             self.t_covered_by_shift,
         )
         remove_worst_employee = partial(
@@ -73,7 +88,7 @@ class ALNS:
 
         repair_worst_week_regret = partial(
             worst_week_regret_repair,
-            self.shifts_in_week,
+            self.shifts_per_week,
             self.competencies,
             self.t_covered_by_shift,
             self.employee_with_competencies,
@@ -101,7 +116,7 @@ class ALNS:
             self.L_C_D,
             self.weeks,
             self.shifts_at_day,
-            self.shifts_in_week,
+            self.shifts_per_week,
             self.contracted_hours,
             self.time_periods_in_week,
             self.time_step,
@@ -110,7 +125,7 @@ class ALNS:
 
         repair_worst_week_greedy = partial(
             worst_week_repair,
-            self.shifts_in_week,
+            self.shifts_per_week,
             self.competencies,
             self.t_covered_by_shift,
             self.employee_with_competencies,
@@ -198,7 +213,7 @@ class ALNS:
             if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
                 candidate_solution.write("before_breaking_weekly")
                 destroy_set, repair_set = illegal_week_swap(
-                    self.shifts_in_week,
+                    self.shifts_per_week,
                     self.employees,
                     self.shifts_at_day,
                     self.t_covered_by_shift,
@@ -340,7 +355,7 @@ class ALNS:
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, self.shifts_in_week, employees, self.weeks)
+        calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
 
         # Updates the current states hard variables based on changed decision variables
         below_minimum_demand(

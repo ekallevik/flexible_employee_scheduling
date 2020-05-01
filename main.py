@@ -58,9 +58,8 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     # These calculations are done using heuristic calculations on the solution gotten from the construction model.
     # This is why they are needed to be calculated here and placed in the initial state at the beginning.
     soft_variables = {
-        "negative_deviation_from_demand": calculate_negative_deviation_from_demand(
-            data, converted_solution["y"]
-        ),
+        "deviation_from_ideal_demand": calculate_deviation_from_demand(data, converted_solution[
+            "y"]),
         "partial_weekends": calculate_partial_weekends(data, converted_solution["x"]),
         "consecutive_days": calculate_consecutive_days(data, converted_solution["x"]),
         "isolated_off_days": calculate_isolated_off_days(
@@ -92,7 +91,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
 
     criterion = GreedyCriterion()
 
-    alns = ALNS(state, candidate_solution, criterion)
+    alns = ALNS(state, candidate_solution, criterion, data)
     solution = alns.iterate(iterations=1000)
 
 

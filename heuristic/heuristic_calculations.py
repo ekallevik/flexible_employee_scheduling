@@ -7,13 +7,13 @@ from operator import itemgetter
 def calculate_deviation_from_demand(data, y):
     delta = {}
 
-    employee_with_competencies = data["staff"]["employee_with_competencies"]
+    employee_with_competencies = data["staff"]["employees_with_competencies"]
 
     for c in data["competencies"]:
         for t in data["time"]["periods"][0]:
             delta[c, t] = (
                     sum(y[c, e, t] for e in employee_with_competencies[c])
-                    - data.demand["ideal"][c, t]
+                    - data["demand"]["ideal"][c, t]
             )
     return delta
 
