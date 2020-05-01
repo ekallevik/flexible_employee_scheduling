@@ -19,6 +19,7 @@ class BaseConstraints:
         self.time_step = time_set["step"]
         self.time_periods = time_set["periods"][0]
         self.time_periods_per_week = time_set["periods"][1]
+        self.combined_time_periods = time_set["combined_time_periods"][0]
         self.days = time_set["days"]
         self.weeks = time_set["weeks"]
         self.saturdays = time_set["saturdays"]
@@ -39,6 +40,7 @@ class BaseConstraints:
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
         self.add_mapping_of_shift_to_demand(var.x, var.y)
+        #self.add_max_one_demand_cover_each_time(var.y)
         self.add_maximum_one_shift_each_day(var.x)
         self.add_weekly_rest(var.w)
         self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y, version="original")
@@ -97,8 +99,7 @@ class BaseConstraints:
                 quicksum(x[e, t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
                 == quicksum(y[c, e, t] for c in self.competencies if y.get((c,e,t)))
                 for e in self.employees
-                for c in self.competencies
-                for t in self.time_periods[c]
+                for t in self.combined_time_periods
             ),
             name="mapping_shift_to_demand",
         )
@@ -106,9 +107,9 @@ class BaseConstraints:
     def add_max_one_demand_cover_each_time(self, y):
         self.model.addConstrs(
             (
-                quicksum(y[c, e, t] for c in self.competencies) <= 1
+                quicksum(y[c, e, t] for c in self.competencies if y.get((c,e,t))) <= 1
                 for e in self.employees
-                for t in self.time_periods
+                for t in self.combined_time_periods
             ),
             name="only_cover_one_demand_at_a_time",
         )
