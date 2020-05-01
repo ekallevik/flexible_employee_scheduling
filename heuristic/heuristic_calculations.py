@@ -64,16 +64,17 @@ def calculate_weekly_rest(data, x, w):
 
 def calculate_negative_deviation_from_demand(data, y):
 
-    employee_with_competencies = data["staff"]["employee_with_competencies"]
+    employees_with_competencies = data["staff"]["employees_with_competencies"]
     delta = {}
 
     for c in data["competencies"]:
         for i in data["time"]["days"]:
-            for t in data.time_periods_in_day[i]:
+            # todo: increase the readability of this set
+            for t in data["time"]["periods"][2][i]:
                 delta[c, t] = max(
                     0,
-                    data.demand["ideal"][c, t]
-                    - sum(y[c, e, t] for e in employee_with_competencies[c]),
+                    data["demand"]["ideal"][c, t]
+                    - sum(y[c, e, t] for e in employees_with_competencies[c]),
                 )
     return delta
 
@@ -98,11 +99,11 @@ def calculate_partial_weekends(data, x):
     partial_weekend = {}
 
     for i in data["time"]["saturdays"]:
-        for e in data.employees:
+        for e in data["staff"]["employees"]:
 
             partial_weekend[e, i] = abs(
                 sum(x[e, t, v] for t, v in data["shifts"]["shifts_per_day"][i])
-                - sum(x[e, t, v] for t, v in data["shifts"]["shifts_at_day"][i + 1])
+                - sum(x[e, t, v] for t, v in data["shifts"]["shifts_per_day"][i + 1])
             )
     return partial_weekend
 
@@ -151,11 +152,12 @@ def calculate_consecutive_days(data, x):
 
     for e in data["staff"]["employees"]:
         for i in range(len(data["time"]["days"]) - data["limit_on_consecutive_days"]):
+
             consecutive_days[e, i] = max(
                 0,
                 (
                     sum(
-                        sum(x[e, t, v] for t, v in shifts_per_day)
+                        sum(x[e, t, v] for t, v in shifts_per_day[i_marked])
                         for i_marked in range(i, i + data["limit_on_consecutive_days"])
                     )
                 )
@@ -177,7 +179,7 @@ def calculate_f(data, soft_vars, w, employees=None):
     for e in employees:
         f[e] = (
             sum(w[e, j][1] for j in data["time"]["weeks"])
-            - sum(soft_vars["contracted_hours"][e, j] for j in data["time"]["weeks"])
+            - sum(soft_vars["deviation_contracted_hours"][e, j] for j in data["time"]["weeks"])
             - sum(soft_vars["partial_weekends"][e, i] for i in data["time"]["saturdays"])
             - sum(
                 soft_vars["isolated_working_days"][e, i + 1]
@@ -194,9 +196,14 @@ def calculate_objective_function(model, soft_vars, w):
     f = calculate_f(model, soft_vars, w)
     g = min(f.values())
 
-    objective_function_value = (
-        sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
-    )
+    # todo: temp solution while waiting on the correct key.
+    try:
+        objective_function_value = (
+            sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
+        )
+    except Exception:
+        objective_function_value = 0
+
     return objective_function_value, f
 
 # todo: I am regarding all of the following as out of use. -Even
@@ -209,7 +216,7 @@ def cover_minimum_demand(model, y):
                 0,
                 (
                     model.demand["min"][c, t]
-                    - sum(y[c, e, t] for e in model.employee_with_competencies[c])
+                    - sum(y[c, e, t] for e in model.employees_with_competencies[c])
                 ),
             )
     return below_minimum_demand

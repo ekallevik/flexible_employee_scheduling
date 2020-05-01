@@ -61,8 +61,8 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
         "negative_deviation_from_demand": calculate_negative_deviation_from_demand(
             data, converted_solution["y"]
         ),
-        "partial_weekends": calculate_partial_weekends(candidate_solution, converted_solution["x"]),
-        "consecutive_days": calculate_consecutive_days(candidate_solution, converted_solution["x"]),
+        "partial_weekends": calculate_partial_weekends(data, converted_solution["x"]),
+        "consecutive_days": calculate_consecutive_days(data, converted_solution["x"]),
         "isolated_off_days": calculate_isolated_off_days(
             data, converted_solution["x"]
         ),
@@ -85,9 +85,8 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
         "delta_positive_contracted_hours": {},
     }
 
-    weights = get_weights()
-
-    objective_function, f = calculate_objective_function(data, soft_variables, weights)
+    objective_function, f = calculate_objective_function(data, soft_variables,
+                                                         converted_solution["w"])
 
     state = State(converted_solution, soft_variables, hard_variables, objective_function, f)
 

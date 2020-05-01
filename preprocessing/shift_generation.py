@@ -70,14 +70,16 @@ def get_time_sets(root):
 
 def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
 
-    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+    shifts_per_day, shifts_per_week = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
+
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
     invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
 
     return {
         "shifts": shifts,
         "shifts_per_day": shifts_per_day,
+        "shifts_per_week": shifts_per_week,
         "short_shifts": short_shifts,
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
@@ -208,7 +210,8 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
 
     for e in employees:
         violating_shifts[e] = tupledict()
-        for day in shifts_per_day:
+
+        for day in shifts_per_day.keys():
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
                     if day != 0:
