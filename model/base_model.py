@@ -56,7 +56,6 @@ class BaseModel:
         self.model.setParam("MIPFocus", self.mip_focus)
         self.model.setParam("SolutionLimit", self.solution_limit)
         self.model.optimize()
-        self.model.write("solution.sol")
 
     def get_variables(self):
         """ This method is intended to be used in all subclasses of BaseModel"""
