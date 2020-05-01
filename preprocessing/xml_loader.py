@@ -14,76 +14,41 @@ from utils.const import (
 )
 
 
-def get_demand_definitions(root):
-    demands = []
-    for DemandDefinition in root.findall("Demands/DemandDefinitions/DemandDefinition"):
-        dem = Demand(DemandDefinition.find("DayDemandId").text)
-        for row in DemandDefinition.find("Rows").findall("Row"):
-            start = row.find("TimeStart").text
-            end = row.find("TimeEnd").text
-            maximum = row.find("Max").text
-            minimum = row.find("Min").text
-            ideal = row.find("Ideal").text
-            try:
-                for requirement in row.find("CompetenceRequirements").findall("CompetenceId"):
-                    # if int(requirement.text) not in competencies:
-                    #     raise AttributeError("No employee with this competency")
-                    competency_requirements = int(requirement.text)
-            except:
-                competency_requirements = DEFAULT_COMPETENCY[0]
-            dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
-        demands.append(dem)
-    return demands
+def get_employee_lists(root, competencies):
+    employees = tuplelist()
+    employee_with_competencies = tupledict()
+    employee_weekly_rest = tupledict()
+    employee_daily_rest = tupledict()
+    employee_contracted_hours = tupledict()
+    employee_daily_offset = tupledict()
+    employee_blocked_hours = tupledict()
 
+    emp = get_staff(root, competencies)
 
-def get_competencies(root):
-    competencies = []
-    for competence in root.findall("Configuration/Competences/Competence"):
-        id = competence.find("CompetenceId").text
-        competencies.append(id)
+    for c in range(len(competencies)):
+        employee_with_competencies[c] = []
+        for e in emp:
+            if c in e.competencies:
+                employee_with_competencies[c].append(int(e.id))
 
-    if not competencies:
-        competencies = DEFAULT_COMPETENCY
+    for e in emp:
+        id = int(e.id)
+        employees.append(id)
+        employee_daily_rest[id] = e.daily_rest_hours
+        employee_weekly_rest[id] = e.weekly_rest_hours
+        employee_contracted_hours[id] = e.contracted_hours
+        employee_daily_offset[id] = e.daily_offset
+        employee_blocked_hours[id] = e.blocked_hours
 
-    return competencies
-
-
-def get_days_with_demand(root):
-    demands = get_demand_definitions(root)
-    days_with_demand = {}
-    for day in root.findall("Demands/DayDemandList/DayDemand"):
-        for obj in demands:
-            if obj.demand_id == day.find("DayDemandId").text:
-                d = int(day.find("DayIndex").text)
-                days_with_demand[d] = obj
-    return days_with_demand
-
-
-def get_days(root):
-    days = []
-    for day in root.findall("Demands/DayDemandList/DayDemand"):
-        days.append(int(day.find("DayIndex").text))
-    return days
-
-
-def get_weekly_rest_rules(root):
-    weekly_rest_rules = []
-    for weekly_rule in root.findall("Configuration/WeeklyRestRules/WeeklyRestRule"):
-        rest_id = weekly_rule.find("Id").text
-        hours = weekly_rule.find("MinRestHours").text
-        rule = Weekly_rest_rule(hours, rest_id)
-        weekly_rest_rules.append(rule)
-    return weekly_rest_rules
-
-
-def get_daily_rest_rules(root):
-    daily_rest_rules = []
-    for daily_rule in root.findall("Configuration/DayRestRules/DayRestRule"):
-        rest_id = daily_rule.find("Id").text
-        hours = daily_rule.find("MinRestHours").text
-        rule = Daily_rest_rule(hours, rest_id)
-        daily_rest_rules.append(rule)
-    return daily_rest_rules
+    return {
+        "employees": employees,
+        "employees_with_competencies": employee_with_competencies,
+        "employee_with_weekly_rest": employee_weekly_rest,
+        "employee_daily_rest": employee_daily_rest,
+        "employee_contracted_hours": employee_contracted_hours,
+        "employee_daily_offset": employee_daily_offset,
+        "employee_blocked_hours": employee_blocked_hours,
+    }
 
 
 def get_staff(root, all_competencies):
@@ -119,9 +84,88 @@ def set_contracted_hours_for_employee(employee, schedule_row):
         employee.set_contracted_hours(float(schedule_row.find("WeekHours").text))
     except AttributeError:
         print(
-            f"ScheduleRow {employee.id} don't have a set WeekHours tag. Using DEFAULT_CONTRACTED_HOURS"
+            f"ScheduleRow {employee.id} don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied"
         )
         employee.set_contracted_hours(DEFAULT_CONTRACTED_HOURS)
+
+
+def get_days_with_demand(root):
+    demands = get_demand_definitions(root)
+    days_with_demand = {}
+    for day in root.findall("Demands/DayDemandList/DayDemand"):
+        for obj in demands:
+            if obj.demand_id == day.find("DayDemandId").text:
+                d = int(day.find("DayIndex").text)
+                days_with_demand[d] = obj
+    return days_with_demand
+
+
+def get_demand_definitions(root):
+    demands = []
+    for DemandDefinition in root.findall("Demands/DemandDefinitions/DemandDefinition"):
+        dem = Demand(DemandDefinition.find("DayDemandId").text)
+        for row in DemandDefinition.find("Rows").findall("Row"):
+            start = row.find("TimeStart").text
+            end = row.find("TimeEnd").text
+            maximum = row.find("Max").text
+            minimum = row.find("Min").text
+            ideal = row.find("Ideal").text
+            try:
+                for requirement in row.find("CompetenceRequirements").findall("CompetenceId"):
+                    # if int(requirement.text) not in competencies:
+                    #     raise AttributeError("No employee with this competency")
+                    competency_requirements = int(requirement.text)
+            except:
+                competency_requirements = DEFAULT_COMPETENCY[0]
+            dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
+        demands.append(dem)
+    return demands
+
+
+def set_competency_for_employee(competencies, employee, schedule_row):
+    """
+    Sets the competencies for the given employee
+
+    :param competencies: a list of all competencies there is demand for
+    :param employee: the relevant Employee-object
+    :param schedule_row: the row in XML for the given employee
+    """
+
+    # there is not defined any competencies for demand
+    if not competencies:
+        employee.set_competency(DEFAULT_COMPETENCY)
+    else:
+        try:
+            for competence in schedule_row.find("Competences").findall("CompetenceId"):
+                if competence.text in competencies:
+                    employee.append_competency(competence.text)
+        except AttributeError:
+            print(
+                f"ScheduleRow {employee.id} don't have a Competence tag. DEFAULT_COMPETENCY applied"
+            )
+
+    # Add DEFAULT_COMPETENCY if the employee does not have any competencies
+    if not employee.competencies:
+        employee.set_competency(DEFAULT_COMPETENCY)
+
+
+def get_competencies(root):
+    competencies = []
+    for competence in root.findall("Configuration/Competences/Competence"):
+        id = competence.find("CompetenceId").text
+        competencies.append(id)
+
+    if not competencies:
+        competencies = DEFAULT_COMPETENCY
+
+    return competencies
+
+
+def get_days(root):
+    days = []
+    for day in root.findall("Demands/DayDemandList/DayDemand"):
+        days.append(int(day.find("DayIndex").text))
+    return days
 
 
 def set_daily_rest_rule(daily_rest_rules, employee, schedule_row):
@@ -145,9 +189,29 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
                 employee.set_weekly_rest(weekly_rule.hours)
     except AttributeError:
         print(
-            f"ScheduleRow {employee.id} don't have a set WeeklyRestRule tag. Using DEFAULT_WEEKLY_REST"
+            f"ScheduleRow {employee.id} don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied"
         )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
+
+
+def get_weekly_rest_rules(root):
+    weekly_rest_rules = []
+    for weekly_rule in root.findall("Configuration/WeeklyRestRules/WeeklyRestRule"):
+        rest_id = weekly_rule.find("Id").text
+        hours = weekly_rule.find("MinRestHours").text
+        rule = Weekly_rest_rule(hours, rest_id)
+        weekly_rest_rules.append(rule)
+    return weekly_rest_rules
+
+
+def get_daily_rest_rules(root):
+    daily_rest_rules = []
+    for daily_rule in root.findall("Configuration/DayRestRules/DayRestRule"):
+        rest_id = daily_rule.find("Id").text
+        hours = daily_rule.find("MinRestHours").text
+        rule = Daily_rest_rule(hours, rest_id)
+        daily_rest_rules.append(rule)
+    return daily_rest_rules
 
 
 def set_daily_offset_for_employee(employee):
@@ -156,10 +220,10 @@ def set_daily_offset_for_employee(employee):
 
 
 def set_blocked_hours_for_employee(employee):
-    # TODO:  Implement code to retrieve blocked hours from xml-data. If there is no data to retrieve, nothing should
-    #       be done as default blocked hours is initialized to an empty list in employee-class.
+    # TODO: Implement code to retrieve blocked hours from xml. If there is no data to retrieve,
+    #  nothing should be done as default blocked hours is initialized to an empty list in
+    #  employee-class.
     pass
-
 
 
 def get_root(problem):
@@ -187,41 +251,3 @@ def get_data_folder(problem):
         )
 
     return data_folder
-
-
-def get_employee_lists(root, competencies):
-
-    employees = tuplelist()
-    employee_with_competencies = tupledict()
-    employee_weekly_rest = tupledict()
-    employee_daily_rest = tupledict()
-    employee_contracted_hours = tupledict()
-    employee_daily_offset = tupledict()
-    employee_blocked_hours = tupledict()
-    
-    emp = get_staff(root, competencies)
-
-    for c in range(len(competencies)):
-        employee_with_competencies[c] = []
-        for e in emp:
-            if c in e.competencies:
-                employee_with_competencies[c].append(int(e.id))
-
-    for e in emp:
-        id = int(e.id)
-        employees.append(id)
-        employee_daily_rest[id] = e.daily_rest_hours
-        employee_weekly_rest[id] = e.weekly_rest_hours
-        employee_contracted_hours[id] = e.contracted_hours
-        employee_daily_offset[id] = e.daily_offset
-        employee_blocked_hours[id] = e.blocked_hours
-
-    return {
-        "employees": employees,
-        "employees_with_competencies": employee_with_competencies,
-        "employee_with_weekly_rest": employee_weekly_rest,
-        "employee_daily_rest": employee_daily_rest,
-        "employee_contracted_hours": employee_contracted_hours,
-        "employee_daily_offset": employee_daily_offset,
-        "employee_blocked_hours": employee_blocked_hours,
-    }

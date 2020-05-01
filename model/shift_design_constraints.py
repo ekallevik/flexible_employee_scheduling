@@ -5,13 +5,14 @@ from utils.const import DESIRED_SHIFT_DURATION
 
 class ShiftDesignConstraints:
     def __init__(
-        self, model, var, competencies, demand, time_periods, shift_sets,
+        self, model, var, competencies, demand, time_periods, shift_sets, time_periods_combined
     ):
 
         self.model = model
         self.competencies = competencies
         self.demand = demand
         self.time_periods = time_periods
+        self.time_periods_combined = time_periods_combined
 
         self.shifts = shift_sets["shifts"]
         self.shifts_overlapping_t = shift_sets["shifts_overlapping_t"]
@@ -30,8 +31,8 @@ class ShiftDesignConstraints:
         self.model.addConstrs(
             (
                 quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                >= quicksum(self.demand["min"][c, t] for c in self.competencies)
-                for t in self.time_periods
+                >= quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c,t)))
+                for t in self.time_periods_combined
             ),
             name="minimum_demand_coverage",
         )
@@ -40,9 +41,10 @@ class ShiftDesignConstraints:
         self.model.addConstrs(
             (
                 quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                - quicksum(self.demand["ideal"][c, t] for c in self.competencies)
-                == delta["plus"][t] - delta["minus"][t]
-                for t in self.time_periods
+                - self.demand["ideal"][c, t]
+                == delta["plus"][c, t] - delta["minus"][c, t]
+                for c in self.competencies
+                for t in self.time_periods[c]
             ),
             name="deviation_from_ideal_demand",
         )

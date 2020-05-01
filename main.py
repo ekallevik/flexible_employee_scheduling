@@ -29,7 +29,7 @@ def run_shift_design_model(problem="rproblem3", data=None):
     sdp.run_model()
 
     used_shifts = sdp.get_used_shifts()
-    data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts)
+    data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts, data["competencies"])
 
     print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
     percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
@@ -59,7 +59,7 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     solution = alns.iterate(iterations=1000)
 
 
-def run_model(model="construction", problem="rproblem3", with_sdp=False):
+def run_model(model="construction", problem="rproblem3", with_sdp=True):
     """
     Runs the specified model on the given problem.
 

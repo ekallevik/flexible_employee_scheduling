@@ -52,7 +52,9 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
                     end = len(time_periods_in_day[day]) - dur
 
                     if end <= 0:
-                        dur = int((time_periods_in_day[day][-1] - time_periods_in_day[day][0]) / time_step)
+                        dur = int(
+                            (time_periods_in_day[day][-1] - time_periods_in_day[day][0]) / time_step
+                        )
                         end = len(time_periods_in_day[day]) - dur
 
                     start_index = random.randint(0, end)
