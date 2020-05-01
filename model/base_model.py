@@ -24,7 +24,7 @@ class BaseModel:
         self.shifts_set = data["shifts"]
         self.off_shifts_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
-       # self.preferences = data["preferences"]
+        self.preferences = data["preferences"]
         self.var = None
 
         # Heuristic

@@ -74,6 +74,39 @@ def get_time_periods(root, competencies):
     return [time_periods, time_periods_in_week, time_periods_in_day]
 
 
+def get_combined_time_periods(time_periods, time_periods_in_week, time_periods_in_day):
+    combined_time_periods = set()
+    combined_time_periods_in_day = tupledict()
+    combined_time_periods_in_week = tupledict()
+
+    for c in time_periods:
+        combined_time_periods.update(time_periods[c])
+
+    for c, j in time_periods_in_week.keys():
+        try:
+            combined_time_periods_in_week[j].update(time_periods_in_week[c, j])
+        except:
+            combined_time_periods_in_week[j] = set(time_periods_in_week[c, j])
+    
+    for c, i in time_periods_in_day:
+        try:
+            combined_time_periods_in_day[i].update(time_periods_in_day[c, i])
+        except:
+            combined_time_periods_in_day[i] = set(time_periods_in_day[c, i])
+        
+    combined_time_periods = tuplelist(combined_time_periods)
+    
+    for i in combined_time_periods_in_day:
+        combined_time_periods_in_day[i] = tuplelist(combined_time_periods_in_day[i])
+    
+    for j in combined_time_periods_in_week:
+        combined_time_periods_in_week[j] = tuplelist(combined_time_periods_in_week[j])
+
+    return [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]
+
+
+
+
 def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
 
@@ -97,7 +130,6 @@ def get_demand(root, competencies):
                 except:
                     demand["max"][c, t] = demands[dem].maximum[i]
                 t += time_step
-
     return demand
 
 

@@ -6,6 +6,7 @@ from preprocessing.demand_processing import (
     get_start_events,
     get_time_periods,
     get_time_steps,
+    get_combined_time_periods,
 )
 from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
@@ -342,10 +343,11 @@ def get_time_sets(root, competencies):
 
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
-
+    periods = get_time_periods(root, competencies)
     return {
         "step": get_time_steps(root),
-        "periods": get_time_periods(root, competencies),
+        "periods": periods,
+        "combined_time_periods": get_combined_time_periods(periods[0], periods[1], periods[2]),
         "days": days,
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
