@@ -3,11 +3,15 @@ from random import choice
 
 from converter import set_x
 from heuristic.delta_calculations import (
-    calc_weekly_objective_function, calculate_consecutive_days,
-    calculate_isolated_off_days, calculate_isolated_working_days,
-    calculate_partial_weekends, calculate_weekly_rest,
+    calc_weekly_objective_function,
+    calculate_consecutive_days,
+    calculate_isolated_off_days,
+    calculate_isolated_working_days,
+    calculate_partial_weekends,
+    calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
-    hard_constraint_penalties)
+    hard_constraint_penalties,
+)
 
 
 def illegal_week_swap(

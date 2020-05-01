@@ -152,6 +152,7 @@ def get_shifts_per_day(shifts, days):
 
     return shifts_per_day, shifts_in_week
 
+
 def get_short_and_long_shifts(shifts):
     short_shifts = tuplelist()
     long_shifts = tuplelist()
