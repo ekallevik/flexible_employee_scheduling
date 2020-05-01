@@ -196,13 +196,9 @@ def calculate_objective_function(model, soft_vars, w):
     f = calculate_f(model, soft_vars, w)
     g = min(f.values())
 
-    # todo: temp solution while waiting on the correct key.
-    try:
-        objective_function_value = (
-            sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
-        )
-    except Exception:
-        objective_function_value = 0
+    objective_function_value = (
+        sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
+    )
 
     return objective_function_value, f
 

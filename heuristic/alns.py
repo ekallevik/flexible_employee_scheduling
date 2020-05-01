@@ -68,10 +68,6 @@ class ALNS:
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
 
-
-
-
-
         remove_worst_week = partial(
             worst_week_removal,
             self.competencies,
@@ -173,8 +169,9 @@ class ALNS:
             based on the destroy and repair operator (the shifts that were destroyed and repaired)	
             Lastly consider candidate is run.	
         """
+        candidate_solution = self.current_solution.copy()
+
         for iteration in range(iterations):
-            candidate_solution = self.current_solution.copy()
 
             destroy_operator, destroy_operator_id = self.select_operator(
                 self.destroy_operators, self.destroy_weights
@@ -191,6 +188,8 @@ class ALNS:
                 candidate_solution, destroy_operator_id, repair_operator_id
             )
 
+            candidate_solution = self.current_solution.copy()
+
         candidate_solution.write("heuristic_solution_2")
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
@@ -200,7 +199,6 @@ class ALNS:
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
-        # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
         print(
             str(candidate_solution.get_objective_value())
             + " VS "
@@ -249,11 +247,11 @@ class ALNS:
 
         if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
 
-            # todo: this is copied from the Github-repo, but unsure if this is the correct way to do it.
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
             self.best_solution.write("heuristic_solution_2")
+
         self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
@@ -312,6 +310,7 @@ class ALNS:
             self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
 
     def add_destroy_and_repair_operators(self, operators):
+
         for key in operators.keys():
             self.add_destroy_operator([key])
             self.add_repair_operator(key.func.__name__, operators[key])
@@ -319,7 +318,7 @@ class ALNS:
     @staticmethod
     def add_operator(operators, new_operator):
         """
-        Adds a new operator to the given set. If new_operator is not a function a ValueError is raised.
+        Adds a new operator to the given set. Raises a ValueError if the operator is not a function.
         :param operators: either self.destroy_operators or self.repair_operators
         :param new_operator: the operator to add to the sets
         """
@@ -342,7 +341,7 @@ class ALNS:
             self.demand,
             destroy_repair_set,
         )
-        delta_calculate_negative_deviation_from_contracted_hours(
+        delta_calculate_deviation_from_contracted_hours(
             state,
             employees,
             self.contracted_hours,
