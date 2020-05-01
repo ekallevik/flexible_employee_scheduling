@@ -80,7 +80,8 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
-        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
+        "shift_sequences_violating_daily_rest": shifts_violating_daily_rest[0],
+        "shift_combinations_violating_daily_rest": shifts_violating_daily_rest[1],
         "invalid_shifts": invalid_shifts,
     }
 
@@ -121,6 +122,7 @@ def get_shifts(root):
                         found_shift = True
                     if duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
                         shifts.append((time, duration))
+
     return shifts
 
 
@@ -143,6 +145,7 @@ def get_shifts_per_day(shifts, days):
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
                 break
+
     return shifts_per_day
 
 
@@ -197,35 +200,67 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     employees = staff["employees"]
     daily_rest = staff["employee_daily_rest"]
     daily_offset = staff["employee_daily_offset"]
-    violating_shifts = tupledict()
+    violating_shift_sequences = tupledict()
+    violating_shift_combinations = tupledict()
 
     for e in employees:
-        violating_shifts[e] = tupledict()
+        violating_shift_sequences[e] = tupledict()
+        violating_shift_combinations[e] = tupledict()
         for day in shifts_per_day:
+            # Check if daily rest is fulfilled naturally
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
                     if day != 0:
+                        # Checking shifts the day before
                         for s in shifts_per_day[day - 1]:
+                            # Checking if the shift from the day before is ending in employee specific day
                             if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
-                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (
-                                    s[0] + s[1]
-                                ):
+                                # Checking if daily rest occurs between the shifts and that they are not overlapping
+                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (s[0] + s[1]):
                                     try:
-                                        violating_shifts[e][shift].append(s)
+                                        violating_shift_sequences[e][shift].append(s)
                                     except:
-                                        violating_shifts[e][shift] = [s]
-                    if day != shifts_per_day.keys()[-1]:
-                        for s in shifts_per_day[day + 1]:
-                            if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
-                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (
-                                    shift[0] + shift[1]
-                                ):
-                                    try:
-                                        violating_shifts[e][shift].append(s)
-                                    except:
-                                        violating_shifts[e][shift] = [s]
+                                        violating_shift_sequences[e][shift] = [s]
 
-    return violating_shifts
+                                    # Check if shift combination forces violation of daily rest
+                                    if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
+                                        try:
+                                            violating_shift_combinations[e][shift].append(s)
+                                        except:
+                                            violating_shift_combinations[e][shift] = [s]
+
+                    if day != shifts_per_day.keys()[-1]:
+                        # Checking shifts the next day
+                        for s in shifts_per_day[day + 1]:
+                            # Checking if the shift in the next day is starting within employee specific dat
+                            if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
+                                # Checking if daily rest occurs between the shifts and that they are not overlapping
+                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (shift[0] + shift[1]):
+                                    try:
+                                        violating_shift_sequences[e][shift].append(s)
+                                    except:
+                                        pass
+                                        #violating_shift_sequences[e][shift] = [s]
+
+                                    # Check if shift combination forces violation of daily rest
+                                    if shift[0] - (24 * int(day) + daily_offset[e]) < daily_rest[e]:
+                                        try:
+                                            violating_shift_combinations[e][shift].append(s)
+                                        except:
+                                            violating_shift_combinations[e][shift] = [s]
+
+        # Removing violating shift sequences that only consists of either shifts on day before or next day
+        for shift in violating_shift_sequences[e].keys():
+            shifts_from_day_before, shifts_from_next_day = False, False
+            for s in violating_shift_sequences[e][shift]:
+                if s[0] < shift[0]:
+                    shifts_from_day_before = True
+                elif s[0] > shift[0] + shift[1]:
+                    shifts_from_next_day = True
+            if not shifts_from_day_before or not shifts_from_next_day:
+                del violating_shift_sequences[e][shift]
+
+    return [violating_shift_sequences, violating_shift_combinations]
 
 
 def get_invalid_shifts(root, staff, shifts_per_day):
@@ -310,11 +345,11 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
             temp_val = interval[1]
             interval[1] = temp_val + employee_offset
         if (
-            employee_offset + (24 * int(day))
+            24 * int(day)
             <= interval[0]
             <= employee_offset + (24 * (int(day) + 1))
         ):
-            if interval[1] - interval[0] >= employee_rest:
+            if interval[1] - interval[0] - employee_offset >= employee_rest:
                 if interval[0] + employee_rest <= employee_offset + (24 * (int(day) + 1)):
                     return True
         if interval[0] > employee_offset + (24 * (int(day) + 1)):
