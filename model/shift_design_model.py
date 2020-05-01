@@ -4,7 +4,6 @@ from model.shift_design_constraints import ShiftDesignConstraints
 from model.shift_design_objective import ShiftDesignObjective
 from model.shift_design_variables import ShiftDesignVariables
 from utils.weights import get_shift_design_weights
-from xml_loader import shift_generation
 
 
 class ShiftDesignModel:

@@ -1,9 +1,4 @@
-from abc import ABC, abstractmethod
-
 from gurobipy import *
-
-from preprocessing import shift_generation
-
 
 class BaseModel:
     """
