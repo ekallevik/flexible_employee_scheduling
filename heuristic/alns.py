@@ -133,7 +133,7 @@ class ALNS:
         """
         # todo: this has potential for performance improvements, but unsure if it is only for GreedyCriterion
         print(str(candidate_solution.get_objective_value()) + " VS " + str(self.current_solution.get_objective_value()))
-        if self.criterion.accept(candidate_solution, self.current_solution):
+        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
             
             if(sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0):
