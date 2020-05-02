@@ -1,5 +1,6 @@
 from gurobipy import *
 
+
 class BaseModel:
     """
     This abstract class will take care of all common code that is to be shared across all model variants.

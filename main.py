@@ -55,16 +55,13 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
     converted_solution = converter.get_converted_variables()
 
     soft_variables = {
-        "deviation_from_ideal_demand": calculate_deviation_from_demand(data, converted_solution[
-            "y"]),
+        "deviation_from_ideal_demand": calculate_deviation_from_demand(
+            data, converted_solution["y"]
+        ),
         "partial_weekends": calculate_partial_weekends(data, converted_solution["x"]),
         "consecutive_days": calculate_consecutive_days(data, converted_solution["x"]),
-        "isolated_off_days": calculate_isolated_off_days(
-            data, converted_solution["x"]
-        ),
-        "isolated_working_days": calculate_isolated_working_days(
-            data, converted_solution["x"]
-        ),
+        "isolated_off_days": calculate_isolated_off_days(data, converted_solution["x"]),
+        "isolated_working_days": calculate_isolated_working_days(data, converted_solution["x"]),
         "deviation_contracted_hours": calculate_negative_deviation_from_contracted_hours(
             data, converted_solution["y"]
         ),

@@ -31,9 +31,8 @@ class State:
                 "consecutive_days": self.soft_vars["consecutive_days"].copy(),
                 "isolated_off_days": self.soft_vars["isolated_off_days"].copy(),
                 "isolated_working_days": self.soft_vars["isolated_working_days"].copy(),
-
                 # todo: this is an attempted fix on a KeyError, but not necessarily correct.
-                #"contracted_hours": self.soft_vars["contracted_hours"].copy(),
+                # "contracted_hours": self.soft_vars["contracted_hours"].copy(),
                 "deviation_contracted_hours": self.soft_vars["deviation_contracted_hours"].copy(),
             },
             {

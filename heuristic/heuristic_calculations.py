@@ -12,8 +12,8 @@ def calculate_deviation_from_demand(data, y):
     for c in data["competencies"]:
         for t in data["time"]["periods"][0]:
             delta[c, t] = (
-                    sum(y[c, e, t] for e in employee_with_competencies[c])
-                    - data["demand"]["ideal"][c, t]
+                sum(y[c, e, t] for e in employee_with_competencies[c])
+                - data["demand"]["ideal"][c, t]
             )
     return delta
 
@@ -86,7 +86,9 @@ def calculate_negative_deviation_from_contracted_hours(data, y):
 
     for e in data["staff"]["employees"]:
         for j in data["time"]["weeks"]:
-            delta_negative_contracted_hours[e, j] = data["staff"]["employee_contracted_hours"][e] - sum(
+            delta_negative_contracted_hours[e, j] = data["staff"]["employee_contracted_hours"][
+                e
+            ] - sum(
                 data["time"]["step"] * y[c, e, t]
                 for t in time_periods_in_week[j]
                 for c in data["competencies"]
@@ -186,7 +188,10 @@ def calculate_f(data, soft_vars, w, employees=None):
                 + soft_vars["isolated_off_days"][e, i + 1]
                 for i in range(len(days) - 2)
             )
-            - sum(soft_vars["consecutive_days"][e, i] for i in range(len(days) - data["limit_on_consecutive_days"]))
+            - sum(
+                soft_vars["consecutive_days"][e, i]
+                for i in range(len(days) - data["limit_on_consecutive_days"])
+            )
         )
     return f
 
@@ -201,6 +206,7 @@ def calculate_objective_function(model, soft_vars, w):
     )
 
     return objective_function_value, f
+
 
 # todo: I am regarding all of the following as out of use. -Even
 # Not needed at the moment and are not in use. Might be deleted at a later time when I know for sure.
