@@ -6,7 +6,7 @@ from model.construction_objective import ConstructionObjective
 
 class ConstructionModel(BaseModel):
     def __init__(self, name, data):
-        super(ConstructionModel, self).__init__(name, data, mip_focus=1, solution_limit=1)
+        super().__init__(name, data, mip_focus=1, solution_limit=1)
 
         self.var = BaseVariables(
             model=self.model,

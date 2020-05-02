@@ -59,31 +59,27 @@ class ProblemRunner:
 
         return self
 
-    def run_model(self, model="construction"):
+    def run_model(self):
         """
         Runs the specified model on the given problem.
 
         :return: self
         """
 
-        breakpoint()
-
-        if model == "feasibility":
+        if self.model == "feasibility":
             esp = FeasibilityModel(name="esp_feasibility", data=self.data)
-        elif model == "optimality":
+        elif self.model == "optimality":
             esp = OptimalityModel(name="esp_optimality", data=self.data)
-        elif model == "construction":
+        elif self.model == "construction":
             esp = ConstructionModel(name="esp_construction", data=self.data)
         else:
-            raise ValueError(f"The model choice '{model}' is not valid.")
+            raise ValueError(f"The model choice '{self.model}' is not valid.")
 
         breakpoint()
 
         esp.run_model()
 
         self.esp_solution = esp
-
-        breakpoint()
 
         return self
 
