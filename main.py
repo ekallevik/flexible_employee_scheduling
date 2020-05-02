@@ -26,88 +26,119 @@ logger.remove()
 logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
 logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
+class ProblemRunner:
 
-def run_shift_design_model(problem="rproblem3", data=None):
-    """
-    Runs the shift design model.
+    def __init__(self, problem="rproblem3", model="construction", with_sdp=True):
 
-    :param data: the dataset
-    :param problem: the problem instance to run.
-    :return: the solved model instance.
-    """
+        self.problem = problem
+        self.data = shift_generation.load_data(problem)
+        self.model = model
 
-    if not data:
-        logger.debug("Loading data")
-        data = shift_generation.load_data(problem)
+        self.esp_solution = None
+        self.alns_solution = None
 
-    original_shifts = data["shifts"]["shifts"]
+        if with_sdp:
+            self.run_shift_design_model()
 
-    sdp = ShiftDesignModel(name="sdp", problem=problem, data=data)
-    sdp.run_model()
+    def run_heuristic(self):
+        """
 
-    used_shifts = sdp.get_used_shifts()
-    data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts)
+        :return:
+        """
 
-    percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
-    logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts (-"
-                 f"{100*percentage_reduction:.2f}%). ")
+        self.run_model()
 
-    #return data
+        converter = Converter(self.esp_solution)
+        converted_solution = converter.get_converted_variables()
 
+        state = State(converted_solution)
+        criterion = GreedyCriterion()
 
-def run_heuristic(construction_model="feasibility", problem="rproblem2"):
-    """
-    Non-complete skeleton for running ALNS.
+        alns = ALNS(state, criterion)
+        self.alns_solution = alns.iterate(iterations=1000)
 
-    :param construction_model: the model to be use to construct the initial solution.
-    :param problem: the problem instance to run.
-    :return:
-    """
+        return self
 
-    candidate_solution = run_model(model=construction_model, problem=problem)
+    def run_model(self, model="construction"):
+        """
+        Runs the specified model on the given problem.
 
-    converter = Converter(candidate_solution)
-    converted_solution = converter.get_converted_variables()
-    state = State(converted_solution)
+        :return: self
+        """
 
-    criterion = GreedyCriterion()
+        breakpoint()
 
-    alns = ALNS(state, criterion)
-    solution = alns.iterate(iterations=1000)
+        if model == "feasibility":
+            esp = FeasibilityModel(name="esp_feasibility", problem=self.problem, data=self.data)
+        elif model == "optimality":
+            esp = OptimalityModel(name="esp_optimality", problem=self.problem, data=self.data)
+        elif model == "construction":
+            esp = ConstructionModel(name="esp_construction", problem=self.problem, data=self.data)
+        else:
+            raise ValueError(f"The model choice '{model}' is not valid.")
 
+        breakpoint()
 
-def run_model(model="construction", problem="rproblem3", with_sdp=False):
-    """
-    Runs the specified model on the given problem.
+        esp.run_model()
 
-    :param model: The model version to be run.
-    :param problem: the problem instance to run.
-    :param with_sdp: Flag to control running of Shift Design Problem
-    :return: the solved model instance.
-    """
+        self.esp_solution = esp
 
-    data = shift_generation.load_data(problem)
+        breakpoint()
 
-    if with_sdp:
-        data = run_shift_design_model(problem=problem, data=data)
+        return self
 
-    if model == "feasibility":
-        esp = FeasibilityModel(name="esp_feasibility", problem=problem, data=data)
-    elif model == "optimality":
-        esp = OptimalityModel(name="esp_optimality", problem=problem, data=data)
-    elif model == "construction":
-        esp = ConstructionModel(name="esp_construction", problem=problem, data=data)
-    else:
-        raise ValueError(f"The model choice '{model}' is not valid.")
+    # TODO: how to ensure that this model only runs once?
+    #  private method?
+    #  switch flag?
+    def run_shift_design_model(self):
+        """
+        Runs the shift design model.
 
-    esp.run_model()
+        :return: self to enable chaining of Fire-commands
+        """
 
-    return esp
+        original_shifts = self.data["shifts"]["shifts"]
+
+        breakpoint()
+
+        sdp = ShiftDesignModel(name="sdp", data=self.data)
+        sdp.run_model()
+
+        used_shifts = sdp.get_used_shifts()
+        self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
+                                                                      used_shifts)
+
+        print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
+        percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
+        print(f"This is a reduction of {100*percentage_reduction:.2f}%")
+
+        breakpoint()
+
+        return self
 
 
 if __name__ == "__main__":
     """ 
     Run any function by using:
         python main.py FUNCTION_NAME *ARGS
+    
+    Reason for using class: Being able to pass in init-arguments as kwargs --arg=value
+    
+    Access property PROP by using: 
+        python main.py FUNCTION_NAME PROP
+        
+    Chaining
+        $ python example.py move 3 3 on move 3 6 on move 6 3 on move 6 6 on move 7 4 on move 7 5 on
+        
+        need to return self
+        
+        $ python example.py --name="Sherrerd Hall" --stories=3 climb_stairs 10
+        $ python example.py --name="Sherrerd Hall" climb_stairs --stairs_per_story=10
+        $ python example.py --name="Sherrerd Hall" climb_stairs --stairs-per-story 10
+        $ python example.py climb-stairs --stairs-per-story 10 --name="Sherrerd Hall"
+        
+    Custom __str__
+    
     """
-    fire.Fire()
+
+    fire.Fire(ProblemRunner)
