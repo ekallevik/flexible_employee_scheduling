@@ -52,7 +52,6 @@ def worst_week_repair(
     repair_set = []
     employees_changed = employees
     changed = destroy_set
-
     while True:
         calculate_deviation_from_demand(
             state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed
@@ -88,7 +87,7 @@ def worst_week_repair(
         shift = max(shifts.items(), key=itemgetter(1))[0]
 
         deviation_contracted_hours = {
-            e: sum(state.soft_vars["contracted_hours"][e, j] for j in week)
+            e: sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in week)
             for e in employees
             if (sum(state.x[e, t, v] for t, v in shifts_at_day[int(shift[0] / 24)])) == 0
         }
@@ -189,7 +188,7 @@ def worst_week_regret_repair(
             deviation_from_demand < 6
             or max(
                 [
-                    sum(state.soft_vars["contracted_hours"][e, j] for j in weeks)
+                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
                     for e in possible_employees
                 ]
             )
@@ -365,7 +364,7 @@ def worst_employee_repair(
             time_step,
         )
         deviation_contracted_hours = {
-            e: sum(state.soft_vars["contracted_hours"][e, j] for j in weeks)
+            e: sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
             for e in employees
             if (sum(state.x[e, t, v] for t, v in shifts_at_day[int(shift[0] / 24)])) == 0
         }
@@ -435,7 +434,7 @@ def worst_employee_regret_repair(
             deviation_from_demand < 6
             or max(
                 [
-                    sum(state.soft_vars["contracted_hours"][e, j] for j in weeks)
+                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
                     for e in possible_employees
                 ]
             )

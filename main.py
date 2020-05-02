@@ -70,16 +70,26 @@ def run_heuristic(construction_model="feasibility", problem="rproblem2"):
         ),
     }
 
+    # soft_variables = {
+    #     "deviation_from_ideal_demand": calculate_deviation_from_demand(model, y),
+    #     "partial_weekends": calculate_partial_weekends(model, x),
+    #     "consecutive_days": calculate_consecutive_days(model, x),
+    #     "isolated_off_days": calculate_isolated_off_days(model, x),
+    #     "isolated_working_days": calculate_isolated_working_days(model, x),
+    #     "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
+    # }
+
     hard_variables = {
-        "below_minimum_demand": {},
-        "above_maximum_demand": {},
-        "more_than_one_shift_per_day": {},
-        "cover_multiple_demand_periods": {},
-        "weekly_off_shift_error": {},
-        "no_work_during_off_shift": {},
-        "mapping_shift_to_demand": {},
-        "delta_positive_contracted_hours": {},
+        "below_minimum_demand": {(c,t): 0 for c in data["competencies"] for t in data["time"]["periods"][0]},
+        "above_maximum_demand": {(c,t): 0 for c in data["competencies"] for t in data["time"]["periods"][0]},
+        "more_than_one_shift_per_day": {(e,i): 0 for e in data["staff"]["employees"] for i in data["time"]["days"]},
+        "cover_multiple_demand_periods": {(e,t): 0 for e in data["staff"]["employees"] for t in data["time"]["periods"][0]},
+        "weekly_off_shift_error": {(e,j): 0 for e in data["staff"]["employees"] for j in data["time"]["weeks"]},
+        "mapping_shift_to_demand": {(c,t): 0 for c in data["competencies"] for t in data["time"]["periods"][0]},
+        "delta_positive_contracted_hours": {e: 0 for e in data["staff"]["employees"]}
     }
+
+    
 
     objective_function, f = calculate_objective_function(data, soft_variables,
                                                          converted_solution["w"])

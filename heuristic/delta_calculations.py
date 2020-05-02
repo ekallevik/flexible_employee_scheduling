@@ -6,7 +6,6 @@ from operator import itemgetter
 def calculate_deviation_from_demand(
     state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set
 ):
-
     for c in competencies:
         for e, t, v in destroy_repair_set:
             for t in t_covered_by_shift[t, v]:
@@ -31,13 +30,13 @@ def delta_calculate_deviation_from_contracted_hours(
     """
     for e in employees:
         for j in weeks:
-            state.soft_vars["contracted_hours"][e, j] \
+            state.soft_vars["deviation_contracted_hours"][e, j] \
                 = contracted_hours[e] - sum(
                 time_step * state.y[c, e, t] for t in time_periods_in_week[j] for c in competencies
             )
 
         state.hard_vars["delta_positive_contracted_hours"][e] = -min(
-            0, sum(state.soft_vars["contracted_hours"][e, j] for j in weeks)
+            0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
         )
 
     # for e,t,v in destroy_set:
@@ -172,7 +171,7 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
 def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks):
     for e in employees:
         state.f[e] = (
-            sum(state.w[e, j][1] - state.soft_vars["contracted_hours"][e, j] for j in weeks)
+            sum(state.w[e, j][1] - state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
             - sum(state.soft_vars["partial_weekends"][e, i] for i in saturdays)
             - sum(
                 state.soft_vars["isolated_working_days"][e, i + 1]
