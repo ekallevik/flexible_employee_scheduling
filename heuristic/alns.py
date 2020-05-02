@@ -182,7 +182,6 @@ class ALNS:
         total_weight = sum(weights.values())
         return [weight / total_weight for weight in weights.values()]
 
-
     def update_weights(self, weight_update, destroy_id, repair_id):
         """ Updates the value of the operator pair by multiplying both with weight_update """
 

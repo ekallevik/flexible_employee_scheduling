@@ -1,305 +1,392 @@
-from gurobipy import *
-from pathlib import Path
-from xml_loader.xml_loader import *
-import xml.etree.ElementTree as ET
+from preprocessing import xml_loader
+from preprocessing.demand_processing import (
+    combine_demand_intervals,
+    combine_no_demand_intervals,
+    get_demand,
+    get_start_events,
+    get_time_periods,
+    get_time_steps,
+    get_combined_time_periods,
+)
 from collections import defaultdict
+from preprocessing.preferences import generate_preferences
+from preprocessing.xml_loader import *
+from utils.const import (
+    ALLOWED_SHIFT_DURATION,
+    DESIRED_SHIFT_DURATION,
+    DURATION_OF_PREFERENCES,
+    NUMBER_OF_PREFERENCES_PER_WEEK,
+    TIME_DEFINING_SHIFT_DAY,
+)
 
 
-def get_time_steps(root):
-    demands = get_demand_definitions(root)
-    time_step_length = 100
-    for demand in demands:
-        for i in range(len(demand.end)):
-            if(demand.end[i] - int(demand.end[i]) > 0):
-                if(demand.end[i] - int(demand.end[i]) == 0.5 and time_step_length > 0.5):
-                    time_step_length = 0.5
-                elif(demand.end[i] - int(demand.end[i]) in [0.25,0.75] and time_step_length > 0.25):
-                    time_step_length = 0.25
-                elif(demand.end[i] - int(demand.end[i]) < 0.25):
-                    time_step_length = 1/60
-                    break
-            if(demand.start[i] - int(demand.start[i]) > 0):
-                if(demand.start[i] - int(demand.start[i]) == 0.5 and time_step_length > 0.5):
-                    time_step_length = 0.5
-                elif(demand.start[i] - int(demand.start[i]) == [0.25,0.75] and time_step_length > 0.25):
-                    time_step_length = 0.25
-                elif(demand.start[i] - int(demand.start[i]) < 0.25):
-                    time_step_length = 1/60
-                    break
-            if(time_step_length > 1 and (demand.end[i] - int(demand.end[i])) == 0 and (demand.start[i] - int(demand.start[i])) == 0):
-                time_step_length = 1
-    return time_step_length
+def load_data(problem_name):
+    root = xml_loader.get_root(problem_name)
 
-def get_time_periods(root):
-    time_periods = []
-    i = 0
-    time_step = get_time_steps(root)
-    demands = get_days_with_demand(root)
-    time_periods_in_week = tupledict()
-    week = 0
-    time_periods_in_week[week] = tuplelist()
-    for dem in demands:
-        for i in range(len(demands[dem].start)):
-            time = demands[dem].start[i] + 24*(dem)
-            end = demands[dem].end[i] + 24*dem
-            #Håndterer special cases hvor demand end er mindre enn demand start
-            if(end <= time):
-                end += 24
-            while(time < end):
-                if(time > (week+1)*24*7):
-                    week += 1
-                    time_periods_in_week[week] = []
-                if(time not in time_periods):
-                    time_periods.append(time)
-                    time_periods_in_week[week].append(time)
-                time += time_step
-    return [time_periods, time_periods_in_week]
-
-
-def get_time_periods_in_day(root):
-    time_step = get_time_steps(root)
-    demands = get_days_with_demand(root)
-    time_periods_in_day = defaultdict(list)
-    day = 0
-    for dem in demands:
-        for i in range(len(demands[dem].start)):
-            time = demands[dem].start[i] + 24*(dem)
-            end = demands[dem].end[i] + 24*dem
-            #Håndterer special cases hvor demand end er mindre enn demand start
-            if(end <= time):
-                end += 24
-            while(time < end):
-                if(time > (day+1)*24):
-                    day += 1
-                if(time not in time_periods_in_day[day]):
-                    time_periods_in_day[day].append(time)
-                time += time_step
-    return time_periods_in_day
-
-
-def get_demand_periods(root):
-    demand = {}
-    demand["min"] = tupledict()
-    demand["ideal"] = tupledict()
-    demand["max"] = tupledict()
-    competencies = [0]
-    time_step = get_time_steps(root)
-    demands = get_days_with_demand(root)
-    for c in competencies:
-        for dem in demands:
-            for i in range(len(demands[dem].start)):
-                t = demands[dem].start[i] + 24*(dem)
-                while(t < demands[dem].end[i] + 24*dem):
-                    try:
-                        demand["min"][c,t] += demands[dem].minimum[i]
-                    except:
-                        demand["min"][c,t] = demands[dem].minimum[i]
-                    try:
-                        demand["ideal"][c,t] += demands[dem].ideal[i]
-                    except:
-                        demand["ideal"][c,t] = demands[dem].ideal[i]
-                    try:
-                        demand["max"][c,t] += demands[dem].maks[i]
-                    except:
-                        demand["max"][c,t] = demands[dem].maks[i]
-                    t += time_step
-    return demand
-
-
-def get_events(root):
-    events = []
-    demand_days = get_days_with_demand(root)
-    for day in demand_days:
-        for t in range(len(demand_days[day].start)):
-            if(demand_days[day].end[t] == 0):
-                demand_days[day].end[t] += 24
-            if(demand_days[day].start[t] + 24*day not in events):
-                events.append(demand_days[day].start[t] + 24*day)
-            if(demand_days[day].end[t] - demand_days[day].start[t] >= 12):
-                diff = (demand_days[day].end[t] - demand_days[day].start[t])/2
-                if(demand_days[day].start[t] + 24*day + diff not in events):
-                    events.append(demand_days[day].start[t] + 24*day + diff)
-            if(demand_days[day].end[t] + 24*day not in events):
-                events.append((demand_days[day].end[t] + 24*day))
-    return events
-
-
-def get_employee_lists(root):
-    competencies = get_competencies(root)
-    employee_with_competencies = tupledict()
-    employees = tuplelist()
-    employee_weekly_rest = tupledict()
-    employee_daily_rest = tupledict()
-    employee_contracted_hours = tupledict()
-    emp = get_employees(root, competencies)
-    if(len(competencies) == 0):
-        competencies.append(0)
-    for c in range(len(competencies)):
-        employee_with_competencies[c] = []
-        for e in emp:
-            if(c in e.competencies):
-                employee_with_competencies[c].append(int(e.id))
+    competencies = []
+    #Do not think we will use this anymore
+    #competencies = get_competencies(root)
     
-    for e in emp:
-        id = int(e.id)
-        employees.append(id)
-        employee_daily_rest[id] = e.daily_rest_hours
-        employee_weekly_rest[id] = e.daily_rest_hours
-        employee_contracted_hours[id] = e.contracted_hours
-        
-    return employees, employee_with_competencies, employee_weekly_rest, employee_daily_rest, employee_contracted_hours
+    staff = get_employee_lists(root, competencies)
+    time_sets = get_time_sets(root, competencies)
+
+    off_shift_sets = get_off_shift_sets(root, time_sets, competencies)
+
+    shifts = get_shifts(root)
+
+    shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"], competencies)
+
+    data = {
+        "competencies": competencies,
+        "demand": get_demand(root, competencies),
+        "staff": staff,
+        "limit_on_consecutive_days": 5,
+        "preferences": generate_preferences(
+            staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
+        ),
+        "shifts": shift_sets,
+        "off_shifts": off_shift_sets,
+        "time": time_sets,
+        "heuristic": {
+            "t_covered_by_shift": get_t_covered_by_shift(shift_sets["shifts"], time_sets),
+            "shift_lookup": get_shift_lookup(shift_sets["shifts_per_day"]),
+        },
+    }
+
+    return data
 
 
-def get_durations(root):
-    events = get_events(root)
-    durations = {}
-    #Possible durations are between 6.0 hours and 12.0 hours
-    possible_durations = [t/4 for t in range(6*4, (12*4+1))]
-    for t in events:
-        for dur in possible_durations:
-            if(t+dur in events):
-                try:
-                    durations[t].append(dur)
-                except:
-                    durations[t] = [dur]
-    return durations
+def get_time_sets(root, competencies):
 
-def get_shift_lists(root):
-    durations = get_durations(root)
-    shifts_per_day = tupledict()
-    shifts_at_week = defaultdict(list)
-    shifts = tuplelist()
     days = get_days(root)
-    time_step = get_time_steps(root)
-    for d in days:
-        shifts_per_day[d] = []
-        for t in durations:
-            if(t >=d*24 and t <= (24*(d+1) - time_step)):
-                for dur in durations[t]:
-                    shifts_per_day[d].append((t,dur))
-                    shifts_at_week[int(d/7)].append((t,dur))
-                    shifts.append((t,dur))
-            if(t > 24*d):
-                continue
-    return [shifts, shifts_per_day, shifts_at_week]
+    number_of_weeks = int(len(days) / 7)
+    periods = get_time_periods(root, competencies)
+    
+    return {
+        "step": get_time_steps(root),
+        "periods": periods,
+        "combined_time_periods": get_combined_time_periods(periods[0], periods[1], periods[2]),
+        "days": days,
+        "weeks": [i for i in range(number_of_weeks)],
+        "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
+        "sundays": [6 + i * 7 for i in range(number_of_weeks)],
+    }
 
-def get_shift_list(root):
+
+def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
+
+    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+    long_shifts, short_shifts = get_short_and_long_shifts(shifts)
+    shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
+    invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
+
+    return {
+        "shifts": shifts,
+        "shifts_per_day": shifts_per_day,
+        "short_shifts": short_shifts,
+        "long_shifts": long_shifts,
+        "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets, competencies),
+        "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
+        "shifts_combinations_violating_daily_rest": shifts_violating_daily_rest,
+        "invalid_shifts": invalid_shifts,
+    }
+
+
+def get_updated_shift_sets(problem_name, data, shifts, competencies):
+
+    root = xml_loader.get_root(problem_name)
+
+    return get_shift_sets(
+        root, data["staff"], data["time"], shifts, data["off_shifts"]["off_shifts"], competencies
+    )
+
+
+def get_shifts(root):
+    demand_intervals = combine_demand_intervals(root)
     shifts = tuplelist()
-    dur = get_durations(root)
-    i = 0
-    for t in dur:
-        for v in dur[t]:
-            shifts.append(i)
-            i += 1
+
+    for intervals in demand_intervals:
+
+        if len(intervals) == 2:
+            start_time = intervals[0]
+            duration = intervals[1] - start_time
+
+            if duration >= ALLOWED_SHIFT_DURATION[1]:
+                if((start_time, duration) not in shifts):
+                    shifts.append((start_time, duration))
+            else:
+                if((start_time, intervals[1] - start_time) not in shifts):
+                    shifts.append((start_time, intervals[1] - start_time))
+
+        else:
+
+            for time in intervals:
+                found_shift = False
+
+                for t in intervals[intervals.index(time) :]:
+                    duration = t - time
+                    if ALLOWED_SHIFT_DURATION[0] <= duration <= ALLOWED_SHIFT_DURATION[1]:
+                        if((time, duration) not in shifts):
+                            shifts.append((time, duration))
+                            found_shift = True
+                    if duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
+                        shifts.append((time, duration))
     return shifts
 
-def get_shifts_overlapping_t(root):
-    time_periods = get_time_periods(root)[0]
-    time_step = get_time_steps(root)
+
+def get_shifts_per_day(shifts, days):
+    shifts_per_day = tupledict()
+
+    for day in days:
+        shifts_per_day[day] = []
+
+        for shift in shifts:
+
+            if (
+                24 * (int(day) - 1) + TIME_DEFINING_SHIFT_DAY
+                <= shift[0]
+                < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
+            ):
+                shifts_per_day[day].append(shift)
+
+            if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
+                if day == days[-1]:
+                    shifts_per_day[day].append(shift)
+                break
+    return shifts_per_day
+
+
+def get_short_and_long_shifts(shifts):
+    short_shifts = tuplelist()
+    long_shifts = tuplelist()
+
+    for s in shifts:
+        if s[1] < DESIRED_SHIFT_DURATION[0]:
+            short_shifts.append(s)
+        elif s[1] > DESIRED_SHIFT_DURATION[1]:
+            long_shifts.append(s)
+    return long_shifts, short_shifts
+
+
+def get_shifts_overlapping_t(shifts, time_sets, competencies):
+
+    time_periods = time_sets["periods"][0]
     shifts_overlapping_t = {}
-    shifts = get_durations(root)
-    for t in time_periods:
-        for time in shifts:
-            for dur in shifts[time]:
-                if(t >= time and t < time + dur):
+
+    for c in competencies:
+        for time in time_periods[c]:
+            for shift in shifts:
+                if shift[0] <= time < shift[0] + shift[1]:
                     try:
-                        shifts_overlapping_t[t].append((time, dur))
+                        if(shift not in shifts_overlapping_t[time]):
+                            shifts_overlapping_t[time].append(shift)
                     except:
-                        shifts_overlapping_t[t] = [(time, dur)]
+                        shifts_overlapping_t[time] = [shift]
     return shifts_overlapping_t
 
-def get_start_events(root):
-    events = []
-    demand_days = get_days_with_demand(root)
-    for day in demand_days:
-        for t in range(len(demand_days[day].start)):
-            for j in range(len(demand_days[day].end)):
-                diff = demand_days[day].end[j] - demand_days[day].start[t]
-                if(diff >= 6):
-                    events.append((demand_days[day].start[t] + 24*day))
-                    break
-    return events
+
+def get_shifts_covered_by_off_shifts(shifts, off_shifts):
+
+    shifts_covered = tupledict()
+
+    for off_shift in off_shifts:
+        shifts_covered[off_shift] = []
+        for shift in shifts:
+            if off_shift[0] <= shift[0] < (off_shift[0] + off_shift[1]) or off_shift[0] <= (
+                shift[0] + shift[1]
+            ) < (off_shift[0] + off_shift[1]):
+                shifts_covered[off_shift].append(shift)
+
+    return shifts_covered
+
+
+def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
+    """
+    Returns a dict, with "employee" as key and another dict as value. The new dict uses "shift"
+    as key and have a list of shifts that violates daily rest for "employee" if "shift" is worked.
+    """
+
+    employees = staff["employees"]
+    daily_rest = staff["employee_daily_rest"]
+    daily_offset = staff["employee_daily_offset"]
+    violating_shifts = tupledict()
+
+    for e in employees:
+        violating_shifts[e] = tupledict()
+        for day in shifts_per_day:
+            if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
+                for shift in shifts_per_day[day]:
+                    if day != 0:
+                        for s in shifts_per_day[day - 1]:
+                            if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
+                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (
+                                    s[0] + s[1]
+                                ):
+                                    try:
+                                        violating_shifts[e][shift].append(s)
+                                    except:
+                                        violating_shifts[e][shift] = [s]
+                    if day != shifts_per_day.keys()[-1]:
+                        for s in shifts_per_day[day + 1]:
+                            if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
+                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (
+                                    shift[0] + shift[1]
+                                ):
+                                    try:
+                                        violating_shifts[e][shift].append(s)
+                                    except:
+                                        violating_shifts[e][shift] = [s]
+
+    return violating_shifts
+
+
+def get_invalid_shifts(root, staff, shifts_per_day):
+    """
+    Returns a dict with employee as key, and all shifts that are invalid either due to blocked
+    hours or daily rest as value.
+    """
+
+    employees = staff["employees"]
+    daily_rest = staff["employee_daily_rest"]
+    daily_offset = staff["employee_daily_offset"]
+    blocked_hours = staff["employee_blocked_hours"]
+    invalid_shifts = tupledict()
+
+    for e in employees:
+        invalid_shifts[e] = tuplelist()
+        for day in shifts_per_day:
+            natural_rest = already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)
+            for shift in shifts_per_day[day]:
+                shift_used = False
+
+                # BLOCKED HOURS
+                for time in blocked_hours[e]:
+                    if shift[0] <= time < shift[0] + shift[1]:
+                        invalid_shifts[e].append(shift)
+                        shift_used = True
+
+                # INVALID SHIFTS DUE TO DAILY REST
+                if not natural_rest:
+                    if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
+                        if (
+                            24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
+                            < daily_rest[e]
+                        ):
+                            if not shift_used:
+                                invalid_shifts[e].append(shift)
+
+    return invalid_shifts
+
+
+def get_t_covered_by_shift(shifts, time_sets):
+
+    time_step = time_sets["step"]
+    time_periods = time_sets["periods"][0]
+    t_covered_by_shift = tupledict()
+    c = 0
+    for shift in shifts:
+        end = time_periods[c].index(shift[0] + shift[1] - time_step)
+        start = time_periods[c].index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = time_periods[c][start : (end + 1)]
+
+    return t_covered_by_shift
+
+
+def get_shift_lookup(shifts_per_day):
+
+    shift_lookup = {}
+
+    for key in shifts_per_day.keys():
+        for value in shifts_per_day[key]:
+            shift_lookup[value] = key
+
+    return shift_lookup
+
+
+def already_daily_off_shift(root, employee_offset, employee_rest, day):
+    """
+    Checks if an employee specific day has a interval without demand that exceeds the daily rest
+    hours. If so, there is no need to ensure that daily rest is satisfied, as this is ensured
+    naturally. Returns True or False.
+    """
+
+    no_demand_intervals = combine_no_demand_intervals(root)
+    days = get_days(root)
+
+    for interval in no_demand_intervals:
+        if (
+            day == len(days) - 1
+            and interval == no_demand_intervals[-1]
+            and interval[1] == 24 * len(days)
+        ):
+            temp_val = interval[1]
+            interval[1] = temp_val + employee_offset
+        if (
+            employee_offset + (24 * int(day))
+            <= interval[0]
+            <= employee_offset + (24 * (int(day) + 1))
+        ):
+            if interval[1] - interval[0] >= employee_rest:
+                if interval[0] + employee_rest <= employee_offset + (24 * (int(day) + 1)):
+                    return True
+        if interval[0] > employee_offset + (24 * (int(day) + 1)):
+            break
+
+    return False
+
+
+def get_off_shift_sets(root, time_sets, competencies):
+
+    off_shift_set = get_off_shifts(root)
+
+    return {
+        "t_in_off_shifts": get_t_covered_by_off_shifts(off_shift_set[0], time_sets, competencies),
+        "off_shifts": off_shift_set[0],
+        "off_shifts_per_week": off_shift_set[1],
+    }
 
 
 def get_off_shifts(root):
+
     events = get_start_events(root)
+
     off_shifts = []
     off_shifts_in_week = tupledict()
     week = 0
     off_shifts_in_week[week] = []
+
     for i in range(len(events)):
-        for event2 in events[i:]:
-            dur = event2 - events[i]
-            if(events[i] >= (week+1)*24*7):
-                week+=1
+        for event in events[i:]:
+            duration = event - events[i]
+            if events[i] >= (week + 1) * 24 * 7:
+                week += 1
                 off_shifts_in_week[week] = []
-            if(event2 >= (week+1)*24*7):
-               break
-            if(dur > 70):
+            if event >= (week + 1) * 24 * 7:
                 break
-            elif(dur>= 36):
-                if((events[i], dur) not in off_shifts):
-                    off_shifts_in_week[week].append((events[i], dur))
-                    off_shifts.append((events[i], dur))
+            if duration > 70:
+                break
+            elif duration >= 36:
+                if (events[i], duration) not in off_shifts:
+                    off_shifts_in_week[week].append((events[i], duration))
+                    off_shifts.append((events[i], duration))
+
     return [off_shifts, off_shifts_in_week]
 
-def get_t_covered_by_off_shifts(root):
-    off_shifts = get_off_shifts(root)[0]
+
+def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
     t_covered = tupledict()
-    time_periods = get_time_periods(root)[0]
+    time_periods = time_sets["periods"][0]
     for shift in off_shifts:
-        end = time_periods.index(shift[0] + shift[1])
-        start = time_periods.index(shift[0])
-        t_covered[shift[0], shift[1]] = time_periods[start:end]
-    #print(t_covered)
+        for c in competencies: 
+            try:
+                end = time_periods[c].index(shift[0] + shift[1])
+                start = time_periods[c].index(shift[0])
+                t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
+            except:  
+                test = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                if(len(test) == 0):
+                    continue
+                t_covered[shift[0], shift[1], c] = test
+
+            
     return t_covered
-
-def get_t_covered_by_shift(root):
-    time_step = get_time_steps(root)
-    shifts = get_shift_lists(root)[0]
-    time_periods = get_time_periods(root)[0]
-    t_covered_by_shift = tupledict()
-    for shift in shifts:
-        end = time_periods.index(shift[0] + shift[1] - time_step)
-        start = time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[start:(end + 1)]
-    #print(t_covered_by_shift)
-    return t_covered_by_shift
-
-def get_shifts_covered_by_off_shifts(root):
-    off_shifts = get_off_shifts(root)[0]
-    shifts_covered = tupledict()
-    shifts = get_shift_lists(root)[0]
-    for off_shift in off_shifts:
-        shifts_covered[off_shift] = []
-        for shift in shifts:
-            if(shift[0] >= off_shift[0] and shift[0] < (off_shift[0] + off_shift[1]) or (shift[0] + shift[1]) >= off_shift[0] and (shift[0] + shift[1]) < (off_shift[0] + off_shift[1])):
-                shifts_covered[off_shift].append(shift)
-    return shifts_covered
-
-
-def shift_lookup(root):
-    shifts = get_shift_lists(root)[1]
-    shift_lookup = {}
-    for key in shifts.keys():
-        for value in shifts[key]:
-            shift_lookup[value] = key
-    return shift_lookup
-
-def load_data(problem_name):
-    data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-    root = ET.parse(data_folder / (problem_name + '.xml')).getroot()
-    shift_lookup(root)
-    data = {}
-    data["employees"] = get_employee_lists(root)
-    data["time"] = [get_time_steps(root)]
-    data["time"].extend(get_time_periods(root))
-    data["time"].extend([get_days(root)])
-    data["demand"] = get_demand_periods(root)
-    data["shifts"] = [get_shifts_covered_by_off_shifts(root), get_shifts_overlapping_t(root)]
-    data["shifts"].extend(get_shift_lists(root))
-    data["off_shifts"] = [get_t_covered_by_off_shifts(root)]
-    data["off_shifts"].extend(get_off_shifts(root))
-    data["competencies"] = get_competencies(root)
-    data["heuristics"] = [get_t_covered_by_shift(root), get_time_periods_in_day(root), shift_lookup(root)]
-    return data
