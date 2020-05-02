@@ -15,9 +15,6 @@ from utils.const import (
     DEFAULT_DAILY_REST_HOURS,
 )
 
-logger.add(sys.stderr, format="{time:HH:mm:ss} {message}", filter="my_module",
-           level="DEBUG",
-           backtrace=True, diagnose=True)
 
 def get_employee_lists(root, competencies):
 
@@ -80,7 +77,7 @@ def set_contracted_hours_for_employee(employee, schedule_row):
     try:
         employee.set_contracted_hours(float(schedule_row.find("WeekHours").text))
     except AttributeError:
-        print(
+        logger.debug(
             f"ScheduleRow {employee.id} don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied"
         )
         employee.set_contracted_hours(DEFAULT_CONTRACTED_HOURS)
