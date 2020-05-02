@@ -69,11 +69,11 @@ class ProblemRunner:
         breakpoint()
 
         if model == "feasibility":
-            esp = FeasibilityModel(name="esp_feasibility", problem=self.problem, data=self.data)
+            esp = FeasibilityModel(name="esp_feasibility", data=self.data)
         elif model == "optimality":
-            esp = OptimalityModel(name="esp_optimality", problem=self.problem, data=self.data)
+            esp = OptimalityModel(name="esp_optimality", data=self.data)
         elif model == "construction":
-            esp = ConstructionModel(name="esp_construction", problem=self.problem, data=self.data)
+            esp = ConstructionModel(name="esp_construction", data=self.data)
         else:
             raise ValueError(f"The model choice '{model}' is not valid.")
 
@@ -99,8 +99,6 @@ class ProblemRunner:
 
         original_shifts = self.data["shifts"]["shifts"]
 
-        breakpoint()
-
         sdp = ShiftDesignModel(name="sdp", data=self.data)
         sdp.run_model()
 
@@ -111,8 +109,6 @@ class ProblemRunner:
         print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         print(f"This is a reduction of {100*percentage_reduction:.2f}%")
-
-        breakpoint()
 
         return self
 
