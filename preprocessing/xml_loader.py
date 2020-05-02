@@ -1,7 +1,9 @@
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from gurobipy.gurobipy import tupledict, tuplelist
+from loguru import logger
 
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
@@ -13,6 +15,9 @@ from utils.const import (
     DEFAULT_DAILY_REST_HOURS,
 )
 
+logger.add(sys.stderr, format="{time:HH:mm:ss} {message}", filter="my_module",
+           level="DEBUG",
+           backtrace=True, diagnose=True)
 
 def get_employee_lists(root, competencies):
 
@@ -125,7 +130,7 @@ def set_competency_for_employee(competencies, employee, schedule_row):
                 if competence.text in competencies:
                     employee.append_competency(competence.text)
         except AttributeError:
-            print(
+            logger.info(
                 f"ScheduleRow {employee.id} don't have a Competence tag. DEFAULT_COMPETENCY applied"
             )
 
@@ -160,7 +165,7 @@ def set_daily_rest_rule(daily_rest_rules, employee, schedule_row):
             if daily_rule.rest_id == daily_rest_rule:
                 employee.set_daily_rest(daily_rule.hours)
     except AttributeError:
-        print(
+        logger.info(
             f"ScheduleRow {employee.id} don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST"
         )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
@@ -173,7 +178,7 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
             if weekly_rule.rest_id == weekly_rest_rule:
                 employee.set_weekly_rest(weekly_rule.hours)
     except AttributeError:
-        print(
+        logger.info(
             f"ScheduleRow {employee.id} don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied"
         )
         employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
