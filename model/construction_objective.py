@@ -15,8 +15,7 @@ class ConstructionObjective:
     def add_objective(self, weights, delta):
 
         self.model.setObjective(
-            -weights["demand deviation"]
-            * quicksum(
+            - quicksum(
                 quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
                          weights["deficit demand deviation factor"] * delta["minus"][c, t]
                          for t in self.time_periods)

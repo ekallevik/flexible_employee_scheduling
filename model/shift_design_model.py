@@ -12,7 +12,7 @@ class ShiftDesignModel:
         self.name = name
         self.model = Model(name=self.name)
 
-        self.weights = get_shift_design_weights()
+        self.weights = get_shift_design_weights(data["time"])
 
         self.competencies = data["competencies"]
         self.demand = data["demand"]

@@ -65,8 +65,7 @@ class OptimalityObjective:
         self.model.setObjective(
             quicksum(f["plus"][e] - f["minus"][e] for e in self.employees)
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
-            - weights["demand deviation"]
-            * quicksum(
+            - quicksum(
                 quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
                          weights["deficit demand deviation factor"] * delta["minus"][c, t]
                          for t in self.time_periods)
