@@ -57,6 +57,9 @@ class ProblemRunner:
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns()
+
+        breakpoint()
+
         self.alns.iterate(iterations)
 
         return self
@@ -95,7 +98,7 @@ class ProblemRunner:
         return self
 
     def set_esp(self):
-        """ Creates an appropriate Gurobi model for ESP and saves it """
+        """ Creates an appropriate Gurobi model for ESP and saves it"""
 
         name = f"{self.mode}_model"
         model = self.create_model(name)
@@ -178,12 +181,42 @@ if __name__ == "__main__":
         python main.py FUNCTION_NAME ARGS
         
     Run functions in a chain:
-        python main.py configure_model --seed=1 run_esp
-    
-    Reason for using class: Being able to pass in init-arguments as kwargs --arg=value
+        python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE
+        
+        Note: only functions that return `self` can be chained.
+        Note2: functions has to be separated by `-`
     
     Access property PROP by using: 
         python main.py FUNCTION_NAME PROP
+    
+    Examples
+        # Initialize object with default arguments and 
+        python main.py
+        
+        # Initialize object and print self.mode
+        python main.py mode
+        
+        # Run ESP with SDP
+        python main.py run_esp
+        python main.py --with_sdp run_esp
+        
+        # Run ESP without SDP
+        python main.py --nowith_sdp run_esp
+        python main.py --with_sdp=False run_esp
+        
+        # Configure ESP-model and then run
+        python main.py configure_model --seed=1 - run_esp
+        
+        # Run ALNS without SDP
+        python main.py --nowith_sdp run_alns
+        
+        # Change to SA-criterion and the run ALNS
+        python main.py change_criterion --start_temp=150 - run_alns
+        
+    
+    Reason for using class: Being able to pass in init-arguments as kwargs --arg=value
+    
+
         
     Chaining
         $ python example.py move 3 3 on move 3 6 on move 6 3 on move 6 6 on move 7 4 on move 7 5 on
