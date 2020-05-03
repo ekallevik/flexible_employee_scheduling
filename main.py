@@ -1,10 +1,12 @@
 import sys
 
 import fire
+from gurobipy import *
 from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
 from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
@@ -28,77 +30,98 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 class ProblemRunner:
 
-    def __init__(self, problem="rproblem3", model="construction", with_sdp=True):
+    def __init__(self, problem="rproblem3_one_week", mode="construction", with_sdp=True):
 
         self.problem = problem
         self.data = shift_generation.load_data(problem)
-        self.model = model
 
-        self.esp_solution = None
-        self.alns_solution = None
+        # Standard Gurobi-config
+        self.mip_focus = "default"
+        self.solution_limit = "default"
+        self.log_to_console = 1
+
+        self.sdp = None
+
+        self.mode = mode
+        self.esp = None
+
+        self.criterion = GreedyCriterion()
+        self.alns = None
 
         if with_sdp:
-            self.run_shift_design_model()
+            self.set_sdp()
 
-    def run_heuristic(self):
-        """
+        self.set_esp()
 
-        :return:
-        """
+    def run_alns(self, iterations=1000):
+        """ Runs ALNS on the generated candidate solution """
 
-        self.run_model()
+        self.set_alns()
+        self.alns.iterate(iterations)
 
-        converter = Converter(self.esp_solution)
-        converted_solution = converter.get_converted_variables()
+        return self
 
+    def change_criterion(self, start_temp=100, end_temp=0, step=1, method="linear"):
+        """ Changes the criterion to Simulated Annealing"""
+
+        self.criterion = SimulatedAnnealingCriterion(start_temperature=start_temp,
+                                                     end_temperature=end_temp, step=step,
+                                                     method=method)
+
+    def set_alns(self):
+        """ Sets ALNS based on the given config """
+
+        converted_solution = self.get_candidate_solution()
         state = State(converted_solution)
-        criterion = GreedyCriterion()
 
-        alns = ALNS(state, criterion)
-        self.alns_solution = alns.iterate(iterations=1000)
+        self.alns = ALNS(state, self.criterion)
+
+    def get_candidate_solution(self):
+        """ Generates a candidate solution for ALNS """
+
+        self.run_esp()
+        converter = Converter(self.esp)
+
+        return converter.get_converted_variables()
+
+    def run_esp(self):
+        """ Runs ESP, with an optional presolve with SDP """
+
+        if self.sdp:
+            self.sdp.run_model()
+
+        self.esp.run_model()
 
         return self
 
-    def run_model(self):
-        """
-        Runs the specified model on the given problem.
+    def set_esp(self):
+        """ Creates an appropriate Gurobi model for ESP and saves it """
 
-        :return: self
-        """
+        name = f"{self.mode}_model"
+        model = self.create_model(name)
 
-        if self.model == "feasibility":
-            esp = FeasibilityModel(name="esp_feasibility", data=self.data)
-        elif self.model == "optimality":
-            esp = OptimalityModel(name="esp_optimality", data=self.data)
-        elif self.model == "construction":
-            esp = ConstructionModel(name="esp_construction", data=self.data)
+        if self.mode == 0 or self.mode == "construction":
+            self.esp = ConstructionModel(model, data=self.data)
+            # Update configuration to get a solution as fast as possible
+            self.configure_model(mip_focus=1, solution_limit=1)
+
+        elif self.mode == 1 or self.mode == "feasibility":
+            self.esp = FeasibilityModel(model, data=self.data)
+            # todo: add same config as ConstructionModel?
+
+        elif self.mode == 2 or self.mode == "optimality":
+            self.esp = OptimalityModel(model, data=self.data)
+
         else:
-            raise ValueError(f"The model choice '{self.model}' is not valid.")
+            raise ValueError(f"The model choice '{self.mode}' is not valid.")
 
-        breakpoint()
-
-        esp.run_model()
-
-        self.esp_solution = esp
-
-        return self
-
-    # TODO: how to ensure that this model only runs once?
-    #  private method?
-    #  switch flag?
-    def run_shift_design_model(self):
-        """
-        Runs the shift design model.
-
-        :return: self to enable chaining of Fire-commands
-        """
+    def run_sdp(self):
+        """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
         original_shifts = self.data["shifts"]["shifts"]
+        self.sdp.run_model()
 
-        sdp = ShiftDesignModel(name="sdp", data=self.data)
-        sdp.run_model()
-
-        used_shifts = sdp.get_used_shifts()
+        used_shifts = self.sdp.get_used_shifts()
         self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
                                                                       used_shifts)
 
@@ -106,13 +129,56 @@ class ProblemRunner:
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         print(f"This is a reduction of {100*percentage_reduction:.2f}%")
 
+    def set_sdp(self):
+        """ Creates an appropriate Gurobi model for SDP and saves it """
+
+        model = self.create_model(name="sdp")
+        self.sdp = ShiftDesignModel(model, data=self.data)
+
+    def configure_model(self, model="esp", **kwargs):
+        """
+        Dynamically configure the ESP-model by running:
+            python main.py configure_model --param1=value1 --param2=value2
+        """
+
+        gurobi_model = self.esp.model if model == "esp" else self.sdp.model
+
+        for key, value in kwargs.items():
+            gurobi_model.setParam(key, value)
+
         return self
+
+    def create_model(self, name):
+        """ Creates a Gurobi model with standard config """
+
+        model = Model(name=name)
+        model.setParam("MIPFocus", self.mip_focus)
+        model.setParam("SolutionLimit", self.solution_limit)
+        model.setParam("LogToConsole", self.log_to_console)
+
+        return model
+
+    def __str__(self):
+        """ Necessary for playing nicely with terminal usage """
+
+        esp_value = self.esp.model.getObjective().getValue()
+        message = f"ESP found solution:  {esp_value:.2f}."
+
+        if self.alns:
+            alns_value = self.alns.best_solution
+            diff = (alns_value - esp_value) / esp_value
+            message += f"\nALNS found solution: {alns_value}.\n Diff {diff:.2f}%"
+
+        return message
 
 
 if __name__ == "__main__":
     """ 
-    Run any function by using:
-        python main.py FUNCTION_NAME *ARGS
+    Run any function with arguments ARGS by using:
+        python main.py FUNCTION_NAME ARGS
+        
+    Run functions in a chain:
+        python main.py configure_model --seed=1 run_esp
     
     Reason for using class: Being able to pass in init-arguments as kwargs --arg=value
     

@@ -7,10 +7,9 @@ from utils.weights import get_shift_design_weights
 
 
 class ShiftDesignModel:
-    def __init__(self, name, data):
+    def __init__(self, model, data):
 
-        self.name = name
-        self.model = Model(name=self.name)
+        self.model = model
 
         self.weights = get_shift_design_weights(data["time"])
 

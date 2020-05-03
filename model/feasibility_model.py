@@ -5,8 +5,8 @@ from model.feasibility_objective import FeasibilityObjective
 
 
 class FeasibilityModel(BaseModel):
-    def __init__(self, name, data):
-        super().__init__(name, data)
+    def __init__(self, model, data):
+        super().__init__(model, data)
 
         self.var = BaseVariables(
             model=self.model,
@@ -35,6 +35,3 @@ class FeasibilityModel(BaseModel):
             staff=self.staff,
             time_set=self.time_set,
         )
-
-        # For heuristic
-        self.x, self.y, self.w = [None, None, None]
