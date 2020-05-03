@@ -58,18 +58,17 @@ class ProblemRunner:
 
         self.set_alns()
 
-        breakpoint()
-
         self.alns.iterate(iterations)
 
         return self
 
-    def change_criterion(self, start_temp=100, end_temp=0, step=1, method="linear"):
+    def change_criterion(self, start_temp=100, end_temp=1, step=1, method="linear"):
         """ Changes the criterion to Simulated Annealing"""
 
-        self.criterion = SimulatedAnnealingCriterion(start_temperature=start_temp,
-                                                     end_temperature=end_temp, step=step,
-                                                     method=method)
+        self.criterion = SimulatedAnnealingCriterion(method=method, start_temperature=start_temp,
+                                                     end_temperature=end_temp, step=step)
+
+        return self
 
     def set_alns(self):
         """ Sets ALNS based on the given config """
@@ -164,7 +163,7 @@ class ProblemRunner:
     def __str__(self):
         """ Necessary for playing nicely with terminal usage """
 
-        esp_value = self.esp.model.getObjective().getValue()
+        esp_value = self.esp.get_objective_value()
         message = f"ESP found solution:  {esp_value:.2f}."
 
         if self.alns:
@@ -212,24 +211,7 @@ if __name__ == "__main__":
         
         # Change to SA-criterion and the run ALNS
         python main.py change_criterion --start_temp=150 - run_alns
-        
-    
-    Reason for using class: Being able to pass in init-arguments as kwargs --arg=value
-    
-
-        
-    Chaining
-        $ python example.py move 3 3 on move 3 6 on move 6 3 on move 6 6 on move 7 4 on move 7 5 on
-        
-        need to return self
-        
-        $ python example.py --name="Sherrerd Hall" --stories=3 climb_stairs 10
-        $ python example.py --name="Sherrerd Hall" climb_stairs --stairs_per_story=10
-        $ python example.py --name="Sherrerd Hall" climb_stairs --stairs-per-story 10
-        $ python example.py climb-stairs --stairs-per-story 10 --name="Sherrerd Hall"
-        
-    Custom __str__
-    
+         
     """
 
     fire.Fire(ProblemRunner)

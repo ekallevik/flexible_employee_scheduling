@@ -19,6 +19,7 @@ class BaseModel:
         self.off_shifts_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
         self.preferences = data["preferences"]
+
         self.var = None
 
     def run_model(self):
@@ -27,3 +28,7 @@ class BaseModel:
     def get_variables(self):
         """ This method is intended to be used in all subclasses of BaseModel"""
         return self.var
+
+    def get_objective_value(self):
+        """ Returns the object value of the found solution """
+        return self.model.getObjective().getValue()
