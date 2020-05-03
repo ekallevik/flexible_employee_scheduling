@@ -75,7 +75,7 @@ def get_time_sets(root, competencies):
 
 def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
 
-    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+    shifts_per_day, shifts_in_week = get_shifts_per_day_and_week(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
     invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
@@ -83,6 +83,7 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
     return {
         "shifts": shifts,
         "shifts_per_day": shifts_per_day,
+        "shifts_in_week": shifts_in_week,
         "short_shifts": short_shifts,
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets, competencies),
@@ -134,9 +135,9 @@ def get_shifts(root):
     return shifts
 
 
-def get_shifts_per_day(shifts, days):
+def get_shifts_per_day_and_week(shifts, days):
     shifts_per_day = tupledict()
-
+    shifts_in_week = defaultdict(list)
     for day in days:
         shifts_per_day[day] = []
 
@@ -148,12 +149,15 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
-
+                if(shift not in shifts_in_week):
+                    shifts_in_week[int(day/7)].append(shift)
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
+                    if(shift not in shifts_in_week):
+                        shifts_in_week[int(day/7)].append(shift)
                 break
-    return shifts_per_day
+    return shifts_per_day, shifts_in_week
 
 
 def get_short_and_long_shifts(shifts):
@@ -281,13 +285,12 @@ def get_invalid_shifts(root, staff, shifts_per_day):
 def get_t_covered_by_shift(shifts, time_sets):
 
     time_step = time_sets["step"]
-    time_periods = time_sets["periods"][0]
+    combined_time_periods = time_sets["combined_time_periods"][0]
     t_covered_by_shift = tupledict()
-    c = 0
     for shift in shifts:
-        end = time_periods[c].index(shift[0] + shift[1] - time_step)
-        start = time_periods[c].index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[c][start : (end + 1)]
+        end = combined_time_periods.index(shift[0] + shift[1] - time_step)
+        start = combined_time_periods.index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
 
     return t_covered_by_shift
 

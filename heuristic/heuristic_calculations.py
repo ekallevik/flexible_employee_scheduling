@@ -4,7 +4,7 @@ from operator import itemgetter
 def calculate_deviation_from_demand(model, y):
     delta = {}
     for c in model.competencies:
-        for t in model.time_periods:
+        for t in model.time_periods[c]:
             delta[c,t] = (sum(y[c,e,t] for e in model.employee_with_competencies[c]) - model.demand["ideal"][c,t])
             # if(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x)) != 0:
             #     print(delta[c,t] - abs(model.delta["plus"][c,t].x - model.delta["minus"][c,t].x))
@@ -49,8 +49,8 @@ def calculate_negative_deviation_from_contracted_hours(model, y):
         for j in model.weeks:
             delta_negative_contracted_hours[e,j] = (model.contracted_hours[e]
             - sum(model.time_step * y[c,e,t] 
-            for t in model.time_periods_in_week[j]
-            for c in model.competencies))
+            for c in model.competencies
+            for t in model.time_periods_in_week[c, j]))
     return delta_negative_contracted_hours
 
 def calculate_partial_weekends(model, x):

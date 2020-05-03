@@ -53,14 +53,18 @@ class ALNS:
         self.shifts_overlapping_t = model.shifts_overlapping_t
         self.t_covered_by_off_shift = model.t_in_off_shifts
         self.time_periods_in_week = model.time_periods_in_week
+        self.combined_time_periods_in_week = model.combined_time_periods_in_week
 
-        remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
+
+
+        remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.combined_time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
         remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift)
 
         repair_worst_week_regret = partial(worst_week_regret_repair, self.shifts_in_week, 
                                             self.competencies, self.t_covered_by_shift, self.employee_with_competencies, 
-                                            self.demand, self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, 
-                                            self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
+                                            self.demand, self.time_step, self.time_periods_in_week, self.combined_time_periods_in_week, 
+                                            self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D, 
+                                            self.shifts_overlapping_t)
 
         repair_worst_employee_regret = partial(worst_employee_regret_repair, self.competencies, 
                                             self.t_covered_by_shift, self.employee_with_competencies, self.demand, 
@@ -83,12 +87,12 @@ class ALNS:
                         remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
-        for key in self.repair_operators.keys():
-            for operator in self.repair_operators[key]:
-                print(str(key) + ": " + str(operator))
+        #for key in self.repair_operators.keys():
+         #   for operator in self.repair_operators[key]:
+         #       print(str(key) + ": " + str(operator))
         self.initialize_destroy_and_repair_weights()
-        print(self.destroy_weights)
-        print(self.repair_weights)
+        #print(self.destroy_weights)
+        #print(self.repair_weights)
 
 
     def iterate(self, iterations):
@@ -139,7 +143,7 @@ class ALNS:
             if(sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0):
                 print("Breaking weekly_off_shift_error")
                 candidate_solution.write("before_breaking_weekly")
-                destroy_set, repair_set = illegal_week_swap(self.shifts_in_week, self.employees, self.shifts_at_day, self.t_covered_by_shift, self.competencies, self.contracted_hours, self.time_periods_in_week, self.time_step, self.L_C_D, self.weeks, candidate_solution)
+                destroy_set, repair_set = illegal_week_swap(self.shifts_in_week, self.employees, self.shifts_at_day, self.t_covered_by_shift, self.competencies, self.contracted_hours, self.time_periods_in_week, self.combined_time_periods_in_week, self.time_step, self.L_C_D, self.weeks, candidate_solution)
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
                 candidate_solution.write("After_breaking_weekly")
 

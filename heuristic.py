@@ -32,14 +32,15 @@ def main():
         "isolated_working_days": calculate_isolated_working_days(model, x),
         "contracted_hours": calculate_negative_deviation_from_contracted_hours(model, y)
     }
+
     hard_vars = {
-        "below_minimum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
-        "above_maximum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
+        "below_minimum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods[c]},
+        "above_maximum_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods[c]},
         "more_than_one_shift_per_day": {(e,i): 0 for e in model.employees for i in model.days},
-        "cover_multiple_demand_periods": {(e,t): 0 for e in model.employees for t in model.time_periods},
+        "cover_multiple_demand_periods": {(e,t): 0 for e in model.employees for t in model.combined_time_periods},
         "weekly_off_shift_error": {(e,j): 0 for e in model.employees for j in model.weeks},
         #"no_work_during_off_shift": {},
-        "mapping_shift_to_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods},
+        "mapping_shift_to_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods[c]},
         "delta_positive_contracted_hours": {e: 0 for e in model.employees}
     }
 

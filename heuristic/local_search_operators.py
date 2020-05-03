@@ -4,7 +4,7 @@ from operator import itemgetter
 from random import choice
 
 
-def illegal_week_swap(shifts_in_week, employees, shifts_at_day, t_covered_by_shift, competencies, contracted_hours, time_periods_in_week, time_step, L_C_D, weeks, state):
+def illegal_week_swap(shifts_in_week, employees, shifts_at_day, t_covered_by_shift, competencies, contracted_hours, time_periods_in_week, combined_time_periods_in_week, time_step, L_C_D, weeks, state):
     destroy_set = []
     repair_set = []
     for emp, j in state.hard_vars["weekly_off_shift_error"]:
@@ -45,7 +45,7 @@ def illegal_week_swap(shifts_in_week, employees, shifts_at_day, t_covered_by_shi
                     #Should not be needed: below_minimum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
 
                     #Calculate the objective function when the employee e is assigned the shift
-                    objective_values[e_p, shift] = calc_weekly_objective_function(state, competencies, time_periods_in_week, employees, [j], L_C_D)[0]
+                    objective_values[e_p, shift] = calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, [j], L_C_D)[0]
 
                     set_x(current_state, t_covered_by_shift, e_p, shift[0], shift[1], 0)
                 set_x(current_state, t_covered_by_shift, emp, shift[0], shift[1], 1)
