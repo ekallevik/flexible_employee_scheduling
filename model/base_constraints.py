@@ -183,7 +183,7 @@ class BaseConstraints:
                     x[e, t_marked, v_marked]
                     for t_marked, v_marked in self.shift_sequences_violating_daily_rest[e][t, v]
                 )
-                <= min(2, len(self.shift_sequences_violating_daily_rest[e][t, v]))
+                <= 2
                 for t, v in self.shift_sequences_violating_daily_rest[e]
                 if len(self.shift_sequences_violating_daily_rest[e]) > 0
             ),
