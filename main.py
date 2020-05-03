@@ -30,7 +30,11 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 class ProblemRunner:
 
-    def __init__(self, problem="rproblem3_one_week", mode="construction", with_sdp=True):
+    def __init__(self, problem="rproblem3", mode="construction", with_sdp=True):
+        """
+        Holds common data across all problems. Use --arg_name=arg_value from the terminal to
+        use non-default values
+        """
 
         self.problem = problem
         self.data = shift_generation.load_data(problem)
