@@ -28,6 +28,7 @@ logger.remove()
 logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
 logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
+
 class ProblemRunner:
 
     def __init__(self, problem="rproblem3", mode="construction", with_sdp=True):
@@ -131,9 +132,9 @@ class ProblemRunner:
         self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
                                                                       used_shifts)
 
-        print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
-        print(f"This is a reduction of {100*percentage_reduction:.2f}%")
+        logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts "
+                       f"(-{100 * percentage_reduction:.2f}%).")
 
     def set_sdp(self):
         """ Creates an appropriate Gurobi model for SDP and saves it """

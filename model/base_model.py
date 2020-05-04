@@ -2,6 +2,7 @@
 from gurobipy import *
 from utils.weights import get_weights
 
+
 class BaseModel:
     """
     This abstract class will take care of all common code that is to be shared across all model variants.
@@ -19,6 +20,8 @@ class BaseModel:
         self.off_shifts_set = data["off_shifts"]
         self.limit_on_consecutive_days = data["limit_on_consecutive_days"]
         self.preferences = data["preferences"]
+
+        self.weights = get_weights(self.time_set, self.staff)
 
         self.var = None
 
