@@ -16,6 +16,10 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
 
         self.validate()
 
+    def __str__(self):
+        return f"SimulatedAnnealingCriterion [t0={self.start_temperature}, " \
+               f"t1={self.end_temperature}, step={self.step}, method={self.method}]"
+
     def accept(self, candidate, current, random_state):
 
         probability = np.exp(
@@ -44,6 +48,8 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
             )
 
     def validate(self):
+
+        breakpoint()
 
         if self.method not in ["linear", "exponential"]:
             raise ValueError(f"Method: {self.method} is not a valid choice")
