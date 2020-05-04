@@ -14,7 +14,7 @@ from heuristic.repair_operators import (
 
 
 class ALNS:
-    def __init__(self, state, model, criterion, data):
+    def __init__(self, state, criterion, data):
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
@@ -400,3 +400,6 @@ class ALNS:
             self.competencies,
             self.weeks,
         )
+
+    def get_best_solution_value(self):
+        return self.best_solution.get_objective_value()
