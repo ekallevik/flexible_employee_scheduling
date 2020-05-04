@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from preprocessing import xml_loader
 from preprocessing.demand_processing import (
     combine_demand_intervals,
@@ -68,14 +70,16 @@ def get_time_sets(root):
 
 def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
 
-    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+    shifts_per_day, shifts_per_week = get_shifts_per_day(shifts, time_sets["days"])
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
+
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
     invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
 
     return {
         "shifts": shifts,
         "shifts_per_day": shifts_per_day,
+        "shifts_per_week": shifts_per_week,
         "short_shifts": short_shifts,
         "long_shifts": long_shifts,
         "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets),
@@ -178,7 +182,10 @@ def remove_duplicates_and_sort(shifts):
 
 
 def get_shifts_per_day(shifts, days):
+
+    # todo: bruke defaultdict for begge?
     shifts_per_day = tupledict()
+    shifts_in_week = defaultdict(list)
 
     for day in days:
         shifts_per_day[day] = []
@@ -191,12 +198,14 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
+                shifts_in_week[int(day / 7)].append(shift)
 
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
                 break
-    return shifts_per_day
+
+    return shifts_per_day, shifts_in_week
 
 
 def get_short_and_long_shifts(shifts):
@@ -254,7 +263,8 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
 
     for e in employees:
         violating_shifts[e] = tupledict()
-        for day in shifts_per_day:
+
+        for day in shifts_per_day.keys():
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
                     if day != 0:
