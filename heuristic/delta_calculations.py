@@ -310,8 +310,6 @@ def calc_weekly_objective_function(
         # todo: moving this could potential increase performance
         days_in_week = [i for i in range(j * 7, (j + 1) * 7)]
 
-        # todo: hard_vars is not initialized anywhere. temp fix while looking
-        #  for compile time errors caused by merge conflicts. -Even
         if setting == "worst":
             value[j] = (
                 sum(state.w[e, j][1] for e in employees)
@@ -336,7 +334,6 @@ def calc_weekly_objective_function(
                     state.hard_vars["below_minimum_demand"][c, t]
                     + state.hard_vars["above_maximum_demand"][c, t]
                     for c in competencies
-                    # for j in weeks
                     for t in time_periods_in_week[j]
                 )
                 - sum(
@@ -347,7 +344,6 @@ def calc_weekly_objective_function(
                 - sum(
                     state.hard_vars["cover_multiple_demand_periods"][e, t]
                     for e in employees
-                    # for j in weeks
                     for t in time_periods_in_week[j]
                 )
                 - max(0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for e in employees))
