@@ -40,7 +40,7 @@ class Converter:
             (e, j): (t, v)
             for e in self.model.staff["employees"]
             for j in self.model.time_set["weeks"]
-            for t, v in self.model.off_shift_in_week[j]
+            for t, v in self.model.off_shifts_set["off_shifts_per_week"][j]
             if var.w[e, t, v].x == 1
         }
 

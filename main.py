@@ -212,7 +212,7 @@ class ProblemRunner:
         if self.alns:
             alns_value = self.alns.get_best_solution_value()
             diff = (alns_value - esp_value) / esp_value
-            message += f"\nALNS found solution: {alns_value}.\n Diff {diff:.2f}%"
+            message += f"\nALNS found solution: {alns_value}.\nDiff {diff:.2f}%"
 
         return message
 
