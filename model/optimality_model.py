@@ -6,8 +6,8 @@ from model.optimality_variables import OptimalityVariables
 
 
 class OptimalityModel(BaseModel):
-    def __init__(self, name, problem, data):
-        super(OptimalityModel, self).__init__(name, problem, data)
+    def __init__(self, model, data):
+        super().__init__(model, data)
 
         self.var = OptimalityVariables(
             model=self.model,

@@ -5,8 +5,8 @@ from model.construction_objective import ConstructionObjective
 
 
 class ConstructionModel(BaseModel):
-    def __init__(self, name, problem, data):
-        super(ConstructionModel, self).__init__(name, problem, data, mip_focus=1, solution_limit=1)
+    def __init__(self, model, data):
+        super().__init__(model, data)
 
         self.var = BaseVariables(
             model=self.model,
