@@ -6,7 +6,7 @@ from model.base_variables import BaseVariables
 class OptimalityVariables(BaseVariables):
     def __init__(self, model, competencies, staff, time_set, shifts_set, off_shifts_set):
 
-        super(OptimalityVariables, self).__init__(
+        super().__init__(
             model=model,
             competencies=competencies,
             staff=staff,

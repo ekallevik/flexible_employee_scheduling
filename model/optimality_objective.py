@@ -26,7 +26,7 @@ class OptimalityObjective:
             (
                 f["plus"][e] - f["minus"][e]
                 == weights["rest"] * quicksum(v * w[e, t, v] for t, v in self.off_shifts)
-                - weights["contracted hours"] * lam[e]
+                - weights["contracted hours"][e] * lam[e]
                 - weights["partial weekends"]
                 * quicksum(rho["sat"][e, i] + rho["sun"][e, i + 1] for i in self.saturdays)
                 - weights["isolated working days"]
@@ -65,9 +65,10 @@ class OptimalityObjective:
         self.model.setObjective(
             quicksum(f["plus"][e] - f["minus"][e] for e in self.employees)
             + weights["lowest fairness score"] * (g["plus"] - g["minus"])
-            - weights["demand_deviation"]
-            * quicksum(
-                quicksum(delta["plus"][c, t] + delta["minus"][c, t] for t in self.time_periods)
+            - quicksum(
+                quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
+                         weights["deficit demand deviation factor"] * delta["minus"][c, t]
+                         for t in self.time_periods)
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,
