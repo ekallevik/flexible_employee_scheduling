@@ -144,8 +144,8 @@ def get_day_demand_intervals(demand, day):
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
-            for pair in demand_pairs[index + 1 :]:
-                if temp_related_intervals[-1] == pair[0]:
+            for pair in demand_pairs[index + 1:]:
+                if temp_related_intervals[-1] == pair[0] or temp_related_intervals[0] == pair[0]:
                     temp_related_intervals.append(pair[1])
                     demand_pairs.remove(pair)
                 else:

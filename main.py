@@ -1,4 +1,7 @@
+import sys
+
 import fire
+from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
@@ -11,6 +14,19 @@ from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
 from utils.weights import get_weights
+from utils.log_formatter import LogFormatter
+
+formatter = LogFormatter()
+
+# Increase the level to get less output
+level_per_module = {
+    "__main__": "INFO",
+    "preprocessing.xml_loader": "WARNING",
+}
+
+logger.remove()
+logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
+logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 def run_shift_design_model(problem="rproblem3", data=None):
@@ -23,6 +39,7 @@ def run_shift_design_model(problem="rproblem3", data=None):
     """
 
     if not data:
+        logger.debug("Loading data")
         data = shift_generation.load_data(problem)
 
     original_shifts = data["shifts"]["shifts"]
@@ -33,11 +50,11 @@ def run_shift_design_model(problem="rproblem3", data=None):
     used_shifts = sdp.get_used_shifts()
     data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts)
 
-    print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
     percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
-    print(f"This is a reduction of {100*percentage_reduction:.2f}%")
+    logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts (-"
+                 f"{100*percentage_reduction:.2f}%). ")
 
-    return data
+    #return data
 
 
 def run_heuristic(construction_model="feasibility", problem="rproblem2"):

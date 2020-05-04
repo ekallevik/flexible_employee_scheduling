@@ -109,7 +109,7 @@ def get_shifts(root):
             duration = intervals[1] - start_time
 
             if duration >= ALLOWED_SHIFT_DURATION[1]:
-                shifts.append((start_time, duration))
+                shifts = get_shifts_for_long_duration(root, shifts, start_time, duration)
             else:
                 shifts.append((start_time, intervals[1] - start_time))
 
@@ -118,13 +118,66 @@ def get_shifts(root):
             for time in intervals:
                 found_shift = False
 
-                for t in intervals[intervals.index(time) :]:
+                for t in intervals[intervals.index(time):]:
                     duration = t - time
                     if ALLOWED_SHIFT_DURATION[0] <= duration <= ALLOWED_SHIFT_DURATION[1]:
                         shifts.append((time, duration))
                         found_shift = True
-                    if duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
-                        shifts.append((time, duration))
+                    if 24 >= duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
+                        shifts = get_shifts_for_long_duration(root, shifts, time, duration)
+
+    shifts = remove_duplicates_and_sort(shifts)
+
+    return shifts
+
+
+def get_shifts_for_long_duration(root, shifts, time, duration):
+    """
+    Create shifts for long demand periods without change in demand. Makes two shifts that together cover the
+    demand period. If possible, three additionally shifts are created that also together cover the demand period.
+    """
+
+    time_step = get_time_steps(root)
+
+    # Create two base shifts
+    half_duration = duration / 2
+
+    if half_duration % time_step == 0:
+        shifts.append((time, half_duration))
+        shifts.append((time + half_duration, half_duration))
+    else:
+        allowed_half_duration = int(half_duration)
+        while allowed_half_duration < half_duration:
+            allowed_half_duration += time_step
+        remaining_half_duration = duration - allowed_half_duration
+        shifts.append((time, allowed_half_duration))
+        shifts.append((time + allowed_half_duration, remaining_half_duration))
+
+    # If possible, create three additionally shifts that covers the duration
+    third_duration = duration / 3
+
+    if third_duration > ALLOWED_SHIFT_DURATION[0]:
+        if third_duration % time_step == 0:
+            for i in range(3):
+                shifts.append((time + (i * third_duration), third_duration))
+        else:
+            allowed_third_duration = int(third_duration)
+            while allowed_third_duration < third_duration:
+                allowed_third_duration += time_step
+            remaining_third_duration = duration - (2 * allowed_third_duration)
+            shifts.append((time, allowed_third_duration))
+            shifts.append((time + allowed_third_duration, allowed_third_duration))
+            shifts.append((time + (2 * allowed_third_duration), remaining_third_duration))
+
+    return shifts
+
+
+def remove_duplicates_and_sort(shifts):
+    """ Remove duplicate shifts and sort them by starting time and then by duration """
+
+    shifts = tuplelist(set(shifts))
+    shifts.sort(key=lambda tup: (tup[0], tup[1]))
+
     return shifts
 
 
