@@ -206,8 +206,6 @@ def get_shifts_per_day(shifts, days):
                     shifts_per_day[day].append(shift)
                 break
 
-    return shifts_per_day
-
     return shifts_per_day, shifts_in_week
 
 
