@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from gurobipy import *
 
-from preprocessing.xml_loader import get_demand_definitions, get_days_with_demand
+from preprocessing.xml_loader import get_days_with_demand, get_demand_definitions
 
 
 def get_time_steps(root):
@@ -58,7 +58,7 @@ def get_time_periods(root):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[week] = []
-                if time > (day + 1)*24:
+                if time > (day + 1) * 24:
                     day += 1
                 if time not in time_periods:
                     time_periods.append(time)
@@ -144,8 +144,8 @@ def get_day_demand_intervals(demand, day):
     else:
         for index in range(len(demand_pairs)):
             temp_related_intervals = [demand_pairs[index][0], demand_pairs[index][1]]
-            for pair in demand_pairs[index + 1 :]:
-                if temp_related_intervals[-1] == pair[0]:
+            for pair in demand_pairs[index + 1:]:
+                if temp_related_intervals[-1] == pair[0] or temp_related_intervals[0] == pair[0]:
                     temp_related_intervals.append(pair[1])
                     demand_pairs.remove(pair)
                 else:
@@ -214,8 +214,13 @@ def get_no_demand_intervals(demand_interval, day):
             for no_intervals in no_demand_intervals:
                 if no_intervals[-1] > start_time:
                     overlapping_intervals = True
-                    if no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] > intervals[-1]:
-                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1] = intervals[-1]
+                    if (
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][-1]
+                        > intervals[-1]
+                    ):
+                        no_demand_intervals[no_demand_intervals.index(no_intervals)][
+                            -1
+                        ] = intervals[-1]
             if not overlapping_intervals:
                 no_demand_intervals.append([end_time, start_time])
         end_time = intervals[-1]

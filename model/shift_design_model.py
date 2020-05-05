@@ -1,19 +1,17 @@
 from gurobipy import *
 
-from utils.weights import get_shift_design_weights
-
 from model.shift_design_constraints import ShiftDesignConstraints
 from model.shift_design_objective import ShiftDesignObjective
 from model.shift_design_variables import ShiftDesignVariables
+from utils.weights import get_shift_design_weights
 
 
 class ShiftDesignModel:
-    def __init__(self, name, problem="rproblem3", data=None):
+    def __init__(self, model, data):
 
-        self.name = name
-        self.model = Model(name=self.name)
+        self.model = model
 
-        self.weights = get_shift_design_weights()
+        self.weights = get_shift_design_weights(data["time"])
 
         self.competencies = data["competencies"]
         self.demand = data["demand"]
@@ -22,9 +20,7 @@ class ShiftDesignModel:
         self.shift_sets = data["shifts"]
 
         self.var = ShiftDesignVariables(
-            model=self.model,
-            shift_sets=self.shift_sets,
-            time_periods=self.time_periods,
+            model=self.model, shift_sets=self.shift_sets, time_periods=self.time_periods,
         )
 
         self.constraints = ShiftDesignConstraints(
@@ -57,7 +53,7 @@ class ShiftDesignModel:
     def convert(self):
         """ Converts a tupledict of Gurobi variables to a tupledict of ints """
 
-        #todo: move this into separate file for greater re-use
+        # todo: move this into separate file for greater re-use
 
         converted_dict = tupledict()
 

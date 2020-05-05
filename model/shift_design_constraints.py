@@ -5,13 +5,7 @@ from utils.const import DESIRED_SHIFT_DURATION
 
 class ShiftDesignConstraints:
     def __init__(
-        self,
-        model,
-        var,
-        competencies,
-        demand,
-        time_periods,
-        shift_sets,
+        self, model, var, competencies, demand, time_periods, shift_sets,
     ):
 
         self.model = model

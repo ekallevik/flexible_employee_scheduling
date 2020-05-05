@@ -1,7 +1,7 @@
 import pytest
 
-from results.converter import Converter
 from model.feasibility_model import FeasibilityModel
+from results.converter import Converter
 
 
 @pytest.fixture()

@@ -2,14 +2,12 @@ from model.base_model import BaseModel
 from model.optimality_constraints import OptimalityConstraints
 from model.optimality_objective import OptimalityObjective
 from model.optimality_variables import OptimalityVariables
-from utils.weights import get_weights
+
 
 
 class OptimalityModel(BaseModel):
-    def __init__(self, name, problem, data):
-        super(OptimalityModel, self).__init__(name, problem, data)
-
-        self.weights = get_weights()
+    def __init__(self, model, data):
+        super().__init__(model, data)
 
         self.var = OptimalityVariables(
             model=self.model,
@@ -37,6 +35,7 @@ class OptimalityModel(BaseModel):
             var=self.var,
             weights=self.weights,
             competencies=self.competencies,
+            preferences=self.preferences,
             staff=self.staff,
             time_set=self.time_set,
             off_shifts_set=self.off_shifts_set,
