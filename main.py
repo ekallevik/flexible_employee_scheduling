@@ -1,7 +1,12 @@
+import sys
+
 import fire
+from gurobipy import *
+from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
 from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
@@ -9,87 +14,209 @@ from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
+from utils.log_formatter import LogFormatter
+
+formatter = LogFormatter()
+
+# Increase the level to get less output
+level_per_module = {
+    "__main__": "INFO",
+    "preprocessing.xml_loader": "WARNING",
+}
+
+logger.remove()
+logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
+logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
-def run_shift_design_model(problem="rproblem3", data=None):
-    """
-    Runs the shift design model.
+class ProblemRunner:
 
-    :param data: the dataset
-    :param problem: the problem instance to run.
-    :return: the solved model instance.
-    """
+    def __init__(self, problem="rproblem3", mode="construction", with_sdp=True):
+        """
+        Holds common data across all problems. Use --arg_name=arg_value from the terminal to
+        use non-default values
+        """
 
-    if not data:
-        data = shift_generation.load_data(problem)
+        self.problem = problem
+        self.data = shift_generation.load_data(problem)
 
-    original_shifts = data["shifts"]["shifts"]
+        # Standard Gurobi-config
+        self.mip_focus = "default"
+        self.solution_limit = "default"
+        self.log_to_console = 1
 
-    sdp = ShiftDesignModel(name="sdp", problem=problem, data=data)
-    sdp.run_model()
+        self.sdp = None
 
-    used_shifts = sdp.get_used_shifts()
-    data["shifts"] = shift_generation.get_updated_shift_sets(problem, data, used_shifts, data["competencies"])
+        self.mode = mode
+        self.esp = None
 
-    print(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shift")
-    percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
-    print(f"This is a reduction of {100*percentage_reduction:.2f}%")
+        self.criterion = GreedyCriterion()
+        self.alns = None
 
-    return data
+        if with_sdp:
+            self.set_sdp()
 
+        self.set_esp()
 
-def run_heuristic(construction_model="feasibility", problem="rproblem2"):
-    """
-    Non-complete skeleton for running ALNS.
+    def run_alns(self, iterations=1000):
+        """ Runs ALNS on the generated candidate solution """
 
-    :param construction_model: the model to be use to construct the initial solution.
-    :param problem: the problem instance to run.
-    :return:
-    """
+        self.set_alns()
 
-    candidate_solution = run_model(model=construction_model, problem=problem)
+        self.alns.iterate(iterations)
 
-    converter = Converter(candidate_solution)
-    converted_solution = converter.get_converted_variables()
-    state = State(converted_solution)
+        return self
 
-    criterion = GreedyCriterion()
+    def change_criterion(self, start_temp=100, end_temp=1, step=1, method="linear"):
+        """ Changes the criterion to Simulated Annealing"""
 
-    alns = ALNS(state, criterion)
-    solution = alns.iterate(iterations=1000)
+        self.criterion = SimulatedAnnealingCriterion(method=method, start_temperature=start_temp,
+                                                     end_temperature=end_temp, step=step)
 
+        return self
 
-def run_model(model="construction", problem="rproblem3", with_sdp=True):
-    """
-    Runs the specified model on the given problem.
+    def set_alns(self):
+        """ Sets ALNS based on the given config """
 
-    :param model: The model version to be run.
-    :param problem: the problem instance to run.
-    :param with_sdp: Flag to control running of Shift Design Problem
-    :return: the solved model instance.
-    """
+        converted_solution = self.get_candidate_solution()
+        state = State(converted_solution)
 
-    data = shift_generation.load_data(problem)
-    if with_sdp:
-        data = run_shift_design_model(problem=problem, data=data)
+        self.alns = ALNS(state, self.criterion)
 
-    if model == "feasibility":
-        esp = FeasibilityModel(name="esp_feasibility", problem=problem, data=data)
-    elif model == "optimality":
-        esp = OptimalityModel(name="esp_optimality", problem=problem, data=data)
-    elif model == "construction":
-        esp = ConstructionModel(name="esp_construction", problem=problem, data=data)
-    else:
-        raise ValueError(f"The model choice '{model}' is not valid.")
+    def get_candidate_solution(self):
+        """ Generates a candidate solution for ALNS """
 
-    esp.run_model()
+        self.run_esp()
+        converter = Converter(self.esp)
 
-    return esp
+        return converter.get_converted_variables()
+
+    def run_esp(self):
+        """ Runs ESP, with an optional presolve with SDP """
+
+        if self.sdp:
+            self.sdp.run_model()
+
+        self.esp.run_model()
+
+        return self
+
+    def set_esp(self):
+        """ Creates an appropriate Gurobi model for ESP and saves it"""
+
+        name = f"{self.mode}_model"
+        model = self.create_model(name)
+
+        if self.mode == 0 or self.mode == "construction":
+            self.esp = ConstructionModel(model, data=self.data)
+            # Update configuration to get a solution as fast as possible
+            self.configure_model(mip_focus=1, solution_limit=1)
+
+        elif self.mode == 1 or self.mode == "feasibility":
+            self.esp = FeasibilityModel(model, data=self.data)
+            # todo: add same config as ConstructionModel?
+
+        elif self.mode == 2 or self.mode == "optimality":
+            self.esp = OptimalityModel(model, data=self.data)
+
+        else:
+            raise ValueError(f"The model choice '{self.mode}' is not valid.")
+
+    def run_sdp(self):
+        """ Runs the Shift Design Model to optimize the shift generation and saves the result """
+
+        original_shifts = self.data["shifts"]["shifts"]
+        self.sdp.run_model()
+
+        used_shifts = self.sdp.get_used_shifts()
+        self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
+                                                                      used_shifts)
+
+        percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
+        logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts "
+                       f"(-{100 * percentage_reduction:.2f}%).")
+
+    def set_sdp(self):
+        """ Creates an appropriate Gurobi model for SDP and saves it """
+
+        model = self.create_model(name="sdp")
+        self.sdp = ShiftDesignModel(model, data=self.data)
+
+    def configure_model(self, model="esp", **kwargs):
+        """
+        Dynamically configure the ESP-model by running:
+            python main.py configure_model --param1=value1 --param2=value2
+        """
+
+        gurobi_model = self.esp.model if model == "esp" else self.sdp.model
+
+        for key, value in kwargs.items():
+            gurobi_model.setParam(key, value)
+
+        return self
+
+    def create_model(self, name):
+        """ Creates a Gurobi model with standard config """
+
+        model = Model(name=name)
+        model.setParam("MIPFocus", self.mip_focus)
+        model.setParam("SolutionLimit", self.solution_limit)
+        model.setParam("LogToConsole", self.log_to_console)
+
+        return model
+
+    def __str__(self):
+        """ Necessary for playing nicely with terminal usage """
+
+        esp_value = self.esp.get_objective_value()
+        message = f"ESP found solution:  {esp_value:.2f}."
+
+        if self.alns:
+            alns_value = self.alns.best_solution
+            diff = (alns_value - esp_value) / esp_value
+            message += f"\nALNS found solution: {alns_value}.\n Diff {diff:.2f}%"
+
+        return message
 
 
 if __name__ == "__main__":
     """ 
-    Run any function by using:
-        python main.py FUNCTION_NAME *ARGS
+    Run any function with arguments ARGS by using:
+        python main.py FUNCTION_NAME ARGS
+        
+    Run functions in a chain:
+        python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE
+        
+        Note: only functions that return `self` can be chained.
+        Note2: functions has to be separated by `-`
+    
+    Access property PROP by using: 
+        python main.py FUNCTION_NAME PROP
+    
+    Examples
+        # Initialize object with default arguments and 
+        python main.py
+        
+        # Initialize object and print self.mode
+        python main.py mode
+        
+        # Run ESP with SDP
+        python main.py run_esp
+        python main.py --with_sdp run_esp
+        
+        # Run ESP without SDP
+        python main.py --nowith_sdp run_esp
+        python main.py --with_sdp=False run_esp
+        
+        # Configure ESP-model and then run
+        python main.py configure_model --seed=1 - run_esp
+        
+        # Run ALNS without SDP
+        python main.py --nowith_sdp run_alns
+        
+        # Change to SA-criterion and the run ALNS
+        python main.py change_criterion --start_temp=150 - run_alns
+         
     """
-    fire.Fire()
+
+    fire.Fire(ProblemRunner)

@@ -15,12 +15,13 @@ class ShiftDesignObjective:
     def add_objective(self, weights, y, delta, rho):
         self.model.setObjective(
             quicksum(y[t, v] for t, v in self.shifts)
-            + weights["demand_deviation"]
-            * quicksum(delta["plus"][c, t] + delta["minus"][c, t] for c in self.competencies for t in self.time_periods[c])
-            + weights["shift_duration"]
-            * (
-                quicksum(rho["short"][t, v] for t, v in self.short_shifts)
-                + quicksum(rho["long"][t, v] for t, v in self.long_shifts)
+            + quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
+                       weights["deficit demand deviation factor"] * delta["minus"][c, t]
+                       for c in self.competencies
+                       for t in self.time_periods[c])
+            + (
+                quicksum(weights["use of short shift"] * rho["short"][t, v] for t, v in self.short_shifts)
+                + quicksum(weights["use of long shift"] * rho["long"][t, v] for t, v in self.long_shifts)
             ),
             GRB.MINIMIZE,
         )

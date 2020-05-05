@@ -10,6 +10,7 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
 
+
         self.random_state = self.initialize_random_state()
         self.criterion = criterion
 
@@ -44,7 +45,6 @@ class ALNS:
 
             self.consider_candidate_and_update_weights(candidate_solution, destroy_id, repair_id)
 
-        return self.best_solution
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
