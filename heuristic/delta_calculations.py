@@ -11,7 +11,8 @@ def calculate_deviation_from_demand(state, competencies, t_covered_by_shift, emp
     for c in competencies:
         for e2,t,v in destroy_repair_set:
             for t in t_covered_by_shift[t,v]:
-                state.soft_vars["deviation_from_ideal_demand"][c,t] = sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t]
+                if(demand["ideal"].get((c,t))):
+                    state.soft_vars["deviation_from_ideal_demand"][c,t] = sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["ideal"][c,t]
 
 
 def delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step):
@@ -118,14 +119,16 @@ def below_minimum_demand(state, repair_destroy_set, employee_with_competencies, 
     for c in competencies:
         for e2,t1,v1 in repair_destroy_set:
             for t in t_covered_by_shift[t1,v1]:
-                state.hard_vars["below_minimum_demand"][c,t] = max(0, (demand["min"][c,t] - sum(state.y[c,e,t] for e in employee_with_competencies[c])))
+                if state.hard_vars["below_minimum_demand"].get((c,t)):
+                    state.hard_vars["below_minimum_demand"][c,t] = max(0, (demand["min"][c,t] - sum(state.y[c,e,t] for e in employee_with_competencies[c])))
 
 
 def above_maximum_demand(state, repair_destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift):
     for c in competencies:
         for e2,t1,v1 in repair_destroy_set:
             for t in t_covered_by_shift[t1,v1]:
-                state.hard_vars["above_maximum_demand"][c,t] = max(0, (sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["max"][c,t]))
+                if state.hard_vars["above_maximum_demand"].get((c,t)):
+                    state.hard_vars["above_maximum_demand"][c,t] = max(0, (sum(state.y[c,e,t] for e in employee_with_competencies[c]) - demand["max"][c,t]))
 
 def more_than_one_shift_per_day(state, employees, demand, shifts_at_day, days):
     for e in employees:
@@ -135,7 +138,7 @@ def more_than_one_shift_per_day(state, employees, demand, shifts_at_day, days):
 def cover_multiple_demand_periods(state, repair_set, t_covered_by_shift, competencies):
     for e,t1,v1 in repair_set:
         for t in t_covered_by_shift[t1,v1]:
-            state.hard_vars["cover_multiple_demand_periods"][e,t] = max(0,(sum(state.y[c,e,t] for c in competencies) - 1))
+            state.hard_vars["cover_multiple_demand_periods"][e,t] = max(0,(sum(state.y[c,e,t] for c in competencies if state.y.get((c,e,t))) - 1))
 
 # I think this is not needed, but I am not sure yet
 #def weekly_off_shift_error(state, repair_destroy_set, weeks, off_shift_in_week):
@@ -154,7 +157,7 @@ def cover_multiple_demand_periods(state, repair_set, t_covered_by_shift, compete
 def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies):
     for e,t1,v1 in repair_destroy_set:
         for t in t_covered_by_shift[t1,v1]:
-           state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies)))
+            state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies if state.y.get((c,e,t)))))
 
 
 # def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):

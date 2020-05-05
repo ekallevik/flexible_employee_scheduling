@@ -54,19 +54,19 @@ class Optimization_model():
 
         self.competencies = data["competencies"]
         #self.time_periods_in_day = data["heuristics"][1]
-
+        
         self.saturdays = [5 + (i*7) for i in range(len(self.weeks))]
         self.L_C_D = data["limit_on_consecutive_days"]
 
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
         self.shift_lookup = data["heuristic"]
-        print(self.employees)
 
 
 #Variables
     def add_variables(self):
 
         y = {(c,e,t): 0 for c in self.competencies for e in self.employees for t in self.time_periods[c]}
+        print(y)
         #self.delta = {}
         self.ro = {}
         self.q_iso = {}
@@ -154,11 +154,12 @@ class Optimization_model():
 
         self.model.addConstrs(
             (
-                quicksum(len(self.t_in_off_shifts[t, v, c]) for c in self.competencies if self.t_in_off_shifts.get((t,v,c))) * self.w[e, t, v]
+                quicksum(len(self.t_in_off_shifts[t, v, c]) for c in self.competencies if self.t_in_off_shifts.get((t, v, c))) * self.w[e, t, v]
                 <= quicksum(1 - self.y[c, e, t_mark] 
                     for c in self.competencies
                     if self.t_in_off_shifts.get((t,v,c))
                     for t_mark in self.t_in_off_shifts[t, v, c]
+                    if self.y.get((c,e,t_mark))
                 )
                 for e in self.employees
                 for t, v in self.off_shifts
@@ -171,9 +172,10 @@ class Optimization_model():
             quicksum(
                 self.time_step * self.y[c,e,t] 
                 for c in self.competencies
-                for t in self.time_periods[c])
+                for t in self.time_periods[c]
+                if self.y.get((c,e,t)))
                 <= len(self.weeks)*self.contracted_hours[e] 
-                for e in  self.employees
+                for e in self.employees
         ), name="contracted_hours")
 
         # self.model.addConstrs((
@@ -191,6 +193,7 @@ class Optimization_model():
                 for e in self.employees
                 for c in self.competencies
                 for t in self.time_periods[c]
+                if(self.y.get((c,e,t)))
         ), GRB.MINIMIZE
     )
 

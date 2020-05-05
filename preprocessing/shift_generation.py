@@ -386,10 +386,10 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
                 start = time_periods[c].index(shift[0])
                 t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
             except:  
-                test = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
-                if(len(test) == 0):
+                t_in_shift = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                if(len(t_in_shift) == 0):
                     continue
-                t_covered[shift[0], shift[1], c] = test
+                t_covered[shift[0], shift[1], c] = t_in_shift
 
             
     return t_covered
