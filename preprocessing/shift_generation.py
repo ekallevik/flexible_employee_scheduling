@@ -216,20 +216,22 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
             # Check if daily rest is fulfilled naturally
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
                 for shift in shifts_per_day[day]:
+                    shift_end = shift[0] + shift[1]
                     if day != 0:
                         # Checking shifts the day before
                         for s in shifts_per_day[day - 1]:
+                            s_end = s[0] + s[1]
                             # Checking if the shift from the day before is ending in employee specific day
-                            if s[0] + s[1] > (24 * int(day)) + daily_offset[e]:
+                            if s_end > (24 * int(day)) + daily_offset[e]:
                                 # Checking if daily rest occurs between the shifts and that they are not overlapping
-                                if shift[0] - (s[0] + s[1]) < daily_rest[e] and shift[0] >= (s[0] + s[1]):
+                                if shift[0] - s_end < daily_rest[e] and shift[0] >= s_end:
                                     try:
                                         violating_shift_sequences[e][shift].append(s)
                                     except:
                                         violating_shift_sequences[e][shift] = [s]
 
                                     # Check if shift combination forces violation of daily rest
-                                    if 24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1]) < daily_rest[e]:
+                                    if 24 * (int(day) + 1) + daily_offset[e] - shift_end < daily_rest[e]:
                                         try:
                                             violating_shift_combinations[e][shift].append(s)
                                         except:
@@ -241,7 +243,7 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
                             # Checking if the shift in the next day is starting within employee specific dat
                             if s[0] < 24 * (int(day) + 1) + daily_offset[e]:
                                 # Checking if daily rest occurs between the shifts and that they are not overlapping
-                                if s[0] - (shift[0] + shift[1]) < daily_rest[e] and s[0] > (shift[0] + shift[1]):
+                                if s[0] - shift_end < daily_rest[e] and s[0] > shift_end:
                                     try:
                                         violating_shift_sequences[e][shift].append(s)
                                     except:
