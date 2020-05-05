@@ -169,6 +169,7 @@ class ProblemRunner:
         used_shifts = self.sdp.get_used_shifts()
         self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
                                                                       used_shifts)
+        self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(self.data, used_shifts)
 
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts "
