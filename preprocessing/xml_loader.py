@@ -86,6 +86,7 @@ def get_staff(root, competencies):
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
         set_competency_for_employee(competencies, employee, schedule_row)
         set_daily_offset_for_employee(employee)
+        set_blocked_hours_for_employee(employee)
 
         staff.append(employee)
 
@@ -129,8 +130,14 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
 
 
 def set_daily_offset_for_employee(employee):
-    #TODO: Implement try-block, trying to collect daily offset from file.
+    # TODO: Implement try-block, trying to collect daily offset from file.
     employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
+
+
+def set_blocked_hours_for_employee(employee):
+    # TODO:  Implement code to retrieve blocked hours from xml-data. If there is no data to retrieve, nothing should
+    #       be done as default blocked hours is initialized to an empty list in employee-class.
+    pass
 
 
 def set_competency_for_employee(competencies, employee, schedule_row):
@@ -195,6 +202,7 @@ def get_employee_lists(root, competencies):
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
     employee_daily_offset = tupledict()
+    employee_blocked_hours = tupledict()
 
     emp = get_staff(root, competencies)
 
@@ -208,9 +216,10 @@ def get_employee_lists(root, competencies):
         id = int(e.id)
         employees.append(id)
         employee_daily_rest[id] = e.daily_rest_hours
-        employee_weekly_rest[id] = e.daily_rest_hours
+        employee_weekly_rest[id] = e.weekly_rest_hours
         employee_contracted_hours[id] = e.contracted_hours
         employee_daily_offset[id] = e.daily_offset
+        employee_blocked_hours[id] = e.blocked_hours
 
     return {
         "employees": employees,
@@ -219,4 +228,5 @@ def get_employee_lists(root, competencies):
         "employee_daily_rest": employee_daily_rest,
         "employee_contracted_hours": employee_contracted_hours,
         "employee_daily_offset": employee_daily_offset,
+        "employee_blocked_hours": employee_blocked_hours,
     }
