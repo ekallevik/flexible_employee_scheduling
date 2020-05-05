@@ -206,17 +206,22 @@ def get_off_shifts(shifts_per_week):
     off_shifts = tuplelist()
     off_shifts_in_week = tupledict()
 
-    for week in shifts_per_week:
+    for week, shifts in shifts_per_week.items():
 
-        off_shifts_in_week[week] = []
+        off_shifts_in_week[week] = tuplelist()
 
-        if shifts_per_week[week][0][0] != (24 * 7 * week):
+        # if first shift in week do not start first time period in week
+        if shifts[0][0] != 24 * 7 * week:
+            # insert dummy-shift used to extract maximum hours when creating off-shifts
             shifts_per_week[week].insert(0, (0.0, 0.0))
-        if shifts_per_week[week][-1][0] != (24 * 7 * (week + 1)):
+
+        # if last shift in week do not end in last time period in week
+        if shifts[-1][0] != 24 * 7 * (week + 1):
+            # insert dummy-shift used to extract maximum hours when creating off-shifts
             shifts_per_week[week].append((float(24 * 7 * (week + 1)), 0.0))
 
-        for shift in shifts_per_week[week]:
-            for s in shifts_per_week[week][shifts_per_week[week].index(shift) + 1:]:
+        for shift in shifts:
+            for s in shifts[shifts.index(shift) + 1:]:
                 end_of_work_shift = (shift[0] + shift[1])
                 duration = s[0] - end_of_work_shift
                 if duration > WEEKLY_REST_DURATION[1]:
