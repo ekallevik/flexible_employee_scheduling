@@ -29,9 +29,8 @@ class BaseConstraints:
         self.off_shifts_in_week = off_shifts_set["off_shifts_per_week"]
         self.t_in_off_shifts = off_shifts_set["t_in_off_shifts"]
         self.off_shifts = off_shifts_set["off_shifts"]
-        self.shifts_combinations_violating_daily_rest = shifts_set[
-            "shifts_combinations_violating_daily_rest"
-        ]
+        self.shift_sequences_violating_daily_rest = shifts_set["shift_sequences_violating_daily_rest"]
+        self.shift_combinations_violating_daily_rest = shifts_set["shift_combinations_violating_daily_rest"]
         self.invalid_shifts = shifts_set["invalid_shifts"]
 
         # Adding constraints
@@ -45,6 +44,7 @@ class BaseConstraints:
         self.add_contracted_hours(var.y, var.lam)
 
         for e in self.employees:
+            self.add_daily_rest_shift_sequences(var.x, e)
             self.add_daily_rest_shift_combinations(var.x, e)
         self.add_daily_rest_invalid_shifts(var.x)
 
@@ -175,17 +175,32 @@ class BaseConstraints:
             name="contracted_hours",
         )
 
-    def add_daily_rest_shift_combinations(self, x, e):
+    def add_daily_rest_shift_sequences(self, x, e):
         self.model.addConstrs(
             (
                 x[e, t, v]
                 + quicksum(
                     x[e, t_marked, v_marked]
-                    for t_marked, v_marked in self.shifts_combinations_violating_daily_rest[e][t, v]
+                    for t_marked, v_marked in self.shift_sequences_violating_daily_rest[e][t, v]
                 )
-                <= min(2, len(self.shifts_combinations_violating_daily_rest[e][t, v]))
-                for t, v in self.shifts_combinations_violating_daily_rest[e]
-                if len(self.shifts_combinations_violating_daily_rest[e]) > 0
+                <= 2
+                for t, v in self.shift_sequences_violating_daily_rest[e]
+                if len(self.shift_sequences_violating_daily_rest[e]) > 0
+            ),
+            name="daily_rest_shift_sequences",
+        )
+
+    def add_daily_rest_shift_combinations(self, x, e):
+        self.model.addConstrs(
+            (
+                2 * x[e, t, v]
+                + quicksum(
+                    x[e, t_marked, v_marked]
+                    for t_marked, v_marked in self.shift_combinations_violating_daily_rest[e][t, v]
+                )
+                <= 2
+                for t, v in self.shift_combinations_violating_daily_rest[e]
+                if len(self.shift_combinations_violating_daily_rest[e]) > 0
             ),
             name="daily_rest_shift_combinations",
         )
