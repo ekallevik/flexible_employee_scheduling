@@ -272,10 +272,10 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     for e in employees:
         violating_shift_sequences[e] = tupledict()
         violating_shift_combinations[e] = tupledict()
-        for day in shifts_per_day:
+        for day, shifts in shifts_per_day.items():
             # Check if daily rest is fulfilled naturally
             if not (already_daily_off_shift(root, daily_offset[e], daily_rest[e], day)):
-                for shift in shifts_per_day[day]:
+                for shift in shifts:
                     shift_end = shift[0] + shift[1]
                     if day != 0:
                         # Checking shifts the day before
