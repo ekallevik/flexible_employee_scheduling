@@ -193,12 +193,12 @@ class BaseConstraints:
     def add_daily_rest_shift_combinations(self, x, e):
         self.model.addConstrs(
             (
-                x[e, t, v]
+                2 * x[e, t, v]
                 + quicksum(
                     x[e, t_marked, v_marked]
                     for t_marked, v_marked in self.shift_combinations_violating_daily_rest[e][t, v]
                 )
-                <= 1
+                <= 2
                 for t, v in self.shift_combinations_violating_daily_rest[e]
                 if len(self.shift_combinations_violating_daily_rest[e]) > 0
             ),
