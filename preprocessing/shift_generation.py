@@ -18,6 +18,7 @@ from utils.const import (
     DURATION_OF_PREFERENCES,
     NUMBER_OF_PREFERENCES_PER_WEEK,
     TIME_DEFINING_SHIFT_DAY,
+    WEEKLY_REST_DURATION,
 )
 
 
@@ -72,7 +73,8 @@ def get_time_sets(root):
 
 def get_shift_sets(root, staff, time_sets, shifts, off_shifts):
 
-    shifts_per_day, shifts_per_week = get_shifts_per_day(shifts, time_sets["days"])
+    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+    shifts_per_week = get_shifts_per_week(shifts_per_day)
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
 
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
@@ -189,9 +191,8 @@ def remove_duplicates_and_sort(shifts):
 
 def get_shifts_per_day(shifts, days):
 
-    # todo: bruke defaultdict for begge?
+    # todo: bruke defaultdict i stedet?
     shifts_per_day = tupledict()
-    shifts_in_week = defaultdict(list)
 
     for day in days:
         shifts_per_day[day] = []
@@ -204,14 +205,31 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
-                shifts_in_week[int(day / 7)].append(shift)
 
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
                 break
 
-    return shifts_per_day, shifts_in_week
+    return shifts_per_day
+
+
+def get_shifts_per_week(shifts_per_day):
+
+    # todo: bruke defaultdict i stedet?
+    shifts_per_week = tupledict()
+
+    for day, shifts in shifts_per_day.items():
+
+        # if first day of week
+        if day % 7 == 0:
+            # get week and initialize tupledict
+            week = int(day / 7)
+            shifts_per_week[week] = tuplelist()
+
+        shifts_per_week[week].extend(shifts)
+
+    return shifts_per_week
 
 
 def get_short_and_long_shifts(shifts):
@@ -254,23 +272,6 @@ def get_shifts_covered_by_off_shifts(shifts, off_shifts):
                 shifts_covered[off_shift].append(shift)
 
     return shifts_covered
-
-
-def get_shifts_per_week(shifts_per_day):
-
-    shifts_per_week = tupledict()
-
-    for day, shifts in shifts_per_day.items():
-
-        # if first day of week
-        if day % 7 == 0:
-            # get week and initialize tupledict
-            week = int(day / 7)
-            shifts_per_week[week] = tuplelist()
-
-        shifts_per_week[week].extend(shifts)
-
-    return shifts_per_week
 
 
 def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
