@@ -14,7 +14,6 @@ def set_x(state, t_covered_by_shift, e, t, v, value, y_s=None):
         for t1 in t_covered_by_shift[t,v]:
             state.y[0,e,t1] = value
     else:
-        print(y_s)
         for t1, c in zip(t_covered_by_shift[t,v], y_s):
             state.y[c,e,t1] = value
 
