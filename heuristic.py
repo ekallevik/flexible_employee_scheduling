@@ -13,7 +13,7 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem2" 
+    problem_name = "rproblem3" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
@@ -53,7 +53,7 @@ def main():
     #simulated_annealing_criterion = SimulatedAnnealingCriterion()
     greedy_criterion = GreedyCriterion()
     alns = ALNS(initial_state, model, greedy_criterion)
-    alns.iterate(10)
+    alns.iterate(5)
 
 
 """Possibilities now.

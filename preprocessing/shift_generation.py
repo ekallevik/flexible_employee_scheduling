@@ -6,7 +6,6 @@ from preprocessing.demand_processing import (
     get_start_events,
     get_time_periods,
     get_time_steps,
-    get_combined_time_periods,
 )
 from collections import defaultdict
 from preprocessing.preferences import generate_preferences
@@ -64,8 +63,8 @@ def get_time_sets(root, competencies):
     
     return {
         "step": get_time_steps(root),
-        "periods": periods,
-        "combined_time_periods": get_combined_time_periods(periods[0], periods[1], periods[2]),
+        "periods": periods["periods"],
+        "combined_time_periods": periods["combined_time_periods"],
         "days": days,
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
@@ -366,7 +365,7 @@ def get_off_shifts(root):
                 off_shifts_in_week[week] = []
             if event >= (week + 1) * 24 * 7:
                 break
-            if duration > 70:
+            if duration > 120:
                 break
             elif duration >= 36:
                 if (events[i], duration) not in off_shifts:

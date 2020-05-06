@@ -68,7 +68,8 @@ class ALNS:
                                             self.shifts_overlapping_t)
 
         repair_worst_employee_regret = partial(worst_employee_regret_repair, self.competencies, 
-                                            self.t_covered_by_shift, self.employee_with_competencies, self.demand, 
+                                            self.t_covered_by_shift, self.employee_with_competencies, 
+                                            self.employee_with_competency_combination, self.demand, 
                                             self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, 
                                             self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, 
                                             self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
@@ -79,12 +80,13 @@ class ALNS:
                                             self.weeks, self.shifts_at_day)
 
         repair_worst_employee_greedy = partial(worst_employee_repair, self.competencies, self.t_covered_by_shift, 
-                                                self.employee_with_competencies, self.demand, self.contracted_hours, 
-                                                self.weeks, self.time_periods_in_week, self.time_step, self.shifts, self.shifts_at_day)
+                                                self.employee_with_competencies, self.employee_with_competency_combination,
+                                                self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week,
+                                                self.time_step, self.shifts, self.shifts_at_day)
 
         #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
         #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
-        #,repair_worst_week_greedy
+        #, repair_worst_week_greedy
         operators = {
                         #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
                         remove_worst_week: [repair_worst_week_regret]
@@ -109,7 +111,7 @@ class ALNS:
             destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
             print("Destroy spesific: " + str(destroy_spesific_set))
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
-            print(repair_set)
+            #print(repair_set)
             #destroy_set, employees = 
             #destroy_set, worst_k_weeks 
 
