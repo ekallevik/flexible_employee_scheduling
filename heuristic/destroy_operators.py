@@ -4,6 +4,7 @@ from heuristic.converter import remove_x
 def worst_week_removal(competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, shifts_in_week, t_covered_by_shift, state, destroy_size=1):
     #print("worst_week_removal is running")
     worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, destroy_size, "worst")
+    print(worst_k_weeks)
     destroy_set_shifts = [remove_x(state, t_covered_by_shift, competencies, e, t, v) for j in worst_k_weeks for e in employees for t,v in shifts_in_week[j] if state.x[e,t,v] == 1]
     print(destroy_set_shifts)
     return destroy_set_shifts, worst_k_weeks

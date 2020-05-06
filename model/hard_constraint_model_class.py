@@ -39,7 +39,7 @@ class Optimization_model():
 
         self.demand = data["demand"]
 
-
+        self.employee_with_competency_combination = data["staff"]["employee_with_competency_combination"]
 
         self.shifts = data["shifts"]["shifts"]
         self.shifts_at_day = data["shifts"]["shifts_per_day"]
@@ -66,7 +66,6 @@ class Optimization_model():
     def add_variables(self):
 
         y = {(c,e,t): 0 for c in self.competencies for e in self.employees for t in self.time_periods[c]}
-        print(y)
         #self.delta = {}
         self.ro = {}
         self.q_iso = {}

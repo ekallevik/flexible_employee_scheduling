@@ -3,9 +3,11 @@ from pathlib import Path
 from gurobipy.gurobipy import tupledict, tuplelist
 from datetime import timedelta, datetime
 today = datetime.today()
+from collections import defaultdict
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
 from preprocessing.rest_rule import Daily_rest_rule, Weekly_rest_rule
+from itertools import chain, combinations
 from utils.const import (
     DEFAULT_COMPETENCY,
     DEFAULT_CONTRACTED_HOURS,
@@ -24,6 +26,7 @@ def get_employee_lists(root, competencies):
     employee_blocked_hours = tupledict()
 
     emp = get_staff(root, competencies)
+
 
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
@@ -48,6 +51,7 @@ def get_employee_lists(root, competencies):
         "employee_contracted_hours": employee_contracted_hours,
         "employee_daily_offset": employee_daily_offset,
         "employee_blocked_hours": employee_blocked_hours,
+        "employee_with_competency_combination": get_competency_combinations(emp),
     }
 
 
@@ -77,6 +81,15 @@ def get_staff(root, all_competencies):
         employee.set_competencies(competencies)
         staff.append(employee)
     return staff
+
+def get_competency_combinations(employees):
+    competency_combinations = defaultdict(list)
+    for e in employees:
+        competency_combos_for_e = list(chain.from_iterable(combinations(e.competencies, r) for r in range(1,len(e.competencies)+1)))
+        for comp in competency_combos_for_e:
+            competency_combinations[comp].append((len(e.competencies),int(e.id)))
+    return competency_combinations
+
 
 def set_contracted_hours_for_employee(employee, schedule_row):
     try:

@@ -187,13 +187,13 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
     g = min(state.f.values())
     state.objective_function_value = (sum(state.f.values()) + g - abs(sum(state.soft_vars["deviation_from_ideal_demand"].values())) - 10 * hard_constraint_penalties(state))
 
-def calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, k=1, setting="best"):
+def calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, k=1, setting="best", competency_score=None):
     value = {}
     for j in weeks:
         days_in_week = [i for i in range(j*7,(j+1)*7)]
         if(setting == "worst"):
             value[j] = (
-                        sum(state.w[e,j][1] for e in employees)
+                        sum(min(100, state.w[e,j][1]) for e in employees)
                         - sum(abs(state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in time_periods_in_week[c, j])
                         - sum(state.soft_vars["partial_weekends"][e, (5 + j * 7)] for e in employees)
                         - sum(state.soft_vars["isolated_working_days"][e, i + 1] + state.soft_vars["isolated_off_days"][e, i + 1] for e in employees for i in range(len(days_in_week)-2))
@@ -205,6 +205,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                         - 100 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
             )
         else:
+            print(employees)
             value[j] = (
                 + sum(min(100, state.w[e,j][1]) for e in employees)
                 - sum(abs(state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in time_periods_in_week[c, j])
@@ -217,6 +218,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                 - 10 * max(0, sum(state.soft_vars["contracted_hours"][e,j] for e in employees))
                 - 10 * sum(state.hard_vars["weekly_off_shift_error"][e,j] for e in employees)
                 - 100 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
+                - 10 * competency_score
                 )
     if(setting == "worst"):
         value = sorted(value, key=value.get, reverse=False)[:k]
