@@ -96,8 +96,9 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
     return destroy_set, employees
 
 
-def random_employee_removal(shifts, t_covered_by_shift, employees, random_state, state,
-                            destroy_size=2):
+def random_employee_removal(
+    shifts, t_covered_by_shift, employees, random_state, state, destroy_size=2
+):
 
     selected_employees = random_state.choice(employees, size=destroy_size)
 
@@ -139,11 +140,8 @@ def get_weighted_probabilities(score):
 
     # Shift all values by the max score, and flip the sign
     upper_bound = max(score)
-    shifted_score = [-(value-upper_bound) for value in score]
+    shifted_score = [-(value - upper_bound) for value in score]
     total_weight = sum(shifted_score)
     adjusted_score = [value / total_weight for value in shifted_score]
 
     return adjusted_score
-
-
-
