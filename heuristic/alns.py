@@ -103,6 +103,15 @@ class ALNS:
             self.random_state,
         )
 
+        remove_random_weekend = partial(
+            random_week_removal,
+            self.employees,
+            self.weeks,
+            self.shifts_at_day,
+            self.t_covered_by_shift,
+            self.random_state,
+        )
+
         remove_worst_employee = partial(
             worst_employee_removal, self.shifts, self.t_covered_by_shift,
         )
@@ -187,7 +196,9 @@ class ALNS:
             remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
             remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
             remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
         }
+
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
