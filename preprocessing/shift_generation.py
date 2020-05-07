@@ -285,12 +285,29 @@ def get_t_covered_by_shift(shifts, time_sets):
 
     time_step = time_sets["step"]
     combined_time_periods = time_sets["combined_time_periods"][0]
-    t_covered_by_shift = tupledict()
+    t_covered_by_shift = {}
     for shift in shifts:
         end = combined_time_periods.index(shift[0] + shift[1] - time_step)
         start = combined_time_periods.index(shift[0])
         t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
+    return t_covered_by_shift
 
+def get_t_covered_by_shift2(shifts, time_sets, competencies):
+    time_periods = time_sets["periods"][0]
+    t_covered_by_shift = {}
+    for shift in shifts:
+        for c in competencies: 
+            try:
+                end = time_periods[c].index(shift[0] + shift[1])
+                start = time_periods[c].index(shift[0])
+                t_covered_by_shift[shift[0], shift[1], c] = time_periods[c][start:end]
+            except:  
+                t_in_shift = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                if(len(t_in_shift) == 0):
+                    continue
+                t_covered_by_shift[shift[0], shift[1], c] = t_in_shift
+    print(t_covered_by_shift)
+    raise ValueError
     return t_covered_by_shift
 
 
@@ -365,7 +382,7 @@ def get_off_shifts(root):
                 off_shifts_in_week[week] = []
             if event >= (week + 1) * 24 * 7:
                 break
-            if duration > 120:
+            if duration > 60:
                 break
             elif duration >= 36:
                 if (events[i], duration) not in off_shifts:

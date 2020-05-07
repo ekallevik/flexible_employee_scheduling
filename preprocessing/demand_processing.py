@@ -71,14 +71,17 @@ def get_time_periods(root, competencies):
                     day += 1
                 if time not in time_periods[c]:
                     time_periods[c].append(time)
-                    combined_time_periods.append(time)
                     try:
                         time_periods_in_week[c, week].append(time)
-                        combined_time_periods_in_week[week].append(time)
                     except:
                         time_periods_in_week[c, week] = [time]
-                        combined_time_periods_in_week[week] = [time]
                     time_periods_in_day[c, day].append(time)
+                if time not in combined_time_periods:
+                    combined_time_periods.append(time)
+                    try:
+                        combined_time_periods_in_week[week].append(time)
+                    except:
+                        combined_time_periods_in_week[week] = [time]
                     combined_time_periods_in_day[day].append(time)
                 time += time_step
     return {"periods": [time_periods, time_periods_in_week, time_periods_in_day],
