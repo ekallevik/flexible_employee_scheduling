@@ -33,7 +33,7 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 class ProblemRunner:
 
-    def __init__(self, problem="rproblem3", mode="construction", with_sdp=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
