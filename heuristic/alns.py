@@ -57,7 +57,6 @@ class ALNS:
         self.employee_with_competency_combination = model.employee_with_competency_combination
 
 
-
         remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.combined_time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
         remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift, self.competencies)
 
@@ -87,9 +86,10 @@ class ALNS:
         #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
         #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
         #, repair_worst_week_greedy
+        #repair_worst_week_regret, 
         operators = {
-                        #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret]
+                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         #for key in self.repair_operators.keys():

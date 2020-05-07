@@ -18,7 +18,7 @@ def main():
     model.add_variables()
     model.add_constraints()
     model.set_objective()
-    model.model.write("constraints.lp")
+    #model.model.write("constraints.lp")
     model.optimize()
     #model.model.write("solution_files/optimality_model_rproblem3.sol")
     x,y,w = convert(model) 
@@ -49,11 +49,11 @@ def main():
     objective_function, f = calc_ob(model, soft_variables, w)
 
     initial_state = State({"x": x, "y":y, "w":w}, soft_variables, hard_vars, objective_function, f)
-    #initial_state.write("optimality_model_rproblem3_heuristic_rest")
+    #initial_state.write("solution_files/optimality_model_rproblem2_2_heuristic_rest")
     #simulated_annealing_criterion = SimulatedAnnealingCriterion()
     greedy_criterion = GreedyCriterion()
     alns = ALNS(initial_state, model, greedy_criterion)
-    alns.iterate(5)
+    alns.iterate(10)
 
 
 """Possibilities now.

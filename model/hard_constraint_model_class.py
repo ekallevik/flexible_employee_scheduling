@@ -120,14 +120,16 @@ class Optimization_model():
         self.model.addConstrs((
             quicksum(self.x[e,t_marked,v] 
             for t_marked,v in self.shifts_overlapping_t[t]) 
-            == quicksum(self.y[c,e,t] for c in self.competencies if self.y.get((c,e,t)))
+            == quicksum(self.y[c,e,t] 
+                for c in self.competencies 
+                if (c,e,t) in self.y)
             for e in self.employees
             for t in self.combined_time_periods
         ),name="mapping_shift_to_demand")
 
         self.model.addConstrs((
             quicksum(self.y[c,e,t] 
-            for c in self.competencies if self.y.get((c,e,t))) 
+            for c in self.competencies if (c,e,t) in self.y) 
             <= 1 
             for e in self.employees 
             for t in self.combined_time_periods
