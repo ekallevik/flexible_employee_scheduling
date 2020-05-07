@@ -2,8 +2,8 @@ import numpy as np
 from heuristic.utils import WeightUpdate
 from heuristic.delta_calculations import *
 from collections import defaultdict
-from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
-from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_week_regret_repair, worst_employee_regret_repair
+from heuristic.destroy_operators import worst_employee_removal, worst_week_removal, \
+    random_week_removal, weighted_random_week_removal, random_employee_removal
 from heuristic.local_search_operators import illegal_week_swap
 from functools import partial
 
@@ -71,9 +71,71 @@ class ALNS:
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
 
+        remove_worst_week = partial(
+            worst_week_removal,
+            self.competencies,
+            self.time_periods_in_week,
+            self.employees,
+            self.weeks,
+            self.L_C_D,
+            self.shifts_per_week,
+            self.t_covered_by_shift,
+        )
 
-        remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.combined_time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_per_week, self.t_covered_by_shift)
-        remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift, self.competencies)
+        remove_random_week = partial(
+            random_week_removal,
+            self.competencies,
+            self.time_periods_in_week,
+            self.employees,
+            self.weeks,
+            self.L_C_D,
+            self.shifts_per_week,
+            self.t_covered_by_shift,
+            self.random_state
+        )
+
+        remove_weighted_random_week = partial(
+            weighted_random_week_removal,
+            self.competencies,
+            self.time_periods_in_week,
+            self.employees,
+            self.weeks,
+            self.L_C_D,
+            self.shifts_per_week,
+            self.t_covered_by_shift,
+            self.random_state
+        )
+
+        remove_worst_employee = partial(
+            worst_employee_removal, self.shifts, self.t_covered_by_shift,
+        )
+
+        remove_random_employee = partial(
+            random_employee_removal, self.shifts, self.t_covered_by_shift,
+            self.employees, self.random_state
+        )
+
+        remove_weighted_random_employee = partial(
+            random_employee_removal, self.shifts, self.t_covered_by_shift,
+            self.employees, self.random_state
+        )
+
+        repair_worst_week_regret = partial(
+            worst_week_regret_repair,
+            self.shifts_per_week,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.employee_with_competencies,
+            self.demand,
+            self.time_step,
+            self.time_periods_in_week,
+            self.employees,
+            self.contracted_hours,
+            self.weeks,
+            self.shifts_at_day,
+            self.L_C_D,
+            self.shifts_overlapping_t,
+        )
 
         repair_worst_week_regret = partial(worst_week_regret_repair, self.shifts_per_week, 
                                             self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.employee_with_competency_combination,
@@ -99,9 +161,13 @@ class ALNS:
                                                 self.time_step, self.shifts, self.shifts_at_day)
 
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
-                    }
+            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_weighted_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+        }
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 

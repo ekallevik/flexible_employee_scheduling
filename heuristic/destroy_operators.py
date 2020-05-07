@@ -1,22 +1,38 @@
 from heuristic.delta_calculations import calc_weekly_objective_function
 from heuristic.converter import remove_x
 
-def worst_week_removal(competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, shifts_in_week, t_covered_by_shift_combined, state, destroy_size=1):
-    worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, destroy_size, "worst")
+
+def worst_week_removal(
+    competencies,
+    time_periods_in_week,
+    employees,
+    weeks,
+    L_C_D,
+    shifts_in_week,
+    t_covered_by_shift,
+    state,
+    destroy_size=1,
+):
+    worst_k_weeks = calc_weekly_objective_function(
+        state, competencies, time_periods_in_week, employees, weeks, L_C_D, destroy_size, "worst"
+    )
+
+    destroy_set_shifts = destroy_shifts(
+        employees, shifts_in_week, state, t_covered_by_shift, worst_k_weeks
+    )
+
+    return destroy_set_shifts, worst_k_weeks
+
+
 def random_week_removal(
-        employees,
-        weeks,
-        shifts_in_week,
-        t_covered_by_shift,
-        state,
-        random_state,
-        destroy_size=1,
+    employees, weeks, shifts_in_week, t_covered_by_shift, state, random_state, destroy_size=1,
 ):
 
     selected_weeks = random_state.choice(weeks, size=destroy_size)
 
-    destroy_set_shifts = destroy_shifts(employees, shifts_in_week, state, t_covered_by_shift,
-                                        selected_weeks)
+    destroy_set_shifts = destroy_shifts(
+        employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
+    )
 
     return destroy_set_shifts, selected_weeks
 
@@ -35,14 +51,21 @@ def weighted_random_week_removal(
 ):
 
     weekly_objective = calc_weekly_objective_function(
-        state, competencies, time_periods_in_week, employees, weeks, L_C_D, destroy_size,
-        setting="best"
+        state,
+        competencies,
+        time_periods_in_week,
+        employees,
+        weeks,
+        L_C_D,
+        destroy_size,
+        setting="best",
     )
 
     selected_weeks = random_state.choice(weeks, size=destroy_size, p=weekly_objective)
 
-    destroy_set_shifts = destroy_shifts(employees, shifts_in_week, state, t_covered_by_shift,
-                                        selected_weeks)
+    destroy_set_shifts = destroy_shifts(
+        employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
+    )
 
     return destroy_set_shifts, selected_weeks
 
@@ -71,19 +94,21 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
     return destroy_set, employees
 
 
-def random_employee_removal(shifts, t_covered_by_shift, state, random_state, destroy_size=2):
+def random_employee_removal(shifts, t_covered_by_shift, state, employees, random_state,
+                            destroy_size=2):
 
-    selected_employees = random_state.choice(len(state.f), size=destroy_size)
+    selected_employees = random_state.choice(employees, size=destroy_size)
 
     destroy_set = destroy_employees(selected_employees, shifts, state, t_covered_by_shift)
 
     return destroy_set, selected_employees
 
 
-def weighted_random_employee_removal(shifts, t_covered_by_shift, state, random_state,
-                                     destroy_size=2):
+def weighted_random_employee_removal(
+    shifts, t_covered_by_shift, state, employees, random_state, destroy_size=2
+):
 
-    selected_employees = random_state.choice(len(state.f), size=destroy_size, p=state.f)
+    selected_employees = random_state.choice(employees, size=destroy_size, p=state.f)
 
     destroy_set = destroy_employees(selected_employees, shifts, state, t_covered_by_shift)
 
@@ -98,10 +123,3 @@ def destroy_employees(employees, shifts, state, t_covered_by_shift):
         if state.x[e, t, v] != 0
     ]
     return destroy_set
-
-
-
-
-
-
-
