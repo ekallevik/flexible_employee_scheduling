@@ -45,8 +45,8 @@ def weighted_random_week_removal(
     L_C_D,
     shifts_in_week,
     t_covered_by_shift,
-    state,
     random_state,
+    state,
     destroy_size=1,
 ):
 
@@ -61,7 +61,9 @@ def weighted_random_week_removal(
         setting="best",
     )
 
-    selected_weeks = random_state.choice(weeks, size=destroy_size, p=weekly_objective)
+    probabilities = get_weighted_probabilities(weekly_objective)
+
+    selected_weeks = random_state.choice(weeks, size=destroy_size, p=probabilities)
 
     destroy_set_shifts = destroy_shifts(
         employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
@@ -108,7 +110,9 @@ def weighted_random_employee_removal(
     shifts, t_covered_by_shift, state, employees, random_state, destroy_size=2
 ):
 
-    selected_employees = random_state.choice(employees, size=destroy_size, p=state.f)
+    probabilities = get_weighted_probabilities(state.f)
+
+    selected_employees = random_state.choice(employees, size=destroy_size, p=probabilities)
 
     destroy_set = destroy_employees(selected_employees, shifts, state, t_covered_by_shift)
 
@@ -123,3 +127,23 @@ def destroy_employees(employees, shifts, state, t_covered_by_shift):
         if state.x[e, t, v] != 0
     ]
     return destroy_set
+
+
+def get_weighted_probabilities(score):
+    """
+    Ensure that all probabilities in [0, 1], with the highest probability for the lowest
+    score
+    """
+
+    # todo: this probably has the potential for improvements
+
+    # Shift all values by the max score, and flip the sign
+    upper_bound = max(score)
+    shifted_score = [-(value-upper_bound) for value in score]
+    total_weight = sum(shifted_score)
+    adjusted_score = [value / total_weight for value in shifted_score]
+
+    return adjusted_score
+
+
+
