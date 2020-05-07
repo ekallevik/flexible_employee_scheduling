@@ -84,11 +84,8 @@ class ALNS:
 
         remove_random_week = partial(
             random_week_removal,
-            self.competencies,
-            self.time_periods_in_week,
             self.employees,
             self.weeks,
-            self.L_C_D,
             self.shifts_per_week,
             self.t_covered_by_shift,
             self.random_state
