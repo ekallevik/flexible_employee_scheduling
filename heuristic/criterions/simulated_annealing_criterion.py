@@ -49,8 +49,6 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
 
     def validate(self):
 
-        breakpoint()
-
         if self.method not in ["linear", "exponential"]:
             raise ValueError(f"Method: {self.method} is not a valid choice")
 

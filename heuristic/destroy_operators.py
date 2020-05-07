@@ -72,6 +72,25 @@ def weighted_random_week_removal(
     return destroy_set_shifts, selected_weeks
 
 
+def random_weekend_removal(
+    employees, weeks, shifts_at_day, t_covered_by_shift, random_state, state, destroy_size=2,
+):
+
+    selected_weeks = list(random_state.choice(weeks, size=destroy_size))
+
+    shifts_in_weekend = []
+
+    for week in selected_weeks:
+        shifts_in_weekend.append(shifts_at_day[5 + week * 7])
+        shifts_in_weekend.append(shifts_at_day[6 + week * 7])
+
+    destroy_set_shifts = destroy_shifts(
+        employees, shifts_at_day, state, t_covered_by_shift, selected_weeks
+    )
+
+    return destroy_set_shifts, selected_weeks
+
+
 def destroy_shifts(employees, shifts_in_week, state, t_covered_by_shift, worst_k_weeks):
     destroy_set_shifts = [
         set_x(state, t_covered_by_shift, e, t, v, 0)
