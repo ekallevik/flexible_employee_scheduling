@@ -17,8 +17,10 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
         self.validate()
 
     def __str__(self):
-        return f"SimulatedAnnealingCriterion [t0={self.start_temperature}, " \
-               f"t1={self.end_temperature}, step={self.step}, method={self.method}]"
+        return (
+            f"SimulatedAnnealingCriterion [t0={self.start_temperature}, "
+            f"t1={self.end_temperature}, step={self.step}, method={self.method}]"
+        )
 
     def accept(self, candidate, current, random_state):
 

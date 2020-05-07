@@ -346,7 +346,9 @@ def calc_weekly_objective_function(
                     for e in employees
                     for t in time_periods_in_week[j]
                 )
-                - max(0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for e in employees))
+                - max(
+                    0, sum(state.soft_vars["deviation_contracted_hours"][e, j] for e in employees)
+                )
                 - 100
                 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
             )

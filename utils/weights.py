@@ -1,8 +1,8 @@
-
 from utils.const import DEFAULT_CONTRACTED_HOURS
 from gurobipy.gurobipy import tupledict
 
 # Set weighting of Optimality Model
+
 
 def set_weights():
     """
@@ -12,7 +12,7 @@ def set_weights():
     over- or under staffing.
     """
 
-    return{
+    return {
         # Weight of fairness aspects. Rest, contracted hours and preferences should be treated as hours.
         "rest": 20,
         "contracted hours": 2,
@@ -21,10 +21,8 @@ def set_weights():
         "isolated off days": 10,
         "consecutive days": 12,
         "preferences": 1.5,
-
         # Weight of least favored employee. Use interval [0, 1].
         "lowest fairness score": 0.5,
-
         # Scaling excess and deficit of demand
         "excess demand deviation factor": 1.0,
         "deficit demand deviation factor": 1.0,
@@ -33,11 +31,11 @@ def set_weights():
 
 # Weighting of Shift Design Model
 
+
 def set_shift_design_weights():
     return {
         "use of short shift": 5,
         "use of long shift": 5,
-
         # Scaling excess and deficit of demand
         "excess demand deviation factor": 1.0,
         "deficit demand deviation factor": 1.0,
@@ -49,10 +47,12 @@ def get_shift_design_weights(time_set):
     weights = set_shift_design_weights()
 
     # Scale weights to hours
-    weights["excess demand deviation factor"] = scale_weight_to_hours(weights["excess demand deviation factor"],
-                                                                      time_set["step"])
-    weights["deficit demand deviation factor"] = scale_weight_to_hours(weights["deficit demand deviation factor"],
-                                                                       time_set["step"])
+    weights["excess demand deviation factor"] = scale_weight_to_hours(
+        weights["excess demand deviation factor"], time_set["step"]
+    )
+    weights["deficit demand deviation factor"] = scale_weight_to_hours(
+        weights["deficit demand deviation factor"], time_set["step"]
+    )
 
     return weights
 
@@ -69,11 +69,15 @@ def get_weights(time_set, staff):
     weights["rest"] = correct_weight_contribution(weights["rest"])
 
     # Scale weights to hours
-    weights["excess demand deviation factor"] = scale_weight_to_hours(weights["excess demand deviation factor"],
-                                                                      time_set["step"])
-    weights["deficit demand deviation factor"] = scale_weight_to_hours(weights["deficit demand deviation factor"],
-                                                                       time_set["step"])
-    weights["contracted hours"] = scale_weight_to_hours(weights["contracted hours"], time_set["step"])
+    weights["excess demand deviation factor"] = scale_weight_to_hours(
+        weights["excess demand deviation factor"], time_set["step"]
+    )
+    weights["deficit demand deviation factor"] = scale_weight_to_hours(
+        weights["deficit demand deviation factor"], time_set["step"]
+    )
+    weights["contracted hours"] = scale_weight_to_hours(
+        weights["contracted hours"], time_set["step"]
+    )
     weights["preferences"] = scale_weight_to_hours(weights["preferences"], time_set["step"])
 
     # Scale weights relatively
@@ -116,11 +120,15 @@ def scale_weights_relatively(weights, staff):
     employee_contracted_hours = staff["employee_contracted_hours"]
 
     weights = scale_contracted_hours_relatively(weights, employee_contracted_hours)
-    weights["lowest fairness score"] = scale_based_on_staff_sized(weights["lowest fairness score"], num_employees)
-    weights["excess demand deviation factor"] = scale_based_on_staff_sized(weights["excess demand deviation factor"],
-                                                                           num_employees)
-    weights["deficit demand deviation factor"] = scale_based_on_staff_sized(weights["deficit demand deviation factor"],
-                                                                           num_employees)
+    weights["lowest fairness score"] = scale_based_on_staff_sized(
+        weights["lowest fairness score"], num_employees
+    )
+    weights["excess demand deviation factor"] = scale_based_on_staff_sized(
+        weights["excess demand deviation factor"], num_employees
+    )
+    weights["deficit demand deviation factor"] = scale_based_on_staff_sized(
+        weights["deficit demand deviation factor"], num_employees
+    )
 
     return weights
 
@@ -135,8 +143,11 @@ def scale_contracted_hours_relatively(weights, employee_contracted_hours):
     scaling_factor = 1.0
 
     for e in employee_contracted_hours:
-        contracted_hours_weights[e] = scaling_factor * weights["contracted hours"] * \
-                                      (DEFAULT_CONTRACTED_HOURS / employee_contracted_hours[e])
+        contracted_hours_weights[e] = (
+            scaling_factor
+            * weights["contracted hours"]
+            * (DEFAULT_CONTRACTED_HOURS / employee_contracted_hours[e])
+        )
 
     weights["contracted hours"] = contracted_hours_weights
 
@@ -168,11 +179,3 @@ def scale_up_weights(weights, employees):
         weights["contracted hours"][e] *= scaling_factor
 
     return weights
-
-
-
-
-
-
-
-
