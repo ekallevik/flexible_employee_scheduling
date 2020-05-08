@@ -23,6 +23,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
     changed = destroy_set.copy()
     impossible_shifts = []
 
+
     while(True):
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
@@ -30,7 +31,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                     (t1, v1, competencies): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in t_covered_by_shift[t1, v1] if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
                                             - (20*(len(competencies)-1) + v1) for competencies in employee_with_competency_combination for t1, v1 in shifts_in_week[week[0]] if (t1,v1,competencies) not in impossible_shifts
                     }
-
+         
         shift = max(shifts.items(), key=itemgetter(1))[0]
 
         deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] 
@@ -43,6 +44,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
 
         if(deviation_from_demand <= 6):
             print("Deviation from demand: " + str(deviation_from_demand))
+            print(shifts)
             return repair_set
         
         
@@ -52,10 +54,13 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
 
         
         deviation_contracted_hours = {e: (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks)  
-                                    - 0*(competency_level - len(competencies_needed)))
+                                    - (competency_level - len(competencies_needed)))
+                                    + (100 if (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] >= 6) else 0)
                                     for (competency_level, e) in employee_with_competency_combination[competencies_needed] 
-                                    if (sum(state.x[e,t,v] 
-                                    for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
+                                    if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
+
+        print("DEV: " + str(deviation_contracted_hours))
+        print("CON: " + str(contracted_hours))
 
         if(len(deviation_contracted_hours.keys()) == 0):
             impossible_shifts.append(shift)

@@ -109,7 +109,7 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
 
 def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks):
     for e in employees:
-        state.f[e] = (sum(state.w[e,j][1] - state.soft_vars["contracted_hours"][e,j] for j in weeks)
+        state.f[e] = (sum(min(100, state.w[e,j][1]) - state.soft_vars["contracted_hours"][e,j] for j in weeks)
             - sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
             - sum(state.soft_vars["isolated_working_days"][e,i+1] + state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(days)-L_C_D)))

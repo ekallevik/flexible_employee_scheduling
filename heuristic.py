@@ -13,7 +13,7 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem2" 
+    problem_name = "rproblem3" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()

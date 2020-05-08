@@ -94,8 +94,8 @@ class ALNS:
         #, repair_worst_week_greedy
         #repair_worst_week_regret, 
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
+                        #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         #for key in self.repair_operators.keys():
@@ -115,7 +115,7 @@ class ALNS:
 
 
             destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
-            #print("Destroy spesific: " + str(destroy_spesific_set))
+            print("Destroy spesific: " + str(destroy_spesific_set))
             #print("Destroy set: " + str(destroy_set))
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
             #print("Repair set: " + str(repair_set))
