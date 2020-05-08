@@ -2,14 +2,11 @@ from model.base_constraints import BaseConstraints
 from model.base_model import BaseModel
 from model.base_variables import BaseVariables
 from model.construction_objective import ConstructionObjective
-from utils import weights
 
 
 class ConstructionModel(BaseModel):
-    def __init__(self, name, problem, data):
-        super(ConstructionModel, self).__init__(name, problem, data, mip_focus=1, solution_limit=1)
-
-        self.weights = weights.get_weights()
+    def __init__(self, model, data):
+        super().__init__(model, data)
 
         self.var = BaseVariables(
             model=self.model,

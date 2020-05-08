@@ -1,7 +1,6 @@
 from gurobipy import *
 
 from model.base_constraints import BaseConstraints
-from utils.const import DAYS_IN_WEEK, SATURDAY_INDEX, SUNDAY_INDEX
 
 
 class OptimalityConstraints(BaseConstraints):
@@ -18,7 +17,7 @@ class OptimalityConstraints(BaseConstraints):
         limit_on_consecutive_days,
     ):
 
-        super(OptimalityConstraints, self).__init__(
+        super().__init__(
             model=model,
             var=var,
             staff=staff,

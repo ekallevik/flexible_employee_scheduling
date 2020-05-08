@@ -1,15 +1,37 @@
-from heuristic.delta_calculations import calc_weekly_objective_function, hard_constraint_penalties, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, delta_calculate_negative_deviation_from_contracted_hours
-from heuristic.converter import set_x
 from operator import itemgetter
 from random import choice
 
+from converter import set_x
+from heuristic.delta_calculations import (
+    calc_weekly_objective_function,
+    calculate_consecutive_days,
+    calculate_isolated_off_days,
+    calculate_isolated_working_days,
+    calculate_partial_weekends,
+    calculate_weekly_rest,
+    delta_calculate_deviation_from_contracted_hours,
+    hard_constraint_penalties,
+)
 
-def illegal_week_swap(shifts_in_week, employees, shifts_at_day, t_covered_by_shift, competencies, contracted_hours, time_periods_in_week, combined_time_periods_in_week, time_step, L_C_D, weeks, state):
+
+def illegal_week_swap(
+    shifts_in_week,
+    employees,
+    shifts_at_day,
+    t_covered_by_shift,
+    competencies,
+    contracted_hours,
+    time_periods_in_week,
+    time_step,
+    L_C_D,
+    weeks,
+    state,
+):
     destroy_set = []
     repair_set = []
     for emp, j in state.hard_vars["weekly_off_shift_error"]:
-        if state.hard_vars["weekly_off_shift_error"][emp,j] == 1:
-            shifts = [(t, v) for t, v in shifts_in_week[j] if state.x[emp,t,v] != 0]
+        if state.hard_vars["weekly_off_shift_error"][emp, j] == 1:
+            shifts = [(t, v) for t, v in shifts_in_week[j] if state.x[emp, t, v] != 0]
             days_in_week = [i + (7 * j) for i in range(7)]
             saturdays = [5 + (j * 7)]
             objective_values = {}
