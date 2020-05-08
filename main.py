@@ -140,9 +140,10 @@ class ProblemRunner:
             "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
         }
 
-        objective_function, f = calculate_objective_function(
-            self.data, soft_variables, candidate_solution["w"]
-        )
+        weights = get_weights(self.data["time"], self.data["staff"])
+
+        objective_function, f = calculate_objective_function(self.data, soft_variables, weights,
+                                                             candidate_solution)
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
