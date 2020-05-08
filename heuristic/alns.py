@@ -56,6 +56,10 @@ class ALNS:
         self.combined_time_periods_in_week = model.combined_time_periods_in_week
         self.employee_with_competency_combination = model.employee_with_competency_combination
 
+        #Set for daily rest restriction
+        self.invalid_shifts = model.invalid_shifts
+        self.shift_combinations_violating_daily_rest = model.shift_combinations_violating_daily_rest
+        self.shift_sequences_violating_daily_rest = model.shift_sequences_violating_daily_rest
 
         remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.combined_time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
         remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift, self.competencies)
@@ -88,8 +92,8 @@ class ALNS:
         #, repair_worst_week_greedy
         #repair_worst_week_regret, 
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
+                        #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         #for key in self.repair_operators.keys():
@@ -109,8 +113,11 @@ class ALNS:
 
 
             destroy_set, destroy_spesific_set = destroy_operator(candidate_solution)
-            print("Destroy spesific: " + str(destroy_spesific_set))
+            #print("Destroy spesific: " + str(destroy_spesific_set))
+            print("Destroy set: " + str(destroy_set))
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_spesific_set)
+            print("Repair set: " + str(repair_set))
+            calculate_daily_rest_error(candidate_solution, repair_set, destroy_set, self.days, self.shifts_at_day)
             #print(repair_set)
             #destroy_set, employees = 
             #destroy_set, worst_k_weeks 
@@ -257,6 +264,7 @@ class ALNS:
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
         calculate_weekly_rest(state, self.shifts_in_week, employees, self.weeks)
+        calculate_daily_rest_error(state, destroy, repair, self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
 
         #Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)

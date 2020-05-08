@@ -159,6 +159,25 @@ def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shift
         for t in t_covered_by_shift[t1,v1]:
             state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies if (c,e,t) in state.y)))
 
+def calculate_daily_rest_error(state, repair, destroy, days, shifts_at_day):
+    days_in_destroy = [(e,int(t/24)) for e,t,v in destroy]
+    #before_and_after = [-1, 0, 1]
+    days_in_repair = defaultdict(set)
+    #days_in_repair = {(e,int(t/24)+d): (t1,v1) for e,t,v in repair for d in before_and_after for t1,v1 in shifts_at_day[int(t/24)+d] if 0 <= (int(t/24) + d) <= len(days) and state.x[e,t1,v1] == 1}
+    
+    for e,i in days_in_destroy:
+        state.hard_vars["daily_rest_error"][e,i] = 0
+
+    for e,t,v in repair:
+        shift_before = shifts_at_day[int(t/24) - 1]
+        d_after = int(t/24) + 1
+
+
+    
+    raise ValueError
+
+
+    
 
 # def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):
 #     for e,t,v in destroy_set:

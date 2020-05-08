@@ -13,7 +13,7 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem3" 
+    problem_name = "rproblem2" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
@@ -42,7 +42,8 @@ def main():
         "weekly_off_shift_error": {(e,j): 0 for e in model.employees for j in model.weeks},
         #"no_work_during_off_shift": {},
         "mapping_shift_to_demand": {(c,t): 0 for c in model.competencies for t in model.time_periods[c]},
-        "delta_positive_contracted_hours": {e: 0 for e in model.employees}
+        "delta_positive_contracted_hours": {e: 0 for e in model.employees},
+        "daily_rest_error": {(e,i): 0 for e in model.employees for i in model.days}
     }
 
     calculate_weekly_rest(model, x, w)
@@ -53,7 +54,7 @@ def main():
     #simulated_annealing_criterion = SimulatedAnnealingCriterion()
     greedy_criterion = GreedyCriterion()
     alns = ALNS(initial_state, model, greedy_criterion)
-    alns.iterate(10)
+    alns.iterate(1)
 
 
 """Possibilities now.
