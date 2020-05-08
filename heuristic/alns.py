@@ -5,7 +5,7 @@ from heuristic.destroy_operators import (
     worst_week_removal,
     random_week_removal,
     weighted_random_week_removal,
-    random_employee_removal,
+    random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap
 from functools import partial
@@ -104,7 +104,7 @@ class ALNS:
         )
 
         remove_random_weekend = partial(
-            random_week_removal,
+            random_weekend_removal,
             self.employees,
             self.weeks,
             self.shifts_at_day,
@@ -125,7 +125,7 @@ class ALNS:
         )
 
         remove_weighted_random_employee = partial(
-            random_employee_removal,
+            weighted_random_employee_removal,
             self.shifts,
             self.t_covered_by_shift,
             self.employees,
@@ -330,31 +330,16 @@ class ALNS:
         """ Provides a seeded random state to ensure a deterministic output over different runs """
         return np.random.RandomState(seed=0)
 
-    def add_destroy_operator(self, operators):
-        for operator in operators:
-            self.add_operator(self.destroy_operators, operator)
+    def add_destroy_and_repair_operators(self, operators):
+
+        for destroy_operator, repair_operator_set in operators.items():
+
+            self.destroy_operators[destroy_operator.func.__name__] = destroy_operator
+            self.add_repair_operator(destroy_operator.func.__name__, operators[destroy_operator])
 
     def add_repair_operator(self, destroy_operator_id, repair_operators):
         for new_operator in repair_operators:
             self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
-
-    def add_destroy_and_repair_operators(self, operators):
-        for key in operators.keys():
-            self.add_destroy_operator([key])
-            self.add_repair_operator(key.func.__name__, operators[key])
-
-    @staticmethod
-    def add_operator(operators, new_operator):
-        """
-        Adds a new operator to the given set. Raises a ValueError if the operator is not a function.
-        :param operators: either self.destroy_operators or self.repair_operators
-        :param new_operator: the operator to add to the sets
-        """
-
-        if not callable(new_operator):
-            raise ValueError("new_operator must be a function")
-
-        operators[new_operator.func.__name__] = new_operator
 
     def calculate_objective(self, state, destroy, repair):
         destroy_repair_set = destroy + repair
