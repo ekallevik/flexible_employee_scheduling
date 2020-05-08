@@ -6,6 +6,7 @@ from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.heuristic_calculations import *
 from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
 from model.construction_model import ConstructionModel
@@ -14,6 +15,7 @@ from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
+from utils.weights import get_weights
 from utils.log_formatter import LogFormatter
 
 formatter = LogFormatter()
@@ -78,10 +80,46 @@ class ProblemRunner:
     def set_alns(self):
         """ Sets ALNS based on the given config """
 
-        converted_solution = self.get_candidate_solution()
-        state = State(converted_solution)
+        candidate_solution = self.get_candidate_solution()
 
-        self.alns = ALNS(state, self.criterion)
+        soft_variables = {
+            "deviation_from_ideal_demand": calculate_deviation_from_demand(
+                self.data, candidate_solution["y"]
+            ),
+            "partial_weekends": calculate_partial_weekends(self.data, candidate_solution["x"]),
+            "consecutive_days": calculate_consecutive_days(self.data, candidate_solution["x"]),
+            "isolated_off_days": calculate_isolated_off_days(self.data, candidate_solution["x"]),
+            "isolated_working_days": calculate_isolated_working_days(self.data,
+                                                                     candidate_solution["x"]),
+            "deviation_contracted_hours": calculate_negative_deviation_from_contracted_hours(
+                self.data, candidate_solution["y"]
+            ),
+        }
+
+        hard_variables = {
+            "below_minimum_demand": {(c, t): 0 for c in self.data["competencies"] for t in
+                                     self.data["time"]["periods"][0]},
+            "above_maximum_demand": {(c, t): 0 for c in self.data["competencies"] for t in
+                                     self.data["time"]["periods"][0]},
+            "more_than_one_shift_per_day": {(e, i): 0 for e in self.data["staff"]["employees"] for i
+                                            in
+                                            self.data["time"]["days"]},
+            "cover_multiple_demand_periods": {(e, t): 0 for e in self.data["staff"]["employees"] for
+                                              t in
+                                              self.data["time"]["periods"][0]},
+            "weekly_off_shift_error": {(e, j): 0 for e in self.data["staff"]["employees"] for j in
+                                       self.data["time"]["weeks"]},
+            "mapping_shift_to_demand": {(c, t): 0 for c in self.data["competencies"] for t in
+                                        self.data["time"]["periods"][0]},
+            "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]}
+        }
+
+        objective_function, f = calculate_objective_function(self.data, soft_variables,
+                                                             candidate_solution["w"])
+
+        state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
+
+        self.alns = ALNS(state, self.criterion, self.data)
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
@@ -131,6 +169,7 @@ class ProblemRunner:
         used_shifts = self.sdp.get_used_shifts()
         self.data["shifts"] = shift_generation.get_updated_shift_sets(self.problem, self.data,
                                                                       used_shifts)
+        self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(self.data, used_shifts)
 
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         logger.warning(f"SDP-reduction from {len(original_shifts)} to {len(used_shifts)} shifts "
@@ -172,9 +211,9 @@ class ProblemRunner:
         message = f"ESP found solution:  {esp_value:.2f}."
 
         if self.alns:
-            alns_value = self.alns.best_solution
+            alns_value = self.alns.get_best_solution_value()
             diff = (alns_value - esp_value) / esp_value
-            message += f"\nALNS found solution: {alns_value}.\n Diff {diff:.2f}%"
+            message += f"\nALNS found solution: {alns_value}.\nDiff {diff:.2f}%"
 
         return message
 

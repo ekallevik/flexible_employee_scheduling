@@ -1,4 +1,3 @@
-
 from gurobipy import *
 from utils.weights import get_weights
 
@@ -24,6 +23,12 @@ class BaseModel:
         self.weights = get_weights(self.time_set, self.staff)
 
         self.var = None
+
+        # heuristic
+        #self.employees = data["staff"]["employees"]
+        #self.weeks = data["time"]["weeks"]
+        self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
+
 
     def run_model(self):
         self.model.optimize()
