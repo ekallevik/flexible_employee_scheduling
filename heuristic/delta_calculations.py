@@ -27,12 +27,12 @@ def delta_calculate_negative_deviation_from_contracted_hours(state, employees, c
 
 def calculate_weekly_rest(state, shifts_at_week, employees, weeks):
     """
-        A function that calculates the longest possible weekly rest an employe can have
-        based on the shifts that employee is assigned. 
+    A function that calculates the longest possible weekly rest an employee can have
+    based on the shifts that employee is assigned.
 
-        If no weekly rest is possible (meaning no rest period is longer than the required number of hours)
-        the hard constraint is broken and the hard variable corresponding to weekly rest gets a
-        value of 1 for the week the constraint is broken. 
+    If no weekly rest is possible (meaning no rest period is longer than the required number of hours)
+    the hard constraint is broken and the hard variable corresponding to weekly rest gets a
+    value of 1 for the week the constraint is broken.
 
     """
     weeks = copy(weeks)

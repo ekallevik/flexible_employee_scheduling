@@ -21,7 +21,9 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 
 
 class ALNS:
-    def __init__(self, state, data, criterion):
+    def __init__(self, state, criterion, data, weights):
+
+        self.value_weights = weights
 
         self.initial_solution = state
         self.current_solution = state
@@ -476,6 +478,7 @@ class ALNS:
             self.days,
             self.competencies,
             self.weeks,
+            self.value_weights
         )
 
     def get_best_solution_value(self):

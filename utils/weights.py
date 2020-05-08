@@ -29,9 +29,6 @@ def set_weights():
     }
 
 
-# Weighting of Shift Design Model
-
-
 def set_shift_design_weights():
     return {
         "use of short shift": 5,

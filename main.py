@@ -43,6 +43,7 @@ class ProblemRunner:
 
         self.problem = problem
         self.data = shift_generation.load_data(problem)
+        self.weights = get_weights(self.data["time"], self.data["staff"])
 
         # Standard Gurobi-config
         self.mip_focus = "default"
@@ -140,14 +141,12 @@ class ProblemRunner:
             "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
         }
 
-        weights = get_weights(self.data["time"], self.data["staff"])
-
-        objective_function, f = calculate_objective_function(self.data, soft_variables, weights,
-                                                             candidate_solution)
+        objective_function, f = calculate_objective_function(self.data, soft_variables,
+                                                             self.weights, candidate_solution)
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.data, self.criterion)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights)
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
