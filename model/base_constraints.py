@@ -39,7 +39,7 @@ class BaseConstraints:
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
         self.add_mapping_of_shift_to_demand(var.x, var.y)
-        #self.add_max_one_demand_cover_each_time(var.y)
+        self.add_max_one_demand_cover_each_time(var.y)
         self.add_maximum_one_shift_each_day(var.x)
         self.add_weekly_rest(var.w)
         self.add_no_demand_cover_during_off_shift(var.w, var.x, var.y, version="original")
