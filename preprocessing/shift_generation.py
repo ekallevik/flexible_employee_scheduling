@@ -198,7 +198,7 @@ def get_shifts_per_day(shifts, days):
 
     # todo: bruke defaultdict i stedet?
     shifts_per_day = tupledict()
-    shifts_in_week = defaultdict(list)
+    #shifts_in_week = defaultdict(list)
     for day in days:
         shifts_per_day[day] = []
 
@@ -210,13 +210,13 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
-                if(shift not in shifts_in_week):
-                    shifts_in_week[int(day/7)].append(shift)
+                #if(shift not in shifts_in_week):
+                    #shifts_in_week[int(day/7)].append(shift)
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
-                    if(shift not in shifts_in_week):
-                        shifts_in_week[int(day/7)].append(shift)
+                    #if(shift not in shifts_in_week):
+                        #shifts_in_week[int(day/7)].append(shift)
                 break
 
     return shifts_per_day
@@ -225,7 +225,7 @@ def get_shifts_per_day(shifts, days):
 def get_shifts_per_week(shifts_per_day):
 
     # todo: bruke defaultdict i stedet?
-    shifts_per_week = tupledict()
+    shifts_per_week = {}
 
     for day, shifts in shifts_per_day.items():
 
@@ -233,8 +233,8 @@ def get_shifts_per_week(shifts_per_day):
         if day % 7 == 0:
             # get week and initialize tupledict
             week = int(day / 7)
-            shifts_per_week[week] = tuplelist()
-
+            shifts_per_week[week] = []
+            
         shifts_per_week[week].extend(shifts)
 
     return shifts_per_week
