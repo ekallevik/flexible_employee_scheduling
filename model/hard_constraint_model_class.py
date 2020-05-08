@@ -13,7 +13,7 @@ class Optimization_model():
 
         data = load_data(problem_name)
 
-
+        print(data["shifts"]["shifts_in_week"])
         self.employees = data["staff"]["employees"]
         self.employee_with_competencies = data["staff"]["employees_with_competencies"]
         self.employee_weekly_rest = data["staff"]["employee_with_weekly_rest"]

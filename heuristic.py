@@ -13,13 +13,14 @@ import pstats
 
 
 def main():
-    problem_name = "rproblem3" 
+    problem_name = "rproblem2" 
     model = Feasibility_model(problem_name)
     model.add_variables()
     model.add_constraints()
     model.set_objective()
     #model.model.write("constraints.lp")
     model.optimize()
+    return
     #model.model.write("solution_files/optimality_model_rproblem3.sol")
     x,y,w = convert(model) 
 
