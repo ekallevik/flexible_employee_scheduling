@@ -43,6 +43,7 @@ def calculate_weekly_rest(state, shifts_at_week, employees, weeks):
     """
     weeks = copy(weeks)
     actual_shifts = {(e, j): [(t,v) for t,v in shifts_at_week[j] if state.x[e,t,v] == 1] for e in employees for j in weeks}
+    print(actual_shifts)
     off_shift_periods = defaultdict(list)
     weeks.append(weeks[-1] + 1)
     important = [7*24*i for i in weeks]

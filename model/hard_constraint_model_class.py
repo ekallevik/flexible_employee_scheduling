@@ -13,15 +13,16 @@ class Optimization_model():
 
         data = load_data(problem_name)
 
-
+        #Employee sets
         self.employees = data["staff"]["employees"]
         self.employee_with_competencies = data["staff"]["employees_with_competencies"]
         self.employee_weekly_rest = data["staff"]["employee_with_weekly_rest"]
         self.employee_daily_rest = data["staff"]["employee_daily_rest"]
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
+        self.employee_with_competency_combination = data["staff"]["employee_with_competency_combination"]
+        self.competencies = data["competencies"]
 
-
-
+        #Time sets
         self.time_step = data["time"]["step"]
         self.time_periods = data["time"]["periods"][0]
         self.time_periods_in_week = data["time"]["periods"][1]
@@ -30,7 +31,7 @@ class Optimization_model():
         self.combined_time_periods_in_week = data["time"]["combined_time_periods"][1]
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][2]
 
-
+        #Week/days set
         self.days = data["time"]["days"]
         self.weeks = data["time"]["weeks"]
         self.saturdays = data["time"]["saturdays"]
@@ -39,25 +40,28 @@ class Optimization_model():
 
         self.demand = data["demand"]
 
-        self.employee_with_competency_combination = data["staff"]["employee_with_competency_combination"]
-
+        
+        #Shift sets
         self.shifts = data["shifts"]["shifts"]
         self.shifts_at_day = data["shifts"]["shifts_per_day"]
-        self.shifts_at_week = data["shifts"]["shifts_in_week"]
+        self.shifts_at_week = data["shifts"]["shifts_per_week"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
 
-
+        #Off shifts set
         self.t_in_off_shifts = data["off_shifts"]["t_in_off_shifts"]
         self.off_shifts = data["off_shifts"]["off_shifts"]
         self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
 
-        self.competencies = data["competencies"]
-        #self.time_periods_in_day = data["heuristics"][1]
+        #Daily rest sets:
+        self.invalid_shifts = data["shifts"]["invalid_shifts"]
+        self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
+        self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
+
         
-        self.saturdays = [5 + (i*7) for i in range(len(self.weeks))]
         self.L_C_D = data["limit_on_consecutive_days"]
 
+        #Heuristic sets
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
         self.shift_lookup = data["heuristic"]
 

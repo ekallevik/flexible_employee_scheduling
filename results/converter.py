@@ -2,7 +2,7 @@ class Converter:
     def __init__(self, gurobi_solution):
 
         self.gurobi_variables = gurobi_solution.get_variables()
-
+        self.model = gurobi_solution
         self.x = self.convert_x()
         self.y = self.convert_y()
         self.w = self.convert_w()
@@ -35,4 +35,12 @@ class Converter:
         """
 
         var = self.gurobi_variables
-        return {(e, t, v): abs(var.w[e, t, v].x) for e, t, v in var.w}
+
+        return {
+            (e, j): (t, v)
+            for e in self.model.staff["employees"]
+            for j in self.model.time_set["weeks"]
+            for t, v in self.model.off_shifts_set["off_shifts_per_week"][j]
+            if var.w[e, t, v].x == 1
+        }
+
