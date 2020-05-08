@@ -11,6 +11,7 @@ class OptimalityObjective:
         self.employees = staff["employees"]
 
         self.time_periods = time_set["periods"][0]
+        self.combined_time_periods = time_set["combined_time_periods"][0]
         self.saturdays = time_set["saturdays"]
         self.days = time_set["days"]
         self.weeks = time_set["weeks"]
@@ -35,8 +36,8 @@ class OptimalityObjective:
                 - weights["consecutive days"] * quicksum(q["con"][e, i] for i in self.days)
                 + weights["preferences"]
                 * quicksum(
-                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies)
-                    for t in self.time_periods
+                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies if y.get((c,e,t)))
+                    for t in self.combined_time_periods
                 )
                 for e in self.employees
             ),
@@ -54,8 +55,8 @@ class OptimalityObjective:
 
         self.model.setObjective(
             quicksum(
-                quicksum(quicksum(y[c, e, t] for e in self.employees) for c in self.competencies)
-                for t in self.time_periods
+                y[c, e, t] for e in self.employees for c in self.competencies
+                for t in self.time_periods[c]
             ),
             GRB.MINIMIZE,
         )
@@ -68,7 +69,7 @@ class OptimalityObjective:
             - quicksum(
                 quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
                          weights["deficit demand deviation factor"] * delta["minus"][c, t]
-                         for t in self.time_periods)
+                         for t in self.time_periods[c])
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,

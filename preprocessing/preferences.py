@@ -21,8 +21,8 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
     employees = staff["employees"]
     time_step = time_set["step"]
-    time_periods = time_set["periods"][0]
-    time_periods_in_day = time_set["periods"][2]
+    time_periods = time_set["combined_time_periods"][0]
+    time_periods_in_day = time_set["combined_time_periods"][2]
     weeks = time_set["weeks"]
 
     # Duration in hours is converted to duration in time_steps

@@ -17,7 +17,6 @@ from utils.const import (
 
 
 def get_employee_lists(root, competencies):
-
     employees = tuplelist()
     employee_with_competencies = tupledict()
     employee_weekly_rest = tupledict()
@@ -54,7 +53,7 @@ def get_employee_lists(root, competencies):
     }
 
 
-def get_staff(root, competencies):
+def get_staff(root, all_competencies):
     weekly_rest_rules = get_weekly_rest_rules(root)
     daily_rest_rules = get_daily_rest_rules(root)
     staff = []
@@ -64,12 +63,21 @@ def get_staff(root, competencies):
         set_contracted_hours_for_employee(employee, schedule_row)
         set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
-        set_competency_for_employee(competencies, employee, schedule_row)
         set_daily_offset_for_employee(employee)
         set_blocked_hours_for_employee(employee)
 
+        competencies = []
+        try:
+            for competency in schedule_row.find("competencies").findall("CompetenceId"):
+                competencies.append(int(competency.text))
+                if int(competency.text) not in all_competencies:
+                    all_competencies.append(int(competency.text))
+        except:
+            competencies = DEFAULT_COMPETENCY
+            if(DEFAULT_COMPETENCY[0] not in all_competencies):
+                all_competencies.append(DEFAULT_COMPETENCY[0])
+        employee.set_competencies(competencies)
         staff.append(employee)
-
     return staff
 
 
@@ -104,7 +112,14 @@ def get_demand_definitions(root):
             maximum = row.find("Max").text
             minimum = row.find("Min").text
             ideal = row.find("Ideal").text
-            dem.add_info(start, end, maximum, minimum, ideal)
+            try:
+                for requirement in row.find("CompetenceRequirements").findall("CompetenceId"):
+                    # if int(requirement.text) not in competencies:
+                    #     raise AttributeError("No employee with this competency")
+                    competency_requirements = int(requirement.text)
+            except:
+                competency_requirements = DEFAULT_COMPETENCY[0]
+            dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
         demands.append(dem)
     return demands
 

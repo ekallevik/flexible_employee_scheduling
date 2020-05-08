@@ -14,11 +14,8 @@ class Employee:
     def set_daily_rest(self, daily_rest):
         self.daily_rest_hours = daily_rest
 
-    def set_competency(self, competency):
-        self.competencies = competency
-
-    def append_competency(self, competency):
-        self.competencies.append(competency)
+    def set_competencies(self, competencies):
+        self.competencies = competencies
 
     def set_contracted_hours(self, hours):
         self.contracted_hours = hours
