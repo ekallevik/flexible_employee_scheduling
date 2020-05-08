@@ -13,13 +13,10 @@ def calculate_deviation_from_demand(model, y):
 
 def calculate_weekly_rest(model, x, w):
     actual_shifts = {(e, j): [(t,v) for t,v in model.shifts_at_week[j] if x[e,t,v] == 1] for e in model.employees for j in model.weeks}
-    print(actual_shifts)
     off_shift_periods = defaultdict(list)
     important = [7*24*i for i in range(len(model.weeks)+1)]
-    print(important)
     for key in actual_shifts.keys():
         week = int(key[1])
-        print(key)
         if(actual_shifts[key][0][0] - important[week] >= 36):
             off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 

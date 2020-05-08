@@ -1,4 +1,4 @@
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand
+from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, calculate_daily_rest_error
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice, choices
@@ -71,7 +71,10 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
 
 
 
-def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination, demand, time_step, time_periods_in_week, combined_time_periods_in_week, employees, contracted_hours, weeks, shifts_at_day, L_C_D, shifts_overlapping_t, state, destroy_set, week):
+def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination,
+                                 demand, time_step, time_periods_in_week, combined_time_periods_in_week, employees, contracted_hours, 
+                                 invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, 
+                                 weeks, shifts_at_day, L_C_D, shifts_overlapping_t, state, destroy_set, week):
     """
         The decision variables are set in the destroy operator. This only applies to the x and y variables as w now is a implisit variable that should be calculated
         At the beginning of a repair operator the soft variables and hard penalizing variables have not been updated to reflect the current changes to the decision variables
@@ -111,7 +114,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
     saturdays = [5 + j * 7 for j in week]
     days = [i + (7 * j) for j in week for i in range(7)]
     impossible_shifts = []
-
+    daily_destroy_and_repair = [destroy_set, []]
     while(True):
         #Initial phase to recalculate soft and hard variables of the destroyed weeks
         #Calculates deviation from demand first to see if we are done and can return
@@ -161,7 +164,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
         calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
         calculate_consecutive_days(state, employees_changed, shifts_at_day, L_C_D, days)
         calculate_weekly_rest(state, shifts_in_week, employees_changed, week)
-        
+        calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
 
         #Now we have to decide on which employee should be assigned this shift. 
         #Since we want to do this through regret we have to calculate the objective function of the state with that shift assigned to each employee. 
@@ -190,6 +193,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             more_than_one_shift_per_day(current_state, [e], demand, shifts_at_day, days)
             above_maximum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
             below_minimum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
+            calculate_daily_rest_error(state, [[], repaired], invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
 
             competency_score = score - len(competencies_needed)
             #Calculate the objective function when the employee e is assigned the shift
@@ -201,6 +205,8 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
         repair_set.append(set_x(state, t_covered_by_shift, employee, shift[0], shift[1], 1, y_s))
         employees_changed = [employee]
         destroy_set = [(employee, shift[0], shift[1])]
+        daily_destroy_and_repair = [[], destroy_set]
+
 
 
 
@@ -253,11 +259,16 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
 
 
 
-def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination, demand, all_shifts, off_shifts, saturdays, days, L_C_D, weeks, shifts_at_day, shifts_in_week, contracted_hours, time_periods_in_week, time_step, shifts_overlapping_t, state, destroy_set, employees_changed):
+def worst_employee_regret_repair(   competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination, demand, 
+                                    all_shifts, off_shifts, saturdays, days, L_C_D, weeks, shifts_at_day, shifts_in_week, contracted_hours,
+                                    invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, 
+                                    time_periods_in_week, time_step, shifts_overlapping_t, state, destroy_set, employees_changed):
+
     #print("worst_employee_regret_repair is running")
     repair_set = []
     destroy_set = destroy_set.copy()
     allowed_competency_combinations = {combination for combination in employee_with_competency_combination for item in employee_with_competency_combination[combination] for e in employees_changed if e == item[1]}
+    daily_destroy_and_repair = [destroy_set, []]
     while(True):
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
 
@@ -284,6 +295,7 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
         above_maximum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         mapping_shift_to_demand(state, destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies)
+        calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
 
         #Soft Restrictions/Variables
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
@@ -293,16 +305,16 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
         calculate_consecutive_days(state, employees_changed, shifts_at_day, L_C_D, days)
         calculate_weekly_rest(state, shifts_in_week, employees_changed, weeks)
         
-        below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
-        above_maximum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
-        cover_multiple_demand_periods(state, destroy_set, t_covered_by_shift, competencies)
-        mapping_shift_to_demand(state, destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies)
+        # below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
+    
+        # cover_multiple_demand_periods(state, destroy_set, t_covered_by_shift, competencies)
+        # mapping_shift_to_demand(state, destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies)
 
 
         #When we have found which shift should be assigned we have to choose the employee to take this shift.
-        # This time I am doing this by setting and removing instead of deepcopy. 
-        #There is something wrong with how I handle this. Would like to switch to copy. 
+        # This time I am doing this by setting and removing instead of copy. 
         employee_objective_functions = {}
+        daily_destroy = []
         for e, score in possible_employees:
             repaired = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1, y_s)]
             
@@ -320,12 +332,13 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
             more_than_one_shift_per_day(state, [e], demand, shifts_at_day, days)
             cover_multiple_demand_periods(state, repaired, t_covered_by_shift, competencies)
             mapping_shift_to_demand(state, repaired, t_covered_by_shift, shifts_overlapping_t, competencies)
-            
+            calculate_daily_rest_error(state, [daily_destroy, repaired], invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+
             competency_score = score - len(competencies_needed)
             #Stores the objective function for this employee
             employee_objective_functions[e] = regret_objective_function(state, e, off_shifts, saturdays, days, L_C_D, weeks, contracted_hours, competencies, [shift[0]], competency_score)
             #Is needed to set the decision variable back to 0
-            set_x(state, t_covered_by_shift, e, shift[0], shift[1], 0, y_s)
+            daily_destroy = set_x(state, t_covered_by_shift, e, shift[0], shift[1], 0, y_s)
         
         #if(len(employee_objective_functions.keys()) == 0):
          #   return repair_set
@@ -335,3 +348,4 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
 
         destroy_set = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1, y_s)]
         repair_set.append((e, shift[0], shift[1]))
+        daily_destroy_and_repair = [[], destroy_set]

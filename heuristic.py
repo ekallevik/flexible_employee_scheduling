@@ -24,7 +24,6 @@ def main():
     x,y,w = convert(model) 
 
 
-
     soft_variables = {
         "deviation_from_ideal_demand": calculate_deviation_from_demand(model, y),
         "partial_weekends": calculate_partial_weekends(model, x),

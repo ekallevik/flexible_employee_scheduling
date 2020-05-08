@@ -43,7 +43,6 @@ def calculate_weekly_rest(state, shifts_at_week, employees, weeks):
     """
     weeks = copy(weeks)
     actual_shifts = {(e, j): [(t,v) for t,v in shifts_at_week[j] if state.x[e,t,v] == 1] for e in employees for j in weeks}
-    print(actual_shifts)
     off_shift_periods = defaultdict(list)
     weeks.append(weeks[-1] + 1)
     important = [7*24*i for i in weeks]
@@ -160,32 +159,24 @@ def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shift
         for t in t_covered_by_shift[t1,v1]:
             state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies if (c,e,t) in state.y)))
 
-def calculate_daily_rest_error(state, repair, destroy, days, shifts_at_day):
+
+def calculate_daily_rest_error(state, destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
+    destroy = destroy_and_repair[0]
+    repair = destroy_and_repair[1]
+    
     days_in_destroy = [(e,int(t/24)) for e,t,v in destroy]
-    #before_and_after = [-1, 0, 1]
-    days_in_repair = defaultdict(set)
-    #days_in_repair = {(e,int(t/24)+d): (t1,v1) for e,t,v in repair for d in before_and_after for t1,v1 in shifts_at_day[int(t/24)+d] if 0 <= (int(t/24) + d) <= len(days) and state.x[e,t1,v1] == 1}
     
     for e,i in days_in_destroy:
-        state.hard_vars["daily_rest_error"][e,i] = 0
+        state.hard_vars["daily_rest_error"][e, i] = 0
 
     for e,t,v in repair:
-        shift_before = shifts_at_day[int(t/24) - 1]
-        d_after = int(t/24) + 1
-
-
-    
-    raise ValueError
-
-
-    
-
-# def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):
-#     for e,t,v in destroy_set:
-#         state.hard_vars["delta_positive_contracted_hours"][e] -= v
-    
-#     for e,t,v in repair_set:
-#         state.hard_vars["delta_positive_contracted_hours"][e] += v
+        i = int(t/24)
+        if((t,v) in invalid_shifts[e]):
+            state.hard_vars["daily_rest_error"][e, i] = 1
+        if (t, v) in shift_combinations_violating_daily_rest[e]:
+            state.hard_vars["daily_rest_error"][e, i] = min(1, sum(state.x[e, t1, v1] for t1, v1 in shift_combinations_violating_daily_rest[e][t, v]))
+        if (t, v) in shift_sequences_violating_daily_rest[e]:
+            state.hard_vars["daily_rest_error"][e, i] = max(0, sum(state.x[e, t2, v2] for t2, v2 in shift_sequences_violating_daily_rest[e][t, v]) - 1)
 
 
 def hard_constraint_penalties(state):
