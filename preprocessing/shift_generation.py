@@ -521,7 +521,6 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
             
     return t_covered
   
-def get_updated_off_shift_sets(data, shifts):
-
-    return get_off_shift_sets(data["time"], get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])))
+def get_updated_off_shift_sets(data, shifts, competencies):
+    return get_off_shift_sets(data["time"], get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
 
