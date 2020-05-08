@@ -12,7 +12,7 @@ class State:
         #Soft Variables
         self.soft_vars = soft_vars
 
-        # #Hard Penalty Variables
+        # Hard Penalty Variables
         self.hard_vars = hard_vars
 
         self.objective_function_value = objective_function_value
