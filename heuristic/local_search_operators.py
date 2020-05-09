@@ -9,8 +9,7 @@ from heuristic.delta_calculations import (
     calculate_isolated_working_days,
     calculate_partial_weekends,
     calculate_weekly_rest,
-
-    hard_constraint_penalties,
+    delta_calculate_negative_deviation_from_contracted_hours,
 )
 
 
@@ -25,6 +24,7 @@ def illegal_week_swap(
     time_step,
     L_C_D,
     weeks,
+    combined_time_periods_in_week,
     state,
 ):
     destroy_set = []
@@ -77,5 +77,5 @@ def illegal_week_swap(
 
             repair_set.append(set_x(state, t_covered_by_shift, employee[0], employee[1][0], employee[1][1], 1))
             destroy_set.append(set_x(state, t_covered_by_shift, emp, employee[1][0], employee[1][1], 0))
+
     return destroy_set, repair_set
-            

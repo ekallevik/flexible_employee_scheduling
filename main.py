@@ -95,9 +95,9 @@ class ProblemRunner:
 
         hard_variables = {
             "below_minimum_demand": {(c, t): 0 for c in self.data["competencies"] for t in
-                                     self.data["time"]["periods"][0]},
+                                     self.data["time"]["periods"][0][c]},
             "above_maximum_demand": {(c, t): 0 for c in self.data["competencies"] for t in
-                                     self.data["time"]["periods"][0]},
+                                     self.data["time"]["periods"][0][c]},
             "more_than_one_shift_per_day": {(e, i): 0 for e in self.data["staff"]["employees"] for i
                                             in
                                             self.data["time"]["days"]},
