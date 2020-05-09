@@ -31,7 +31,6 @@ def load_data(problem_name):
     
     shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"], competencies)
 
-
     data = {
         "competencies": competencies,
         "demand": get_demand(root, competencies),
@@ -63,6 +62,7 @@ def get_time_sets(root, competencies):
         "periods": periods["periods"],
         "combined_time_periods": periods["combined_time_periods"],
         "days": days,
+        "number_of_days": len(days),
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
         "sundays": [6 + i * 7 for i in range(number_of_weeks)],
@@ -119,7 +119,7 @@ def get_shifts(root):
             if duration >= ALLOWED_SHIFT_DURATION[1]:
                 shifts = get_shifts_for_long_duration(root, shifts, start_time, duration)
             else:
-                if((start_time, intervals[1] - start_time) not in shifts):
+                if (start_time, intervals[1] - start_time) not in shifts:
                     shifts.append((start_time, intervals[1] - start_time))
 
         else:
