@@ -1,17 +1,11 @@
-
-from collections import defaultdict
-
 from preprocessing import xml_loader
 from preprocessing.demand_processing import (
     combine_demand_intervals,
     combine_no_demand_intervals,
     get_demand,
-    get_start_events,
     get_time_periods,
     get_time_steps,
-    get_combined_time_periods,
 )
-from collections import defaultdict
 from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
 from utils.const import (
@@ -28,8 +22,6 @@ def load_data(problem_name):
     root = xml_loader.get_root(problem_name)
 
     competencies = []
-    #Do not think we will use this anymore
-    #competencies = get_competencies(root)
     
     staff = get_employee_lists(root, competencies)
     time_sets = get_time_sets(root, competencies)
@@ -512,7 +504,7 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
                 start = time_periods[c].index(shift[0])
                 t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
             except:  
-                t_in_shift = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                t_in_shift = list(filter(lambda i: shift[0] <= i <= (shift[0] + shift[1]), time_periods[c]))
                 if(len(t_in_shift) == 0):
                     continue
                 t_covered[shift[0], shift[1], c] = t_in_shift

@@ -9,7 +9,7 @@ from heuristic.delta_calculations import (
     calculate_isolated_working_days,
     calculate_partial_weekends,
     calculate_weekly_rest,
-    delta_calculate_deviation_from_contracted_hours,
+
     hard_constraint_penalties,
 )
 
