@@ -23,7 +23,12 @@ class BaseVariables:
         self.lam = self.add_lambda()
 
     def add_y(self):
-        y = {(c,e,t): 0 for c in self.competencies for e in self.employees for t in self.time_periods[c]}
+        y = {(c, e, t): 0
+             for c in self.competencies
+             for e in self.employees
+             for t in self.time_periods[c]
+             }
+
         return self.model.addVars(
             y, vtype=GRB.BINARY, name="y"
         )
@@ -35,14 +40,14 @@ class BaseVariables:
         return self.model.addVars(self.employees, self.off_shifts, vtype=GRB.BINARY, name="w")
 
     def add_mu(self):
-        mu = {(c,t): 0 for c in self.competencies for t in self.time_periods[c]}
+        mu = {(c, t): 0 for c in self.competencies for t in self.time_periods[c]}
         return self.model.addVars(
             mu, vtype=GRB.INTEGER, name="mu"
         )
 
     def add_delta(self):
-        plus = {(c,t): 0 for c in self.competencies for t in self.time_periods[c]}
-        minus = {(c,t): 0 for c in self.competencies for t in self.time_periods[c]}
+        plus = {(c, t): 0 for c in self.competencies for t in self.time_periods[c]}
+        minus = {(c, t): 0 for c in self.competencies for t in self.time_periods[c]}
         return {
             "plus": self.model.addVars(
                 plus, vtype=GRB.INTEGER, name="delta_plus"

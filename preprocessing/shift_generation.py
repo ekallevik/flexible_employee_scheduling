@@ -56,7 +56,7 @@ def get_time_sets(root, competencies):
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
     periods = get_time_periods(root, competencies)
-    
+
     return {
         "step": get_time_steps(root),
         "periods": periods["periods"],
@@ -447,7 +447,6 @@ def already_daily_off_shift(root, employee_offset, employee_rest, day):
             break
 
     return False
-
 
 
 def get_off_shift_sets(time_sets, shifts_per_week, competencies):

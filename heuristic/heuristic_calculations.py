@@ -83,7 +83,7 @@ def calculate_negative_deviation_from_contracted_hours(data, y):
 
 def calculate_partial_weekends(data, x):
     partial_weekend = {}
-    for i in data["saturdays"]:
+    for i in data["time"]["saturdays"]:
         for e in data["staff"]["employees"]:
             partial_weekend[e, i] = abs(
                 (
@@ -149,7 +149,7 @@ def calculate_f(data, soft_vars, w, employees=None):
     for e in employees:
         f[e] = (
             sum(w[e, j][1] for j in data["time"]["weeks"])
-            - sum(soft_vars["contracted_hours"][e, j] for j in data["time"]["weeks"])
+            - sum(soft_vars["deviation_contracted_hours"][e, j] for j in data["time"]["weeks"])
             - sum(soft_vars["partial_weekends"][e, i] for i in data["time"]["saturdays"])
             - sum(
                 soft_vars["isolated_working_days"][e, i + 1]

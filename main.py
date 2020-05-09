@@ -116,7 +116,7 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data)
+        self.alns = ALNS(state, self.data, self.criterion)
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """

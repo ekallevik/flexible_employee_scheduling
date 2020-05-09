@@ -62,7 +62,7 @@ class ALNS:
         self.off_shifts = data["off_shifts"]["off_shifts"]
         self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
-        self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shift"]
+        self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
 
         self.L_C_D = data["limit_on_consecutive_days"]
