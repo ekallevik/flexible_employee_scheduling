@@ -81,7 +81,7 @@ class State:
                 for key2 in self.soft_vars[key]:
                     summasjon[key2[0]] += float(self.soft_vars[key][key2])
                 for e in summasjon:
-                    f.write(f"contracted_hour[{e}] {summasjon[e]}\n")
+                    f.write(f"contracted_hours[{e}] {summasjon[e]}\n")
             else:
                 for key2 in self.soft_vars[key]:
                     f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))

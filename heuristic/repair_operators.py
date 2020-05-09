@@ -55,7 +55,9 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
         
         deviation_contracted_hours = {e: (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks)  
                                     - (competency_level - len(competencies_needed)))
-                                    + (100 if (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] >= 6) else 0)
+                                    + (20 if (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] >= 8.5) else 0)
+                                    + (20 if (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] <= 17) else 0)
+                                    + (100 if (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1]  == 0) else 0)
                                     for (competency_level, e) in employee_with_competency_combination[competencies_needed] 
                                     if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
 

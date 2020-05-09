@@ -4,7 +4,7 @@ from heuristic.delta_calculations import *
 from collections import defaultdict
 from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
 from heuristic.repair_operators import worst_week_repair, worst_employee_repair, worst_week_regret_repair, worst_employee_regret_repair
-from heuristic.local_search_operators import illegal_week_swap
+from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 from functools import partial
 
 
@@ -159,7 +159,8 @@ class ALNS:
                 print("Breaking weekly_off_shift_error")
                 candidate_solution.write("before_breaking_weekly")
                 destroy_set, repair_set = illegal_week_swap(self.shifts_in_week, self.employees, self.shifts_at_day, self.t_covered_by_shift, self.competencies, self.contracted_hours, self.time_periods_in_week, self.combined_time_periods_in_week, self.time_step, self.L_C_D, self.weeks, candidate_solution)
-                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
 

@@ -227,7 +227,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                 - 10 * sum(state.hard_vars["cover_multiple_demand_periods"][e,t] for e in employees for j in weeks for t in combined_time_periods_in_week[j])
                 - 5 * max(0, sum(state.soft_vars["contracted_hours"][e,j] for e in employees))
                 - 10 * sum(state.hard_vars["weekly_off_shift_error"][e,j] for e in employees)
-                - 100 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
+                - 1000 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
                 - 100 * competency_score
                 )
     if(setting == "worst"):
