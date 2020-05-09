@@ -23,13 +23,6 @@ def delta_calculate_negative_deviation_from_contracted_hours(state, employees, c
                 for t in time_periods_in_week[c, j]))
         
         state.hard_vars["delta_positive_contracted_hours"][e] = -min(0, sum(state.soft_vars["contracted_hours"][e,j] for j in weeks))
-            
-    # for e,t,v in destroy_set:
-    #     state.soft_vars["contracted_hours"][e] += v
-
-    # for e,t,v in repair_set:
-    #     state.soft_vars["contracted_hours"][e] -= v
-
 
 def calculate_weekly_rest(state, shifts_at_week, employees, weeks):
     """
@@ -160,21 +153,12 @@ def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shift
             state.hard_vars["mapping_shift_to_demand"][e,t] = max(0, abs(sum(state.x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t]) - sum(state.y[c,e,t] for c in competencies if (c,e,t) in state.y)))
 
 
-# def calculate_positive_deviation_from_contracted_hours(state, destroy_set, repair_set):
-#     for e,t,v in destroy_set:
-#         state.hard_vars["delta_positive_contracted_hours"][e] -= v
-    
-#     for e,t,v in repair_set:
-#         state.hard_vars["delta_positive_contracted_hours"][e] += v
-
-
 def hard_constraint_penalties(state):
     below_demand = sum(state.hard_vars["below_minimum_demand"].values())
     above_demand = sum(state.hard_vars["above_maximum_demand"].values())
     break_one_shift_per_day = sum(state.hard_vars["more_than_one_shift_per_day"].values())
     break_one_demand_per_time = sum(state.hard_vars["cover_multiple_demand_periods"].values())
     break_weekly_off = sum(state.hard_vars["weekly_off_shift_error"].values())
-    #break_no_work_during_off_shift = sum(state.hard_vars["no_work_during_off_shift"].values())
     break_shift_to_demand = sum(state.hard_vars["mapping_shift_to_demand"].values())
     break_contracted_hours = sum(state.hard_vars["delta_positive_contracted_hours"].values())
 
