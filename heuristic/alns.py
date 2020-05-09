@@ -216,6 +216,7 @@ class ALNS:
                     self.time_step,
                     self.L_C_D,
                     self.weeks,
+                    self.combined_time_periods_in_week,
                     candidate_solution,
                 )
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)

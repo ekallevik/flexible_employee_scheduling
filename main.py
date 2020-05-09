@@ -101,9 +101,10 @@ class ProblemRunner:
             "more_than_one_shift_per_day": {(e, i): 0 for e in self.data["staff"]["employees"] for i
                                             in
                                             self.data["time"]["days"]},
-            "cover_multiple_demand_periods": {(e, t): 0 for e in self.data["staff"]["employees"] for
-                                              t in
-                                              self.data["time"]["periods"][0]},
+            "cover_multiple_demand_periods": {(e, t): 0
+                                              for e in self.data["staff"]["employees"]
+                                              for j in self.data["time"]["weeks"]
+                                              for t in self.data["time"]["combined_time_periods"][1][j]},
             "weekly_off_shift_error": {(e, j): 0 for e in self.data["staff"]["employees"] for j in
                                        self.data["time"]["weeks"]},
             "mapping_shift_to_demand": {(c, t): 0 for c in self.data["competencies"] for t in
