@@ -100,18 +100,18 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
     }
 
 
-def get_updated_shift_sets(problem_name, data, shifts, competencies):
+def get_updated_shift_sets(problem_name, data, shifts, ):
 
     root = xml_loader.get_root(problem_name)
 
     off_shift_sets = get_off_shift_sets(
             data["time"],
             get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])),
-            competencies
+            data["competencies"]
         )
 
-    return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"], competencies)
-
+    return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"],
+                          data["competencies"])
 
 
 def get_shifts(root):
@@ -517,9 +517,13 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
                     continue
                 t_covered[shift[0], shift[1], c] = t_in_shift
 
-            
     return t_covered
-  
-def get_updated_off_shift_sets(data, shifts, competencies):
-    return get_off_shift_sets(data["time"], get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
+
+
+def get_updated_off_shift_sets(data, shifts):
+    competencies = data["competencies"]
+    return (
+        get_off_shift_sets(data["time"],
+        get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
+    )
 
