@@ -11,6 +11,7 @@ from preprocessing.demand_processing import (
     get_time_steps,
     get_combined_time_periods,
 )
+from collections import defaultdict
 from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
 from utils.const import (
@@ -67,8 +68,8 @@ def get_time_sets(root, competencies):
     
     return {
         "step": get_time_steps(root),
-        "periods": periods,
-        "combined_time_periods": get_combined_time_periods(periods[0], periods[1], periods[2]),
+        "periods": periods["periods"],
+        "combined_time_periods": periods["combined_time_periods"],
         "days": days,
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
@@ -105,7 +106,8 @@ def get_updated_shift_sets(problem_name, data, shifts, competencies):
 
     off_shift_sets = get_off_shift_sets(
             data["time"],
-            get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"]))
+            get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])),
+            competencies
         )
 
     return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"], competencies)
@@ -200,7 +202,6 @@ def get_shifts_per_day(shifts, days):
 
     # todo: bruke defaultdict i stedet?
     shifts_per_day = tupledict()
-
     for day in days:
         shifts_per_day[day] = []
 
@@ -212,7 +213,6 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
-
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
@@ -224,7 +224,7 @@ def get_shifts_per_day(shifts, days):
 def get_shifts_per_week(shifts_per_day):
 
     # todo: bruke defaultdict i stedet?
-    shifts_per_week = tupledict()
+    shifts_per_week = {}
 
     for day, shifts in shifts_per_day.items():
 
@@ -232,7 +232,7 @@ def get_shifts_per_week(shifts_per_day):
         if day % 7 == 0:
             # get week and initialize tupledict
             week = int(day / 7)
-            shifts_per_week[week] = tuplelist()
+            shifts_per_week[week] = []
 
         shifts_per_week[week].extend(shifts)
 
@@ -404,15 +404,14 @@ def get_invalid_shifts(root, staff, shifts_per_day):
 def get_t_covered_by_shift(shifts, time_sets):
 
     time_step = time_sets["step"]
-    time_periods = time_sets["periods"][0]
-    t_covered_by_shift = tupledict()
-    c = 0
+    combined_time_periods = time_sets["combined_time_periods"][0]
+    t_covered_by_shift = {}
     for shift in shifts:
-        end = time_periods[c].index(shift[0] + shift[1] - time_step)
-        start = time_periods[c].index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = time_periods[c][start : (end + 1)]
-
+        end = combined_time_periods.index(shift[0] + shift[1] - time_step)
+        start = combined_time_periods.index(shift[0])
+        t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
     return t_covered_by_shift
+
 
 
 def get_shift_lookup(shifts_per_day):
@@ -513,10 +512,10 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
                 start = time_periods[c].index(shift[0])
                 t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
             except:  
-                test = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
-                if(len(test) == 0):
+                t_in_shift = list(filter(lambda i: i >= shift[0] and i <= (shift[0] + shift[1]), time_periods[c]))
+                if(len(t_in_shift) == 0):
                     continue
-                t_covered[shift[0], shift[1], c] = test
+                t_covered[shift[0], shift[1], c] = t_in_shift
 
             
     return t_covered

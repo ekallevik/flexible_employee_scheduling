@@ -1,8 +1,19 @@
 import pytest
+import sys
+from pathlib import Path
+loader_path = Path(__file__).resolve().parents[1]
+sys.path.insert(1, str(loader_path))
+from xml_loader.xml_loader import *
+import xml.etree.ElementTree as ET
 
 from utils.const import DAYS_IN_WEEK, DEFAULT_COMPETENCY
 from xml_loader import xml_loader
 
+@pytest.fixture
+def comptencies():
+    root = ET.parse(data_folder / ('problem12.xml')).getroot()
+    competencies = get_competencies(root)
+    return competencies
 
 def test_loading_demand():
 
@@ -33,6 +44,11 @@ def test_loading_demand():
     assert dem2.ideal == [2, 3, 4, 5]
     assert dem2.maximum == [3, 4, 5, 6]
 
+def test_loading_employees(employees):
+    assert len(employees) == 1, "Expected 1 employee got %d" % (len(employees))
+    for employee in employees:
+        assert employee.competencies == ["Competence1", "Competence2", "Competence3"], "Employee 1 should have three competencies"
+        assert employee.contracted_hours == 37, "Employee 1 should have 37 contracted hours"
 
 def test_rest_rules():
 

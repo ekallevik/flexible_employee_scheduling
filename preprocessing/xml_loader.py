@@ -1,13 +1,16 @@
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
 from gurobipy.gurobipy import tupledict, tuplelist
+from datetime import timedelta, datetime
+today = datetime.today()
+from collections import defaultdict
 from loguru import logger
 
 from preprocessing.demand import Demand
 from preprocessing.employee import Employee
 from preprocessing.rest_rule import Daily_rest_rule, Weekly_rest_rule
+from itertools import chain, combinations
 from utils.const import (
     DEFAULT_COMPETENCY,
     DEFAULT_CONTRACTED_HOURS,
@@ -26,6 +29,7 @@ def get_employee_lists(root, competencies):
     employee_blocked_hours = tupledict()
 
     emp = get_staff(root, competencies)
+
 
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
@@ -50,6 +54,7 @@ def get_employee_lists(root, competencies):
         "employee_contracted_hours": employee_contracted_hours,
         "employee_daily_offset": employee_daily_offset,
         "employee_blocked_hours": employee_blocked_hours,
+        "employee_with_competency_combination": get_competency_combinations(emp),
     }
 
 
@@ -80,6 +85,14 @@ def get_staff(root, all_competencies):
         staff.append(employee)
     return staff
 
+def get_competency_combinations(employees):
+    competency_combinations = defaultdict(list)
+    for e in employees:
+        competency_combos_for_e = list(chain.from_iterable(combinations(e.competencies, r) for r in range(1,len(e.competencies)+1)))
+        for comp in competency_combos_for_e:
+            competency_combinations[comp].append((len(e.competencies),int(e.id)))
+    return competency_combinations
+
 
 def set_contracted_hours_for_employee(employee, schedule_row):
     try:
@@ -94,7 +107,7 @@ def set_contracted_hours_for_employee(employee, schedule_row):
 def get_days_with_demand(root):
     demands = get_demand_definitions(root)
     days_with_demand = {}
-    for day in root.findall("Demands/DayDemandList/DayDemand"):
+    for day in root.findall('Demands/DayDemandList/DayDemand'):
         for obj in demands:
             if obj.demand_id == day.find("DayDemandId").text:
                 d = int(day.find("DayIndex").text)
@@ -123,44 +136,6 @@ def get_demand_definitions(root):
         demands.append(dem)
     return demands
 
-
-def set_competency_for_employee(competencies, employee, schedule_row):
-    """
-    Sets the competencies for the given employee
-
-    :param competencies: a list of all competencies there is demand for
-    :param employee: the relevant Employee-object
-    :param schedule_row: the row in XML for the given employee
-    """
-
-    # there is not defined any competencies for demand
-    if not competencies:
-        employee.set_competency(DEFAULT_COMPETENCY)
-    else:
-        try:
-            for competence in schedule_row.find("Competences").findall("CompetenceId"):
-                if competence.text in competencies:
-                    employee.append_competency(competence.text)
-        except AttributeError:
-            logger.info(
-                f"ScheduleRow {employee.id} don't have a Competence tag. DEFAULT_COMPETENCY applied"
-            )
-
-    # Add DEFAULT_COMPETENCY if the employee does not have any competencies
-    if not employee.competencies:
-        employee.set_competency(DEFAULT_COMPETENCY)
-
-
-def get_competencies(root):
-    competencies = []
-    for competence in root.findall("Configuration/Competences/Competence"):
-        id = competence.find("CompetenceId").text
-        competencies.append(id)
-
-    if not competencies:
-        competencies = DEFAULT_COMPETENCY
-
-    return competencies
 
 
 def get_days(root):
@@ -253,3 +228,28 @@ def get_data_folder(problem):
         )
 
     return data_folder
+
+
+def get_demand_definitions2(root):
+    demands = []
+    for DemandDefinition in root.findall('Demands/DemandDefinitions/DemandDefinition'):
+        dem = Demand(DemandDefinition.find("DayDemandId").text)
+        for row in DemandDefinition.find("Rows").findall("Row"):
+            start = row.find("TimeStart").text
+            end = row.find("TimeEnd").text
+            maksimum = row.find("Max").text
+            minimum = row.find("Min").text
+            ideal = row.find("Ideal").text
+            dem.add_info2(start, end, maksimum, minimum, ideal)
+        demands.append(dem)
+    return demands
+
+def get_days_with_demand2(root):
+    demands = get_demand_definitions2(root)
+    days_with_demand = {}
+    for day in root.findall('Demands/DayDemandList/DayDemand'):
+        for obj in demands:
+            if obj.demand_id == day.find("DayDemandId").text:
+                day_obj = today + timedelta(days = int(day.find("DayIndex").text))
+                days_with_demand[day_obj] = obj
+    return days_with_demand

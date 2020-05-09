@@ -44,8 +44,13 @@ def get_time_periods(root, competencies):
     time_step = get_time_steps(root)
     demands = get_days_with_demand(root)
     time_periods_in_week = tupledict()
+
+    combined_time_periods = tuplelist()
+    
+    combined_time_periods_in_week = tupledict()
     #Used in heuristic:
     time_periods_in_day = defaultdict(list)
+    combined_time_periods_in_day = defaultdict(list)
     week = 0
     day = 0
 
@@ -61,6 +66,7 @@ def get_time_periods(root, competencies):
                 if time > (week + 1) * 24 * 7:
                     week += 1
                     time_periods_in_week[c, week] = tuplelist()
+                    combined_time_periods_in_week[week] = tuplelist()
                 if time > (day + 1) * 24:
                     day += 1
                 if time not in time_periods[c]:
@@ -70,41 +76,16 @@ def get_time_periods(root, competencies):
                     except:
                         time_periods_in_week[c, week] = [time]
                     time_periods_in_day[c, day].append(time)
+                if time not in combined_time_periods:
+                    combined_time_periods.append(time)
+                    try:
+                        combined_time_periods_in_week[week].append(time)
+                    except:
+                        combined_time_periods_in_week[week] = [time]
+                    combined_time_periods_in_day[day].append(time)
                 time += time_step
-    return [time_periods, time_periods_in_week, time_periods_in_day]
-
-
-def get_combined_time_periods(time_periods, time_periods_in_week, time_periods_in_day):
-    combined_time_periods = set()
-    combined_time_periods_in_day = tupledict()
-    combined_time_periods_in_week = tupledict()
-
-    for c in time_periods:
-        combined_time_periods.update(time_periods[c])
-
-    for c, j in time_periods_in_week.keys():
-        try:
-            combined_time_periods_in_week[j].update(time_periods_in_week[c, j])
-        except:
-            combined_time_periods_in_week[j] = set(time_periods_in_week[c, j])
-    
-    for c, i in time_periods_in_day:
-        try:
-            combined_time_periods_in_day[i].update(time_periods_in_day[c, i])
-        except:
-            combined_time_periods_in_day[i] = set(time_periods_in_day[c, i])
-        
-    combined_time_periods = tuplelist(combined_time_periods)
-    
-    for i in combined_time_periods_in_day:
-        combined_time_periods_in_day[i] = tuplelist(combined_time_periods_in_day[i])
-    
-    for j in combined_time_periods_in_week:
-        combined_time_periods_in_week[j] = tuplelist(combined_time_periods_in_week[j])
-
-    return [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]
-
-
+    return {"periods": [time_periods, time_periods_in_week, time_periods_in_day],
+            "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]}
 
 
 def get_demand(root, competencies):
