@@ -38,7 +38,7 @@ class ALNS:
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
 
         self.combined_time_periods_in_week = data["time"]["combined_time_periods"][1]
-        self.employee_with_competency_combination = data["staff"]["employees_with_competencies"]
+        self.employee_with_competency_combination = data["staff"]["employee_with_competency_combination"]
 
         self.competencies = data["competencies"]
         self.demand = data["demand"]
@@ -200,6 +200,15 @@ class ALNS:
             + " VS "
             + str(self.current_solution.get_objective_value())
         )
+        if (
+                candidate_solution.get_objective_value()
+                >= self.best_legal_solution.get_objective_value()
+                and hard_constraint_penalties(candidate_solution) == 0
+            ):
+                self.best_legal_solution = candidate_solution
+                print("Is legal")
+                self.best_legal_solution.write("best_legal_solution")
+                
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
 
@@ -222,14 +231,7 @@ class ALNS:
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
                 candidate_solution.write("After_breaking_weekly")
 
-            if (
-                candidate_solution.get_objective_value()
-                >= self.best_legal_solution.get_objective_value()
-                and hard_constraint_penalties(candidate_solution) == 0
-            ):
-                self.best_legal_solution = candidate_solution
-                print("Is legal")
-                self.best_legal_solution.write("best_legal_solution")
+            
 
             if (
                 candidate_solution.get_objective_value()

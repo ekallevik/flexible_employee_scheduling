@@ -21,7 +21,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
     employees_changed = employees
     changed = destroy_set.copy()
     impossible_shifts = []
-
+    
     while True:
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
@@ -35,7 +35,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                     for t in t_covered_by_shift[t1, v1]
                 )
                 - (20*(len(competencies)-1) + v1)
-                for comp in employee_with_competency_combination.keys()
+                for comp in employee_with_competency_combination
                 for t1, v1 in shifts_in_week[week[0]]
                 if (t1, v1, comp) not in impossible_shifts
                 }
@@ -66,7 +66,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
         competencies_needed = tuple(set(y_s))
 
 
-        deviation_contracted_hours = {e: (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks)
+        deviation_contracted_hours = {e: (sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks)
                                     - 0*(competency_level - len(competencies_needed)))
                                     for (competency_level, e) in employee_with_competency_combination[competencies_needed]
                                     if (sum(state.x[e,t,v]
@@ -151,7 +151,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift, e
             impossible_shifts.append(shift)
             continue
 
-        if(deviation_from_demand < 6 or max([sum(state.soft_vars["contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
+        if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in week) for e in possible_employees]) < shift[1]):
             deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in time_periods_in_week[c, week[0]] if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
             return repair_set
 
@@ -246,7 +246,7 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
 
 
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-        deviation_contracted_hours = {e: (sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - 10*(competency_level - len(competencies_needed))) for (competency_level, e) in employee_with_competency_combination[competencies_needed] if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0 if e in employees_changed}
+        deviation_contracted_hours = {e: (sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) - 10*(competency_level - len(competencies_needed))) for (competency_level, e) in employee_with_competency_combination[competencies_needed] if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0 if e in employees_changed}
 
         if(len(deviation_contracted_hours.keys()) == 0):
             return repair_set
@@ -276,7 +276,7 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
 
         possible_employees = [(e, score) for score, e in employee_with_competency_combination[competencies_needed] if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0 if e in employees_changed]
 
-        if(deviation_from_demand < 6 or max([sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) for e, score in possible_employees]) < shift[1]):
+        if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e, score in possible_employees]) < shift[1]):
             return repair_set
 
         #Initial phase to recalculate soft and hard variables of the destroyed weeks

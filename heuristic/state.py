@@ -59,11 +59,11 @@ class State:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
-            if(key == "contracted_hours"):
+            if(key == "deviation_contracted_hours"):
                 for key2 in self.soft_vars[key]:
                     summasjon[key2[0]] += float(self.soft_vars[key][key2])
                 for e in summasjon:
-                    f.write(f"contracted_hour[{e}] {summasjon[e]}\n")
+                    f.write(f"deviation_contracted_hours[{e}] {summasjon[e]}\n")
             else:
                 for key2 in self.soft_vars[key]:
                     f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
