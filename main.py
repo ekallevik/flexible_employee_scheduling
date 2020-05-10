@@ -98,12 +98,12 @@ class ProblemRunner:
             "below_minimum_demand": {
                 (c, t): 0
                 for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0]
+                for t in self.data["time"]["periods"][0][c]
             },
             "above_maximum_demand": {
                 (c, t): 0
                 for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0]
+                for t in self.data["time"]["periods"][0][c]
             },
             "more_than_one_shift_per_day": {
                 (e, i): 0
@@ -113,7 +113,8 @@ class ProblemRunner:
             "cover_multiple_demand_periods": {
                 (e, t): 0
                 for e in self.data["staff"]["employees"]
-                for t in self.data["time"]["periods"][0]
+                for j in self.data["time"]["weeks"]
+                for t in self.data["time"]["combined_time_periods"][1][j]
             },
             "weekly_off_shift_error": {
                 (e, j): 0
