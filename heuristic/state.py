@@ -18,10 +18,9 @@ class State:
         self.objective_function_value = objective_function_value
         self.f = f
 
-
     def get_objective_value(self):
         return self.objective_function_value
-    
+
     def copy(self):
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
 
@@ -31,8 +30,8 @@ class State:
         "consecutive_days": self.soft_vars["consecutive_days"].copy(),
         "isolated_off_days": self.soft_vars["isolated_off_days"].copy(),
         "isolated_working_days": self.soft_vars["isolated_working_days"].copy(),
-        "contracted_hours": self.soft_vars["contracted_hours"].copy()
-        }, 
+        "deviation_contracted_hours": self.soft_vars["deviation_contracted_hours"].copy()
+        },
         {
         "below_minimum_demand": self.hard_vars["below_minimum_demand"].copy(),
         "above_maximum_demand": self.hard_vars["above_maximum_demand"].copy(),
@@ -47,28 +46,28 @@ class State:
 
     def write(self, filename):
         summasjon = defaultdict(float)
-        f= open(filename + ".sol","w+")
+        f = open(filename + ".sol", "w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
         for c,e,t in self.y:
             f.write(f"y[{c},{e},{t}] {int(self.y[c,e,t])}\n")
-            
+
         for e, t, v in self.x:
             f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
-        
+
         for e,j in self.w:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
-            if(key == "contracted_hours"):
+            if(key == "deviation_contracted_hours"):
                 for key2 in self.soft_vars[key]:
                     summasjon[key2[0]] += float(self.soft_vars[key][key2])
                 for e in summasjon:
-                    f.write(f"contracted_hour[{e}] {summasjon[e]}\n")
+                    f.write(f"deviation_contracted_hours[{e}] {summasjon[e]}\n")
             else:
                 for key2 in self.soft_vars[key]:
                     f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
-            
+
         for key in self.f:
             f.write(f"f[{key}] {self.f[key]}\n")
 
