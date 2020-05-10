@@ -26,7 +26,6 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
 
-        # TODO: Must discuss with Haakon that this works as needed
         shifts = {
                 (t1, v1, comp):
                 sum(
@@ -41,36 +40,38 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                 }
 
         shift = max(shifts.items(), key=itemgetter(1))[0]
+        competency_pair = shift[2]
 
-        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c, t]
-                                for c in [shift[2]]
-                                for t in t_covered_by_shift[shift[0], shift[1]]
-                                if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
-                                if state.soft_vars["deviation_from_ideal_demand"][c, t] < 0)
+        deviation_from_demand = -sum(
+            state.soft_vars["deviation_from_ideal_demand"][c, t]
+            for c in competency_pair
+            for t in t_covered_by_shift[shift[0], shift[1]]
+            if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+            if state.soft_vars["deviation_from_ideal_demand"][c, t] < 0
+        )
 
         if deviation_from_demand <= 6:
             return repair_set
 
-        shift_competency = shift[2]
-
-
-        # TODO: fix this
         y_s_1 = {t:
-            {shift_competency:
-                state.soft_vars["deviation_from_ideal_demand"].get((shift_competency, t), 0)
-                #if (shift_competency, t) in state.soft_vars["deviation_from_ideal_demand"]
-            }
-            for t in t_covered_by_shift[shift[0], shift[1]]}
+                    {c:
+                        state.soft_vars["deviation_from_ideal_demand"][c, t]
+                        for c in competency_pair if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+                    }
+                for t in t_covered_by_shift[shift[0], shift[1]]
+        }
 
         y_s = [min(y_s_1[t].items(), key=itemgetter(1))[0] for t in t_covered_by_shift[shift[0], shift[1]] if len(y_s_1[t]) != 0]
         competencies_needed = tuple(set(y_s))
 
-
-        deviation_contracted_hours = {e: (sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks)
-                                    - 0*(competency_level - len(competencies_needed)))
-                                    for (competency_level, e) in employee_with_competency_combination[competencies_needed]
-                                    if (sum(state.x[e,t,v]
-                                    for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
+        deviation_contracted_hours = {e: (
+            sum(
+                state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                - 0*(competency_level - len(competencies_needed))
+            )
+                for (competency_level, e) in employee_with_competency_combination[competencies_needed]
+                if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0
+        }
 
         if len(deviation_contracted_hours.keys()) == 0:
             impossible_shifts.append(shift)
