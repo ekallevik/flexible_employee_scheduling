@@ -1,13 +1,3 @@
-from heuristic.delta_calculations import calc_weekly_objective_function, hard_constraint_penalties, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, delta_calculate_negative_deviation_from_contracted_hours
-from heuristic.converter import set_x, remove_x
-from operator import itemgetter
-from random import choice
-
-<<<<<<< HEAD
-
-def illegal_week_swap(shifts_in_week, employees, shifts_at_day, t_covered_by_shift, competencies, contracted_hours, time_periods_in_week, combined_time_periods_in_week, time_step, L_C_D, weeks, state):
-=======
-from converter import set_x
 from heuristic.delta_calculations import (
     calc_weekly_objective_function,
     calculate_consecutive_days,
@@ -17,7 +7,9 @@ from heuristic.delta_calculations import (
     calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
 )
-
+from heuristic.converter import set_x, remove_x
+from operator import itemgetter
+from random import choice
 
 def illegal_week_swap(
     shifts_in_week,
@@ -33,7 +25,6 @@ def illegal_week_swap(
     combined_time_periods_in_week,
     state,
 ):
->>>>>>> master
     destroy_set = []
     repair_set = []
     for emp, j in state.hard_vars["weekly_off_shift_error"]:
@@ -52,17 +43,8 @@ def illegal_week_swap(
                 calculate_isolated_off_days(current_state, [emp], shifts_at_day, days_in_week)
                 calculate_consecutive_days(current_state, [emp], shifts_at_day, L_C_D, days_in_week)
                 delta_calculate_negative_deviation_from_contracted_hours(current_state, [emp], contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-<<<<<<< HEAD
 
                 possible_employees = [e for e in employees if (sum(current_state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
-                #if sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] >= 0
-               # if(len(possible_employees) == 0):
-                #    print("Not enough employees")
-
-=======
-
-                possible_employees = [e for e in employees if (sum(current_state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
->>>>>>> master
                 for e_p in possible_employees:
                     set_x(current_state, t_covered_by_shift, e_p, shift[0], shift[1], 1)
 
@@ -90,16 +72,9 @@ def illegal_week_swap(
 
             max_value = max(objective_values.items(), key=itemgetter(1))[1]
             employee = choice([key for key, value in objective_values.items() if value == max_value])
-<<<<<<< HEAD
 
             repair_set.append(set_x(state, t_covered_by_shift, employee[0], employee[1][0], employee[1][1], 1))
             destroy_set.append(remove_x(state, t_covered_by_shift, competencies, emp, employee[1][0], employee[1][1]))
-=======
-
-            repair_set.append(set_x(state, t_covered_by_shift, employee[0], employee[1][0], employee[1][1], 1))
-            destroy_set.append(set_x(state, t_covered_by_shift, emp, employee[1][0], employee[1][1], 0))
-
->>>>>>> master
     return destroy_set, repair_set
             
 def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day, weeks, t_covered_by_shift, contracted_hours, time_periods_in_week, competencies):
@@ -111,7 +86,7 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
             illegal_hours = state.hard_vars["delta_positive_contracted_hours"][e]
             illegal_shifts = [(e,t,v) for t,v in shifts if state.x[e,t,v] == 1]
             for e,t,v in illegal_shifts:
-                swap_shifts = [(e,t1,v1) for e in employees for t1,v1 in shifts_in_day[int(t/24)] if state.x[e,t1,v1] == 1 and v1 < v and sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) + (v1 - v) >= 0]
+                swap_shifts = [(e,t1,v1) for e in employees for t1,v1 in shifts_in_day[int(t/24)] if state.x[e,t1,v1] == 1 and v1 < v and sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) + (v1 - v) >= 0]
                 if(len(swap_shifts) != 0):
                     shift = choice(swap_shifts)
                     destroy_set.append(remove_x(state, t_covered_by_shift, competencies, e, t, v))

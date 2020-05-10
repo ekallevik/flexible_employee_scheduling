@@ -47,13 +47,8 @@ class State:
         "consecutive_days": self.soft_vars["consecutive_days"].copy(),
         "isolated_off_days": self.soft_vars["isolated_off_days"].copy(),
         "isolated_working_days": self.soft_vars["isolated_working_days"].copy(),
-<<<<<<< HEAD
-        "contracted_hours": self.soft_vars["contracted_hours"].copy()
-        }, 
-=======
         "deviation_contracted_hours": self.soft_vars["deviation_contracted_hours"].copy()
         },
->>>>>>> master
         {
         "below_minimum_demand": self.hard_vars["below_minimum_demand"].copy(),
         "above_maximum_demand": self.hard_vars["above_maximum_demand"].copy(),
@@ -61,12 +56,8 @@ class State:
         "cover_multiple_demand_periods": self.hard_vars["cover_multiple_demand_periods"].copy(),
         "weekly_off_shift_error": self.hard_vars["weekly_off_shift_error"].copy(),
         "mapping_shift_to_demand": self.hard_vars["mapping_shift_to_demand"].copy(),
-<<<<<<< HEAD
         "delta_positive_contracted_hours": self.hard_vars["delta_positive_contracted_hours"].copy(),
         "daily_rest_error": self.hard_vars["daily_rest_error"].copy()
-=======
-        "delta_positive_contracted_hours": self.hard_vars["delta_positive_contracted_hours"].copy()
->>>>>>> master
         },
         copy(self.objective_function_value), copy(self.f))
 
@@ -81,26 +72,10 @@ class State:
             
         for e, t, v in self.x:
             f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> master
         for e,j in self.w:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
-<<<<<<< HEAD
-            if(key == "contracted_hours"):
-                for key2 in self.soft_vars[key]:
-                    summasjon[key2[0]] += float(self.soft_vars[key][key2])
-                for e in summasjon:
-                    f.write(f"contracted_hours[{e}] {summasjon[e]}\n")
-            else:
-                for key2 in self.soft_vars[key]:
-                    f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
-            
-=======
             if(key == "deviation_contracted_hours"):
                 for key2 in self.soft_vars[key]:
                     summasjon[key2[0]] += float(self.soft_vars[key][key2])
@@ -110,7 +85,6 @@ class State:
                 for key2 in self.soft_vars[key]:
                     f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
 
->>>>>>> master
         for key in self.f:
             f.write(f"f[{key}] {self.f[key]}\n")
 

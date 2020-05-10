@@ -109,7 +109,8 @@ class ProblemRunner:
                                        self.data["time"]["weeks"]},
             "mapping_shift_to_demand": {(c, t): 0 for c in self.data["competencies"] for t in
                                         self.data["time"]["periods"][0]},
-            "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]}
+            "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
+            "daily_rest_error": {(e,i): 0 for e in self.data["staff"]["employees"] for i in self.data["time"]["days"]}
         }
 
         objective_function, f = calculate_objective_function(self.data, soft_variables,

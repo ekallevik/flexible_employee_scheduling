@@ -68,9 +68,9 @@ class ALNS:
         self.L_C_D = data["limit_on_consecutive_days"]
 
         # Set for daily rest restriction
-        self.invalid_shifts = data.invalid_shifts
-        self.shift_combinations_violating_daily_rest = data.shift_combinations_violating_daily_rest
-        self.shift_sequences_violating_daily_rest = model.shift_sequences_violating_daily_rest
+        self.invalid_shifts = data["shifts"]["invalid_shifts"]
+        self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
+        self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -105,6 +105,9 @@ class ALNS:
             self.combined_time_periods_in_week,
             self.employees,
             self.contracted_hours,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
             self.weeks,
             self.shifts_at_day,
             self.L_C_D,
@@ -127,6 +130,9 @@ class ALNS:
             self.shifts_at_day,
             self.shifts_per_week,
             self.contracted_hours,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
             self.time_periods_in_week,
             self.time_step,
             self.shifts_overlapping_t,
@@ -197,11 +203,11 @@ class ALNS:
 
         #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
         #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
-        #, repair_worst_week_greedy
+        #
         #repair_worst_week_regret, 
         operators = {
-                        #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret]
+                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
         self.add_destroy_and_repair_operators(operators)
         #for key in self.repair_operators.keys():
@@ -386,7 +392,7 @@ class ALNS:
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
-        calculate_weekly_rest(state, self.shifts_in_week, employees, self.weeks)
+        calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
         calculate_daily_rest_error(state, [destroy, repair], self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
 
         #Updates the current states hard variables based on changed decision variables
