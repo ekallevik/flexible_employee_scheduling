@@ -78,6 +78,7 @@ class ALNS:
             worst_week_removal,
             self.competencies,
             self.time_periods_in_week,
+            self.combined_time_periods_in_week,
             self.employees,
             self.weeks,
             self.L_C_D,
@@ -87,6 +88,7 @@ class ALNS:
 
         remove_random_week = partial(
             random_week_removal,
+            self.competencies,
             self.employees,
             self.weeks,
             self.shifts_per_week,
@@ -98,6 +100,7 @@ class ALNS:
             weighted_random_week_removal,
             self.competencies,
             self.time_periods_in_week,
+            self.combined_time_periods_in_week,
             self.employees,
             self.weeks,
             self.L_C_D,
@@ -108,6 +111,7 @@ class ALNS:
 
         remove_random_weekend = partial(
             random_weekend_removal,
+            self.competencies,
             self.employees,
             self.weeks,
             self.shifts_at_day,
@@ -116,13 +120,17 @@ class ALNS:
         )
 
         remove_worst_employee = partial(
-            worst_employee_removal, self.shifts, self.t_covered_by_shift,
+            worst_employee_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
         )
 
         remove_random_employee = partial(
             random_employee_removal,
             self.shifts,
             self.t_covered_by_shift,
+            self.competencies,
             self.employees,
             self.random_state,
         )
@@ -131,6 +139,7 @@ class ALNS:
             weighted_random_employee_removal,
             self.shifts,
             self.t_covered_by_shift,
+            self.competencies,
             self.employees,
             self.random_state,
         )
@@ -141,10 +150,12 @@ class ALNS:
             self.competencies,
             self.t_covered_by_shift,
             self.employee_with_competencies,
+            self.employee_with_competency_combination,
             self.demand,
             self.time_step,
             self.time_periods_in_week,
             self.employees,
+            self.combined_time_periods_in_week,
             self.contracted_hours,
             self.weeks,
             self.shifts_at_day,

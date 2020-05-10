@@ -1,6 +1,7 @@
 from operator import itemgetter
 from collections import defaultdict
 from copy import copy
+
 def delta_calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_repair_set):
     for c in competencies:
         for e2,t,v in destroy_repair_set:
