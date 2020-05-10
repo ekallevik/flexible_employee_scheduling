@@ -333,6 +333,16 @@ class ALNS:
             destroy_repair_set,
         )
 
+        delta_calculate_negative_deviation_from_contracted_hours(
+            state,
+            employees,
+            self.contracted_hours,
+            self.weeks,
+            self.time_periods_in_week,
+            self.competencies,
+            self.time_step,
+        )
+
         calculate_partial_weekends(state, employees, self.shifts_at_day, self.saturdays)
         calculate_isolated_working_days(state, employees, self.shifts_at_day, self.days)
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
