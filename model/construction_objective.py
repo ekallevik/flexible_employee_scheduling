@@ -18,7 +18,7 @@ class ConstructionObjective:
             - quicksum(
                 quicksum(weights["excess demand deviation factor"] * delta["plus"][c, t] +
                          weights["deficit demand deviation factor"] * delta["minus"][c, t]
-                         for t in self.time_periods)
+                         for t in self.time_periods[c])
                 for c in self.competencies
             ),
             GRB.MAXIMIZE,

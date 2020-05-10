@@ -1,5 +1,3 @@
-import sys
-
 import fire
 from gurobipy import *
 from loguru import logger
@@ -15,7 +13,6 @@ from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
-from utils.weights import get_weights
 from utils.log_formatter import LogFormatter
 
 formatter = LogFormatter()
@@ -137,7 +134,7 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data)
+        self.alns = ALNS(state, self.data, self.criterion)
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """

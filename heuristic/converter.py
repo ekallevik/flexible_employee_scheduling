@@ -1,4 +1,3 @@
-from tupledict import TupleDict
 
 def convert(model):
     x = {(e,t,v): abs(model.x[e,t,v].x) for e,t,v in model.x}
@@ -9,6 +8,7 @@ def convert(model):
 
 def set_x(state, t_covered_by_shift, e, t, v, value, y_s=None):
     state.x[e,t,v] = value
+
     #Need a smarter solution for choosing competency
     if y_s == None:
         for t1 in t_covered_by_shift[t,v]:
@@ -17,12 +17,15 @@ def set_x(state, t_covered_by_shift, e, t, v, value, y_s=None):
         for t1, c in zip(t_covered_by_shift[t,v], y_s):
             state.y[c,e,t1] = value
 
-    return (e,t,v)
+    return (e, t, v)
 
 
 def remove_x(state, t_covered_by_shift, competencies, e, t, v):
-    state.x[e,t,v] = 0
+
+    state.x[e, t, v] = 0
+
     for t1 in t_covered_by_shift[t,v]:
         for c in competencies:
             state.y[c,e,t1] = 0
-    return (e,t,v)
+
+    return (e, t, v)
