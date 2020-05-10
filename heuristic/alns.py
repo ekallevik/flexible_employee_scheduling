@@ -10,6 +10,9 @@ from heuristic.destroy_operators import (
 from heuristic.local_search_operators import illegal_week_swap
 from functools import partial
 
+from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
+    worst_employee_repair, worst_employee_regret_repair
+
 
 class ALNS:
     def __init__(self, state, data, criterion):
@@ -149,12 +152,6 @@ class ALNS:
             self.shifts_overlapping_t,
         )
 
-        repair_worst_week_regret = partial(worst_week_regret_repair, self.shifts_per_week, 
-                                            self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.employee_with_competency_combination,
-                                            self.demand, self.time_step, self.time_periods_in_week, self.combined_time_periods_in_week, 
-                                            self.employees, self.contracted_hours, self.weeks, self.shifts_at_day, self.L_C_D, 
-                                            self.shifts_overlapping_t)
-
         repair_worst_week_greedy = partial(
             worst_week_repair,
             self.shifts_per_week,
@@ -169,6 +166,27 @@ class ALNS:
             self.contracted_hours,
             self.weeks,
             self.shifts_at_day,
+        )
+
+        repair_worst_employee_regret = partial(
+            worst_employee_regret_repair,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.employee_with_competencies,
+            self.employee_with_competency_combination,
+            self.demand,
+            self.shifts,
+            self.off_shifts,
+            self.saturdays,
+            self.days,
+            self.L_C_D,
+            self.weeks,
+            self.shifts_at_day,
+            self.shifts_per_week,
+            self.contracted_hours,
+            self.time_periods_in_week,
+            self.time_step,
+            self.shifts_overlapping_t,
         )
 
         repair_worst_employee_greedy = partial(
@@ -245,7 +263,7 @@ class ALNS:
                 self.best_legal_solution = candidate_solution
                 print("Is legal")
                 self.best_legal_solution.write("best_legal_solution")
-                
+
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
 
@@ -268,7 +286,7 @@ class ALNS:
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
                 candidate_solution.write("After_breaking_weekly")
 
-            
+
 
             if (
                 candidate_solution.get_objective_value()
