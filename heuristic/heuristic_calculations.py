@@ -1,5 +1,6 @@
 from collections import defaultdict
 from operator import itemgetter
+from copy import copy
 
 def calculate_deviation_from_demand(model, y):
     delta = {}
@@ -12,21 +13,31 @@ def calculate_deviation_from_demand(model, y):
     return delta
 
 def calculate_weekly_rest(model, x, w):
+
+    weeks = copy(model.weeks)
     actual_shifts = {(e, j): [(t,v) for t,v in model.shifts_at_week[j] if x[e,t,v] == 1] for e in model.employees for j in model.weeks}
     off_shift_periods = defaultdict(list)
-    important = [7*24*i for i in range(len(model.weeks)+1)]
+    important = [7*24*i for i in range(len(weeks)+1)]
+
     for key in actual_shifts.keys():
         week = int(key[1])
-        if(actual_shifts[key][0][0] - important[week] >= 36):
-            off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+        if(len(actual_shifts[key]) == 0):
+            off_shift_periods[key] = [(important[week], float((important[week + 1] - important[week])))]
 
-        if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
-            off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+        else:
+            if(actual_shifts[key][0][0] - important[week] >= 36):
+                off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
-        for i in range(len(actual_shifts[key])-1):
-            if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
-                off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
+            if(actual_shifts[key][0][0] - important[week] >= 36):
+                off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
+            if(important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1]) >= 36):
+                off_shift_periods[key].append(((actual_shifts[key][-1][0] + actual_shifts[key][-1][1]), important[week + 1] - (actual_shifts[key][-1][0] + actual_shifts[key][-1][1])))
+
+            for i in range(len(actual_shifts[key])-1):
+                if(actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1]) >= 36):
+                    off_shift_periods[key].append(((actual_shifts[key][i][0] + actual_shifts[key][i][1]), actual_shifts[key][i+1][0] - (actual_shifts[key][i][0] + actual_shifts[key][i][1])))
+        
     for key in off_shift_periods:
         w[key] = max(off_shift_periods[key],key=itemgetter(1))
 

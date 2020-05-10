@@ -13,7 +13,7 @@ data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_schedulin
 solution_folder = Path(__file__).resolve().parents[1]
 loader_path = Path(__file__).resolve().parents[1] 
 sys.path.insert(1, str(loader_path))
-from xml_loader.xml_loader import get_days_with_demand2
+from preprocessing.xml_loader import get_days_with_demand2
 
 # creating indices
 key_y = re.compile('\d*,\d*,\d*')
@@ -160,11 +160,11 @@ def create_gantt_chart(data, solution, maximum, minimum):
 def main():
     
     data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-    root = ET.parse(data_folder / ('rproblem3.xml')).getroot()
+    root = ET.parse(data_folder / ('rproblem2.xml')).getroot()
     demand = get_days_with_demand2(root)
     maks = max([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
     minst = min([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
-    solution = str(solution_folder / "heuristic_solution.sol")
+    solution = str(solution_folder / "solution_files/optimality_model_rproblem2_new.sol")
     create_gantt_chart(demand, solution, maks, minst)
 
 

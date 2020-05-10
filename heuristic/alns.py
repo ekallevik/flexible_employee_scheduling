@@ -95,7 +95,7 @@ class ALNS:
         #repair_worst_week_regret, 
         operators = {
                         #remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_greedy]
+                        remove_worst_week: [repair_worst_week_regret]
                     }
         self.add_destroy_and_repair_operators(operators)
         #for key in self.repair_operators.keys():

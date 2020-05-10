@@ -61,8 +61,8 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                                     for (competency_level, e) in employee_with_competency_combination[competencies_needed] 
                                     if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
 
-        print("DEV: " + str(deviation_contracted_hours))
-        print("CON: " + str(contracted_hours))
+        #print("DEV: " + str(deviation_contracted_hours))
+        #print("CON: " + str(contracted_hours))
 
         if(len(deviation_contracted_hours.keys()) == 0):
             impossible_shifts.append(shift)
@@ -141,7 +141,6 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
                                     if (c, t) in state.soft_vars["deviation_from_ideal_demand"] 
                                     if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
 
-        #print(possible_employees)
         y_s_1 = {t: {(c): state.soft_vars["deviation_from_ideal_demand"][c,t] for c in shift[2] if (c,t) in state.soft_vars["deviation_from_ideal_demand"]} for t in t_covered_by_shift[shift[0], shift[1]]}
         y_s = [min(y_s_1[t].items(), key=itemgetter(1))[0] for t in t_covered_by_shift[shift[0], shift[1]] if len(y_s_1[t]) != 0]
         competencies_needed = tuple(set(y_s))
@@ -151,7 +150,7 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
             impossible_shifts.append(shift)
             continue
 
-        if(deviation_from_demand < 6 or max([sum(state.soft_vars["contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
+        if(deviation_from_demand < 6 or max([sum(state.soft_vars["contracted_hours"][e[0],j] for j in week) for e in possible_employees]) < shift[1]):
             deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in time_periods_in_week[c, week[0]] if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
             print("RW: Deviation from demand: " + str(deviation_from_demand))
             return repair_set 

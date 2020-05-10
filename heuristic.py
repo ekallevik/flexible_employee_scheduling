@@ -20,7 +20,7 @@ def main():
     model.set_objective()
     #model.model.write("constraints.lp")
     model.optimize()
-    #model.model.write("solution_files/optimality_model_rproblem3.sol")
+    #model.model.write("solution_files/optimality_model_rproblem2_new.sol")
     x,y,w = convert(model) 
 
 
@@ -53,7 +53,7 @@ def main():
     #simulated_annealing_criterion = SimulatedAnnealingCriterion()
     greedy_criterion = GreedyCriterion()
     alns = ALNS(initial_state, model, greedy_criterion)
-    alns.iterate(1)
+    alns.iterate(5)
 
 
 """Possibilities now.
