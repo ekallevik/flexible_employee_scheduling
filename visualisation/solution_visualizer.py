@@ -13,7 +13,11 @@ data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_schedulin
 solution_folder = Path(__file__).resolve().parents[1]
 loader_path = Path(__file__).resolve().parents[1] 
 sys.path.insert(1, str(loader_path))
+<<<<<<< HEAD
 from preprocessing.xml_loader import get_days_with_demand2
+=======
+from xml_loader.xml_loader import get_days_with_demand2
+>>>>>>> master
 
 # creating indices
 key_y = re.compile('\d*,\d*,\d*')

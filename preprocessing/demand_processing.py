@@ -86,6 +86,7 @@ def get_time_periods(root, competencies):
                 time += time_step
     return {"periods": [time_periods, time_periods_in_week, time_periods_in_day],
             "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]}
+<<<<<<< HEAD
 
 
 # def get_combined_time_periods(time_periods, time_periods_in_week, time_periods_in_day):
@@ -119,6 +120,8 @@ def get_time_periods(root, competencies):
 #     return [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]
 
 
+=======
+>>>>>>> master
 
 
 def get_demand(root, competencies):

@@ -1,4 +1,3 @@
-from tupledict import TupleDict
 
 def convert(model):
     x = {(e,t,v): abs(model.x[e,t,v].x) for e,t,v in model.x}

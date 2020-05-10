@@ -1,12 +1,8 @@
-
-from collections import defaultdict
-
 from preprocessing import xml_loader
 from preprocessing.demand_processing import (
     combine_demand_intervals,
     combine_no_demand_intervals,
     get_demand,
-    get_start_events,
     get_time_periods,
     get_time_steps,
 )
@@ -27,8 +23,11 @@ def load_data(problem_name):
     root = xml_loader.get_root(problem_name)
 
     competencies = []
+<<<<<<< HEAD
     #Do not think we will use this anymore
     #competencies = get_competencies(root)
+=======
+>>>>>>> master
     
     staff = get_employee_lists(root, competencies)
     time_sets = get_time_sets(root, competencies)
@@ -63,12 +62,17 @@ def get_time_sets(root, competencies):
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
     periods = get_time_periods(root, competencies)
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> master
     return {
         "step": get_time_steps(root),
         "periods": periods["periods"],
         "combined_time_periods": periods["combined_time_periods"],
         "days": days,
+        "number_of_days": len(days),
         "weeks": [i for i in range(number_of_weeks)],
         "saturdays": [5 + i * 7 for i in range(number_of_weeks)],
         "sundays": [6 + i * 7 for i in range(number_of_weeks)],
@@ -98,16 +102,22 @@ def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
     }
 
 
+<<<<<<< HEAD
 def get_updated_shift_sets(problem_name, data, shifts, competencies):
+=======
+def get_updated_shift_sets(problem_name, data, shifts, ):
+>>>>>>> master
 
     root = xml_loader.get_root(problem_name)
 
     off_shift_sets = get_off_shift_sets(
             data["time"],
-            get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"]))
+            get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])),
+            data["competencies"]
         )
 
-    return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"])
+    return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"],
+                          data["competencies"])
 
 
 def get_shifts(root):
@@ -123,7 +133,11 @@ def get_shifts(root):
             if duration >= ALLOWED_SHIFT_DURATION[1]:
                 shifts = get_shifts_for_long_duration(root, shifts, start_time, duration)
             else:
+<<<<<<< HEAD
                 if((start_time, intervals[1] - start_time) not in shifts):
+=======
+                if (start_time, intervals[1] - start_time) not in shifts:
+>>>>>>> master
                     shifts.append((start_time, intervals[1] - start_time))
 
         else:
@@ -198,7 +212,10 @@ def get_shifts_per_day(shifts, days):
 
     # todo: bruke defaultdict i stedet?
     shifts_per_day = tupledict()
+<<<<<<< HEAD
     #shifts_in_week = defaultdict(list)
+=======
+>>>>>>> master
     for day in days:
         shifts_per_day[day] = []
 
@@ -210,8 +227,11 @@ def get_shifts_per_day(shifts, days):
                 < 24 * int(day) + TIME_DEFINING_SHIFT_DAY
             ):
                 shifts_per_day[day].append(shift)
+<<<<<<< HEAD
                 #if(shift not in shifts_in_week):
                     #shifts_in_week[int(day/7)].append(shift)
+=======
+>>>>>>> master
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
@@ -234,7 +254,11 @@ def get_shifts_per_week(shifts_per_day):
             # get week and initialize tupledict
             week = int(day / 7)
             shifts_per_week[week] = []
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> master
         shifts_per_week[week].extend(shifts)
 
     return shifts_per_week
@@ -411,6 +435,7 @@ def get_t_covered_by_shift(shifts, time_sets):
         end = combined_time_periods.index(shift[0] + shift[1] - time_step)
         start = combined_time_periods.index(shift[0])
         t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
+<<<<<<< HEAD
     return t_covered_by_shift
 
 def get_t_covered_by_shift2(shifts, time_sets, competencies):
@@ -429,7 +454,10 @@ def get_t_covered_by_shift2(shifts, time_sets, competencies):
                 t_covered_by_shift[shift[0], shift[1], c] = t_in_shift
     print(t_covered_by_shift)
     raise ValueError
+=======
+>>>>>>> master
     return t_covered_by_shift
+
 
 
 def get_shift_lookup(shifts_per_day):
@@ -529,13 +557,29 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
                 start = time_periods[c].index(shift[0])
                 t_covered[shift[0], shift[1], c] = time_periods[c][start:end]
             except:  
+<<<<<<< HEAD
                 t_in_shift = list(filter(lambda i: i >= shift[0] and i < (shift[0] + shift[1]), time_periods[c]))
+=======
+                t_in_shift = list(filter(lambda i: shift[0] <= i <= (shift[0] + shift[1]), time_periods[c]))
+>>>>>>> master
                 if(len(t_in_shift) == 0):
                     continue
                 t_covered[shift[0], shift[1], c] = t_in_shift
 
     return t_covered
+<<<<<<< HEAD
   
   
 def get_updated_off_shift_sets(data, shifts, competencies):
     return get_off_shift_sets(data["time"], get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
+=======
+
+
+def get_updated_off_shift_sets(data, shifts):
+    competencies = data["competencies"]
+    return (
+        get_off_shift_sets(data["time"],
+        get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
+    )
+
+>>>>>>> master

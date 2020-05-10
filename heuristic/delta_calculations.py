@@ -18,18 +18,11 @@ def calculate_deviation_from_demand(state, competencies, t_covered_by_shift, emp
 def delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step):
     for e in employees:
         for j in weeks:
-            state.soft_vars["contracted_hours"][e,j] = (contracted_hours[e] - sum(time_step * state.y[c,e,t] 
+            state.soft_vars["deviation_contracted_hours"][e,j] = (contracted_hours[e] - sum(time_step * state.y[c,e,t]
                 for c in competencies
                 for t in time_periods_in_week[c, j]))
         
-        state.hard_vars["delta_positive_contracted_hours"][e] = -min(0, sum(state.soft_vars["contracted_hours"][e,j] for j in weeks))
-            
-    # for e,t,v in destroy_set:
-    #     state.soft_vars["contracted_hours"][e] += v
-
-    # for e,t,v in repair_set:
-    #     state.soft_vars["contracted_hours"][e] -= v
-
+        state.hard_vars["delta_positive_contracted_hours"][e] = -min(0, sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks))
 
 def calculate_weekly_rest(state, shifts_at_week, employees, weeks):
     """
@@ -109,7 +102,7 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
 
 def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks):
     for e in employees:
-        state.f[e] = (sum(min(100, state.w[e,j][1]) - state.soft_vars["contracted_hours"][e,j] for j in weeks)
+        state.f[e] = (sum(state.w[e,j][1] - state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks)
             - sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
             - sum(state.soft_vars["isolated_working_days"][e,i+1] + state.soft_vars["isolated_off_days"][e,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["consecutive_days"][e,i] for i in range(len(days)-L_C_D)))
@@ -185,7 +178,6 @@ def hard_constraint_penalties(state):
     break_one_shift_per_day = sum(state.hard_vars["more_than_one_shift_per_day"].values())
     break_one_demand_per_time = sum(state.hard_vars["cover_multiple_demand_periods"].values())
     break_weekly_off = sum(state.hard_vars["weekly_off_shift_error"].values())
-    #break_no_work_during_off_shift = sum(state.hard_vars["no_work_during_off_shift"].values())
     break_shift_to_demand = sum(state.hard_vars["mapping_shift_to_demand"].values())
     break_contracted_hours = sum(state.hard_vars["delta_positive_contracted_hours"].values())
 
@@ -202,7 +194,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
     value = {}
     for j in weeks:
         days_in_week = [i for i in range(j*7,(j+1)*7)]
-        if(setting == "worst"):
+        if setting == "worst":
             value[j] = (
                         sum(min(100, state.w[e,j][1]) for e in employees)
                         - sum(abs(state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in time_periods_in_week[c, j])
@@ -212,7 +204,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                         - 10 * sum(state.hard_vars["below_minimum_demand"][c, t] + state.hard_vars["above_maximum_demand"][c, t] for c in competencies for j in weeks for t in time_periods_in_week[c, j])
                         - 10 * sum(state.hard_vars["more_than_one_shift_per_day"][e, i] for e in employees for i in days_in_week)
                         - 10 * sum(state.hard_vars["cover_multiple_demand_periods"][e,t] for e in employees for j in weeks for t in combined_time_periods_in_week[j])
-                        - max(0, sum(state.soft_vars["contracted_hours"][e,j] for e in employees))
+                        - max(0, sum(state.soft_vars["deviation_contracted_hours"][e,j] for e in employees))
                         - 10 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
             )
         else:
@@ -225,7 +217,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                 - 5 * sum(state.hard_vars["below_minimum_demand"][c, t] + state.hard_vars["above_maximum_demand"][c, t] for c in competencies for j in weeks for t in time_periods_in_week[c, j])
                 - 10 * sum(state.hard_vars["more_than_one_shift_per_day"][e, i] for e in employees for i in days_in_week)
                 - 10 * sum(state.hard_vars["cover_multiple_demand_periods"][e,t] for e in employees for j in weeks for t in combined_time_periods_in_week[j])
-                - 5 * max(0, sum(state.soft_vars["contracted_hours"][e,j] for e in employees))
+                - 5 * max(0, sum(state.soft_vars["deviation_contracted_hours"][e,j] for e in employees))
                 - 10 * sum(state.hard_vars["weekly_off_shift_error"][e,j] for e in employees)
                 - 100 * sum(state.hard_vars["delta_positive_contracted_hours"][e] for e in employees)
                 - 100 * competency_score
@@ -241,7 +233,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
 def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_D, weeks, contracted_hours, competencies, t_changed, competency_score):
 
     return (+ sum(min(100, state.w[employee,j][1]) for j in weeks)
-            + max(0, sum(state.soft_vars["contracted_hours"][employee,j] for j in weeks))
+            + max(0, sum(state.soft_vars["deviation_contracted_hours"][employee,j] for j in weeks))
             - sum(state.soft_vars["partial_weekends"][employee,i] for i in saturdays)
             - sum(state.soft_vars["isolated_working_days"][employee,i+1] + state.soft_vars["isolated_off_days"][employee,i+1] for i in range(len(days)-2))
             - sum(state.soft_vars["consecutive_days"][employee,i] for i in range(len(days)-L_C_D))
