@@ -10,7 +10,7 @@ class LogFormatter:
 
     def format(self, record):
 
-        length = len("{name}:{function}:{line}".format(**record))
+        length = len("{function}:{line}".format(**record))
         self.padding = max(self.padding, length)
         record["extra"]["padding"] = " " * (self.padding - length)
 
