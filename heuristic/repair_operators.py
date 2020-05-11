@@ -355,6 +355,9 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
             if e in employees_changed
         ]
 
+        if not possible_employees:
+            return repair_set
+
         if (
             deviation_from_demand < 6
             or max(

@@ -4,24 +4,14 @@ from heuristic.converter import remove_x
 
 def worst_week_removal(competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, shifts_in_week, t_covered_by_shift_combined, state, destroy_size=1):
 
-    worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, destroy_size, "worst")
+    worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week,
+                                                   combined_time_periods_in_week, employees,
+                                                   weeks,  L_C_D, destroy_size, "worst")
 
     destroy_set_shifts = destroy_shifts(competencies, employees, shifts_in_week, state,
                                         t_covered_by_shift_combined, worst_k_weeks)
 
     return destroy_set_shifts, worst_k_weeks
-
-
-def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covered_by_shift,
-                        random_state, state,  destroy_size=1):
-
-    selected_weeks = list(random_state.choice(weeks, size=destroy_size))
-
-    destroy_set_shifts = destroy_shifts(
-        competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
-    )
-
-    return destroy_set_shifts, selected_weeks
 
 
 def weighted_random_week_removal(competencies, time_periods_in_week,
@@ -30,13 +20,25 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
                                  destroy_size=1):
 
     weekly_objective = calc_weekly_objective_function(state, competencies, time_periods_in_week,
-                                                      employees, combined_time_periods_in_week,
+                                                      combined_time_periods_in_week, employees,
                                                       weeks, L_C_D, destroy_size,
                                                       setting="best")
 
     probabilities = get_weighted_probabilities(weekly_objective)
 
     selected_weeks = list(random_state.choice(weeks, size=destroy_size, p=probabilities))
+
+    destroy_set_shifts = destroy_shifts(
+        competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
+    )
+
+    return destroy_set_shifts, selected_weeks
+
+
+def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covered_by_shift,
+                        random_state, state,  destroy_size=1):
+
+    selected_weeks = list(random_state.choice(weeks, size=destroy_size))
 
     destroy_set_shifts = destroy_shifts(
         competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
@@ -78,18 +80,6 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
     return destroy_set, employees
 
 
-def random_employee_removal(
-    shifts, t_covered_by_shift, competencies, employees, random_state, state, destroy_size=2
-):
-
-    selected_employees = random_state.choice(employees, size=destroy_size)
-
-    destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
-                                    t_covered_by_shift)
-
-    return destroy_set, selected_employees
-
-
 def weighted_random_employee_removal(
     shifts, t_covered_by_shift, competencies, employees, random_state, state, destroy_size=2
 ):
@@ -97,6 +87,18 @@ def weighted_random_employee_removal(
     probabilities = get_weighted_probabilities(state.f)
 
     selected_employees = list(random_state.choice(employees, size=destroy_size, p=probabilities))
+
+    destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
+                                    t_covered_by_shift)
+
+    return destroy_set, selected_employees
+
+
+def random_employee_removal(
+    shifts, t_covered_by_shift, competencies, employees, random_state, state, destroy_size=2
+):
+
+    selected_employees = random_state.choice(employees, size=destroy_size)
 
     destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
                                     t_covered_by_shift)
