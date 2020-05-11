@@ -208,8 +208,6 @@ def get_shifts_per_day(shifts, days):
             if shift[0] >= 24 * int(day) + TIME_DEFINING_SHIFT_DAY:
                 if day == days[-1]:
                     shifts_per_day[day].append(shift)
-                    #if(shift not in shifts_in_week):
-                        #shifts_in_week[int(day/7)].append(shift)
                 break
 
     return shifts_per_day
