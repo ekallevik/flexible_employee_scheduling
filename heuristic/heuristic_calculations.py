@@ -88,7 +88,6 @@ def calculate_isolated_working_days(data, x):
             )
     return isolated_working_days
 
-    return isolated_working_days
 
 def calculate_isolated_off_days(data, x):
     isolated_off_days = {}

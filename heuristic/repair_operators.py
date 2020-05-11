@@ -48,11 +48,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                                     if (c, t) in state.soft_vars["deviation_from_ideal_demand"] 
                                     if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
 
-#        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] for c in competencies for t in time_periods_in_week[c, week[0]] if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
-
         if(deviation_from_demand <= 6):
-            print("Deviation from demand: " + str(deviation_from_demand))
-            print(shifts)
             return repair_set
         
         
@@ -81,8 +77,6 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                                     for (competency_level, e) in employee_with_competency_combination[competencies_needed] 
                                     if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0}
 
-        #print("DEV: " + str(deviation_contracted_hours))
-        #print("CON: " + str(contracted_hours))
 
         if(len(deviation_contracted_hours.keys()) == 0):
             impossible_shifts.append(shift)
@@ -248,7 +242,6 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
         or we do not have any employees to assign to this shift as all employees are working this day 
     """
     
-    #print("worst_employee_repair is running")
     repair_set = []
     destroy_set = destroy_set.copy()
     employees_changed = employees

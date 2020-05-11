@@ -169,53 +169,14 @@ class ALNS:
             self.shifts_at_day,
         )
 
-       
-
-
-
-        # remove_worst_week = partial(worst_week_removal, self.competencies, self.time_periods_in_week, self.combined_time_periods_in_week, self.employees, self.weeks, self.L_C_D, self.shifts_in_week, self.t_covered_by_shift)
-        # remove_worst_employee = partial(worst_employee_removal, self.shifts, self.t_covered_by_shift, self.competencies)
-
-        # repair_worst_week_regret = partial(worst_week_regret_repair, self.shifts_in_week, 
-        #                                     self.competencies, self.t_covered_by_shift, self.employee_with_competencies, self.employee_with_competency_combination,
-        #                                     self.demand, self.time_step, self.time_periods_in_week, self.combined_time_periods_in_week, 
-        #                                     self.employees, self.contracted_hours, self.invalid_shifts,
-        #                                     self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest,
-        #                                     self.weeks, self.shifts_at_day, self.L_C_D, self.shifts_overlapping_t)
-
-        # repair_worst_employee_regret = partial(worst_employee_regret_repair, self.competencies, 
-        #                                     self.t_covered_by_shift, self.employee_with_competencies, 
-        #                                     self.employee_with_competency_combination, self.demand, 
-        #                                     self.shifts, self.off_shifts, self.saturdays, self.days, self.L_C_D, 
-        #                                     self.weeks, self.shifts_at_day, self.shifts_in_week, self.contracted_hours, 
-        #                                     self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest,
-        #                                     self.time_periods_in_week, self.time_step, self.shifts_overlapping_t)
-
-        # repair_worst_week_greedy = partial(worst_week_repair, self.shifts_in_week, self.competencies, self.t_covered_by_shift,
-        #                                     self.employee_with_competencies, self.employee_with_competency_combination, self.demand, 
-        #                                     self.time_step, self.time_periods_in_week, self.employees, self.contracted_hours, 
-        #                                     self.weeks, self.shifts_at_day)
-
-        # repair_worst_employee_greedy = partial(worst_employee_repair, self.competencies, self.t_covered_by_shift, 
-        #                                         self.employee_with_competencies, self.employee_with_competency_combination,
-        #                                         self.demand, self.contracted_hours, self.weeks, self.time_periods_in_week,
-        #                                         self.time_step, self.shifts, self.shifts_at_day)
-
-        #self.add_destroy_operator([remove_worst_employee, remove_worst_week])
-        #self.add_repair_operator([repair_worst_week_regret, repair_worst_employee_regret, repair_worst_week_greedy, repair_worst_employee_greedy])
-        #
-        #repair_worst_week_regret, 
+    
         operators = {
                         remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
                         remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
                     }
+                    
         self.add_destroy_and_repair_operators(operators)
-        #for key in self.repair_operators.keys():
-         #   for operator in self.repair_operators[key]:
-         #       print(str(key) + ": " + str(operator))
         self.initialize_destroy_and_repair_weights()
-        #print(self.destroy_weights)
-        #print(self.repair_weights)
 
 
     def iterate(self, iterations):
