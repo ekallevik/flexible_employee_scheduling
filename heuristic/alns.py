@@ -1,4 +1,6 @@
 import numpy as np
+from loguru import logger
+
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -23,7 +25,7 @@ class ALNS:
 
         self.criterion = criterion
         self.random_state =  self.initialize_random_state()
-        
+
         self.destroy_operators = {}
         self.destroy_weights = {}
         self.repair_operators = defaultdict(dict)
@@ -162,8 +164,8 @@ class ALNS:
             self.combined_time_periods_in_week,
             self.employees,
             self.contracted_hours,
-            self.invalid_shifts, 
-            self.shift_combinations_violating_daily_rest, 
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
             self.weeks,
             self.shifts_at_day,
@@ -203,8 +205,8 @@ class ALNS:
             self.shifts_at_day,
             self.shifts_per_week,
             self.contracted_hours,
-            self.invalid_shifts, 
-            self.shift_combinations_violating_daily_rest, 
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
             self.time_periods_in_week,
             self.time_step,
@@ -226,7 +228,7 @@ class ALNS:
             self.shifts_at_day,
         )
 
-    
+
         operators = {
             remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
             remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
@@ -243,9 +245,12 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
-
     def iterate(self, iterations):
         for iteration in range(iterations):
+
+            if iteration % 25:
+                logger.trace(f"Iteration: {iteration}")
+
             candidate_solution = self.current_solution.copy()
 
             destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
@@ -259,7 +264,6 @@ class ALNS:
 
 
         candidate_solution.write("heuristic_solution_2")
-        
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -268,21 +272,23 @@ class ALNS:
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
-        print(
-            str(candidate_solution.get_objective_value())
-            + " VS "
-            + str(self.current_solution.get_objective_value())
-        )
+
+        logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
+                       f"{candidate_solution.get_objective_value(): 7.2f} "
+                       f"({destroy_id}, {repair_id})")
+
         if (
                 candidate_solution.get_objective_value()
                 >= self.best_legal_solution.get_objective_value()
                 and hard_constraint_penalties(candidate_solution) == 0
-            ):
-                self.best_legal_solution = candidate_solution
-                print("Is legal")
-                self.best_legal_solution.write("best_legal_solution")
+        ):
+            self.best_legal_solution = candidate_solution
+
+            logger.warning("New best legal solution found")
+            self.best_legal_solution.write("best_legal_solution")
 
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
+
             self.current_solution = candidate_solution
 
             if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
@@ -301,25 +307,29 @@ class ALNS:
                     self.combined_time_periods_in_week,
                     candidate_solution,
                 )
+
                 destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
-
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
+                logger.trace("Solution is better")
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
+                logger.trace("Solution is accepted")
+
         else:
             weight_update = self.WeightUpdate["IS_REJECTED"]
+            logger.trace("Solution is rejected")
 
         if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
 
-            # todo: this is copied from the Github-repo, but unsure if this is the correct way to do it.
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
             self.best_solution.write("heuristic_solution_2")
+
         self.update_weights(weight_update, destroy_id, repair_id)
 
     def select_operator(self, operators, weights):
@@ -331,6 +341,8 @@ class ALNS:
         """
 
         probabilities = self.get_probabilities(weights)
+        logger.trace(f"Probabilities: {probabilities}")
+
         selected_operator_id = self.random_state.choice(list(operators.keys()), p=probabilities)
         return operators[selected_operator_id], selected_operator_id
 
@@ -349,7 +361,6 @@ class ALNS:
         self.destroy_weights = self.initialize_weights(self.destroy_operators)
         for destroy_operator in self.destroy_operators:
             self.repair_weights[destroy_operator] = self.initialize_weights(self.repair_operators[destroy_operator])
-
 
     @staticmethod
     def initialize_weights(operators):
@@ -405,7 +416,7 @@ class ALNS:
         calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
         calculate_daily_rest_error(state, [destroy, repair], self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
 
-        #Updates the current states hard variables based on changed decision variables
+        # Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
