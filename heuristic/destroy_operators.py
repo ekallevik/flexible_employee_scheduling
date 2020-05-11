@@ -136,7 +136,7 @@ def get_weighted_probabilities(score):
     # todo: this probably has the potential for improvements
 
     # Shift all values by the max score, and flip the sign
-    upper_bound = max(score, 0)
+    upper_bound = max(max(score), 0)
     shifted_score = [-(value - upper_bound) for value in score]
     total_weight = sum(shifted_score)
     adjusted_score = [value / total_weight for value in shifted_score]
