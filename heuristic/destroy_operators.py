@@ -1,3 +1,5 @@
+from loguru import logger
+
 from heuristic.delta_calculations import calc_weekly_objective_function
 from heuristic.converter import remove_x
 
@@ -10,6 +12,8 @@ def worst_week_removal(competencies, time_periods_in_week, combined_time_periods
 
     destroy_set_shifts = destroy_shifts(competencies, employees, shifts_in_week, state,
                                         t_covered_by_shift_combined, worst_k_weeks)
+
+    logger.info(f"Destroyed {destroy_size} worst weeks: {worst_k_weeks}")
 
     return destroy_set_shifts, worst_k_weeks
 
@@ -32,6 +36,8 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
         competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
     )
 
+    logger.info(f"Destroyed {destroy_size} selected weeks: {selected_weeks}")
+
     return destroy_set_shifts, selected_weeks
 
 
@@ -43,6 +49,8 @@ def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covere
     destroy_set_shifts = destroy_shifts(
         competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
     )
+
+    logger.info(f"Destroyed {destroy_size} random weeks: {selected_weeks}")
 
     return destroy_set_shifts, selected_weeks
 
@@ -64,6 +72,8 @@ def random_weekend_removal(
         competencies, employees, shifts_at_day, state, t_covered_by_shift, selected_weeks
     )
 
+    logger.info(f"Destroyed {destroy_size} random weekends: {selected_weeks}")
+
     return destroy_set_shifts, selected_weeks
 
 
@@ -76,6 +86,8 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
 
     destroy_set = destroy_employees(competencies, employees, shifts, state,
                                     t_covered_by_shift_combined)
+
+    logger.info(f"Destroyed {destroy_size} worst employees")
 
     return destroy_set, employees
 
@@ -91,6 +103,8 @@ def weighted_random_employee_removal(
     destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
                                     t_covered_by_shift)
 
+    logger.info(f"Destroyed {destroy_size} selected employees")
+
     return destroy_set, selected_employees
 
 
@@ -102,6 +116,8 @@ def random_employee_removal(
 
     destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
                                     t_covered_by_shift)
+
+    logger.info(f"Destroyed {destroy_size} random employees")
 
     return destroy_set, selected_employees
 
@@ -132,8 +148,6 @@ def get_weighted_probabilities(score):
     Ensure that all probabilities in [0, 1], with the highest probability for the lowest
     score
     """
-
-    # todo: this probably has the potential for improvements
 
     # Shift all values by the max score, and flip the sign
     upper_bound = max(max(score), 0)
