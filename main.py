@@ -131,7 +131,7 @@ class ProblemRunner:
         """ Runs ESP, with an optional presolve with SDP """
 
         if self.sdp:
-            self.sdp.run_model()
+            self.run_sdp()
 
         self.esp.run_model()
 
