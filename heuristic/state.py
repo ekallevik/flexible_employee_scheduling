@@ -18,9 +18,10 @@ class State:
         self.objective_function_value = objective_function_value
         self.f = f
 
+
     def get_objective_value(self):
         return self.objective_function_value
-
+    
     def copy(self):
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
 
@@ -39,22 +40,22 @@ class State:
         "cover_multiple_demand_periods": self.hard_vars["cover_multiple_demand_periods"].copy(),
         "weekly_off_shift_error": self.hard_vars["weekly_off_shift_error"].copy(),
         "mapping_shift_to_demand": self.hard_vars["mapping_shift_to_demand"].copy(),
-        "delta_positive_contracted_hours": self.hard_vars["delta_positive_contracted_hours"].copy()
+        "delta_positive_contracted_hours": self.hard_vars["delta_positive_contracted_hours"].copy(),
+        "daily_rest_error": self.hard_vars["daily_rest_error"].copy()
         },
         copy(self.objective_function_value), copy(self.f))
 
 
     def write(self, filename):
         summasjon = defaultdict(float)
-        f = open(filename + ".sol", "w+")
+        f= open(filename + ".sol","w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
         for c,e,t in self.y:
             f.write(f"y[{c},{e},{t}] {int(self.y[c,e,t])}\n")
-
+            
         for e, t, v in self.x:
             f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
-
         for e,j in self.w:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 

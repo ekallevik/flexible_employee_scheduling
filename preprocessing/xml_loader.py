@@ -30,6 +30,7 @@ def get_employee_lists(root, competencies):
 
     emp = get_staff(root, competencies)
 
+
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
         for e in emp:

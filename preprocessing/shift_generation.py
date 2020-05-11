@@ -6,6 +6,7 @@ from preprocessing.demand_processing import (
     get_time_periods,
     get_time_steps,
 )
+from collections import defaultdict
 from preprocessing.preferences import generate_preferences
 from preprocessing.xml_loader import *
 from utils.const import (
@@ -56,7 +57,6 @@ def get_time_sets(root, competencies):
     days = get_days(root)
     number_of_weeks = int(len(days) / 7)
     periods = get_time_periods(root, competencies)
-
     return {
         "step": get_time_steps(root),
         "periods": periods["periods"],
@@ -225,7 +225,6 @@ def get_shifts_per_week(shifts_per_day):
             # get week and initialize tupledict
             week = int(day / 7)
             shifts_per_week[week] = []
-
         shifts_per_week[week].extend(shifts)
 
     return shifts_per_week
@@ -403,7 +402,6 @@ def get_t_covered_by_shift(shifts, time_sets):
         start = combined_time_periods.index(shift[0])
         t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
     return t_covered_by_shift
-
 
 
 def get_shift_lookup(shifts_per_day):
