@@ -1,15 +1,17 @@
 import numpy as np
 from heuristic.delta_calculations import *
-from collections import defaultdict
-from heuristic.destroy_operators import worst_week_removal, worst_employee_removal
-from heuristic.repair_operators import (
-    worst_week_repair,
-    worst_employee_repair,
-    worst_week_regret_repair,
-    worst_employee_regret_repair,
+from heuristic.destroy_operators import (
+    worst_employee_removal,
+    worst_week_removal,
+    random_week_removal,
+    weighted_random_week_removal,
+    random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 from functools import partial
+
+from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
+    worst_employee_repair, worst_employee_regret_repair
 
 
 class ALNS:
@@ -88,8 +90,63 @@ class ALNS:
             self.shifts_per_week,
             self.t_covered_by_shift,
         )
+
+        remove_random_week = partial(
+            random_week_removal,
+            self.competencies,
+            self.employees,
+            self.weeks,
+            self.shifts_per_week,
+            self.t_covered_by_shift,
+            self.random_state,
+        )
+
+        remove_weighted_random_week = partial(
+            weighted_random_week_removal,
+            self.competencies,
+            self.time_periods_in_week,
+            self.combined_time_periods_in_week,
+            self.employees,
+            self.weeks,
+            self.L_C_D,
+            self.shifts_per_week,
+            self.t_covered_by_shift,
+            self.random_state,
+        )
+
+        remove_random_weekend = partial(
+            random_weekend_removal,
+            self.competencies,
+            self.employees,
+            self.weeks,
+            self.shifts_at_day,
+            self.t_covered_by_shift,
+            self.random_state,
+        )
+
         remove_worst_employee = partial(
-            worst_employee_removal, self.shifts, self.t_covered_by_shift, self.competencies
+            worst_employee_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
+        )
+
+        remove_random_employee = partial(
+            random_employee_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
+            self.employees,
+            self.random_state,
+        )
+
+        remove_weighted_random_employee = partial(
+            weighted_random_employee_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
+            self.employees,
+            self.random_state,
         )
 
         repair_worst_week_regret = partial(
@@ -112,6 +169,22 @@ class ALNS:
             self.shifts_at_day,
             self.L_C_D,
             self.shifts_overlapping_t,
+        )
+
+        repair_worst_week_greedy = partial(
+            worst_week_repair,
+            self.shifts_per_week,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.employee_with_competencies,
+            self.employee_with_competency_combination,
+            self.demand,
+            self.time_step,
+            self.time_periods_in_week,
+            self.employees,
+            self.contracted_hours,
+            self.weeks,
+            self.shifts_at_day,
         )
 
         repair_worst_employee_regret = partial(
@@ -138,22 +211,6 @@ class ALNS:
             self.shifts_overlapping_t,
         )
 
-        repair_worst_week_greedy = partial(
-            worst_week_repair,
-            self.shifts_per_week,
-            self.competencies,
-            self.t_covered_by_shift,
-            self.employee_with_competencies,
-            self.employee_with_competency_combination,
-            self.demand,
-            self.time_step,
-            self.time_periods_in_week,
-            self.employees,
-            self.contracted_hours,
-            self.weeks,
-            self.shifts_at_day,
-        )
-
         repair_worst_employee_greedy = partial(
             worst_employee_repair,
             self.competencies,
@@ -171,10 +228,18 @@ class ALNS:
 
     
         operators = {
-                        remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-                        remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy]
-                    }
-                    
+            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_weighted_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy,
+            ],
+            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
+        }
+
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
@@ -216,7 +281,7 @@ class ALNS:
                 self.best_legal_solution = candidate_solution
                 print("Is legal")
                 self.best_legal_solution.write("best_legal_solution")
-                
+
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
             self.current_solution = candidate_solution
 
@@ -240,7 +305,6 @@ class ALNS:
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
-            
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
@@ -299,31 +363,16 @@ class ALNS:
         """ Provides a seeded random state to ensure a deterministic output over different runs """
         return np.random.RandomState(seed=0)
 
-    def add_destroy_operator(self, operators):
-        for operator in operators:
-            self.add_operator(self.destroy_operators, operator)
+    def add_destroy_and_repair_operators(self, operators):
+
+        for destroy_operator, repair_operator_set in operators.items():
+
+            self.destroy_operators[destroy_operator.func.__name__] = destroy_operator
+            self.add_repair_operator(destroy_operator.func.__name__, operators[destroy_operator])
 
     def add_repair_operator(self, destroy_operator_id, repair_operators):
         for new_operator in repair_operators:
             self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
-
-    def add_destroy_and_repair_operators(self, operators):
-        for key in operators.keys():
-            self.add_destroy_operator([key])
-            self.add_repair_operator(key.func.__name__, operators[key])
-
-    @staticmethod
-    def add_operator(operators, new_operator):
-        """
-        Adds a new operator to the given set. If new_operator is not a function a ValueError is raised.
-        :param operators: either self.destroy_operators or self.repair_operators
-        :param new_operator: the operator to add to the sets
-        """
-
-        if not callable(new_operator):
-            raise ValueError("new_operator must be a function")
-
-        operators[new_operator.func.__name__] = new_operator
 
     def calculate_objective(self, state, destroy, repair):
         destroy_repair_set = destroy + repair
