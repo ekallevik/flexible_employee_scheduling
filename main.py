@@ -35,6 +35,8 @@ class ProblemRunner:
         use non-default values
         """
 
+        logger.info(f"Setting up runner for {problem}")
+
         self.problem = problem
         self.data = shift_generation.load_data(problem)
 
@@ -61,6 +63,7 @@ class ProblemRunner:
 
         self.set_alns()
 
+        logger.info(f"Running ALNS with {iterations} iterations and {self.criterion}")
         self.alns.iterate(iterations)
 
         return self
@@ -156,6 +159,7 @@ class ProblemRunner:
         if self.sdp:
             self.run_sdp()
 
+        logger.info(f"Running ESP in mode {self.mode}")
         self.esp.run_model()
 
         return self
@@ -184,6 +188,7 @@ class ProblemRunner:
     def run_sdp(self):
         """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
+        logger.info("Running SDP")
         original_shifts = self.data["shifts"]["shifts"]
         self.sdp.run_model()
 
