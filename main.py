@@ -126,6 +126,11 @@ class ProblemRunner:
                 for c in self.data["competencies"]
                 for t in self.data["time"]["periods"][0]
             },
+            "daily_rest_error": {
+                (e, i): 0
+                for e in self.data["staff"]["employees"]
+                for i in self.data["time"]["days"]},
+
             "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
         }
 
