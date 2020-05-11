@@ -14,7 +14,7 @@ def set_weights():
 
     return{
         # Weight of fairness aspects. Rest, contracted hours and preferences should be treated as hours.
-        "rest": 20,
+        "rest": 0.5,
         "contracted hours": 2,
         "partial weekends": 8,
         "isolated working days": 10,
@@ -65,9 +65,6 @@ def get_weights(time_set, staff):
 
     weights = set_weights()
 
-    # Correct weights
-    weights["rest"] = correct_weight_contribution(weights["rest"])
-
     # Scale weights to hours
     weights["excess demand deviation factor"] = scale_weight_to_hours(weights["excess demand deviation factor"],
                                                                       time_set["step"])
@@ -83,21 +80,6 @@ def get_weights(time_set, staff):
     weights = scale_up_weights(weights, staff["employees"])
 
     return weights
-
-
-def correct_weight_contribution(weight):
-    """
-    Weekly rest contributes positively to the fairness score (if additional hours are granted), different from the
-    other fairness aspects. Thus it is necessary to correct the weight, so that it actually represents the intention
-    defined in set_weights.
-
-    NOTE:   Preferences are also contributing positively to the fairness score, but these respective weights are
-            corrected naturally in the generate_preferences-function.
-    """
-
-    weight = 1 / weight
-
-    return weight
 
 
 def scale_weight_to_hours(weight, time_step):

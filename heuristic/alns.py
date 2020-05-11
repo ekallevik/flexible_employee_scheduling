@@ -7,7 +7,7 @@ from heuristic.destroy_operators import (
     weighted_random_week_removal,
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
 )
-from heuristic.local_search_operators import illegal_week_swap
+from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 from functools import partial
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
@@ -22,8 +22,8 @@ class ALNS:
         self.best_legal_solution = state
 
         self.criterion = criterion
-        self.random_state = self.initialize_random_state()
-
+        self.random_state =  self.initialize_random_state()
+        
         self.destroy_operators = {}
         self.destroy_weights = {}
         self.repair_operators = defaultdict(dict)
@@ -33,7 +33,7 @@ class ALNS:
             "IS_BEST": 1.3,
             "IS_BETTER": 1.2,
             "IS_ACCEPTED": 1.1,
-            "IS_REJECTED": 0.9,
+            "IS_REJECTED": 0.9
         }
 
         # Sets
@@ -68,6 +68,11 @@ class ALNS:
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
 
         self.L_C_D = data["limit_on_consecutive_days"]
+
+        # Set for daily rest restriction
+        self.invalid_shifts = data["shifts"]["invalid_shifts"]
+        self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
+        self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -157,6 +162,9 @@ class ALNS:
             self.combined_time_periods_in_week,
             self.employees,
             self.contracted_hours,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
             self.weeks,
             self.shifts_at_day,
             self.L_C_D,
@@ -195,6 +203,9 @@ class ALNS:
             self.shifts_at_day,
             self.shifts_per_week,
             self.contracted_hours,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
             self.time_periods_in_week,
             self.time_step,
             self.shifts_overlapping_t,
@@ -215,6 +226,7 @@ class ALNS:
             self.shifts_at_day,
         )
 
+    
         operators = {
             remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
             remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
@@ -231,28 +243,23 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
+
     def iterate(self, iterations):
         for iteration in range(iterations):
             candidate_solution = self.current_solution.copy()
 
-            destroy_operator, destroy_operator_id = self.select_operator(
-                self.destroy_operators, self.destroy_weights
-            )
-            repair_operator, repair_operator_id = self.select_operator(
-                self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id]
-            )
+            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
 
             destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
             repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
 
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(
-                candidate_solution, destroy_operator_id, repair_operator_id
-            )
+            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
-            candidate_solution = self.current_solution.copy()
 
         candidate_solution.write("heuristic_solution_2")
+        
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -294,15 +301,12 @@ class ALNS:
                     self.combined_time_periods_in_week,
                     candidate_solution,
                 )
-                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
 
-
-            if (
-                candidate_solution.get_objective_value()
-                >= self.current_solution.get_objective_value()
-            ):
+            if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
@@ -311,6 +315,7 @@ class ALNS:
 
         if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
 
+            # todo: this is copied from the Github-repo, but unsure if this is the correct way to do it.
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
@@ -343,9 +348,8 @@ class ALNS:
     def initialize_destroy_and_repair_weights(self):
         self.destroy_weights = self.initialize_weights(self.destroy_operators)
         for destroy_operator in self.destroy_operators:
-            self.repair_weights[destroy_operator] = self.initialize_weights(
-                self.repair_operators[destroy_operator]
-            )
+            self.repair_weights[destroy_operator] = self.initialize_weights(self.repair_operators[destroy_operator])
+
 
     @staticmethod
     def initialize_weights(operators):
@@ -399,24 +403,11 @@ class ALNS:
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
         calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
+        calculate_daily_rest_error(state, [destroy, repair], self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
 
-        # Updates the current states hard variables based on changed decision variables
-        below_minimum_demand(
-            state,
-            destroy_repair_set,
-            self.employee_with_competencies,
-            self.demand,
-            self.competencies,
-            self.t_covered_by_shift,
-        )
-        above_maximum_demand(
-            state,
-            destroy_repair_set,
-            self.employee_with_competencies,
-            self.demand,
-            self.competencies,
-            self.t_covered_by_shift,
-        )
+        #Updates the current states hard variables based on changed decision variables
+        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
+        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         mapping_shift_to_demand(
