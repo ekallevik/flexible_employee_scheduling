@@ -18,13 +18,17 @@ from utils.log_formatter import LogFormatter
 formatter = LogFormatter()
 
 # Increase the level to get less output
+# Trace < Info < Debug < Warning < Error < Critical
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
+    "heuristic.alns": "TRACE",
+    "heuristic.destroy_operators": "TRACE",
+    "heuristic.repair_operators": "TRACE",
 }
 
 logger.remove()
-logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
+logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
@@ -34,6 +38,8 @@ class ProblemRunner:
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
         """
+
+        logger.info(f"Setting up runner for {problem}")
 
         self.problem = problem
         self.data = shift_generation.load_data(problem)
@@ -61,6 +67,7 @@ class ProblemRunner:
 
         self.set_alns()
 
+        logger.info(f"Running ALNS with {iterations} iterations and {self.criterion}")
         self.alns.iterate(iterations)
 
         return self
@@ -156,6 +163,7 @@ class ProblemRunner:
         if self.sdp:
             self.run_sdp()
 
+        logger.info(f"Running ESP in mode {self.mode}")
         self.esp.run_model()
 
         return self
@@ -184,6 +192,7 @@ class ProblemRunner:
     def run_sdp(self):
         """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
+        logger.info("Running SDP")
         original_shifts = self.data["shifts"]["shifts"]
         self.sdp.run_model()
 

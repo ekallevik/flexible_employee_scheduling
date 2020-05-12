@@ -98,7 +98,7 @@ def set_contracted_hours_for_employee(employee, schedule_row):
     try:
         employee.set_contracted_hours(float(schedule_row.find("WeekHours").text))
     except AttributeError:
-        logger.debug(
+        logger.info(
             f"ScheduleRow {employee.id} don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied"
         )
         employee.set_contracted_hours(DEFAULT_CONTRACTED_HOURS)
