@@ -20,21 +20,31 @@ class ShiftDesignConstraints:
         self.long_shifts = shift_sets["long_shifts"]
 
         # Adding constraints
-        self.add_minimum_demand_coverage(var.x)
+        self.add_minimum_demand_coverage(var.x, var.mu)
+        self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_demand(var.x, var.delta)
         self.add_mapping_x_to_y(var.x, var.y)
         self.add_short_shift_duration(var.y, var.rho)
         self.add_long_shift_duration(var.y, var.rho)
 
     # Constraint definitions
-    def add_minimum_demand_coverage(self, x):
+    def add_minimum_demand_coverage(self, x, mu):
         self.model.addConstrs(
             (
                 quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                >= quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c,t)))
+                == quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c,t)))
+                + mu[t]
                 for t in self.time_periods_combined
             ),
             name="minimum_demand_coverage",
+        )
+
+    def add_maximum_demand_coverage(self, mu):
+        self.model.addConstrs(
+            (
+                mu[t] <= quicksum(self.demand["max"][c,t] - self.demand["min"][c,t] for c in self.competencies)
+                for t in self.time_periods_combined
+            )
         )
 
     def add_deviation_from_demand(self, x, delta):

@@ -15,6 +15,7 @@ class ShiftDesignVariables:
 
         self.x = self.add_x()
         self.y = self.add_y()
+        self.mu = self.add_mu()
         self.delta = self.add_delta()
         self.rho = self.add_rho()
 
@@ -23,6 +24,9 @@ class ShiftDesignVariables:
 
     def add_y(self):
         return self.model.addVars(self.shifts, vtype=GRB.BINARY, name="y")
+
+    def add_mu(self):
+        return self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="mu")
 
     def add_delta(self):
         plus = {(c,t): 0 for c in self.competencies for t in self.time_periods[c]}
