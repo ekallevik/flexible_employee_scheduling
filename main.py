@@ -160,7 +160,7 @@ class ProblemRunner:
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
 
-        logger.info(f"Running ESP in mode {self.mode} with {len(self.data['shifts']['shifts'])}")
+        logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
         self.esp.run_model()
 
         return self
