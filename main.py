@@ -14,6 +14,7 @@ from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
+from utils.weights import get_weights
 
 formatter = LogFormatter()
 
@@ -142,7 +143,7 @@ class ProblemRunner:
         }
 
         objective_function, f = calculate_objective_function(self.data, soft_variables,
-                                                             self.weights, candidate_solution)
+                                                             self.weights, candidate_solution["w"])
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
