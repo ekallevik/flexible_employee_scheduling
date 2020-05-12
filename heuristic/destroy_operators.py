@@ -84,8 +84,11 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
     employees = []
     employees.extend(f_sorted[:destroy_size] + f_sorted[-destroy_size:])
 
-    destroy_set = destroy_employees(competencies, employees, shifts, state,
-                                    t_covered_by_shift_combined)
+    destroy_set = destroy_employees(
+        competencies, employees, shifts, state, t_covered_by_shift_combined
+    )
+
+    logger.info(f"Destroyed {destroy_size} worst employees: {employees}")
 
     logger.info(f"Destroyed {destroy_size} worst employees")
 
@@ -100,8 +103,11 @@ def weighted_random_employee_removal(
 
     selected_employees = list(random_state.choice(employees, size=destroy_size, p=probabilities))
 
-    destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
-                                    t_covered_by_shift)
+    destroy_set = destroy_employees(
+        competencies, selected_employees, shifts, state, t_covered_by_shift
+    )
+
+    logger.info(f"Destroyed {destroy_size} selected employees: {selected_employees}")
 
     logger.info(f"Destroyed {destroy_size} selected employees")
 
@@ -114,8 +120,11 @@ def random_employee_removal(
 
     selected_employees = random_state.choice(employees, size=destroy_size)
 
-    destroy_set = destroy_employees(competencies, selected_employees, shifts, state,
-                                    t_covered_by_shift)
+    destroy_set = destroy_employees(
+        competencies, selected_employees, shifts, state, t_covered_by_shift
+    )
+
+    logger.info(f"Destroyed {destroy_size} random employees: : {selected_employees}")
 
     logger.info(f"Destroyed {destroy_size} random employees")
 
