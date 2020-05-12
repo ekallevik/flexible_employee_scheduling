@@ -32,10 +32,10 @@ class ALNS:
         self.repair_weights = {}
 
         self.WeightUpdate = {
-            "IS_BEST": 1.3,
-            "IS_BETTER": 1.2,
-            "IS_ACCEPTED": 1.1,
-            "IS_REJECTED": 0.9
+            "IS_BEST": 1.09,
+            "IS_BETTER": 1.06,
+            "IS_ACCEPTED": 1.03,
+            "IS_REJECTED": 0.97
         }
 
         # Sets
@@ -248,7 +248,7 @@ class ALNS:
     def iterate(self, iterations):
         for iteration in range(iterations):
 
-            if iteration % 25:
+            if iteration % 25 == 0:
                 logger.trace(f"Iteration: {iteration}")
 
             candidate_solution = self.current_solution.copy()
@@ -341,7 +341,13 @@ class ALNS:
         """
 
         probabilities = self.get_probabilities(weights)
-        logger.trace(f"Probabilities: {probabilities}")
+
+        message = f"Probabilities for " \
+                  f"{'Destroy' if 'worst_week_removal' in operators.keys() else 'Repair'} ["
+        for p in probabilities:
+            message += f" {p*100:.1f}%"
+        message += " ]"
+        logger.trace(message)
 
         selected_operator_id = self.random_state.choice(list(operators.keys()), p=probabilities)
         return operators[selected_operator_id], selected_operator_id

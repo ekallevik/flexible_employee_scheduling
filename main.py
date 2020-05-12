@@ -18,13 +18,17 @@ from utils.log_formatter import LogFormatter
 formatter = LogFormatter()
 
 # Increase the level to get less output
+# Trace < Info < Debug < Warning < Error < Critical
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
+    "heuristic.alns": "TRACE",
+    "heuristic.destroy_operators": "TRACE",
+    "heuristic.repair_operators": "TRACE",
 }
 
 logger.remove()
-logger.add(sys.stderr, format=formatter.format, filter=level_per_module)
+logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
