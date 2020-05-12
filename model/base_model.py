@@ -1,4 +1,6 @@
 from gurobipy import *
+from loguru import logger
+
 from utils.weights import get_weights
 
 
@@ -32,6 +34,7 @@ class BaseModel:
 
     def run_model(self):
         self.model.optimize()
+        logger.error(f"Model is {self.model.status}")
 
     def get_variables(self):
         """ This method is intended to be used in all subclasses of BaseModel"""

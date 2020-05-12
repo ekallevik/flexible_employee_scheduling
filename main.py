@@ -50,15 +50,15 @@ class ProblemRunner:
         self.log_to_console = 1
 
         self.sdp = None
+        if with_sdp:
+            self.set_sdp()
+            self.run_sdp()
 
         self.mode = mode
         self.esp = None
 
         self.criterion = GreedyCriterion()
         self.alns = None
-
-        if with_sdp:
-            self.set_sdp()
 
         self.set_esp()
 
@@ -160,10 +160,7 @@ class ProblemRunner:
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
 
-        if self.sdp:
-            self.run_sdp()
-
-        logger.info(f"Running ESP in mode {self.mode}")
+        logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
         self.esp.run_model()
 
         return self
@@ -192,8 +189,9 @@ class ProblemRunner:
     def run_sdp(self):
         """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
-        logger.info("Running SDP")
         original_shifts = self.data["shifts"]["shifts"]
+        logger.info(f"Running SDP with {len(original_shifts)} shifts")
+
         self.sdp.run_model()
 
         used_shifts = self.sdp.get_used_shifts()
