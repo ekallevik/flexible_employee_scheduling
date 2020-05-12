@@ -90,8 +90,6 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
 
     logger.info(f"Destroyed {destroy_size} worst employees: {employees}")
 
-    logger.info(f"Destroyed {destroy_size} worst employees")
-
     return destroy_set, employees
 
 
@@ -108,8 +106,6 @@ def weighted_random_employee_removal(
     )
 
     logger.info(f"Destroyed {destroy_size} selected employees: {selected_employees}")
-
-    logger.info(f"Destroyed {destroy_size} selected employees")
 
     return destroy_set, selected_employees
 

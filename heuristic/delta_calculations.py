@@ -232,7 +232,6 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
     g = min(state.f.values())
 
     penalty = 10 * hard_constraint_penalties(state)
-    logger.info(f"Penalty: {penalty}")
 
     objective_function_value = (
             sum(state.f.values())
@@ -240,7 +239,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
             - weights["excess demand deviation factor"] * abs(sum(state.soft_vars["deviation_from_ideal_demand"].values()))
             - penalty)
 
-    logger.info(f"Delta-objective: {objective_function_value: .2f}")
+    logger.info(f"Delta-objective: {objective_function_value: .2f} (incl. penalty: {penalty})")
 
     state.objective_function_value = objective_function_value
 
