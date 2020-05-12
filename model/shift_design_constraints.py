@@ -32,7 +32,7 @@ class ShiftDesignConstraints:
         self.model.addConstrs(
             (
                 quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
-                == quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c,t)))
+                == quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c, t)))
                 + mu[t]
                 for t in self.time_periods_combined
             ),
@@ -42,16 +42,17 @@ class ShiftDesignConstraints:
     def add_maximum_demand_coverage(self, mu):
         self.model.addConstrs(
             (
-                mu[t] <= quicksum(self.demand["max"][c,t] - self.demand["min"][c,t] for c in self.competencies)
+                mu[t] <= quicksum(self.demand["max"][c, t] - self.demand["min"][c, t] for c in self.competencies)
                 for t in self.time_periods_combined
             ),
             name="maximum_demand_coverage"
         )
 
-    def add_deviation_from_demand(self, x, delta):
+    def add_deviation_from_demand(self, mu, delta):
         self.model.addConstrs(
             (
-                quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
+                mu[t]
+                + self.demand["min"][c, t]
                 - self.demand["ideal"][c, t]
                 == delta["plus"][c, t] - delta["minus"][c, t]
                 for c in self.competencies
