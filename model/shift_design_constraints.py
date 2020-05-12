@@ -44,7 +44,8 @@ class ShiftDesignConstraints:
             (
                 mu[t] <= quicksum(self.demand["max"][c,t] - self.demand["min"][c,t] for c in self.competencies)
                 for t in self.time_periods_combined
-            )
+            ),
+            name="maximum_demand_coverage"
         )
 
     def add_deviation_from_demand(self, x, delta):
