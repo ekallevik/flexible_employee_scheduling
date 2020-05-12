@@ -21,7 +21,11 @@ class ShiftDesignModel:
         self.shift_sets = data["shifts"]
 
         self.var = ShiftDesignVariables(
-            model=self.model, shift_sets=self.shift_sets, time_periods=self.time_periods, competencies=self.competencies
+            model=self.model,
+            shift_sets=self.shift_sets,
+            time_periods=self.time_periods,
+            time_periods_combined=self.time_periods_combined,
+            competencies=self.competencies
         )
 
         self.constraints = ShiftDesignConstraints(

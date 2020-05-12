@@ -22,7 +22,7 @@ class ShiftDesignConstraints:
         # Adding constraints
         self.add_minimum_demand_coverage(var.x, var.mu)
         self.add_maximum_demand_coverage(var.mu)
-        self.add_deviation_from_demand(var.x, var.delta)
+        self.add_deviation_from_demand(var.mu, var.delta)
         self.add_mapping_x_to_y(var.x, var.y)
         self.add_short_shift_duration(var.y, var.rho)
         self.add_long_shift_duration(var.y, var.rho)
@@ -33,7 +33,7 @@ class ShiftDesignConstraints:
             (
                 quicksum(x[t_marked, v] for t_marked, v in self.shifts_overlapping_t[t])
                 == quicksum(self.demand["min"][c, t] for c in self.competencies if self.demand["min"].get((c, t)))
-                + mu[t]
+                + quicksum(mu[c, t] for c in self.competencies)
                 for t in self.time_periods_combined
             ),
             name="minimum_demand_coverage",
@@ -42,8 +42,9 @@ class ShiftDesignConstraints:
     def add_maximum_demand_coverage(self, mu):
         self.model.addConstrs(
             (
-                mu[t] <= quicksum(self.demand["max"][c, t] - self.demand["min"][c, t] for c in self.competencies)
-                for t in self.time_periods_combined
+                mu[c, t] <= self.demand["max"][c, t] - self.demand["min"][c, t]
+                for c in self.competencies
+                for t in self.time_periods[c]
             ),
             name="maximum_demand_coverage"
         )
@@ -51,7 +52,7 @@ class ShiftDesignConstraints:
     def add_deviation_from_demand(self, mu, delta):
         self.model.addConstrs(
             (
-                mu[t]
+                mu[c, t]
                 + self.demand["min"][c, t]
                 - self.demand["ideal"][c, t]
                 == delta["plus"][c, t] - delta["minus"][c, t]

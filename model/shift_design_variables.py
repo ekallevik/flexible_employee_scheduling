@@ -2,7 +2,7 @@ from gurobipy import *
 
 
 class ShiftDesignVariables:
-    def __init__(self, model, shift_sets, time_periods, competencies):
+    def __init__(self, model, shift_sets, time_periods, time_periods_combined, competencies):
 
         self.model = model
 
@@ -11,6 +11,7 @@ class ShiftDesignVariables:
         self.long_shifts = shift_sets["long_shifts"]
 
         self.time_periods = time_periods
+        self.time_periods_combined = time_periods_combined
         self.competencies = competencies
 
         self.x = self.add_x()
@@ -26,7 +27,10 @@ class ShiftDesignVariables:
         return self.model.addVars(self.shifts, vtype=GRB.BINARY, name="y")
 
     def add_mu(self):
-        return self.model.addVars(self.time_periods, vtype=GRB.INTEGER, name="mu")
+        mu = {(c, t): 0 for c in self.competencies for t in self.time_periods[c]}
+        return self.model.addVars(
+            mu, vtype=GRB.INTEGER, name="mu"
+        )
 
     def add_delta(self):
         plus = {(c,t): 0 for c in self.competencies for t in self.time_periods[c]}
