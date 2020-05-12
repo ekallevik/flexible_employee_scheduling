@@ -62,13 +62,12 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def run_alns(self, iterations=1000):
+    def run_alns(self, iterations=None, runtime=15):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns()
 
-        logger.info(f"Running ALNS with {iterations} iterations and {self.criterion}")
-        self.alns.iterate(iterations)
+        self.alns.iterate(iterations, runtime)
 
         return self
 
