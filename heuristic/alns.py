@@ -318,7 +318,7 @@ class ALNS:
         ):
             self.best_legal_solution = candidate_solution
 
-            logger.warning("New best legal solution found")
+            logger.critical("Candidate is legal")
             self.best_legal_solution.write("best_legal_solution")
 
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
@@ -326,7 +326,9 @@ class ALNS:
             self.current_solution = candidate_solution
 
             if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
+
                 candidate_solution.write("before_breaking_weekly")
+
                 destroy_set, repair_set = illegal_week_swap(
                     self.shifts_per_week,
                     self.employees,
@@ -348,18 +350,20 @@ class ALNS:
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
-                logger.trace("Solution is better")
+                logger.trace("Candidate is better")
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
-                logger.trace("Solution is accepted")
+                logger.trace("Candidate is accepted")
 
         else:
             weight_update = self.WeightUpdate["IS_REJECTED"]
-            logger.trace("Solution is rejected")
+            logger.trace("Candidate is rejected")
 
         if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
 
             weight_update = self.WeightUpdate["IS_BEST"]
+            logger.trace("Candidate is best")
+
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
             self.best_solution.write("heuristic_solution_2")

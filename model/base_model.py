@@ -27,10 +27,7 @@ class BaseModel:
         self.var = None
 
         # heuristic
-        #self.employees = data["staff"]["employees"]
-        #self.weeks = data["time"]["weeks"]
         self.off_shift_in_week = data["off_shifts"]["off_shifts_per_week"]
-
 
     def run_model(self):
         self.model.optimize()

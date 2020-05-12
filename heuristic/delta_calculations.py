@@ -253,7 +253,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
 
         if setting == "worst":
             value[j] = (
-                        sum(min(100, state.w[e,j][1]) for e in employees)
+                        sum(min(100, state.w[e, j][1]) for e in employees)
                         - sum(abs(state.soft_vars["deviation_from_ideal_demand"][c,t]) for c in competencies for t in time_periods_in_week[c, j])
                         - sum(state.soft_vars["partial_weekends"][e, (5 + j * 7)] for e in employees)
                         - sum(state.soft_vars["isolated_working_days"][e, i + 1] + state.soft_vars["isolated_off_days"][e, i + 1] for e in employees for i in range(len(days_in_week)-2))
@@ -330,7 +330,9 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                             )
 
                 - 100 * competency_score
-                - 10 * sum(state.hard_vars["daily_rest_error"][e,i] for e in employees for i in days_in_week)
+                - 10 * sum(state.hard_vars["daily_rest_error"][e,i]
+                           for e in employees for i in days_in_week
+                           )
                 )
 
     if setting == "worst":
