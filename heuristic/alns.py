@@ -314,16 +314,6 @@ class ALNS:
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
 
-        if (
-                candidate_solution.get_objective_value()
-                >= self.best_legal_solution.get_objective_value()
-                and hard_constraint_penalties(candidate_solution) == 0
-        ):
-            self.best_legal_solution = candidate_solution
-
-            logger.critical("Candidate is legal")
-            self.best_legal_solution.write("best_legal_solution")
-
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
