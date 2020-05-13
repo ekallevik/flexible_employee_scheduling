@@ -38,7 +38,7 @@ class ShiftDesignConstraints:
                 ==
                 quicksum(
                     self.demand["min"][c, t]
-                    for c in self.competencies if self.demand["min"].get((c, t))
+                    for c in self.competencies if (c, t) in self.demand["min"]
                 )
                 + mu[t]
                 for t in self.time_periods_combined
