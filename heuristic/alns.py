@@ -1,5 +1,9 @@
+from datetime import timedelta
+
 import numpy as np
 from loguru import logger
+
+from timeit import default_timer as timer
 
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
@@ -18,13 +22,14 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 
 class ALNS:
     def __init__(self, state, data, criterion):
+
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
 
         self.criterion = criterion
-        self.random_state =  self.initialize_random_state()
+        self.random_state = self.initialize_random_state()
 
         self.destroy_operators = {}
         self.destroy_weights = {}
@@ -228,7 +233,6 @@ class ALNS:
             self.shifts_at_day,
         )
 
-
         operators = {
             remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
             remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
@@ -245,25 +249,53 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
-    def iterate(self, iterations):
-        for iteration in range(iterations):
+    def iterate(self, iterations=None, runtime=None):
+        """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-            if iteration % 25 == 0:
-                logger.trace(f"Iteration: {iteration}")
+        candidate_solution = None
+        iteration = 0
+        runtime_in_seconds = runtime * 60 if runtime else None
 
-            candidate_solution = self.current_solution.copy()
+        start = timer()
 
-            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+        if not iterations:
 
-            destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
-            repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+            logger.warning(f"Running ALNS for {runtime} minutes")
 
-            self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+            while timer() < start + runtime_in_seconds:
+                candidate_solution = self.perform_iteration(iteration)
+                iteration += 1
 
+        else:
 
-        candidate_solution.write("heuristic_solution_2")
+            logger.warning(f"Running ALNS for {iterations} iterations")
+
+            for iteration in range(iterations):
+                candidate_solution = self.perform_iteration(iteration)
+
+        # Add a newline after the output from the last iteration
+        print()
+        logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
+                       f" {timer() - start:.2f}s ")
+
+        candidate_solution.write("solutions/heuristic_solution_2")
+
+    def perform_iteration(self, iteration):
+
+        # Add a newline between the output of each iteration
+        print()
+        logger.trace(f"Iteration: {iteration}")
+
+        candidate_solution = self.current_solution.copy()
+        destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+        repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+
+        destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
+        repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+
+        self.calculate_objective(candidate_solution, destroy_set, repair_set)
+        self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+        return candidate_solution
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
