@@ -47,7 +47,7 @@ class State:
 
     def write(self, filename):
         summasjon = defaultdict(float)
-        f = open(f"solutions/{filename}.sol", "w+")
+        f = open(f"{filename}.sol", "w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
         for c,e,t in self.y:
