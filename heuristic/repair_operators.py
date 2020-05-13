@@ -344,7 +344,7 @@ def worst_employee_regret_repair(   competencies, t_covered_by_shift, employee_w
             #Stores the objective function for this employee
             employee_objective_functions[e] = regret_objective_function(state, e, off_shifts, saturdays, days, L_C_D, weeks, contracted_hours, competencies, [shift[0]], competency_score)
             #Is needed to set the decision variable back to 0
-            daily_destroy = set_x(state, t_covered_by_shift, e, shift[0], shift[1], 0, y_s)
+            daily_destroy = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 0, y_s)]
         
         #if(len(employee_objective_functions.keys()) == 0):
          #   return repair_set
