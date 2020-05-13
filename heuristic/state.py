@@ -1,6 +1,9 @@
 from copy import copy
 from collections import defaultdict
 
+from heuristic.delta_calculations import hard_constraint_penalties
+
+
 class State:
     def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
 
@@ -20,7 +23,14 @@ class State:
 
     def get_objective_value(self):
         return self.objective_function_value
-    
+
+    def is_legal(self):
+        """ Returns True if all hard_vars is 0, otherwise will return False """
+
+        return not any(self.hard_vars.values())
+
+
+
     def copy(self):
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
 

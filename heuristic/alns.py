@@ -19,6 +19,7 @@ from functools import partial
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair
 
+from timeit import default_timer as timer
 
 class ALNS:
     def __init__(self, state, criterion, data, objective_weights):
@@ -39,7 +40,9 @@ class ALNS:
         self.repair_weights = {}
 
         self.WeightUpdate = {
-            "IS_BEST": 1.09,
+            "IS_BEST_AND_LEGAL": 1.50,
+            "IS_LEGAL": 1.30,
+            "IS_BEST": 1.12,
             "IS_BETTER": 1.06,
             "IS_ACCEPTED": 1.03,
             "IS_REJECTED": 0.97
@@ -359,9 +362,25 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_REJECTED"]
             logger.trace("Candidate is rejected")
 
-        if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
+        if candidate_solution.is_legal():
+
+            if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
+                logger.critical(f"Legal, best solution found")
+                weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
+                self.best_legal_solution = candidate_solution
+                self.best_legal_solution.write("best_legal_solution")
+                self.update_best_solution(candidate_solution)
+
+            elif candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value():
+                logger.warning("Legal solution found")
+                weight_update = self.WeightUpdate["IS_LEGAL"]
+                self.best_legal_solution = candidate_solution
+                self.best_legal_solution.write("best_legal_solution")
+
+        elif candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
 
             weight_update = self.WeightUpdate["IS_BEST"]
+            self.update_best_solution(candidate_solution)
             logger.trace("Candidate is best")
 
             self.best_solution = candidate_solution
@@ -369,6 +388,11 @@ class ALNS:
             self.best_solution.write("heuristic_solution_2")
 
         self.update_weights(weight_update, destroy_id, repair_id)
+
+    def update_best_solution(self, candidate_solution):
+        self.best_solution = candidate_solution
+        self.current_solution = candidate_solution
+        self.best_solution.write("heuristic_solution_2")
 
     def select_operator(self, operators, weights):
         """
