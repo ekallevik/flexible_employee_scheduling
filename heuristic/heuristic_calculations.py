@@ -140,7 +140,7 @@ def calculate_f_for_employee(data, e, soft_vars, weights, w):
 
     f = (
         weights["rest"] * sum(
-            w[e, j][1]
+            min(100, w[e, j][1])
             for j in data["time"]["weeks"]
         )
 
@@ -183,5 +183,5 @@ def calculate_objective_function(data, soft_vars, weights, w):
         - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
 
-    logger.info(f"Total-objective: {objective_function_value: .2f}")
+    logger.info(f"Initial objective: {objective_function_value: .2f}")
     return objective_function_value, f

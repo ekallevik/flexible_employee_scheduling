@@ -114,7 +114,7 @@ def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights):
 
     f = (
         sum(
-            weights["rest"] * state.w[e, j][1]
+            weights["rest"] * min(100, state.w[e, j][1])
             - weights["contracted hours"][e] * state.soft_vars["deviation_contracted_hours"][e, j]
             for j in weeks
         )
@@ -358,6 +358,3 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
             - 10 * state.hard_vars["delta_positive_contracted_hours"][employee]
             - 100 * competency_score
     )
-
-    
-
