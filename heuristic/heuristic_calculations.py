@@ -2,6 +2,8 @@ from collections import defaultdict
 from operator import itemgetter
 from copy import copy
 
+from loguru import logger
+
 
 def calculate_deviation_from_demand(data, y):
     delta = {}
@@ -122,32 +124,64 @@ def calculate_consecutive_days(data, x):
     return consecutive_days
 
 
-def calculate_f(data, soft_vars, w, employees=None):
-    if employees == None:
+def calculate_f(data, soft_vars, weights, w, employees=None):
+
+    if not employees:
         employees = data["staff"]["employees"]
+
     f = {}
     for e in employees:
-        f[e] = (
-            sum(w[e, j][1] for j in data["time"]["weeks"])
-            - sum(soft_vars["deviation_contracted_hours"][e, j] for j in data["time"]["weeks"])
-            - sum(soft_vars["partial_weekends"][e, i] for i in data["time"]["saturdays"])
-            - sum(
-                soft_vars["isolated_working_days"][e, i + 1]
-                + soft_vars["isolated_off_days"][e, i + 1]
-                for i in range(data["time"]["number_of_days"] - 2)
-            )
-            - sum(
-                soft_vars["consecutive_days"][e, i]
-                for i in range(data["time"]["number_of_days"] - data["limit_on_consecutive_days"])
-            )
-        )
+        f[e] = calculate_f_for_employee(data, e, soft_vars, weights, w)
+
     return f
 
 
-def calculate_objective_function(data, soft_vars, w):
-    f = calculate_f(data, soft_vars, w)
-    g = min(f.values())
-    objective_function_value = (
-        sum(f.values()) + g - abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
+def calculate_f_for_employee(data, e, soft_vars, weights, w):
+
+    f = (
+        weights["rest"] * sum(
+            min(100, w[e, j][1])
+            for j in data["time"]["weeks"]
+        )
+
+        - weights["contracted hours"][e] * sum(
+            soft_vars["deviation_contracted_hours"][e, j]
+            for j in data["time"]["weeks"]
+        )
+
+
+        - weights["partial weekends"] * sum(
+            soft_vars["partial_weekends"][e, i]
+            for i in data["time"]["saturdays"]
+        )
+
+        - sum(
+            weights["isolated working days"] * soft_vars["isolated_working_days"][e, i + 1]
+            + weights["isolated off days"] * soft_vars["isolated_off_days"][e, i + 1]
+            for i in range(data["time"]["number_of_days"] - 2)
+        )
+
+        - weights["consecutive days"] * sum(
+            soft_vars["consecutive_days"][e, i]
+            for i in range(data["time"]["number_of_days"] - data["limit_on_consecutive_days"])
+        )
     )
+
+    return f
+
+
+def calculate_objective_function(data, soft_vars, weights, w):
+
+    f = calculate_f(data, soft_vars, weights, w)
+    g = min(f.values())
+
+    # todo: Split demand deviation into positive and negative
+
+    objective_function_value = (
+        sum(f.values())
+        + g
+        - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
+    )
+
+    logger.info(f"Initial objective: {objective_function_value: .2f}")
     return objective_function_value, f
