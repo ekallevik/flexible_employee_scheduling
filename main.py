@@ -14,6 +14,7 @@ from model.shift_design_model import ShiftDesignModel
 from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
+from utils.weights import get_weights
 
 formatter = LogFormatter()
 
@@ -43,6 +44,7 @@ class ProblemRunner:
 
         self.problem = problem
         self.data = shift_generation.load_data(problem)
+        self.weights = get_weights(self.data["time"], self.data["staff"])
 
         # Standard Gurobi-config
         self.mip_focus = "default"
@@ -62,13 +64,12 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def run_alns(self, iterations=1000):
+    def run_alns(self, iterations=None, runtime=15):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns()
 
-        logger.info(f"Running ALNS with {iterations} iterations and {self.criterion}")
-        self.alns.iterate(iterations)
+        self.alns.iterate(iterations, runtime)
 
         return self
 
@@ -141,13 +142,12 @@ class ProblemRunner:
             "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
         }
 
-        objective_function, f = calculate_objective_function(
-            self.data, soft_variables, candidate_solution["w"]
-        )
+        objective_function, f = calculate_objective_function(self.data, soft_variables,
+                                                             self.weights, candidate_solution["w"])
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.data, self.criterion)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights)
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """

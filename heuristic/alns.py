@@ -1,5 +1,9 @@
+from datetime import timedelta
+
 import numpy as np
 from loguru import logger
+
+from timeit import default_timer as timer
 
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
@@ -18,14 +22,17 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 from timeit import default_timer as timer
 
 class ALNS:
-    def __init__(self, state, data, criterion):
+    def __init__(self, state, criterion, data, objective_weights):
+
+        self.objective_weights = objective_weights
+
         self.initial_solution = state
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
 
         self.criterion = criterion
-        self.random_state =  self.initialize_random_state()
+        self.random_state = self.initialize_random_state()
 
         self.destroy_operators = {}
         self.destroy_weights = {}
@@ -231,7 +238,6 @@ class ALNS:
             self.shifts_at_day,
         )
 
-
         operators = {
             remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
             remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
@@ -248,25 +254,53 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
-    def iterate(self, iterations):
-        for iteration in range(iterations):
+    def iterate(self, iterations=None, runtime=None):
+        """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-            if iteration % 25 == 0:
-                logger.trace(f"Iteration: {iteration}")
+        candidate_solution = None
+        iteration = 0
+        runtime_in_seconds = runtime * 60 if runtime else None
 
-            candidate_solution = self.current_solution.copy()
+        start = timer()
 
-            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+        if not iterations:
 
-            destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
-            repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+            logger.warning(f"Running ALNS for {runtime} minutes")
 
-            self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+            while timer() < start + runtime_in_seconds:
+                candidate_solution = self.perform_iteration(iteration)
+                iteration += 1
 
+        else:
 
-        candidate_solution.write("heuristic_solution_2")
+            logger.warning(f"Running ALNS for {iterations} iterations")
+
+            for iteration in range(iterations):
+                candidate_solution = self.perform_iteration(iteration)
+
+        # Add a newline after the output from the last iteration
+        print()
+        logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
+                       f" {timer() - start:.2f}s ")
+
+        candidate_solution.write("solutions/heuristic_solution_2")
+
+    def perform_iteration(self, iteration):
+
+        # Add a newline between the output of each iteration
+        print()
+        logger.trace(f"Iteration: {iteration}")
+
+        candidate_solution = self.current_solution.copy()
+        destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+        repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+
+        destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
+        repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+
+        self.calculate_objective(candidate_solution, destroy_set, repair_set)
+        self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+        return candidate_solution
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -280,12 +314,24 @@ class ALNS:
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
 
+        if (
+                candidate_solution.get_objective_value()
+                >= self.best_legal_solution.get_objective_value()
+                and hard_constraint_penalties(candidate_solution) == 0
+        ):
+            self.best_legal_solution = candidate_solution
+
+            logger.critical("Candidate is legal")
+            self.best_legal_solution.write("best_legal_solution")
+
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
 
             if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
+
                 candidate_solution.write("before_breaking_weekly")
+
                 destroy_set, repair_set = illegal_week_swap(
                     self.shifts_per_week,
                     self.employees,
@@ -307,14 +353,14 @@ class ALNS:
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
-                logger.trace("Solution is better")
+                logger.trace("Candidate is better")
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
-                logger.trace("Solution is accepted")
+                logger.trace("Candidate is accepted")
 
         else:
             weight_update = self.WeightUpdate["IS_REJECTED"]
-            logger.trace("Solution is rejected")
+            logger.trace("Candidate is rejected")
 
         if candidate_solution.is_legal():
 
@@ -335,6 +381,11 @@ class ALNS:
 
             weight_update = self.WeightUpdate["IS_BEST"]
             self.update_best_solution(candidate_solution)
+            logger.trace("Candidate is best")
+
+            self.best_solution = candidate_solution
+            self.current_solution = candidate_solution
+            self.best_solution.write("heuristic_solution_2")
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
@@ -453,8 +504,8 @@ class ALNS:
             self.saturdays,
             self.L_C_D,
             self.days,
-            self.competencies,
             self.weeks,
+            self.objective_weights
         )
 
     def get_best_solution_value(self):

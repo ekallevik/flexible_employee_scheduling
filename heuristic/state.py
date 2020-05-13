@@ -15,7 +15,7 @@ class State:
         #Soft Variables
         self.soft_vars = soft_vars
 
-        # #Hard Penalty Variables
+        # Hard Penalty Variables
         self.hard_vars = hard_vars
 
         self.objective_function_value = objective_function_value
@@ -57,7 +57,7 @@ class State:
 
     def write(self, filename):
         summasjon = defaultdict(float)
-        f = open(f"solutions/{filename}.sol", "w+")
+        f = open(f"{filename}.sol", "w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
         for c,e,t in self.y:

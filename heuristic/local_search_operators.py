@@ -76,7 +76,8 @@ def illegal_week_swap(
             repair_set.append(set_x(state, t_covered_by_shift, employee[0], employee[1][0], employee[1][1], 1))
             destroy_set.append(remove_x(state, t_covered_by_shift, competencies, emp, employee[1][0], employee[1][1]))
     return destroy_set, repair_set
-            
+
+
 def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day, weeks, t_covered_by_shift, contracted_hours, time_periods_in_week, competencies):
     destroy_set = []
     repair_set = []

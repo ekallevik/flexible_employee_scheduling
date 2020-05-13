@@ -307,14 +307,13 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
 
 
 
-def worst_employee_regret_repair(   competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination, demand,
-                                    all_shifts, off_shifts, saturdays, days, L_C_D, weeks, shifts_at_day, shifts_in_week, contracted_hours,
-                                    invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest,
-                                    time_periods_in_week, time_step, shifts_overlapping_t, state, destroy_set, employees_changed):
+def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with_competencies, employee_with_competency_combination, demand,
+                                all_shifts, off_shifts, saturdays, days, L_C_D, weeks, shifts_at_day, shifts_in_week, contracted_hours,
+                                invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest,
+                                time_periods_in_week, time_step, shifts_overlapping_t, state, destroy_set, employees_changed):
 
-    logger.info(f"Repairing employees: {destroy_set}")
+    logger.info(f"Repairing employees: {employees_changed}")
 
-    #print("worst_employee_regret_repair is running")
     repair_set = []
     destroy_set = destroy_set.copy()
     allowed_competency_combinations = {combination for combination in employee_with_competency_combination for item in employee_with_competency_combination[combination] for e in employees_changed if e == item[1]}
