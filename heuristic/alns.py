@@ -258,7 +258,7 @@ class ALNS:
 
         start = timer()
 
-        if runtime:
+        if not iterations:
 
             logger.warning(f"Running ALNS for {runtime} minutes")
 
@@ -275,7 +275,8 @@ class ALNS:
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"Runtime for ALNS: {timer() - start:.2f}s")
+        logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
+                       f" {timer() - start:.2f}s ")
 
         candidate_solution.write("solutions/heuristic_solution_2")
 
