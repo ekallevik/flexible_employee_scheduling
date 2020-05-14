@@ -81,6 +81,7 @@ class ALNS:
 
         self.L_C_D = data["limit_on_consecutive_days"]
 
+        print(self.days)
         # Set for daily rest restriction
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
@@ -239,16 +240,16 @@ class ALNS:
         )
 
         operators = {
-            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            remove_weighted_random_employee: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy,
-            ],
-            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
+            # remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            # remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            # remove_weighted_random_employee: [
+            #     repair_worst_employee_regret,
+            #     repair_worst_employee_greedy,
+            # ],repair_worst_week_greedy
+            remove_worst_week: [repair_worst_week_regret],
+            # remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            # remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            # remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
         }
 
         self.add_destroy_and_repair_operators(operators)
