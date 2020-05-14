@@ -16,6 +16,7 @@ from utils.const import (
     DEFAULT_CONTRACTED_HOURS,
     DEFAULT_DAILY_OFFSET,
     DEFAULT_DAILY_REST_HOURS,
+    DEFAULT_WEEKLY_REST_HOURS,
 )
 
 
@@ -167,7 +168,7 @@ def set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         logger.info(
             f"ScheduleRow {employee.id} don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied"
         )
-        employee.set_daily_rest(DEFAULT_DAILY_REST_HOURS)
+        employee.set_weekly_rest(DEFAULT_WEEKLY_REST_HOURS)
 
 
 def get_weekly_rest_rules(root):
@@ -193,7 +194,8 @@ def get_daily_rest_rules(root):
 def set_daily_offset_for_employee(employee, problem):
     # TODO: Implement try-block, trying to collect daily offset from file.
     if problem == "rproblem9":
-        employee.set_daily_offset(10)
+        default_offset_for_rproblem9 = 10
+        employee.set_daily_offset(default_offset_for_rproblem9)
     else:
         employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
 
