@@ -178,7 +178,6 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
             continue
 
         if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
-            print(deviation_from_demand)
             return repair_set
 
 
