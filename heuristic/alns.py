@@ -78,10 +78,8 @@ class ALNS:
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
-        print(self.contracted_hours)
         self.L_C_D = data["limit_on_consecutive_days"]
 
-        print(self.days)
         # Set for daily rest restriction
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
