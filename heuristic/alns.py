@@ -240,16 +240,16 @@ class ALNS:
         )
 
         operators = {
-            # remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            # remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            # remove_weighted_random_employee: [
-            #     repair_worst_employee_regret,
-            #     repair_worst_employee_greedy,
-            # ],repair_worst_week_greedy
-            remove_worst_week: [repair_worst_week_regret],
-            # remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            # remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            # remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_weighted_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy,
+            ],
+            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
         }
 
         self.add_destroy_and_repair_operators(operators)
@@ -315,16 +315,6 @@ class ALNS:
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
 
-        if (
-                candidate_solution.get_objective_value()
-                >= self.best_legal_solution.get_objective_value()
-                and hard_constraint_penalties(candidate_solution) == 0
-        ):
-            self.best_legal_solution = candidate_solution
-
-            logger.critical("Candidate is legal")
-            self.best_legal_solution.write("best_legal_solution")
-
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
@@ -352,7 +342,7 @@ class ALNS:
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
-            if sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
+            elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
                 destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
                 candidate_solution.write("After_breaking_contracted")

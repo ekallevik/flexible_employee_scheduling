@@ -24,7 +24,7 @@ def load_data(problem_name):
 
     competencies = []
     
-    staff = get_employee_lists(root, competencies)
+    staff = get_employee_lists(problem_name, root, competencies)
     time_sets = get_time_sets(root, competencies)
     
     shifts = get_shifts(root)
@@ -117,7 +117,7 @@ def get_shifts(root):
             duration = intervals[1] - start_time
 
             if duration >= ALLOWED_SHIFT_DURATION[1]:
-                shifts = get_shifts_for_long_duration(root, shifts, start_time, duration)
+                shifts = add_shifts_for_long_duration(root, shifts, start_time, duration)
             else:
                 if (start_time, intervals[1] - start_time) not in shifts:
                     shifts.append((start_time, intervals[1] - start_time))
@@ -133,14 +133,14 @@ def get_shifts(root):
                         shifts.append((time, duration))
                         found_shift = True
                     if 24 >= duration > ALLOWED_SHIFT_DURATION[1] and not found_shift:
-                        shifts = get_shifts_for_long_duration(root, shifts, time, duration)
+                        shifts = add_shifts_for_long_duration(root, shifts, time, duration)
 
     shifts = remove_duplicates_and_sort(shifts)
 
     return shifts
 
 
-def get_shifts_for_long_duration(root, shifts, time, duration):
+def add_shifts_for_long_duration(root, shifts, time, duration):
     """
     Create shifts for long demand periods without change in demand. Makes two shifts that together cover the
     demand period. If possible, three additionally shifts are created that also together cover the demand period.

@@ -19,7 +19,7 @@ from utils.const import (
 )
 
 
-def get_employee_lists(root, competencies):
+def get_employee_lists(problem, root, competencies):
     employees = tuplelist()
     employee_with_competencies = tupledict()
     employee_weekly_rest = tupledict()
@@ -28,8 +28,7 @@ def get_employee_lists(root, competencies):
     employee_daily_offset = tupledict()
     employee_blocked_hours = tupledict()
 
-    emp = get_staff(root, competencies)
-
+    emp = get_staff(problem, root, competencies)
 
     for c in range(len(competencies)):
         employee_with_competencies[c] = []
@@ -58,7 +57,7 @@ def get_employee_lists(root, competencies):
     }
 
 
-def get_staff(root, all_competencies):
+def get_staff(problem, root, all_competencies):
     weekly_rest_rules = get_weekly_rest_rules(root)
     daily_rest_rules = get_daily_rest_rules(root)
     staff = []
@@ -68,7 +67,7 @@ def get_staff(root, all_competencies):
         set_contracted_hours_for_employee(employee, schedule_row)
         set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
-        set_daily_offset_for_employee(employee)
+        set_daily_offset_for_employee(employee, problem)
         set_blocked_hours_for_employee(employee)
 
         competencies = []
@@ -79,11 +78,12 @@ def get_staff(root, all_competencies):
                     all_competencies.append(int(competency.text))
         except:
             competencies = DEFAULT_COMPETENCY
-            if(DEFAULT_COMPETENCY[0] not in all_competencies):
+            if DEFAULT_COMPETENCY[0] not in all_competencies:
                 all_competencies.append(DEFAULT_COMPETENCY[0])
         employee.set_competencies(competencies)
         staff.append(employee)
     return staff
+
 
 def get_competency_combinations(employees):
     competency_combinations = defaultdict(list)
@@ -135,7 +135,6 @@ def get_demand_definitions(root):
             dem.add_info(start, end, maximum, minimum, ideal, competency_requirements)
         demands.append(dem)
     return demands
-
 
 
 def get_days(root):
@@ -191,9 +190,12 @@ def get_daily_rest_rules(root):
     return daily_rest_rules
 
 
-def set_daily_offset_for_employee(employee):
+def set_daily_offset_for_employee(employee, problem):
     # TODO: Implement try-block, trying to collect daily offset from file.
-    employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
+    if problem == "rproblem9":
+        employee.set_daily_offset(10)
+    else:
+        employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
 
 
 def set_blocked_hours_for_employee(employee):
@@ -243,6 +245,7 @@ def get_demand_definitions2(root):
             dem.add_info2(start, end, maksimum, minimum, ideal)
         demands.append(dem)
     return demands
+
 
 def get_days_with_demand2(root):
     demands = get_demand_definitions2(root)

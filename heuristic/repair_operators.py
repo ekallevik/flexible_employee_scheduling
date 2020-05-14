@@ -173,7 +173,7 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
         competencies_needed = tuple(set(y_s))
         possible_employees = [(e, score) for score, e in employee_with_competency_combination[competencies_needed] if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
 
-        if(len(possible_employees) == 0):
+        if len(possible_employees) == 0:
             impossible_shifts.append(shift)
             continue
 

@@ -103,43 +103,14 @@ class ProblemRunner:
         }
 
         hard_variables = {
-            "below_minimum_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0][c]
-            },
-            "above_maximum_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0][c]
-            },
-            "more_than_one_shift_per_day": {
-                (e, i): 0
-                for e in self.data["staff"]["employees"]
-                for i in self.data["time"]["days"]
-            },
-            "cover_multiple_demand_periods": {
-                (e, t): 0
-                for e in self.data["staff"]["employees"]
-                for j in self.data["time"]["weeks"]
-                for t in self.data["time"]["combined_time_periods"][1][j]
-            },
-            "weekly_off_shift_error": {
-                (e, j): 0
-                for e in self.data["staff"]["employees"]
-                for j in self.data["time"]["weeks"]
-            },
-            "mapping_shift_to_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0]
-            },
-            "daily_rest_error": {
-                (e, i): 0
-                for e in self.data["staff"]["employees"]
-                for i in self.data["time"]["days"]},
-
-            "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
+            "below_minimum_demand": {},
+            "above_maximum_demand": {},
+            "more_than_one_shift_per_day": {},
+            "cover_multiple_demand_periods": {},
+            "weekly_off_shift_error": {},
+            "mapping_shift_to_demand": {},
+            "daily_rest_error": {},
+            "delta_positive_contracted_hours": {},
         }
 
         objective_function, f = calculate_objective_function(self.data, soft_variables,
