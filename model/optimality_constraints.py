@@ -37,36 +37,6 @@ class OptimalityConstraints(BaseConstraints):
         self.add_consecutive_days(var.gamma, var.q)
         self.add_helping_variable_gamma(var.x, var.gamma)
 
-    def add_minimum_weekly_work_hours(self, y):
-        # NOTE: Not in use.
-        self.model.addConstrs(
-            (
-                quicksum(
-                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[c, j])
-                    for c in self.competencies
-                )
-                >= 0.1 * self.contracted_hours[e]
-                for e in self.employees
-                for j in self.weeks
-            ),
-            name="min_weekly_work_hours",
-        )
-
-    def add_maximum_weekly_work_hours(self, y):
-        # NOTE: Not in use.
-        self.model.addConstrs(
-            (
-                quicksum(
-                    quicksum(self.time_step * y[c, e, t] for t in self.time_periods_per_week[c, j])
-                    for c in self.competencies
-                )
-                <= 1.4 * self.contracted_hours[e]
-                for e in self.employees
-                for j in self.weeks
-            ),
-            name="maximum_weekly_work_hours",
-        )
-
     def add_partial_weekends(self, gamma, rho):
 
         self.model.addConstrs(
