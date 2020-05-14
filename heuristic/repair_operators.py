@@ -1,6 +1,6 @@
 from loguru import logger
 
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, calculate_daily_rest_error
+from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, calculate_daily_rest_error, employee_shift_value
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice, choices
@@ -136,6 +136,7 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
     #Destroy_set is the shifts that have been destroyed.
     destroy_set = destroy_set.copy()
     saturdays = [5 + j * 7 for j in week]
+    sundays = [6 + j * 7 for j in week]
     days = [i + (7 * j) for j in week for i in range(7)]
     impossible_shifts = []
     daily_destroy_and_repair = [destroy_set, []]
@@ -201,31 +202,13 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
         # 1. We could copy the state we are working with. We would have to use deepcopy which takes time and resources.
         # 2. We could set the x value and then remove it again after calculation. Might take a lot of time and resources. 
 
+
+
         #Copy method
         objective_values = {}
         for e, score in possible_employees:
-            current_state = state.copy()
-            repaired = [set_x(current_state, t_covered_by_shift, e, shift[0], shift[1], 1, y_s)]
-
-            #Soft restriction calculations
-            calculate_deviation_from_demand(current_state, competencies, t_covered_by_shift, employee_with_competencies, demand, repaired)
-            calculate_weekly_rest(current_state, shifts_in_week, [e], week)
-            calculate_partial_weekends(current_state, [e], shifts_at_day, saturdays)
-            calculate_isolated_working_days(current_state, [e], shifts_at_day, days)
-            calculate_isolated_off_days(current_state, [e], shifts_at_day, days)
-            calculate_consecutive_days(current_state, [e], shifts_at_day, L_C_D, days)
-            delta_calculate_negative_deviation_from_contracted_hours(current_state, [e], contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-            #Hard constraint calculations
-            mapping_shift_to_demand(state, repaired, t_covered_by_shift, shifts_overlapping_t, competencies)
-            cover_multiple_demand_periods(state, repaired, t_covered_by_shift, competencies)
-            more_than_one_shift_per_day(current_state, [e], demand, shifts_at_day, days)
-            above_maximum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
-            below_minimum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
-            calculate_daily_rest_error(state, [[], repaired], invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
-
             competency_score = score - len(competencies_needed)
-            #Calculate the objective function when the employee e is assigned the shift
-            objective_values[e] = calc_weekly_objective_function(current_state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, week, L_C_D, competency_score=competency_score)[0]
+            objective_values[e] = employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, week[0], competency_score)
 
         max_value = max(objective_values.items(), key=itemgetter(1))[1]
         employee = choice([key for key, value in objective_values.items() if value == max_value])
