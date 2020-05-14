@@ -78,7 +78,7 @@ class ALNS:
         self.t_covered_by_shift = data["heuristic"]["t_covered_by_shift"]
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
-
+        print(self.contracted_hours)
         self.L_C_D = data["limit_on_consecutive_days"]
 
         print(self.days)
@@ -351,6 +351,11 @@ class ALNS:
                 destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
+
+            if sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
+                destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                candidate_solution.write("After_breaking_contracted")
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
