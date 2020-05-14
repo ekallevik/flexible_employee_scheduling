@@ -24,7 +24,7 @@ def load_data(problem_name):
 
     competencies = []
     
-    staff = get_employee_lists(root, competencies)
+    staff = get_employee_lists(problem_name, root, competencies)
     time_sets = get_time_sets(root, competencies)
     
     shifts = get_shifts(root)
