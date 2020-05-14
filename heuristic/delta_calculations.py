@@ -387,10 +387,11 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
     weekly_rest_error = regret_weekly_rest(state, shifts_at_week, e, week, shift)
     partial_weekend_error = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
     isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
-    deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, weeks)
+    deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
 
     # print(
-    #     str(daily_rest_error) + ", "
+    #     str(e) + ": "
+    #     + str(daily_rest_error) + ", "
     #     + str(weekly_rest_error) + ", "
     #     + str(partial_weekend_error) + ", "
     #     + str(isolated_days_error) + ", "
@@ -408,15 +409,13 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
              #- sum(state.soft_vars["consecutive_days"][e, i] for e in employees for i in range(len(days_in_week)-L_C_D)) Not fixed
 
 def regret_weekly_rest(state, shifts_at_week, e, week, shift):
-
-    actual_shifts = [(t, v) for t,v in shifts_at_week[week] if state.x[e,t,v] == 1 or (t,v) == shift]
+    actual_shifts = [(t, v) for t,v in shifts_at_week[week] if state.x[e,t,v] == 1 or (t,v) == (shift[0],shift[1])]
     off_shift_periods = []
     important = [7 * 24 * week, 7 * 24 * (week + 1) ]
-
   
     if len(actual_shifts) == 0:
         off_shift_periods.append(float(important[1] - important[0]))
-        return min(100, off_shift_periods[0])
+        return min(72, off_shift_periods[0])
 
     else:
         if(actual_shifts[0][0] - important[0] >= 36):
@@ -431,23 +430,23 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
     if len(off_shift_periods) != 0:
-        return min(100, max(off_shift_periods))
+        return min(72, max(off_shift_periods))
     
-    return -10
+    return -200
 
 
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
-    if(day in saturdays):
+    if day in saturdays:
         for t,v in shifts_at_day[day + 1]:
             if(state.x.get((e, t, v))):
-                return -1
+                return -2
             else:
                 return 0
 
     elif day in sundays:
         for t,v in shifts_at_day[day - 1]:
             if(state.x.get((e, t, v))):
-                return -1
+                return -2
             else:
                 return 0
     else:
@@ -474,13 +473,14 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
         if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
             isolated_day += 1
     
-    return -isolated_day
+    return 2 * -isolated_day
 
-def regret_deviation_contracted_hours(state, e, shift, weeks):
-    negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) - shift[1]
-    if(negative_deviation_from_contracted_hours < 0):
-        return 100 * negative_deviation_from_contracted_hours
-    return - 5 * negative_deviation_from_contracted_hours
+def regret_deviation_contracted_hours(state, e, shift, j, weeks):
+    negative_deviation_from_contracted_hours = state.soft_vars["deviation_contracted_hours"][e,j] - shift[1]
+    total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
+    if(total_negative_deviation_from_contracted_hours < 0):
+        return 5 * total_negative_deviation_from_contracted_hours
+    return negative_deviation_from_contracted_hours
 
 
 def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
@@ -492,3 +492,7 @@ def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinat
         return -10 * max(0, sum(state.x[e, t2, v2] for t2, v2 in shift_sequences_violating_daily_rest[e][shift[0], shift[1]]) - 1)
     else:
         return 0
+
+# def calculate_consecutive_days(state, e, shifts_at_day, L_C_D, day):
+#         for i in range(len(days)-L_C_D):
+#             state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
