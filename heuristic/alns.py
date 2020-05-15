@@ -300,6 +300,9 @@ class ALNS:
 
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+
+        breakpoint()
+
         return candidate_solution
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
