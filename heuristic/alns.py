@@ -343,6 +343,7 @@ class ALNS:
             logger.warning(f"Running ALNS for {runtime} minutes")
 
             while timer() < start + runtime_in_seconds:
+
                 candidate_solution = self.perform_iteration(iteration)
 
                 if self.violation_plotter:
@@ -379,21 +380,25 @@ class ALNS:
 
     def perform_iteration(self, iteration):
 
-        # Add a newline between the output of each iteration
-        print()
-        logger.trace(f"Iteration: {iteration}")
+        try:
+            # Add a newline between the output of each iteration
+            print()
+            logger.trace(f"Iteration: {iteration}")
 
-        candidate_solution = self.current_solution.copy()
-        destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-        repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+            candidate_solution = self.current_solution.copy()
+            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
 
-        destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
-        repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+            destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
+            repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
 
-        self.calculate_objective(candidate_solution, destroy_set, repair_set)
-        self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+            self.calculate_objective(candidate_solution, destroy_set, repair_set)
+            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
-        return candidate_solution
+            return candidate_solution
+        except KeyboardInterrupt:
+            # Enables dropping into the python debugger
+            breakpoint()
 
 
     def update_history(self, candidate_solution):
