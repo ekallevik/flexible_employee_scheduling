@@ -83,7 +83,7 @@ def get_weights(time_set, staff):
 
 def scale_weight_to_hours(weight, time_step):
     """
-    Demand deviation, contracted hours and preferences needs to be scaled to hours, as this is the
+    Demand deviation and preferences needs to be scaled to hours, as this is the
     reference time step.
     """
 
