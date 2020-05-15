@@ -1,7 +1,19 @@
 import pytest
 
 from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
+from heuristic.state import State
 
+
+@pytest.fixture()
+def sa():
+    return SimulatedAnnealingCriterion(start_temperature=100, end_temperature=1, step=1)
+
+
+def create_state(objective_function):
+
+    decision_vars = {"x": 0, "y": 0, "w": 0}
+
+    return State(decision_vars, None, None, objective_function, None)
 
 @pytest.mark.parametrize(
     ("start_temperature", "step", "expected_temperature"),
@@ -71,3 +83,12 @@ def test_create_unbounded_growth():
         SimulatedAnnealingCriterion(100, 50, step=1.1, method="exponential")
 
     assert str(e.value) == "The step must be less than 1 for exponential simulated annealing"
+
+
+def test_probability_increases_with_objective_value(sa):
+
+    current_state = create_state(100)
+    worst_state = create_state(50)
+    better_state = create_state(150)
+
+    assert sa.get_probability(worst_state, current_state) < sa.get_probability(better_state, current_state)

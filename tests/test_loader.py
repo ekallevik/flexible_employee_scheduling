@@ -3,11 +3,10 @@ import sys
 from pathlib import Path
 loader_path = Path(__file__).resolve().parents[1]
 sys.path.insert(1, str(loader_path))
-from xml_loader.xml_loader import *
 import xml.etree.ElementTree as ET
 
 from utils.const import DAYS_IN_WEEK, DEFAULT_COMPETENCY
-from xml_loader import xml_loader
+from preprocessing import xml_loader
 
 @pytest.fixture
 def comptencies():

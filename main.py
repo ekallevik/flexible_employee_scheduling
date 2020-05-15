@@ -26,6 +26,7 @@ level_per_module = {
     "heuristic.alns": "TRACE",
     "heuristic.destroy_operators": "TRACE",
     "heuristic.repair_operators": "TRACE",
+    "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
 logger.remove()
