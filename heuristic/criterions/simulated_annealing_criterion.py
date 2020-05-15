@@ -26,13 +26,10 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
         probability = self.get_probability(candidate, current)
 
         self.update_temperature()
+        is_accepted = probability >= random_state.random()
 
-        limit = random_state.random()
-
-        is_accepted = probability >= limit
-
-        logger.warning(f"Accept candidate: {is_accepted} (p={probability:.3f}, l={limit:.3f}, "
-                       f"t={self.current_temperature})")
+        logger.info(f"Accept candidate: {is_accepted} (p={probability:.3f}, "
+                    f"t={self.current_temperature})")
 
         return is_accepted
 

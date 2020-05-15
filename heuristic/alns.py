@@ -283,6 +283,10 @@ class ALNS:
         logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
                        f" {timer() - start:.2f}s ")
 
+        logger.error(f"Initial solution: {self.initial_solution.get_objective_value()}")
+        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value()}")
+        logger.error(f"Best solution: {self.best_solution.get_objective_value()}")
+
         candidate_solution.write("solutions/heuristic_solution_2")
 
     def perform_iteration(self, iteration):
@@ -300,8 +304,6 @@ class ALNS:
 
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
-
-        breakpoint()
 
         return candidate_solution
 
