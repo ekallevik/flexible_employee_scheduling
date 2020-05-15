@@ -29,22 +29,18 @@ class State:
     def is_legal(self):
         """ Returns True if all hard_vars is 0, otherwise will return False """
 
-        legal = (
+        return (
                 not any(self.hard_vars["below_minimum_demand"].values())
+                and not any(self.hard_vars["delta_positive_contracted_hours"].values())
                 and not any(self.hard_vars["above_maximum_demand"].values())
+                and not any(self.hard_vars["weekly_off_shift_error"].values())
                 and not any(self.hard_vars["more_than_one_shift_per_day"].values())
                 and not any(self.hard_vars["cover_multiple_demand_periods"].values())
-                and not any(self.hard_vars["weekly_off_shift_error"].values())
                 and not any(self.hard_vars["mapping_shift_to_demand"].values())
-                and not any(self.hard_vars["delta_positive_contracted_hours"].values())
                 )
 
-        penalty = hard_constraint_penalties(self)
 
-        if legal != (penalty == 0):
-            breakpoint()
 
-        return legal
 
     def copy(self):
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
