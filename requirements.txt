@@ -9,3 +9,5 @@ pdbpp==0.10.2
 loguru==0.4.1
 numpy==1.18.4
 
+
+matplotlib~=3.2.1

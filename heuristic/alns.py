@@ -2,6 +2,8 @@ from datetime import timedelta
 
 import numpy as np
 from loguru import logger
+from matplotlib import pyplot as plt
+
 
 from timeit import default_timer as timer
 
@@ -267,8 +269,45 @@ class ALNS:
 
             logger.warning(f"Running ALNS for {runtime} minutes")
 
+            plt.style.use('seaborn-pastel')
+
+            plt.ion()
+            fig = plt.figure()
+
+            plt.yscale('symlog')
+            plt.title('Objective values')
+            plt.grid(True)
+
+            candidate_history = []
+            current_history = []
+            best_history = []
+            best_legal_history = []
+            iteration_history = []
+
             while timer() < start + runtime_in_seconds:
                 candidate_solution = self.perform_iteration(iteration)
+
+                candidate_history.append(candidate_solution.get_objective_value())
+                current_history.append(self.current_solution.get_objective_value())
+                best_history.append(self.best_solution.get_objective_value())
+                best_legal_history.append(self.best_legal_solution.get_objective_value())
+
+                iteration_history.append(iteration)
+
+                candidate_plot, = plt.plot(candidate_history, label="candidate",
+                                            color="lightcoral",
+                             linestyle=":")
+                current_plot, = plt.plot(current_history, label="current", color="darkviolet",
+                                linestyle="-.")
+                best_plot, = plt.plot(best_history, label="best", color="royalblue", linestyle="--")
+                best_legal_plot, = plt.plot(best_legal_history, label="best legal",
+                                        color="forestgreen", linestyle="-")
+
+                plt.legend(handles=[candidate_plot, current_plot, best_plot, best_legal_plot],
+                           loc='lower left')
+                plt.show()
+                plt.pause(0.0001)
+
                 iteration += 1
 
         else:
