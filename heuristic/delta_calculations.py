@@ -231,7 +231,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
 
     g = min(state.f.values())
 
-    penalty = 10 * hard_constraint_penalties(state)
+    penalty = 100 * hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())
@@ -411,26 +411,26 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
 def regret_weekly_rest(state, shifts_at_week, e, week, shift):
     actual_shifts = [(t, v) for t,v in shifts_at_week[week] if state.x[e,t,v] == 1 or (t,v) == (shift[0],shift[1])]
     off_shift_periods = []
-    important = [7 * 24 * week, 7 * 24 * (week + 1) ]
+    week_interval = [7 * 24 * week, 7 * 24 * (week + 1) ]
   
-    if len(actual_shifts) == 0:
-        off_shift_periods.append(float(important[1] - important[0]))
-        return min(72, off_shift_periods[0])
+    if not actual_shifts:
+        off_shift_periods.append(float(week_interval[1] - week_interval[0]))
+        return min(100, off_shift_periods[0])
 
     else:
-        if(actual_shifts[0][0] - important[0] >= 36):
-            off_shift_periods.append(actual_shifts[0][0] - important[0])
+        if(actual_shifts[0][0] - week_interval[0] >= 36):
+            off_shift_periods.append(actual_shifts[0][0] - week_interval[0])
             
 
-        if(important[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]) >= 36):
-            off_shift_periods.append(important[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]))
+        if(week_interval[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]) >= 36):
+            off_shift_periods.append(week_interval[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]))
 
         for i in range(len(actual_shifts) - 1):
             if(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]) >= 36):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
-    if len(off_shift_periods) != 0:
-        return min(72, max(off_shift_periods))
+    if off_shift_periods:
+        return min(100, max(off_shift_periods))
     
     return -200
 
@@ -439,14 +439,14 @@ def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
         for t,v in shifts_at_day[day + 1]:
             if(state.x.get((e, t, v))):
-                return -2
+                return -5
             else:
                 return 0
 
     elif day in sundays:
         for t,v in shifts_at_day[day - 1]:
             if(state.x.get((e, t, v))):
-                return -2
+                return -5
             else:
                 return 0
     else:
@@ -456,30 +456,33 @@ def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
 def regret_isolated_days(state, e, shifts_at_day, day, weeks):
     isolated_day = 0
 
-    if day in [0, 1, (len(weeks)*7 - 2), (len(weeks)*7 - 1)]:
-        return 0
-
+    if 1 < day < len(weeks)*7-2:
     
     #Isolated Working Day
-    if sum(state.x[e,t,v] for t,v in (shifts_at_day[day - 1] + shifts_at_day[day + 1])) == 2:
-        isolated_day += 1
-    
-    #Isolated off day
-    if sum(1 for t,v in shifts_at_day[day - 2] if state.x.get((e,t,v))) == 1:
-        if sum(1 for t,v in shifts_at_day[day - 1] if state.x.get((e,t,v))) == 0 :
+        if sum(state.x[e,t,v] for t,v in (shifts_at_day[day - 1] + shifts_at_day[day + 1])) == 0:
             isolated_day += 1
-    
-    if sum(1 for t,v in shifts_at_day[day + 2] if state.x.get((e,t,v))) == 1:
-        if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
-            isolated_day += 1
-    
-    return 2 * -isolated_day
+        
+        #Isolated off day
+        if sum(1 for t,v in shifts_at_day[day - 2] if state.x.get((e,t,v))) == 1:
+            if sum(1 for t,v in shifts_at_day[day - 1] if state.x.get((e,t,v))) == 0 :
+                isolated_day += 1
+        
+        if sum(1 for t,v in shifts_at_day[day + 2] if state.x.get((e,t,v))) == 1:
+            if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
+                isolated_day += 1
+        
+        return 4 * -isolated_day
+
+    else:
+        return 0
 
 def regret_deviation_contracted_hours(state, e, shift, j, weeks):
     negative_deviation_from_contracted_hours = state.soft_vars["deviation_contracted_hours"][e,j] - shift[1]
     total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
-    if(total_negative_deviation_from_contracted_hours < 0):
-        return 5 * total_negative_deviation_from_contracted_hours
+    if total_negative_deviation_from_contracted_hours < 0:
+        return 50 * total_negative_deviation_from_contracted_hours
+    elif total_negative_deviation_from_contracted_hours == 0:
+        return 100
     return negative_deviation_from_contracted_hours
 
 

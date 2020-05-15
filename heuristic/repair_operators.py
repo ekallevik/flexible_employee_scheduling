@@ -150,7 +150,7 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
         shifts =    {(t1, v1, competencies_1): -sum(
                                                     (state.soft_vars["deviation_from_ideal_demand"][c,t]
                                                     if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0 
-                                                    else 10)
+                                                    else 20)
                                                     for c in competencies_1 
                                                     for t in t_covered_by_shift[t1, v1]
                                                     if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
@@ -161,12 +161,16 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
                     }
 
         shift = max(shifts.items(), key=itemgetter(1))[0]
-
+        
         deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
                                     for c in shift[2]
                                     for t in t_covered_by_shift[shift[0], shift[1]]
                                     if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
                                     if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
+
+        for t in t_covered_by_shift[shift[0], shift[1]]:
+            if(state.soft_vars["deviation_from_ideal_demand"][0,t] + 1 > 0):
+                print(shift)
 
         y_s_1 = {t: {(c): state.soft_vars["deviation_from_ideal_demand"][c,t] for c in shift[2] if (c,t) in state.soft_vars["deviation_from_ideal_demand"]} for t in t_covered_by_shift[shift[0], shift[1]]}
         y_s = [min(y_s_1[t].items(), key=itemgetter(1))[0] for t in t_covered_by_shift[shift[0], shift[1]] if len(y_s_1[t]) != 0]
@@ -174,10 +178,11 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
         possible_employees = [(e, score) for score, e in employee_with_competency_combination[competencies_needed] if (sum(state.x[e,t,v] for t,v in shifts_at_day[int(shift[0]/24)])) == 0]
 
         if(len(possible_employees) == 0):
+            return repair_set
             impossible_shifts.append(shift)
             continue
 
-        if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
+        if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in week) for e in possible_employees]) < shift[1]):
             print(deviation_from_demand)
             return repair_set
 
