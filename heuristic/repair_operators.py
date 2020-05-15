@@ -6,10 +6,10 @@ from loguru import logger
 from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, calculate_daily_rest_error, employee_shift_value
 from operator import itemgetter
 from heuristic.converter import set_x
-from random import choice, choices
-import numpy as np
+from random import choice
 
 
+# todo: implement version to handle only parts of a week
 def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
                        demand, employees, contracted_hours, shifts_at_day,
                        time_step, time_periods_in_week, employee_with_competencies,
@@ -20,81 +20,86 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
     repair_set = []
     employees_changed = employees
+    number_of_employees = len(employees)
 
     for week in weeks:
 
-        #breakpoint()
-        shift_heap = get_scored_shifts(shifts_in_week, week, t_covered_by_shift, competencies, demand)
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
+                                                                 contracted_hours, weeks,
+                                                                 time_periods_in_week, competencies,
+                                                                 time_step)
 
-        #employee_heap = [contracted_hours[e] for e in employees]
-        #heapify(employee_heap)
+        remaining_demand = get_demand_for_week(competencies, demand, shifts_in_week,
+                                               t_covered_by_shift, week)
+
+        shift_heap = get_scored_shifts(shifts_in_week[week], t_covered_by_shift, remaining_demand)
 
         employee_heap = get_scored_employees(employees, week, state, shifts_in_week)
         number_of_shifts = len(shift_heap)
 
-        pprint(shift_heap)
-
         for _ in range(number_of_shifts):
-            # will always terminate as the size of shift_heap should be reduce by at least 1 per
-            # iteration
-
-            # TODO: verify this! Maybe rather use 'for _ in num_shifts'
 
             # To separate output
             print()
+            print("Remaining demand")
+            positive_remaining_demand = {key: value for key, value in remaining_demand.items() if
+                                         value}
+            pprint(positive_remaining_demand)
 
-            shift_score, shift = pop_from_heap(shift_heap)
+            print(f"Shift heap with {len(shift_heap)} elements")
+            pprint(shift_heap)
 
-            remaining_demand = min(get_demand_min_for_period(t_covered_by_shift[shift], demand, competencies))
+            print("Employee heap")
+            pprint(employee_heap)
 
-            logger.info(f"Repairing shift {shift} (s: {shift_score}, d: {remaining_demand})")
-
-            number_of_employees = len(employees)
+            shift, shift_score = get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift)
+            allocations_needed = min([remaining_demand[t] for t in t_covered_by_shift[shift]])
+            logger.info(f"Repairing shift {shift} (s: {shift_score}, d: {allocations_needed})")
 
             if not number_of_employees:
                 logger.trace("There is no employee to cover the demand")
                 continue
-            if not remaining_demand:
+            if not allocations_needed:
+                # TODO: This might cause problems. If there is one period with 0 demand and no
+                #  other shift to cover it....
                 logger.trace("The demand is already covered")
                 continue
 
-            allocated_employees = []
+            considered_employees = []
 
-            while remaining_demand and number_of_employees > len(allocated_employees):
-
-
+            while allocations_needed and number_of_employees > len(considered_employees):
 
                 employee_score, employee = pop_from_heap(employee_heap)
                 logger.trace(f"Employee {employee} (s: {employee_score}) chosen")
-                updated_employee_score = 0
+                updated_employee_score = employee_score
 
                 if can_allocate(employee, shift, state, shifts_at_day):
                     repair_set.append(
                         set_x(state, t_covered_by_shift, employee, shift[0], shift[1], 1, None)
                     )
 
-                    remaining_demand -= 1
+                    for t in t_covered_by_shift[shift]:
+
+                        remaining_demand[t] -= 1
+
+                    allocations_needed -= 1
 
                     logger.trace(f"Allocating employee {employee} to shift {shift} "
-                                 f"(remaining demand:{remaining_demand})")
+                                 f"(remaining demand:{allocations_needed})")
 
-                    # TODO: Have to handle this better
-                    updated_employee_score = employee_score - shift[1]
+                    updated_employee_score -= shift[1]
 
                     logger.trace(f"Employee {employee} score: Original={employee_score}, "
                                  f"Updated={updated_employee_score}")
 
+                considered_employees.append((updated_employee_score, employee))
 
-                allocated_employees.append((updated_employee_score, employee))
-
-            for employee_score, employee in allocated_employees:
+            for employee_score, employee in considered_employees:
                 push_to_heap(employee_heap, employee_score, employee)
 
-
-            # TODO: Need to find a way to update demand after each iteration to avoid a sequence
-            #  of demand stealing all the attention
-            #shift_heap = get_scored_shifts(shifts_in_week, week, t_covered_by_shift, competencies,
-            #                               demand)
+            # TODO: Need to find a way to update demand after each iteration
+            shift_heap = get_scored_shifts(shifts_in_week[week], t_covered_by_shift,
+                                           remaining_demand)
 
     delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
                                                              contracted_hours, weeks,
@@ -109,6 +114,29 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
     #breakpoint()
 
     return repair_set
+
+
+def get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift):
+    shift_score, shift = pop_from_heap(shift_heap)
+    updated_shift_score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
+    #
+    while shift_score != updated_shift_score:
+        logger.trace(f"Outdated shift score {shift}: {shift_score} vs"
+                     f" {updated_shift_score}")
+        push_to_heap(shift_heap, updated_shift_score, shift)
+
+        shift_score, shift = pop_from_heap(shift_heap)
+        updated_shift_score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
+    return shift, shift_score
+
+
+def get_demand_for_week(competencies, demand, shifts_in_week, t_covered_by_shift, week):
+    times_in_shift_set = set()
+    for shift in shifts_in_week[week]:
+        times_in_shift_set.update(t_covered_by_shift[shift])
+    remaining_demand = {t: sum(demand["min"][c, t] for c in competencies)
+                        for t in times_in_shift_set}
+    return remaining_demand
 
 
 def can_allocate(employee, shift, state, shifts_at_day):
@@ -131,35 +159,40 @@ def get_scored_employees(employees, week, state, shifts_in_week):
 def get_score_for_employee(employee, week, state, shifts_in_week):
 
     deviation_contracted = state.soft_vars["deviation_contracted_hours"][employee, week]
-    #weekly_rest = calculate_weekly_rest(state, shifts_in_week, employee, week)
 
-    # todo: use a tuple as a score here?
+    # TODO: Include weekly rest?
 
-    #score = weekly_rest if weekly_rest > 36 else -1000
-    score = deviation_contracted if deviation_contracted > 0 else -100*deviation_contracted
+    # TODO: set a better threshold here. Maybe 140% of contracted hours?
+    # penalize negative deviation of contracted hours
+    score = deviation_contracted if deviation_contracted > -10 else 100*deviation_contracted
+    logger.trace(f"employee {employee}: dc={deviation_contracted}, s={score}")
 
     return score
 
 
-def get_scored_shifts(shifts_in_week, week, t_covered_by_shift, competencies, demand):
+def get_scored_shifts(shifts, t_covered_by_shift, remaining_demand):
 
     h = []
 
     # todo: pass shifts_at_week in as argument?
 
-    for shift in shifts_in_week[week]:
-        shift_demand = get_demand_min_for_period(t_covered_by_shift[shift], demand, competencies)
+    for shift in shifts:
+        score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
 
-        if not any(shift_demand):
+        if score <= 0:
             # Shifts without demand is not relevant. Score is 0, but we dont want to work with it
             # further
             continue
 
-        score = sum(shift_demand) - shift[1]
         push_to_heap(h, score, shift)
 
     #breakpoint()
     return h
+
+
+def get_score_for_shift(shift, t_covered_by_shift, remaining_demand):
+    score = sum(remaining_demand[t] for t in t_covered_by_shift[shift]) - shift[1]
+    return score
 
 
 def pop_from_heap(h):
@@ -178,8 +211,8 @@ def push_to_heap(h, score, element):
     heappush(h, (-score, element))
 
 
-def get_demand_min_for_period(period, demand, competencies):
-    return [demand["min"][c, t] for c in competencies for t in period]
+def get_demand_for_period(period, demand, competencies, demand_type="ideal"):
+    return [demand[demand_type][c, t] for c in competencies for t in period]
 
 
 def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee_with_competencies,
