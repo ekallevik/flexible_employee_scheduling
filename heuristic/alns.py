@@ -310,9 +310,9 @@ class ALNS:
         logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
                        f" {timer() - start:.2f}s ")
 
-        logger.error(f"Initial solution: {self.initial_solution.get_objective_value()}")
-        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value()}")
-        logger.error(f"Best solution: {self.best_solution.get_objective_value()}")
+        logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
+        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
+        logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
 
         candidate_solution.write("solutions/heuristic_solution_2")
 
