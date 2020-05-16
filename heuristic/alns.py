@@ -1,8 +1,5 @@
-from datetime import timedelta
-
 import numpy as np
-from loguru import logger
-
+from functools import partial
 from timeit import default_timer as timer
 
 from heuristic.delta_calculations import *
@@ -14,12 +11,11 @@ from heuristic.destroy_operators import (
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
-from functools import partial
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair
 
-from timeit import default_timer as timer
+
 
 class ALNS:
     def __init__(self, state, criterion, data, objective_weights):
@@ -85,6 +81,11 @@ class ALNS:
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
+
+        # Plotting and statistics
+        self.violation_plotter = None
+        self.objective_plotter = None
+        self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -269,6 +270,19 @@ class ALNS:
 
             while timer() < start + runtime_in_seconds:
                 candidate_solution = self.perform_iteration(iteration)
+
+                if self.violation_plotter:
+
+                    violations = candidate_solution.get_violations_per_week(
+                        self.weeks, self.time_periods_in_week, self.competencies, self.employees
+                        )
+
+                    self.violation_plotter.plot_data(violations)
+
+                if self.objective_plotter:
+                    self.update_history(candidate_solution)
+                    self.objective_plotter.plot_data(self.objective_history)
+
                 iteration += 1
 
         else:
@@ -306,6 +320,14 @@ class ALNS:
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
         return candidate_solution
+
+
+    def update_history(self, candidate_solution):
+
+        self.objective_history["candidate"].append(candidate_solution.get_objective_value())
+        self.objective_history["current"].append(self.current_solution.get_objective_value())
+        self.objective_history["best"].append(self.best_solution.get_objective_value())
+        self.objective_history["best_legal"].append(self.best_legal_solution.get_objective_value())
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
