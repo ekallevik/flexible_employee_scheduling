@@ -487,14 +487,12 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
 
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
-        for t,v in shifts_at_day[day + 1]:
-            if(state.x[e, t, v] == 1):
-                return -5
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day + 1]) == 0:
+            return -8
 
     elif day in sundays:
-        for t,v in shifts_at_day[day - 1]:
-            if(state.x[e, t, v] == 1):
-                return -5
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day - 1]) == 0:
+            return -8
     
     return 0
 
