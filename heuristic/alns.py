@@ -52,6 +52,7 @@ class ALNS:
 
         self.competencies = data["competencies"]
         self.demand = data["demand"]
+        self.demand_per_shift = data.get("demand_per_shift", None)
 
         self.days = data["time"]["days"]
         self.weeks = data["time"]["weeks"]
