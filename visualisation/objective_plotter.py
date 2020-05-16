@@ -32,6 +32,6 @@ class ObjectivePlotter(AbstractPlotter):
                                          linestyle="-")
 
         self.plt.legend(handles=[candidate_plot, current_plot, best_plot, best_legal_plot],
-                        loc='lower left ')
+                        loc='lower left')
 
         self.show()
