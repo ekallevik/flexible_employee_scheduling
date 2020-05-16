@@ -147,18 +147,6 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
 
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
 
-        # shifts =    {(t1, v1, competencies_1): -sum(
-        #                                             (state.soft_vars["deviation_from_ideal_demand"][c,t]
-        #                                             if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0 
-        #                                             else 20)
-        #                                             for c in competencies_1 
-        #                                             for t in t_covered_by_shift[t1, v1]
-        #                                             if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-        #                                             - (20*(len(competencies_1)-1) + v1)
-        #                                             for competencies_1 in employee_with_competency_combination 
-        #                                             for t1, v1 in shifts_in_week[week[0]]
-        #                                             if (t1,v1,competencies_1) not in impossible_shifts
-        #             }
         if sum(state.hard_vars["below_minimum_demand"].values()) != 0:
             shifts =    {
                         (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
@@ -192,8 +180,6 @@ def worst_week_regret_repair(   shifts_in_week, competencies, t_covered_by_shift
                                     if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
                                     if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
 
-        #for t in t_covered_by_shift[shift[0], shift[1]]:
-            #if(state.soft_vars["deviation_from_ideal_demand"][0,t] + 1 > 0):
 
         y_s_1 = {t: {(c): state.soft_vars["deviation_from_ideal_demand"][c,t] for c in shift[2] if (c,t) in state.soft_vars["deviation_from_ideal_demand"]} for t in t_covered_by_shift[shift[0], shift[1]]}
         y_s = [min(y_s_1[t].items(), key=itemgetter(1))[0] for t in t_covered_by_shift[shift[0], shift[1]] if len(y_s_1[t]) != 0]
