@@ -23,6 +23,9 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 
 from timeit import default_timer as timer
 
+from visualisation.ObjectivePlotter import ObjectivePlotter
+
+
 class ALNS:
     def __init__(self, state, criterion, data, objective_weights):
 
@@ -87,6 +90,8 @@ class ALNS:
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
+
+        self.history = {"candidate": [], "current": [], "best": [], "best_legal": []}
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -269,44 +274,13 @@ class ALNS:
 
             logger.warning(f"Running ALNS for {runtime} minutes")
 
-            plt.style.use('seaborn-pastel')
-
-            plt.ion()
-            fig = plt.figure()
-
-            plt.yscale('symlog')
-            plt.title('Objective values')
-            plt.grid(True)
-
-            candidate_history = []
-            current_history = []
-            best_history = []
-            best_legal_history = []
-            iteration_history = []
+            plotter = ObjectivePlotter()
 
             while timer() < start + runtime_in_seconds:
                 candidate_solution = self.perform_iteration(iteration)
 
-                candidate_history.append(candidate_solution.get_objective_value())
-                current_history.append(self.current_solution.get_objective_value())
-                best_history.append(self.best_solution.get_objective_value())
-                best_legal_history.append(self.best_legal_solution.get_objective_value())
-
-                iteration_history.append(iteration)
-
-                candidate_plot, = plt.plot(candidate_history, label="candidate",
-                                            color="lightcoral",
-                             linestyle=":")
-                current_plot, = plt.plot(current_history, label="current", color="darkviolet",
-                                linestyle="-.")
-                best_plot, = plt.plot(best_history, label="best", color="royalblue", linestyle="--")
-                best_legal_plot, = plt.plot(best_legal_history, label="best legal",
-                                        color="forestgreen", linestyle="-")
-
-                plt.legend(handles=[candidate_plot, current_plot, best_plot, best_legal_plot],
-                           loc='lower left')
-                plt.show()
-                plt.pause(0.0001)
+                self.update_history(candidate_solution)
+                plotter.plot_data(self.history)
 
                 iteration += 1
 
@@ -345,6 +319,14 @@ class ALNS:
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
         return candidate_solution
+
+
+    def update_history(self, candidate_solution):
+
+        self.history["candidate"].append(candidate_solution.get_objective_value())
+        self.history["current"].append(self.current_solution.get_objective_value())
+        self.history["best"].append(self.best_solution.get_objective_value())
+        self.history["best_legal"].append(self.best_legal_solution.get_objective_value())
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
