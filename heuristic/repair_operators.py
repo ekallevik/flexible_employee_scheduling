@@ -3,7 +3,13 @@ from pprint import pprint
 
 from loguru import logger
 
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, calculate_daily_rest_error, employee_shift_value
+from heuristic.delta_calculations import delta_calculate_deviation_from_demand, \
+    delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, \
+    calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, \
+    calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, \
+    more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, \
+    calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, \
+    calculate_daily_rest_error, employee_shift_value, hard_constraint_penalties
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice
