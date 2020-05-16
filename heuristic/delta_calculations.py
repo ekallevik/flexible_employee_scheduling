@@ -417,4 +417,126 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
             - 10 * state.hard_vars["delta_positive_contracted_hours"].get(employee, 0)
 
             - 100 * competency_score
+    )
+
+"""
+        What is important to calculate?
+            1. deviation_from_demand vil ikke ha noe å si. Derfor unyttig å kalkulere
+           
+            8. Shift to demand burde ikke trenges ettersom vi sjekker om en ansatt jobber den dagen. 
+            9. Cover multiple demand periods er likt den over. Burde ikke trenge å sjekkes. 
+            10. More than one shift per day burde ikke trenge det heller ettersom vi sjekker et annet sted.
+            11. above/below ikke nødvendig det heller. 
+            
+            13. Dette er opp mot objektivverdi og trenger da sannsynligvis ikke å regne egen objektivverdi. Kan bare se på hver ansatt. 
+        """
+"""
+            2. weekly rest. Når vi setter inn et skift så bør denne kalkuleres. Bør derimot strengt tatt ikke sette verdien, men heller regne ut høyeste mulige verdi.
+            3. Partial weekend vil ha noe å si hvis shiftet ble satt på en lørdag eller søndag
+            4. isolated working day er vanskelig å enkelt kalkulere uten å se på dagen før og dagen etter
+            5. Samme som over. Må sjekke dagen før og dagen etter.
+            6. Consecutive days må sjekke strengt tatt L_C_D - 1 dager før og L_C_D -1 dager etter. 
+            7. Negative deviation from contracted hours. Dette går fort å regne ut. Bare ta nåværende - varighet på skift. Alt som blir minus vil da også bryte hard restriksjon.
+            12. daily_rest bør sjekkes. Bare sjekke den dagen. 
+"""
+
+def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, competency_score):
+    day = int(shift[0]/24)
+    daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+    weekly_rest_error = regret_weekly_rest(state, shifts_at_week, e, week, shift)
+    partial_weekend_error = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
+    isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
+    deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
+    #I have decided to only use + here as all the values becomes negative unless they should be positive.
+    # The signs should therefore be correct.
+    return (
+            daily_rest_error 
+            + weekly_rest_error 
+            + partial_weekend_error 
+            + isolated_days_error 
+            + deviation_contracted_hours 
+            - 100 * competency_score
             )
+
+def regret_weekly_rest(state, shifts_at_week, e, week, shift):
+    actual_shifts = [(t, v) for t,v in shifts_at_week[week] if state.x[e,t,v] == 1 or (t,v) == (shift[0],shift[1])]
+    off_shift_periods = []
+    week_interval = [7 * 24 * week, 7 * 24 * (week + 1) ]
+  
+    if not actual_shifts:
+        off_shift_periods.append(float(week_interval[1] - week_interval[0]))
+        return min(50, off_shift_periods[0])
+
+    else:
+        if(actual_shifts[0][0] - week_interval[0] >= 36):
+            off_shift_periods.append(actual_shifts[0][0] - week_interval[0])
+            
+
+        if(week_interval[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]) >= 36):
+            off_shift_periods.append(week_interval[1] - (actual_shifts[-1][0] + actual_shifts[-1][1]))
+
+        for i in range(len(actual_shifts) - 1):
+            if(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]) >= 36):
+                off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
+
+    if off_shift_periods:
+        return min(50, max(off_shift_periods))
+    #Positive if we have a rest period. I use 50 as return if there is since we use 0.5 in the weights
+    return -200
+
+
+def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
+    if day in saturdays:
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day + 1]) == 0:
+            return -8
+
+    elif day in sundays:
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day - 1]) == 0:
+            return -8
+    
+    return 0
+
+
+def regret_isolated_days(state, e, shifts_at_day, day, weeks):
+    isolated_day = 0
+
+    if 1 < day < len(weeks)*7-2: 
+    
+        #Isolated Working Day
+        if sum(state.x[e,t,v] for t,v in (shifts_at_day[day - 1] + shifts_at_day[day + 1])) == 0:
+            isolated_day += 1
+        
+        #Isolated off day
+        if sum(1 for t,v in shifts_at_day[day - 2] if state.x.get((e,t,v))) == 1:
+            if sum(1 for t,v in shifts_at_day[day - 1] if state.x.get((e,t,v))) == 0 :
+                isolated_day += 1
+        
+        if sum(1 for t,v in shifts_at_day[day + 2] if state.x.get((e,t,v))) == 1:
+            if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
+                isolated_day += 1
+        
+        return 5 * -isolated_day
+    else:
+        return 0
+
+def regret_deviation_contracted_hours(state, e, shift, j, weeks):
+    negative_deviation_from_contracted_hours = state.soft_vars["deviation_contracted_hours"][e,j] - shift[1]
+    total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
+    if(total_negative_deviation_from_contracted_hours < 0):
+        #This is negative!
+        return 50 * total_negative_deviation_from_contracted_hours
+    elif total_negative_deviation_from_contracted_hours == 0:
+        return 100
+    else:
+        return negative_deviation_from_contracted_hours
+
+
+def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
+    if shift in invalid_shifts[e]:
+        return -10
+    elif shift in shift_combinations_violating_daily_rest[e]:
+        return -10 * min(1, sum(state.x[e, t1, v1] for t1, v1 in shift_combinations_violating_daily_rest[e][shift[0], shift[1]]))
+    elif shift in shift_sequences_violating_daily_rest[e]:
+        return -10 * max(0, sum(state.x[e, t2, v2] for t2, v2 in shift_sequences_violating_daily_rest[e][shift[0], shift[1]]) - 1)
+    else:
+        return 0
