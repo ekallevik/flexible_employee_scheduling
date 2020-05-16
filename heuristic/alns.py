@@ -145,6 +145,15 @@ class ALNS:
             self.competencies,
         )
 
+        remove_worst_contract = partial(
+            worst_contract_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
+            self.weeks,
+            self.employees
+        )
+
         remove_random_employee = partial(
             random_employee_removal,
             self.shifts,
@@ -271,6 +280,11 @@ class ALNS:
 
         operators = {
             remove_worst_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
+            remove_worst_contract: [
                 repair_worst_employee_regret,
                 repair_worst_employee_greedy
             ],

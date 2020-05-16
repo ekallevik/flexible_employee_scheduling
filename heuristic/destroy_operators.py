@@ -1,3 +1,6 @@
+from operator import itemgetter
+from pprint import pprint
+
 from loguru import logger
 
 from heuristic.delta_calculations import calc_weekly_objective_function
@@ -91,6 +94,51 @@ def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, st
     logger.info(f"Destroyed {destroy_size} worst employees: {employees}")
 
     return destroy_set, employees
+
+def worst_contract_removal(shifts, t_covered_by_shift_combined, competencies, weeks, employees,
+                           state,
+                           destroy_size=4):
+
+    if destroy_size % 2 == 1:
+        raise ValueError("The destroy size should be even")
+
+
+    # todo: only use some weeks?
+
+    worked_hours = {e: sum(state.soft_vars["deviation_contracted_hours"][e, j]
+                           for j in weeks)
+                    for e in employees}
+
+    #breakpoint()
+
+    selected_employees = []
+
+    for _ in range(int(destroy_size / 2)):
+        # TODO: does this have to by symmetric? Maybe have a balanced deficiency
+
+        overworked_employee = max(worked_hours.items(), key=itemgetter(1))[0]
+
+        logger.trace(f"Overworked employee {overworked_employee} chosen "
+                     f"(v:{worked_hours[overworked_employee]})")
+
+        selected_employees.append(overworked_employee)
+        del worked_hours[overworked_employee]
+
+        underworked_employee = min(worked_hours.items(), key=itemgetter(1))[0]
+
+        logger.trace(f"Underworked employee {underworked_employee} chosen "
+                     f"(v:{worked_hours[underworked_employee]})")
+
+        selected_employees.append(underworked_employee)
+        del worked_hours[underworked_employee]
+
+    destroy_set = destroy_employees(
+        competencies, selected_employees, shifts, state, t_covered_by_shift_combined
+    )
+
+    logger.error(f"Destroyed {destroy_size} worst employees: {selected_employees}")
+
+    return destroy_set, selected_employees
 
 
 def weighted_random_employee_removal(
