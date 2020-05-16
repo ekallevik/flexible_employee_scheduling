@@ -287,7 +287,7 @@ if __name__ == "__main__":
         python main.py --nowith_sdp run_alns
         
         # Change to SA-criterion and the run ALNS
-        python main.py change_criterion --start_temp=150 - run_alns
+        python3 main.py change_criterion --start_temp=100 - run_alns --iterations=10 --with_sdp=False
          
     """
 

@@ -23,7 +23,7 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
     def accept(self, candidate, current, random_state):
 
         probability = np.exp(
-            (current.get_objective_value() - candidate.get_objective_value())
+            (candidate.get_objective_value() - current.get_objective_value())
             / self.current_temperature
         )
 
