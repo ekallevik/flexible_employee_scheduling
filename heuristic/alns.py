@@ -13,7 +13,7 @@ from heuristic.destroy_operators import (
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
-    worst_employee_repair, worst_employee_regret_repair
+    worst_employee_repair, worst_employee_regret_repair, week_demand_repair
 
 
 
@@ -162,6 +162,20 @@ class ALNS:
             self.random_state,
         )
 
+        repair_week_demand = partial(
+            week_demand_repair,
+            self.shifts_per_week,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.demand,
+            self.employees,
+            self.contracted_hours,
+            self.shifts_at_day,
+            self.time_step,
+            self.time_periods_in_week,
+            self.employee_with_competencies,
+        )
+
         repair_worst_week_regret = partial(
             worst_week_regret_repair,
             self.shifts_per_week,
@@ -240,16 +254,43 @@ class ALNS:
         )
 
         operators = {
-            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_worst_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
+            remove_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
             remove_weighted_random_employee: [
                 repair_worst_employee_regret,
                 repair_worst_employee_greedy,
             ],
-            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
+
+            remove_worst_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
+                repair_week_demand
+            ],
+
+            remove_random_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
+                repair_week_demand
+            ],
+
+            remove_weighted_random_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
+                repair_week_demand
+            ],
+
+            remove_random_weekend: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy
+            ],
         }
 
         self.add_destroy_and_repair_operators(operators)
@@ -297,9 +338,9 @@ class ALNS:
         logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
                        f" {timer() - start:.2f}s ")
 
-        logger.error(f"Initial solution: {self.initial_solution.get_objective_value()}")
-        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value()}")
-        logger.error(f"Best solution: {self.best_solution.get_objective_value()}")
+        logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
+        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
+        logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
 
         candidate_solution.write("solutions/heuristic_solution_2")
 
