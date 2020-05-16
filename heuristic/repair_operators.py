@@ -45,19 +45,6 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
         for _ in range(number_of_shifts):
 
-            # To separate output
-            print()
-            print("Remaining demand")
-            positive_remaining_demand = {key: value for key, value in remaining_demand.items() if
-                                         value}
-            pprint(positive_remaining_demand)
-
-            print(f"Shift heap with {len(shift_heap)} elements")
-            pprint(shift_heap)
-
-            print("Employee heap")
-            pprint(employee_heap)
-
             shift, shift_score = get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift)
             allocations_needed = min([remaining_demand[t] for t in t_covered_by_shift[shift]])
             logger.info(f"Repairing shift {shift} (s: {shift_score}, d: {allocations_needed})")
@@ -114,10 +101,6 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
     calculate_deviation_from_demand(state, competencies, t_covered_by_shift,
                                     employee_with_competencies, demand, destroy_set)
-
-    penalties = hard_constraint_penalties(state)
-
-    #breakpoint()
 
     return repair_set
 
