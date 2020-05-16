@@ -447,7 +447,8 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
     partial_weekend_error = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
     isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
-
+    #I have decided to only use + here as all the values becomes negative unless they should be positive.
+    # The signs should therefore be correct.
     return (
             daily_rest_error 
             + weekly_rest_error 
@@ -464,7 +465,7 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
   
     if not actual_shifts:
         off_shift_periods.append(float(week_interval[1] - week_interval[0]))
-        return min(72, off_shift_periods[0])
+        return min(50, off_shift_periods[0])
 
     else:
         if(actual_shifts[0][0] - week_interval[0] >= 36):
@@ -479,27 +480,23 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
     if off_shift_periods:
-        return min(72, max(off_shift_periods))
-    
+        return min(50, max(off_shift_periods))
+    #Positive if we have a rest period. I use 50 as return if there is since we use 0.5 in the weights
     return -200
 
 
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
         for t,v in shifts_at_day[day + 1]:
-            if(state.x.get((e, t, v))):
-                return -2
-            else:
-                return 0
+            if(state.x[e, t, v] == 1):
+                return -5
 
     elif day in sundays:
         for t,v in shifts_at_day[day - 1]:
-            if(state.x.get((e, t, v))):
-                return -2
-            else:
-                return 0
-    else:
-        return 0
+            if(state.x[e, t, v] == 1):
+                return -5
+    
+    return 0
 
 
 def regret_isolated_days(state, e, shifts_at_day, day, weeks):
@@ -520,7 +517,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 2 * -isolated_day
+        return 5 * -isolated_day
     else:
         return 0
 
@@ -528,8 +525,12 @@ def regret_deviation_contracted_hours(state, e, shift, j, weeks):
     negative_deviation_from_contracted_hours = state.soft_vars["deviation_contracted_hours"][e,j] - shift[1]
     total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
     if(total_negative_deviation_from_contracted_hours < 0):
-        return 5 * total_negative_deviation_from_contracted_hours
-    return negative_deviation_from_contracted_hours
+        #This is negative!
+        return 50 * total_negative_deviation_from_contracted_hours
+    elif total_negative_deviation_from_contracted_hours == 0:
+        return 100
+    else:
+        return negative_deviation_from_contracted_hours
 
 
 def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
