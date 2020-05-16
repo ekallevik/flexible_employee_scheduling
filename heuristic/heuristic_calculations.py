@@ -178,7 +178,7 @@ def calculate_objective_function(data, soft_vars, weights, w):
 
     objective_function_value = (
         sum(f.values())
-        + g
+        + weights["lowest fairness score"] * g
         - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
 
