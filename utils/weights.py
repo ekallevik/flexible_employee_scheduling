@@ -70,9 +70,6 @@ def get_weights(time_set, staff):
     weights["deficit demand deviation factor"] = scale_weight_to_hours(
         weights["deficit demand deviation factor"], time_set["step"]
     )
-    weights["contracted hours"] = scale_weight_to_hours(
-        weights["contracted hours"], time_set["step"]
-    )
     weights["preferences"] = scale_weight_to_hours(weights["preferences"], time_set["step"])
 
     # Scale weights relatively
@@ -86,7 +83,7 @@ def get_weights(time_set, staff):
 
 def scale_weight_to_hours(weight, time_step):
     """
-    Demand deviation, contracted hours and preferences needs to be scaled to hours, as this is the
+    Demand deviation and preferences needs to be scaled to hours, as this is the
     reference time step.
     """
 
