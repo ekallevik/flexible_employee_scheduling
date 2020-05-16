@@ -15,6 +15,8 @@ from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
 from utils.weights import get_weights
+from visualisation.heatmap_plotter import HeatmapPlotter
+from visualisation.objective_plotter import ObjectivePlotter
 
 formatter = LogFormatter()
 
@@ -82,6 +84,14 @@ class ProblemRunner:
         )
 
         return self
+
+    def add_plotters(self, objective=False, violations=False):
+
+        if objective:
+            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
+
+        if violations:
+            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
 
     def set_alns(self):
         """ Sets ALNS based on the given config """

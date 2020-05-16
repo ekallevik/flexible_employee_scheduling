@@ -3,20 +3,18 @@ from visualisation.abstract_plotter import AbstractPlotter
 
 class ObjectivePlotter(AbstractPlotter):
 
-    def __init__(self):
-        super().__init__()
-
-        self.plt.ion()
+    def __init__(self, title):
+        super().__init__(title)
 
         fig = self.plt.figure()
 
         self.plt.yscale('symlog')
-        self.plt.title('Objective values')
         self.plt.grid(True)
 
     def plot_data(self, data):
 
         # todo: add time as x-value?
+        # todo: change to line plotter?
 
         candidate_plot, = self.plt.plot(data["candidate"],
                                         label="candidate",
@@ -35,5 +33,5 @@ class ObjectivePlotter(AbstractPlotter):
 
         self.plt.legend(handles=[candidate_plot, current_plot, best_plot, best_legal_plot],
                         loc='lower left ')
-        self.plt.show()
-        self.plt.pause(0.0001)
+
+        self.show()
