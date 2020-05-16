@@ -238,16 +238,16 @@ class ALNS:
         )
 
         operators = {
-            # remove_worst_employee: [repair_worst_employee_regret],
-            # remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
-            # remove_weighted_random_employee: [
-            #     repair_worst_employee_regret,
-            #     repair_worst_employee_greedy,repair_worst_week_greedy
-            # ],
-            remove_worst_week: [repair_worst_week_regret],
-            # remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy], 
-            # remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
-            # remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_worst_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_random_employee: [repair_worst_employee_regret, repair_worst_employee_greedy],
+            remove_weighted_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy,
+            ],
+            remove_worst_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_week: [repair_worst_week_regret, repair_worst_week_greedy], 
+            remove_weighted_random_week: [repair_worst_week_regret, repair_worst_week_greedy],
+            remove_random_weekend: [repair_worst_week_regret, repair_worst_week_greedy],
         }
 
         self.add_destroy_and_repair_operators(operators)

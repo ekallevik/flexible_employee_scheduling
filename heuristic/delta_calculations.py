@@ -235,7 +235,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
 
     objective_function_value = (
             sum(state.f.values())
-            + g
+            + 45 * g * 0.5
             - weights["excess demand deviation factor"] * abs(sum(state.soft_vars["deviation_from_ideal_demand"].values()))
             - penalty)
 
@@ -417,7 +417,7 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
   
     if not actual_shifts:
         off_shift_periods.append(float(week_interval[1] - week_interval[0]))
-        return min(100, off_shift_periods[0])
+        return min(50, off_shift_periods[0])
 
     else:
         if(actual_shifts[0][0] - week_interval[0] >= 36):
@@ -432,21 +432,19 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
     if off_shift_periods:
-        return min(100, max(off_shift_periods))
+        return min(50, max(off_shift_periods))
     
     return -200
 
 
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
-        for t,v in shifts_at_day[day + 1]:
-            if(state.x[e, t, v] == 1):
-                return -3
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day + 1]) == 0:
+                return -20
 
     elif day in sundays:
-        for t,v in shifts_at_day[day - 1]:
-            if(state.x[e, t, v] == 1):
-                return -3
+        if sum(state.x[e, t, v] for t,v in shifts_at_day[day - 1]) == 0:
+                return -20
     return 0
 
 
@@ -468,7 +466,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 2 * -isolated_day
+        return 4 * -isolated_day
 
     else:
         return 0

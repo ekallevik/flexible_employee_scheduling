@@ -161,11 +161,11 @@ def create_gantt_chart(data, solution, maximum, minimum):
 def main():
     
     data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-    root = ET.parse(data_folder / ('rproblem2.xml')).getroot()
+    root = ET.parse(data_folder / ('rproblem3.xml')).getroot()
     demand = get_days_with_demand2(root)
     maks = max([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
     minst = min([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
-    solution = str(solution_folder / "solution_files/optimality_model_rproblem2_new.sol")
+    solution = str(solution_folder / "optimality_solution_rproblem3.sol")
     create_gantt_chart(demand, solution, maks, minst)
 
 

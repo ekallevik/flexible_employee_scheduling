@@ -179,7 +179,7 @@ def calculate_objective_function(data, soft_vars, weights, w):
 
     objective_function_value = (
         sum(f.values())
-        + g
+        + 45 * 0.5 * g
         - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
 
