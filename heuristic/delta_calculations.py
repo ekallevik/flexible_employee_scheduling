@@ -245,7 +245,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
 
     objective_function_value = (
             sum(state.f.values())
-            + g
+            + weights["lowest fairness score"] * g
             - weights["excess demand deviation factor"] * abs(sum(state.soft_vars["deviation_from_ideal_demand"].values()))
             - penalty)
 
