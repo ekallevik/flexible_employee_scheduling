@@ -67,10 +67,19 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def run_alns(self, iterations=None, runtime=15):
+    def run_alns(self, iterations=None, runtime=15, plot_objective=False, plot_violations=False):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns()
+
+        if plot_objective and plot_violations:
+            raise ValueError("Cannot use two plots simultaneously")
+
+        if plot_objective:
+            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
+
+        if plot_violations:
+            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
 
         self.alns.iterate(iterations, runtime)
 
@@ -84,14 +93,6 @@ class ProblemRunner:
         )
 
         return self
-
-    def add_plotters(self, objective=False, violations=False):
-
-        if objective:
-            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
-
-        if violations:
-            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
 
     def set_alns(self):
         """ Sets ALNS based on the given config """
