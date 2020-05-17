@@ -67,10 +67,11 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def run_alns(self, iterations=None, runtime=15, plot_objective=False, plot_violations=False):
+    def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
+                 plot_violations=False):
         """ Runs ALNS on the generated candidate solution """
 
-        self.set_alns()
+        self.set_alns(decay)
 
         if plot_objective and plot_violations:
             raise ValueError("Cannot use two plots simultaneously")
@@ -94,7 +95,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self):
+    def set_alns(self, decay):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -130,7 +131,8 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, decay)
+        logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
