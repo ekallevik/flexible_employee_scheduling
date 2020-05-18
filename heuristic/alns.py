@@ -87,6 +87,7 @@ class ALNS:
         self.violation_plotter = None
         self.objective_plotter = None
         self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
+        self.iteration = 0
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -333,7 +334,6 @@ class ALNS:
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
         candidate_solution = None
-        iteration = 0
         runtime_in_seconds = runtime * 60 if runtime else None
 
         start = timer()
@@ -343,33 +343,31 @@ class ALNS:
             logger.warning(f"Running ALNS for {runtime} minutes")
 
             while timer() < start + runtime_in_seconds:
+                try:
+                    candidate_solution = self.perform_iteration()
+                except KeyboardInterrupt:
+                    command = input("\n\nAvailable commands: \n"
+                                    "1 - Continue running \n"
+                                    "2 - Drop into debugger \n"
+                                    "3 - Stop running \n")
 
-                candidate_solution = self.perform_iteration(iteration)
-
-                if self.violation_plotter:
-
-                    violations = candidate_solution.get_violations_per_week(
-                        self.weeks, self.time_periods_in_week, self.competencies, self.employees
-                        )
-
-                    self.violation_plotter.plot_data(violations)
-
-                if self.objective_plotter:
-                    self.update_history(candidate_solution)
-                    self.objective_plotter.plot_data(self.objective_history)
-
-                iteration += 1
+                    if command == "1":
+                        continue
+                    elif command == "2":
+                        breakpoint()
+                    else:
+                        break
 
         else:
 
             logger.warning(f"Running ALNS for {iterations} iterations")
 
             for iteration in range(iterations):
-                candidate_solution = self.perform_iteration(iteration)
+                candidate_solution = self.perform_iteration()
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
+        logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
                        f" {timer() - start:.2f}s ")
 
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
@@ -378,27 +376,36 @@ class ALNS:
 
         candidate_solution.write("solutions/heuristic_solution_2")
 
-    def perform_iteration(self, iteration):
+    def perform_iteration(self):
 
-        try:
-            # Add a newline between the output of each iteration
-            print()
-            logger.trace(f"Iteration: {iteration}")
+        # Add a newline between the output of each iteration
+        print()
+        logger.trace(f"Iteration: {self.iteration}")
 
-            candidate_solution = self.current_solution.copy()
-            destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-            repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+        candidate_solution = self.current_solution.copy()
+        destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
+        repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
 
-            destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
-            repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
+        destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
+        repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
 
-            self.calculate_objective(candidate_solution, destroy_set, repair_set)
-            self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+        self.calculate_objective(candidate_solution, destroy_set, repair_set)
+        self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
-            return candidate_solution
-        except KeyboardInterrupt:
-            # Enables dropping into the python debugger
-            breakpoint()
+        if self.violation_plotter:
+            violations = candidate_solution.get_violations_per_week(
+                self.weeks, self.time_periods_in_week, self.competencies, self.employees
+            )
+
+            self.violation_plotter.plot_data(violations)
+
+        if self.objective_plotter:
+            self.update_history(candidate_solution)
+            self.objective_plotter.plot_data(self.objective_history)
+
+        self.iteration += 1
+
+        return candidate_solution
 
 
     def update_history(self, candidate_solution):
