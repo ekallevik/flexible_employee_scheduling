@@ -16,6 +16,7 @@ from heuristic.local_search_operators import illegal_week_swap, illegal_contract
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair
+from visualisation.barchart_plotter import BarchartPlotter
 
 
 class ALNS:
@@ -85,7 +86,7 @@ class ALNS:
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # Plotting and statistics
-        self.violation_plotter = None
+        self.violation_plotter = BarchartPlotter("Violations for candidate")
         self.objective_plotter = None
         self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
 
