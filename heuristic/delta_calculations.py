@@ -241,7 +241,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
 
     g = min(state.f.values())
 
-    penalty = 75 * hard_constraint_penalties(state)
+    penalty = 20 * hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())

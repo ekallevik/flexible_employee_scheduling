@@ -11,11 +11,11 @@ from heuristic.destroy_operators import (
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
     worst_contract_removal,
 )
-from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
+from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours, exploit_contracted_hours
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
-    week_demand_per_shift_repair, week_demand_based_repair
+    week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy
 
 
 class ALNS:
@@ -283,8 +283,31 @@ class ALNS:
             self.shifts_at_day,
         )
 
-        repair_worst_week_demand_based = partial(
-            week_demand_based_repair,
+        repair_worst_week_demand_based_random = partial(
+            week_demand_based_repair_random,
+            self.shifts_per_week, 
+            self.competencies, 
+            self.t_covered_by_shift,
+            self.employee_with_competencies, 
+            self.employee_with_competency_combination,
+            self.demand,
+            self.time_step,
+            self.time_periods_in_week,
+            self.combined_time_periods_in_week,
+            self.employees, 
+            self.contracted_hours, 
+            self.demand_per_shift, 
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest,
+            self.shift_sequences_violating_daily_rest,
+            self.weeks, 
+            self.shifts_at_day,
+            self.L_C_D, 
+            self.shifts_overlapping_t,
+        )
+
+        repair_worst_week_demand_based_greedy = partial(
+            week_demand_based_repair_greedy,
             self.shifts_per_week, 
             self.competencies, 
             self.t_covered_by_shift,
@@ -308,52 +331,57 @@ class ALNS:
 
 
         operators = {
-            # remove_worst_employee: [
-            #      repair_worst_employee_regret,
-            #      repair_worst_employee_greedy
-            # ],
-
-            # remove_worst_contract: [
-            #     repair_worst_employee_regret,
-            #     repair_worst_employee_greedy
-            # ],
-
-            # remove_random_employee: [
-            #     repair_worst_employee_regret,
-            #     repair_worst_employee_greedy
-            # ],
-
-            # remove_weighted_random_employee: [
-            #     repair_worst_employee_regret,
-            #     repair_worst_employee_greedy,
-            # ],
-
-            remove_worst_week: [
-            #     repair_worst_week_regret,
-            #     repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift,
-                repair_worst_week_demand_based
+            remove_worst_employee: [
+                 repair_worst_employee_regret,
+                 repair_worst_employee_greedy
             ],
 
-            # remove_random_week: [
-            #     repair_worst_week_regret,
-            #     repair_worst_week_greedy,
+            remove_worst_contract: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
+            remove_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
+            remove_weighted_random_employee: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy,
+            ],
+
+            remove_worst_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
+            #     repair_week_demand,
+            #     repair_week_demand_per_shift,
+                repair_worst_week_demand_based_random,
+                repair_worst_week_demand_based_greedy
+            ],
+
+            remove_random_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
             #     repair_week_demand,
             #     repair_week_demand_per_shift
-            # ],
+                repair_worst_week_demand_based_random,
+                repair_worst_week_demand_based_greedy
+            ],
 
-            # remove_weighted_random_week: [
-            #     repair_worst_week_regret,
-            #     repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift
-            # ],
+            remove_weighted_random_week: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy,
+                #repair_week_demand,
+                #repair_week_demand_per_shift,
+                repair_worst_week_demand_based_random,
+                repair_worst_week_demand_based_greedy
+            ],
 
-            # remove_random_weekend: [
-            #     repair_worst_week_regret,
-            #     repair_worst_week_greedy
-            # ],
+            remove_random_weekend: [
+                repair_worst_week_regret,
+                repair_worst_week_greedy
+            ],
         }
 
         self.add_destroy_and_repair_operators(operators)
@@ -405,7 +433,8 @@ class ALNS:
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
 
-        candidate_solution.write("solutions/heuristic_solution_2")
+        exploit_contracted_hours(candidate_solution, self.shifts, self.t_covered_by_shift, self.weeks, self.employees, self.competencies)
+        self.best_solution.write("solutions/best_solution")
 
     def perform_iteration(self, iteration):
 
