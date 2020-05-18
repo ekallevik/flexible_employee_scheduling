@@ -30,7 +30,8 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
 
     probabilities = get_weighted_probabilities(weekly_objective)
 
-    selected_weeks = list(random_state.choice(weeks, size=destroy_size, p=probabilities))
+    selected_weeks = list(random_state.choice(weeks, size=destroy_size, p=probabilities,
+                                              replace=False))
 
     destroy_set_shifts = destroy_shifts(
         competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
@@ -44,7 +45,7 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
 def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covered_by_shift,
                         random_state, state,  destroy_size=1):
 
-    selected_weeks = list(random_state.choice(weeks, size=destroy_size))
+    selected_weeks = list(random_state.choice(weeks, size=destroy_size, replace=False))
 
     destroy_set_shifts = destroy_shifts(
         competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
@@ -60,7 +61,7 @@ def random_weekend_removal(
         destroy_size=2,
 ):
 
-    selected_weeks = list(random_state.choice(weeks, size=destroy_size))
+    selected_weeks = list(random_state.choice(weeks, size=destroy_size, replace=False))
 
     shifts_in_weekend = []
 
@@ -99,7 +100,8 @@ def weighted_random_employee_removal(
 
     probabilities = get_weighted_probabilities(state.f)
 
-    selected_employees = list(random_state.choice(employees, size=destroy_size, p=probabilities))
+    selected_employees = list(random_state.choice(employees, size=destroy_size, p=probabilities,
+                                                  replace=False))
 
     destroy_set = destroy_employees(
         competencies, selected_employees, shifts, state, t_covered_by_shift
@@ -114,7 +116,7 @@ def random_employee_removal(
     shifts, t_covered_by_shift, competencies, employees, random_state, state, destroy_size=2
 ):
 
-    selected_employees = random_state.choice(employees, size=destroy_size)
+    selected_employees = random_state.choice(employees, size=destroy_size, replace=False)
 
     destroy_set = destroy_employees(
         competencies, selected_employees, shifts, state, t_covered_by_shift
