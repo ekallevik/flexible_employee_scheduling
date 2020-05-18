@@ -6,7 +6,7 @@ gurobipy==9.0.0
 pygments==2.6.1
 fire==0.3.1
 pdbpp==0.10.2
-loguru==0.4.1
+loguru==0.5.0
 numpy==1.18.4
 
 
