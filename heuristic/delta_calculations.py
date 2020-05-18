@@ -1,7 +1,7 @@
 from operator import itemgetter
 from collections import defaultdict
 from copy import copy
-
+from utils.const import WEEKLY_REST_DURATION
 from loguru import logger
 
 
@@ -118,7 +118,7 @@ def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights):
 
     f = (
         sum(
-            weights["rest"] * min(100, state.w[e, j][1])
+            weights["rest"] * min(WEEKLY_REST_DURATION[1], state.w[e, j][1])
             - weights["contracted hours"][e] * state.soft_vars["deviation_contracted_hours"][e, j]
             for j in weeks
         )
@@ -241,7 +241,7 @@ def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D,
 
     g = min(state.f.values())
 
-    penalty = 10 * hard_constraint_penalties(state)
+    penalty = 75 * hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())
@@ -263,20 +263,20 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
 
         if setting == "worst":
             value[j] = (
-                        sum(min(100, state.w[e, j][1]) for e in employees)
+                        sum(min(WEEKLY_REST_DURATION[1], state.w[e, j][1]) for e in employees)
 
-                        - sum(abs(state.soft_vars["deviation_from_ideal_demand"][c, t])
+                        - sum(10 * abs(state.soft_vars["deviation_from_ideal_demand"][c, t])
                               for c in competencies
                               for t in time_periods_in_week[c, j]
                               )
 
-                        - sum(state.soft_vars["partial_weekends"][e, (5 + j * 7)]
+                        - sum(8 * state.soft_vars["partial_weekends"][e, (5 + j * 7)]
                               for e in employees
                               )
 
-                        - sum(state.soft_vars["isolated_working_days"][e, i + 1]
+                        - sum(10 * state.soft_vars["isolated_working_days"][e, i + 1]
                               +
-                              state.soft_vars["isolated_off_days"][e, i + 1]
+                              10 * state.soft_vars["isolated_off_days"][e, i + 1]
                               for e in employees
                               for i in range(len(days_in_week)-2)
                               )
@@ -305,7 +305,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                                    )
 
                         - max(0,
-                              sum(state.soft_vars["deviation_contracted_hours"].get((e, j), 0)
+                              sum(2 * state.soft_vars["deviation_contracted_hours"].get((e, j), 0)
                                   for e in employees
                                   )
                               )
@@ -442,21 +442,22 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
 
 def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, competency_score):
     day = int(shift[0]/24)
+    week = int(day/7)
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
     weekly_rest_error = regret_weekly_rest(state, shifts_at_week, e, week, shift)
     partial_weekend_error = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
     isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
-    #I have decided to only use + here as all the values becomes negative unless they should be positive.
-    # The signs should therefore be correct.
-    return (
-            daily_rest_error 
-            + weekly_rest_error 
+
+    return (weekly_rest_error
+            + daily_rest_error  
             + partial_weekend_error 
             + isolated_days_error 
             + deviation_contracted_hours 
             - 100 * competency_score
             )
+
+
 
 def regret_weekly_rest(state, shifts_at_week, e, week, shift):
     actual_shifts = [(t, v) for t,v in shifts_at_week[week] if state.x[e,t,v] == 1 or (t,v) == (shift[0],shift[1])]
@@ -465,7 +466,7 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
   
     if not actual_shifts:
         off_shift_periods.append(float(week_interval[1] - week_interval[0]))
-        return min(50, off_shift_periods[0])
+        return 0.5 * min(WEEKLY_REST_DURATION[1], off_shift_periods[0])
 
     else:
         if(actual_shifts[0][0] - week_interval[0] >= 36):
@@ -480,29 +481,28 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
     if off_shift_periods:
-        return min(50, max(off_shift_periods))
-    #Positive if we have a rest period. I use 50 as return if there is since we use 0.5 in the weights
+        return 0.5 * min(WEEKLY_REST_DURATION[1], max(off_shift_periods))
+    
     return -200
 
 
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
         if sum(state.x[e, t, v] for t,v in shifts_at_day[day + 1]) == 0:
-            return -8
+            return -50
 
     elif day in sundays:
         if sum(state.x[e, t, v] for t,v in shifts_at_day[day - 1]) == 0:
-            return -8
-    
+            return -50
     return 0
 
 
 def regret_isolated_days(state, e, shifts_at_day, day, weeks):
     isolated_day = 0
 
-    if 1 < day < len(weeks)*7-2: 
+    if 1 < day < len(weeks)*7-2:
     
-        #Isolated Working Day
+    #Isolated Working Day
         if sum(state.x[e,t,v] for t,v in (shifts_at_day[day - 1] + shifts_at_day[day + 1])) == 0:
             isolated_day += 1
         
@@ -515,28 +515,76 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 5 * -isolated_day
+        return 12 * -isolated_day
+
     else:
         return 0
 
 def regret_deviation_contracted_hours(state, e, shift, j, weeks):
     negative_deviation_from_contracted_hours = state.soft_vars["deviation_contracted_hours"][e,j] - shift[1]
     total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
-    if(total_negative_deviation_from_contracted_hours < 0):
-        #This is negative!
+    if total_negative_deviation_from_contracted_hours < 0:
+        #Remeber that this is negative to begin with. The other two are positive
         return 50 * total_negative_deviation_from_contracted_hours
     elif total_negative_deviation_from_contracted_hours == 0:
-        return 100
-    else:
-        return negative_deviation_from_contracted_hours
+        return 200
+    return negative_deviation_from_contracted_hours
 
 
 def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
     if shift in invalid_shifts[e]:
-        return -10
+        return -100
     elif shift in shift_combinations_violating_daily_rest[e]:
-        return -10 * min(1, sum(state.x[e, t1, v1] for t1, v1 in shift_combinations_violating_daily_rest[e][shift[0], shift[1]]))
+        return -100 * min(1, sum(state.x[e, t1, v1] for t1, v1 in shift_combinations_violating_daily_rest[e][shift[0], shift[1]]))
     elif shift in shift_sequences_violating_daily_rest[e]:
-        return -10 * max(0, sum(state.x[e, t2, v2] for t2, v2 in shift_sequences_violating_daily_rest[e][shift[0], shift[1]]) - 1)
+        return -100 * max(0, sum(state.x[e, t2, v2] for t2, v2 in shift_sequences_violating_daily_rest[e][shift[0], shift[1]]) - 1)
     else:
         return 0
+
+# def calculate_consecutive_days(state, e, shifts_at_day, L_C_D, day):
+#         for i in range(len(days)-L_C_D):
+#             state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
+
+
+
+def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, days, competency_score):
+    day = int(shift[0]/24)
+    week = int(day/7)
+
+    daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+    weekly_rest_other_weeks = sum(state.w[e,j][1] for j in weeks if j != week)
+    isolated_off_days_other_weeks = sum(state.soft_vars["isolated_off_days"][e,i+1] + state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(days)-2))
+    partial_weekends_other_weeks = sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
+
+    total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
+    
+    
+    if total_negative_deviation_from_contracted_hours < 0:
+        contracted_hours = 500 * total_negative_deviation_from_contracted_hours
+    elif total_negative_deviation_from_contracted_hours == 0:
+        contracted_hours = 100
+    else:
+        contracted_hours = total_negative_deviation_from_contracted_hours
+
+    current_week_rest = regret_weekly_rest(state, shifts_at_week, e, week, shift)
+    current_isolated_days = regret_isolated_days(state, e, shifts_at_day, day, weeks)
+    current_partial_weekends = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
+
+    return (
+            current_week_rest
+            + daily_rest_error
+            + contracted_hours
+            + current_isolated_days
+            + current_partial_weekends #* (-partial_weekends_other_weeks)
+            #weekly_rest_other_weeks
+            #isolated_off_days_other_weeks
+            
+    )
+
+"""
+    Forskjell når man ser på en ansatt:
+    2. isolated_days. Burde egentlig sjekke gjennom alle mulige isolated_days for å spre dem jevnt ut.
+    3. samme gjelder med partial weekends. Man burde se alle partial weekend å ta det med inn i beregningen for hvem som skal få en til
+    4. Weekly_rest. Kan her bare telle over en ansatt sine andre i tilegg til å gjøre den testen over. Hvor mye man får i en uke er jo viktig. 
+    5. kontraktsfestede timer burde gå over hele perioden istedenfor for bare en uke. 
+"""
