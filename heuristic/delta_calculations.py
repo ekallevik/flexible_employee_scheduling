@@ -449,14 +449,6 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
     isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
 
-    # print(
-    #     str(e) + ": "
-    #     + str(daily_rest_error) + ", "
-    #     + str(weekly_rest_error) + ", "
-    #     + str(partial_weekend_error) + ", "
-    #     + str(isolated_days_error) + ", "
-    #     + str(deviation_contracted_hours))
-
     return (weekly_rest_error
             + daily_rest_error  
             + partial_weekend_error 
@@ -464,8 +456,6 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
             + deviation_contracted_hours 
             - 100 * competency_score
             )
-
-             #- sum(state.soft_vars["consecutive_days"][e, i] for e in employees for i in range(len(days_in_week)-L_C_D)) Not fixed
 
 
 
@@ -499,11 +489,11 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
 def regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day):
     if day in saturdays:
         if sum(state.x[e, t, v] for t,v in shifts_at_day[day + 1]) == 0:
-            return -8
+            return -50
 
     elif day in sundays:
         if sum(state.x[e, t, v] for t,v in shifts_at_day[day - 1]) == 0:
-            return -8
+            return -50
     return 0
 
 
@@ -525,7 +515,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 10 * -isolated_day
+        return 12 * -isolated_day
 
     else:
         return 0
@@ -581,11 +571,14 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
     current_partial_weekends = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
 
     return (
-            current_week_rest/(weekly_rest_other_weeks * 0.5)
+            current_week_rest
             + daily_rest_error
             + contracted_hours
-            + (8 * isolated_off_days_other_weeks * current_isolated_days)
-            + (8 * partial_weekends_other_weeks * current_partial_weekends)
+            + current_isolated_days
+            + current_partial_weekends #* (-partial_weekends_other_weeks)
+            #weekly_rest_other_weeks
+            #isolated_off_days_other_weeks
+            
     )
 
 """

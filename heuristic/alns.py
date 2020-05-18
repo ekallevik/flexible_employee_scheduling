@@ -28,7 +28,7 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
-        self.initial_solution.write("Initial_solution")
+
         self.criterion = criterion
         self.random_state = self.initialize_random_state()
 
@@ -493,7 +493,7 @@ class ALNS:
             weight_update = self.WeightUpdate["IS_REJECTED"]
             logger.trace("Candidate is rejected")
 
-        if hard_constraint_penalties(candidate_solution) == 0:
+        if candidate_solution.is_legal():
 
             if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
                 logger.critical(f"Legal, best solution found")

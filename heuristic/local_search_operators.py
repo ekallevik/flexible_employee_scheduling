@@ -58,33 +58,7 @@ def illegal_week_swap(
                     print("Not enough employees")
 
                 for e_p in possible_employees:
-                    # set_x(current_state, t_covered_by_shift, e_p, shift[0], shift[1], 1)
-
-                    # #Soft restriction calculations
-                    # # Deviation from demand would not change if we use the same shift: calculate_deviation_from_demand(current_state, competencies, t_covered_by_shift, employee_with_competencies, demand, repaired)
-                    # calculate_weekly_rest(current_state, shifts_in_week, [e_p], [j])
-                    # calculate_partial_weekends(current_state, [e_p], shifts_at_day, saturdays)
-                    # calculate_isolated_working_days(current_state, [e_p], shifts_at_day, days_in_week)
-                    # calculate_isolated_off_days(current_state, [e_p], shifts_at_day, days_in_week)
-                    # calculate_consecutive_days(current_state, [e_p], shifts_at_day, L_C_D, days_in_week)
-                    # delta_calculate_negative_deviation_from_contracted_hours(current_state, [e_p], contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-                    
-                    # #Hard constraint calculations
-                    # #This should not be needed if the swap is done properly: mapping_shift_to_demand(state, repaired, t_covered_by_shift, shifts_overlapping_t, competencies)
-                    # #This should also not be needed if the swap is done properly: cover_multiple_demand_periods(state, repaired, t_covered_by_shift, competencies)
-                    # #This should also not be needed: more_than_one_shift_per_day(current_state, [e], demand, shifts_at_day, days)
-                    # #Should not be needed: above_maximum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
-                    # #Should not be needed: below_minimum_demand(current_state, repaired, employee_with_competencies, demand, competencies, t_covered_by_shift)
-
-                    # #Calculate the objective function when the employee e is assigned the shift
-                    # objective_values[e_p, shift] = calc_weekly_objective_function(state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, [j], L_C_D)[0]
-
-                    
-                    # set_x(current_state, t_covered_by_shift, e_p, shift[0], shift[1], 0)
-
                     objective_values[e_p, shift] = employee_shift_value(state, e_p, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, j, 0)
-
-                #set_x(current_state, t_covered_by_shift, emp, shift[0], shift[1], 1)
 
             max_value = max(objective_values.items(), key=itemgetter(1))[1]
             employee = choice([key for key, value in objective_values.items() if value == max_value])
@@ -120,6 +94,5 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
                     illegal_hours -= (v - shift[2])
 
                     if(illegal_hours <= 0):
-                        print("Done")
                         break
     return destroy_set, repair_set
