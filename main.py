@@ -15,6 +15,8 @@ from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
 from utils.weights import get_weights
+from visualisation.heatmap_plotter import HeatmapPlotter
+from visualisation.objective_plotter import ObjectivePlotter
 
 formatter = LogFormatter()
 
@@ -26,6 +28,7 @@ level_per_module = {
     "heuristic.alns": "TRACE",
     "heuristic.destroy_operators": "TRACE",
     "heuristic.repair_operators": "TRACE",
+    "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
 logger.remove()
@@ -64,10 +67,19 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def run_alns(self, iterations=None, runtime=15):
+    def run_alns(self, iterations=None, runtime=15, plot_objective=False, plot_violations=False):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns()
+
+        if plot_objective and plot_violations:
+            raise ValueError("Cannot use two plots simultaneously")
+
+        if plot_objective:
+            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
+
+        if plot_violations:
+            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
 
         self.alns.iterate(iterations, runtime)
 
@@ -103,43 +115,14 @@ class ProblemRunner:
         }
 
         hard_variables = {
-            "below_minimum_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0][c]
-            },
-            "above_maximum_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0][c]
-            },
-            "more_than_one_shift_per_day": {
-                (e, i): 0
-                for e in self.data["staff"]["employees"]
-                for i in self.data["time"]["days"]
-            },
-            "cover_multiple_demand_periods": {
-                (e, t): 0
-                for e in self.data["staff"]["employees"]
-                for j in self.data["time"]["weeks"]
-                for t in self.data["time"]["combined_time_periods"][1][j]
-            },
-            "weekly_off_shift_error": {
-                (e, j): 0
-                for e in self.data["staff"]["employees"]
-                for j in self.data["time"]["weeks"]
-            },
-            "mapping_shift_to_demand": {
-                (c, t): 0
-                for c in self.data["competencies"]
-                for t in self.data["time"]["periods"][0]
-            },
-            "daily_rest_error": {
-                (e, i): 0
-                for e in self.data["staff"]["employees"]
-                for i in self.data["time"]["days"]},
-
-            "delta_positive_contracted_hours": {e: 0 for e in self.data["staff"]["employees"]},
+            "below_minimum_demand": {},
+            "above_maximum_demand": {},
+            "more_than_one_shift_per_day": {},
+            "cover_multiple_demand_periods": {},
+            "weekly_off_shift_error": {},
+            "mapping_shift_to_demand": {},
+            "daily_rest_error": {},
+            "delta_positive_contracted_hours": {},
         }
 
         objective_function, f = calculate_objective_function(self.data, soft_variables,
@@ -287,7 +270,7 @@ if __name__ == "__main__":
         python main.py --nowith_sdp run_alns
         
         # Change to SA-criterion and the run ALNS
-        python3 main.py change_criterion --start_temp=100 - run_alns --iterations=10 --with_sdp=False
+        python3 main.py --with_sdp=False change_criterion --start_temp=100 - run_alns --iterations=10 
          
     """
 

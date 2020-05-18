@@ -1,6 +1,4 @@
 from collections import defaultdict
-from operator import itemgetter
-from copy import copy
 
 from loguru import logger
 
@@ -26,15 +24,16 @@ def calculate_weekly_rest(data, x, w):
     important = [7 * 24 * i for i in range(len(data["time"]["weeks"]) + 1)]
     for key in actual_shifts.keys():
         week = int(key[1])
-        if(len(actual_shifts[key]) == 0):
+        if len(actual_shifts[key]) == 0:
             off_shift_periods[key] = [(important[week], float((important[week + 1] - important[week])))]
 
         else:
-            if(actual_shifts[key][0][0] - important[week] >= 36):
+            if actual_shifts[key][0][0] - important[week] >= 36:
                 off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
 
-            if(actual_shifts[key][0][0] - important[week] >= 36):
+            if actual_shifts[key][0][0] - important[week] >= 36:
                 off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+
 
 def calculate_negative_deviation_from_demand(data, y):
     delta = {}
@@ -140,7 +139,7 @@ def calculate_f_for_employee(data, e, soft_vars, weights, w):
 
     f = (
         weights["rest"] * sum(
-            min(100, w[e, j][1])
+            min(72, w[e, j][1])
             for j in data["time"]["weeks"]
         )
 
@@ -179,7 +178,7 @@ def calculate_objective_function(data, soft_vars, weights, w):
 
     objective_function_value = (
         sum(f.values())
-        + len(data["staff"]["employees"]) * 0.5 * g
+        + weights["lowest fairness score"] * g
         - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
 

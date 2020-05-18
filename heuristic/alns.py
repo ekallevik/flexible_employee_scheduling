@@ -1,8 +1,5 @@
-from datetime import timedelta
-
 import numpy as np
-from loguru import logger
-
+from functools import partial
 from timeit import default_timer as timer
 
 from heuristic.delta_calculations import *
@@ -14,12 +11,11 @@ from heuristic.destroy_operators import (
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
-from functools import partial
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair
 
-from timeit import default_timer as timer
+
 
 class ALNS:
     def __init__(self, state, criterion, data, objective_weights):
@@ -64,7 +60,7 @@ class ALNS:
         self.time_periods = data["time"]["periods"][0]
         self.time_periods_in_week = data["time"]["periods"][1]
         self.time_periods_in_day = data["time"]["periods"][2]
-
+        print(self.time_periods_in_week)
         self.shifts = data["shifts"]["shifts"]
 
         self.employees = data["staff"]["employees"]
@@ -84,6 +80,11 @@ class ALNS:
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
+
+        # Plotting and statistics
+        self.violation_plotter = None
+        self.objective_plotter = None
+        self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
 
         # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
@@ -268,6 +269,19 @@ class ALNS:
 
             while timer() < start + runtime_in_seconds:
                 candidate_solution = self.perform_iteration(iteration)
+
+                if self.violation_plotter:
+
+                    violations = candidate_solution.get_violations_per_week(
+                        self.weeks, self.time_periods_in_week, self.competencies, self.employees
+                        )
+
+                    self.violation_plotter.plot_data(violations)
+
+                if self.objective_plotter:
+                    self.update_history(candidate_solution)
+                    self.objective_plotter.plot_data(self.objective_history)
+
                 iteration += 1
 
         else:
@@ -281,6 +295,10 @@ class ALNS:
         print()
         logger.warning(f"Performed {iterations if iterations else iteration} iterations over"
                        f" {timer() - start:.2f}s ")
+
+        logger.error(f"Initial solution: {self.initial_solution.get_objective_value()}")
+        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value()}")
+        logger.error(f"Best solution: {self.best_solution.get_objective_value()}")
 
         candidate_solution.write("solutions/heuristic_solution_2")
 
@@ -299,7 +317,16 @@ class ALNS:
 
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+
         return candidate_solution
+
+
+    def update_history(self, candidate_solution):
+
+        self.objective_history["candidate"].append(candidate_solution.get_objective_value())
+        self.objective_history["current"].append(self.current_solution.get_objective_value())
+        self.objective_history["best"].append(self.best_solution.get_objective_value())
+        self.objective_history["best_legal"].append(self.best_legal_solution.get_objective_value())
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -312,22 +339,7 @@ class ALNS:
         logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
-
-        if (
-                candidate_solution.get_objective_value()
-                >= self.best_legal_solution.get_objective_value()
-                and hard_constraint_penalties(candidate_solution) == 0
-        ):
-            self.best_legal_solution = candidate_solution
-
-            logger.critical("Candidate is legal")
-            self.best_legal_solution.write("best_legal_solution")
-
-        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
-
-            self.current_solution = candidate_solution
-
-            if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
+        if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
                 print("Breaking Weekly Rest")
                 candidate_solution.write("before_breaking_weekly")
 
@@ -353,12 +365,49 @@ class ALNS:
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
                 candidate_solution.write("After_breaking_weekly")
 
-            if sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
+        elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
                 print("Breaking Contracted Hours")
                 candidate_solution.write("Before_breaking_contracted")
                 destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
                 candidate_solution.write("After_breaking_contracted")
+
+        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
+
+            self.current_solution = candidate_solution
+
+            # if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
+            #     print("Breaking Weekly Rest")
+            #     candidate_solution.write("before_breaking_weekly")
+
+            #     destroy_set, repair_set = illegal_week_swap(
+            #         self.shifts_per_week,
+            #         self.employees,
+            #         self.shifts_at_day,
+            #         self.t_covered_by_shift,
+            #         self.competencies,
+            #         self.contracted_hours,
+            #         self.invalid_shifts, 
+            #         self.shift_combinations_violating_daily_rest, 
+            #         self.shift_sequences_violating_daily_rest,
+            #         self.time_periods_in_week,
+            #         self.time_step,
+            #         self.L_C_D,
+            #         self.weeks,
+            #         self.combined_time_periods_in_week,
+            #         candidate_solution,
+            #     )
+
+            #     destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+            #     self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
+            #     candidate_solution.write("After_breaking_weekly")
+
+            # elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
+            #     print("Breaking Contracted Hours")
+            #     candidate_solution.write("Before_breaking_contracted")
+            #     destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+            #     self.calculate_objective(candidate_solution, destroy_set, repair_set)
+            #     candidate_solution.write("After_breaking_contracted")
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]

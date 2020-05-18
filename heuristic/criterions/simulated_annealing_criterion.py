@@ -1,4 +1,5 @@
 import numpy as np
+from loguru import logger
 
 from heuristic.criterions.abstract_criterion import AbstractCriterion
 
@@ -22,14 +23,24 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
 
     def accept(self, candidate, current, random_state):
 
+        probability = self.get_probability(candidate, current)
+
+        self.update_temperature()
+        is_accepted = probability >= random_state.random()
+
+        logger.info(f"Accept candidate: {is_accepted} (p={probability:.3f}, "
+                    f"t={self.current_temperature})")
+
+        return is_accepted
+
+    def get_probability(self, candidate, current):
+
         probability = np.exp(
             (candidate.get_objective_value() - current.get_objective_value())
             / self.current_temperature
         )
 
-        self.update_temperature()
-
-        return probability >= random_state.random()
+        return probability
 
     def update_temperature(self):
         """

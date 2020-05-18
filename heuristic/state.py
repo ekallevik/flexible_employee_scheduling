@@ -1,8 +1,7 @@
 from copy import copy
 from collections import defaultdict
 
-from heuristic.delta_calculations import hard_constraint_penalties
-
+from loguru import logger
 
 class State:
     def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
@@ -27,9 +26,15 @@ class State:
     def is_legal(self):
         """ Returns True if all hard_vars is 0, otherwise will return False """
 
-        return not any(self.hard_vars.values())
-
-
+        return (
+                not any(self.hard_vars["below_minimum_demand"].values())
+                and not any(self.hard_vars["delta_positive_contracted_hours"].values())
+                and not any(self.hard_vars["above_maximum_demand"].values())
+                and not any(self.hard_vars["weekly_off_shift_error"].values())
+                and not any(self.hard_vars["more_than_one_shift_per_day"].values())
+                and not any(self.hard_vars["cover_multiple_demand_periods"].values())
+                and not any(self.hard_vars["mapping_shift_to_demand"].values())
+                )
 
     def copy(self):
         return State({"x": self.x.copy(), "y": self.y.copy(), "w": self.w.copy()},
@@ -54,6 +59,30 @@ class State:
         },
         copy(self.objective_function_value), copy(self.f))
 
+    def get_violations_per_week(self, weeks, time_periods_in_week, competencies, employees):
+        """ Calculations violations of hard constraints per week"""
+
+        below_demand = [sum(self.hard_vars["below_minimum_demand"].get((c, t), 0)
+                            for c in competencies
+                            for t in time_periods_in_week[c, week])
+                        for week in weeks]
+
+        above_demand = [sum(self.hard_vars["above_maximum_demand"].get((c, t), 0)
+                            for c in competencies
+                            for t in time_periods_in_week[c, week])
+                        for week in weeks]
+
+        contracted_hours = [sum(-min(0, self.soft_vars["deviation_contracted_hours"][e, j])
+                                for e in employees)
+                            for j in weeks]
+
+        violations = {
+            "above_demand": above_demand,
+            "below_demand": below_demand,
+            "contracted_hours": contracted_hours
+        }
+
+        return violations
 
     def write(self, filename):
         summasjon = defaultdict(float)
