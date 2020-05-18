@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import fire
 from gurobipy import *
 from loguru import logger
@@ -37,7 +39,7 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -46,6 +48,9 @@ class ProblemRunner:
         logger.info(f"Setting up runner for {problem}")
 
         self.problem = problem
+        self.mode = mode
+        self.log_name = log_name
+
         self.data = shift_generation.load_data(problem)
         self.weights = get_weights(self.data["time"], self.data["staff"])
 
@@ -59,9 +64,7 @@ class ProblemRunner:
             self.set_sdp()
             self.run_sdp()
 
-        self.mode = mode
         self.esp = None
-
         self.criterion = GreedyCriterion()
         self.alns = None
 
@@ -217,6 +220,10 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
+
+        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
+        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
+                                  f"{log_name}.log")
 
         return model
 
