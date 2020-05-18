@@ -177,10 +177,14 @@ class ProblemRunner:
 
         self.sdp.run_model()
 
-        used_shifts = self.sdp.get_used_shifts()
+        used_shifts, unused_shifts = self.sdp.get_used_shifts()
+
+        self.data["demand_per_shift"] = self.sdp.get_demand_per_shift()
+
         self.data["shifts"] = shift_generation.get_updated_shift_sets(
             self.problem, self.data, used_shifts
         )
+
         self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
             self.data, used_shifts
         )
