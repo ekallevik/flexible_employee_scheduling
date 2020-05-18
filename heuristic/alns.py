@@ -9,12 +9,13 @@ from heuristic.destroy_operators import (
     random_week_removal,
     weighted_random_week_removal,
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
+    worst_contract_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
-    worst_employee_repair, worst_employee_regret_repair, week_demand_repair
-
+    worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
+    week_demand_per_shift_repair
 
 
 class ALNS:
@@ -145,6 +146,15 @@ class ALNS:
             self.competencies,
         )
 
+        remove_worst_contract = partial(
+            worst_contract_removal,
+            self.shifts,
+            self.t_covered_by_shift,
+            self.competencies,
+            self.weeks,
+            self.employees
+        )
+
         remove_random_employee = partial(
             random_employee_removal,
             self.shifts,
@@ -161,6 +171,21 @@ class ALNS:
             self.competencies,
             self.employees,
             self.random_state,
+        )
+
+        repair_week_demand_per_shift = partial(
+            week_demand_per_shift_repair,
+            self.shifts_per_week,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.demand,
+            self.demand_per_shift,
+            self.employees,
+            self.contracted_hours,
+            self.shifts_at_day,
+            self.time_step,
+            self.time_periods_in_week,
+            self.employee_with_competencies,
         )
 
         repair_week_demand = partial(
@@ -260,6 +285,11 @@ class ALNS:
                 repair_worst_employee_greedy
             ],
 
+            remove_worst_contract: [
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
+            ],
+
             remove_random_employee: [
                 repair_worst_employee_regret,
                 repair_worst_employee_greedy
@@ -273,19 +303,22 @@ class ALNS:
             remove_worst_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                repair_week_demand
+                repair_week_demand,
+                repair_week_demand_per_shift
             ],
 
             remove_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                repair_week_demand
+                repair_week_demand,
+                repair_week_demand_per_shift
             ],
 
             remove_weighted_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                repair_week_demand
+                repair_week_demand,
+                repair_week_demand_per_shift
             ],
 
             remove_random_weekend: [
