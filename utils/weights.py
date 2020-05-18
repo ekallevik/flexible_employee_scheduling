@@ -101,12 +101,6 @@ def scale_weights_relatively(weights, staff):
     weights["lowest fairness score"] = scale_based_on_staff_sized(
         weights["lowest fairness score"], num_employees
     )
-    weights["excess demand deviation factor"] = scale_based_on_staff_sized(
-        weights["excess demand deviation factor"], num_employees
-    )
-    weights["deficit demand deviation factor"] = scale_based_on_staff_sized(
-        weights["deficit demand deviation factor"], num_employees
-    )
 
     return weights
 

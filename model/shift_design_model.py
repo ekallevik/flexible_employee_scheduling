@@ -52,19 +52,30 @@ class ShiftDesignModel:
 
     def get_used_shifts(self):
 
-        y = self.convert()
-        shifts = [shift for shift, used in y.items() if used == 1]
+        y = self.convert(self.var.y)
 
-        return tuplelist(shifts)
+        used_shifts = [shift for shift, used in y.items() if used == 1]
+        unused_shifts = [shift for shift, used in y.items() if used == 0]
 
-    def convert(self):
+        return tuplelist(used_shifts), tuplelist(unused_shifts)
+
+    def get_demand_per_shift(self):
+        """
+        Returns the number of employees needed for each shift to cover if demand exists
+        """
+
+        x = self.convert(self.var.x)
+
+        demand_for_shift = {shift: demand for shift, demand in x.items() if demand}
+
+        return tupledict(demand_for_shift)
+
+    def convert(self, var):
         """ Converts a tupledict of Gurobi variables to a tupledict of ints """
 
         # todo: move this into separate file for greater re-use
 
         converted_dict = tupledict()
-
-        var = self.var.y
 
         for key in var.keys():
             # Make sure that values are always positive

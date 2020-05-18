@@ -363,7 +363,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                 - 10 * sum(state.hard_vars["weekly_off_shift_error"].get((e, j), 0)
                            for e in employees)
 
-                - 100 * sum(state.hard_vars["delta_positive_contracted_hours"][e]
+                - 100 * sum(state.hard_vars["delta_positive_contracted_hours"].get(e, 0)
                             for e in employees)
 
                 - 100 * competency_score

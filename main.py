@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import fire
 from gurobipy import *
 from loguru import logger
@@ -37,7 +39,7 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -46,6 +48,9 @@ class ProblemRunner:
         logger.info(f"Setting up runner for {problem}")
 
         self.problem = problem
+        self.mode = mode
+        self.log_name = log_name
+
         self.data = shift_generation.load_data(problem)
         self.weights = get_weights(self.data["time"], self.data["staff"])
 
@@ -59,18 +64,17 @@ class ProblemRunner:
             self.set_sdp()
             self.run_sdp()
 
-        self.mode = mode
         self.esp = None
-
         self.criterion = GreedyCriterion()
         self.alns = None
 
         self.set_esp()
 
-    def run_alns(self, iterations=None, runtime=15, plot_objective=False, plot_violations=False):
+    def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
+                 plot_violations=False):
         """ Runs ALNS on the generated candidate solution """
 
-        self.set_alns()
+        self.set_alns(decay)
 
         if plot_objective and plot_violations:
             raise ValueError("Cannot use two plots simultaneously")
@@ -94,7 +98,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self):
+    def set_alns(self, decay):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -130,7 +134,8 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, decay)
+        logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
@@ -177,10 +182,14 @@ class ProblemRunner:
 
         self.sdp.run_model()
 
-        used_shifts = self.sdp.get_used_shifts()
+        used_shifts, unused_shifts = self.sdp.get_used_shifts()
+
+        self.data["demand_per_shift"] = self.sdp.get_demand_per_shift()
+
         self.data["shifts"] = shift_generation.get_updated_shift_sets(
             self.problem, self.data, used_shifts
         )
+
         self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
             self.data, used_shifts
         )
@@ -217,6 +226,10 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
+
+        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
+        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
+                                  f"{log_name}.log")
 
         return model
 
