@@ -18,9 +18,10 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 
 
 class ALNS:
-    def __init__(self, state, criterion, data, objective_weights):
+    def __init__(self, state, criterion, data, objective_weights, decay):
 
         self.objective_weights = objective_weights
+        self.decay = decay
 
         self.initial_solution = state
         self.current_solution = state
@@ -485,8 +486,13 @@ class ALNS:
     def update_weights(self, weight_update, destroy_id, repair_id):
         """ Updates the value of the operator pair by multiplying both with weight_update """
 
-        self.destroy_weights[destroy_id] *= weight_update
-        self.repair_weights[destroy_id][repair_id] *= weight_update
+        self.destroy_weights[destroy_id] = (
+                self.decay * self.destroy_weights[destroy_id] + (1-self.decay) * weight_update
+        )
+
+        self.repair_weights[destroy_id][repair_id] = (
+                self.decay * self.repair_weights[destroy_id][repair_id] + (1-self.decay) * weight_update
+        )
 
     def initialize_destroy_and_repair_weights(self):
         self.destroy_weights = self.initialize_weights(self.destroy_operators)
