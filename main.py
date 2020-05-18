@@ -39,7 +39,7 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None):
+    def __init__(self, problem="rproblem3", mode="feasibility", update_shifts=True, with_sdp=True, log_name=None):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -62,7 +62,7 @@ class ProblemRunner:
         self.sdp = None
         if with_sdp:
             self.set_sdp()
-            self.run_sdp()
+            self.run_sdp(update_shifts)
 
         self.esp = None
         self.criterion = GreedyCriterion()
@@ -174,7 +174,7 @@ class ProblemRunner:
         else:
             raise ValueError(f"The model choice '{self.mode}' is not valid.")
 
-    def run_sdp(self):
+    def run_sdp(self, update_shifts):
         """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
         original_shifts = self.data["shifts"]["shifts"]
@@ -186,13 +186,14 @@ class ProblemRunner:
 
         self.data["demand_per_shift"] = self.sdp.get_demand_per_shift()
 
-        #self.data["shifts"] = shift_generation.get_updated_shift_sets(
-        #    self.problem, self.data, used_shifts
-        #)
+        if update_shifts:
+            self.data["shifts"] = shift_generation.get_updated_shift_sets(
+               self.problem, self.data, used_shifts
+            )
 
-        #self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
-        #    self.data, used_shifts
-        #)
+            self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
+               self.data, used_shifts
+            )
 
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         logger.warning(

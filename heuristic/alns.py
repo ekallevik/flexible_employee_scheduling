@@ -95,9 +95,6 @@ class ALNS:
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
 
-        #print({(t,v): sum(self.initial_solution.x[e,t,v] for e in self.employees if self.initial_solution.x[e,t,v] == 1) for (t,v) in self.shifts})
-        #raise ValueError
-
         remove_worst_week = partial(
             worst_week_removal,
             self.competencies,
@@ -354,8 +351,8 @@ class ALNS:
             remove_worst_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy
             ],
@@ -363,8 +360,8 @@ class ALNS:
             remove_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy
             ],
@@ -372,8 +369,8 @@ class ALNS:
             remove_weighted_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                #repair_week_demand,
-                #repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy
             ],

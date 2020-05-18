@@ -118,11 +118,7 @@ def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights):
 
     f = (
         sum(
-<<<<<<< HEAD
-            weights["rest"] * min(72, state.w[e, j][1])
-=======
             weights["rest"] * min(WEEKLY_REST_DURATION[1], state.w[e, j][1])
->>>>>>> master
             - weights["contracted hours"][e] * state.soft_vars["deviation_contracted_hours"][e, j]
             for j in weeks
         )

@@ -35,7 +35,6 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                                                                  time_periods_in_week, competencies,
                                                                  time_step)
         shifts = shifts_in_week[week]
-        print(shifts_in_week)
         demand_per_shift_in_week = {key: value for key, value in demand_per_shift.items()
                                     if key in shifts}
 
@@ -767,7 +766,6 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
-            print("This is running")
             return repair_set
 
 def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_shift,
@@ -814,5 +812,4 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
-            print("This is running")
             return repair_set
