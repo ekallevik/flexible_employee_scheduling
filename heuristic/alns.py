@@ -60,7 +60,6 @@ class ALNS:
         self.time_periods = data["time"]["periods"][0]
         self.time_periods_in_week = data["time"]["periods"][1]
         self.time_periods_in_day = data["time"]["periods"][2]
-        print(self.time_periods_in_week)
         self.shifts = data["shifts"]["shifts"]
 
         self.employees = data["staff"]["employees"]

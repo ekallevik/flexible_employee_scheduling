@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from operator import itemgetter
 from loguru import logger
 
 
@@ -33,7 +33,9 @@ def calculate_weekly_rest(data, x, w):
 
             if actual_shifts[key][0][0] - important[week] >= 36:
                 off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
-
+                
+    for key in off_shift_periods:
+            w[key] = max(off_shift_periods[key],key=itemgetter(1))
 
 def calculate_negative_deviation_from_demand(data, y):
     delta = {}
