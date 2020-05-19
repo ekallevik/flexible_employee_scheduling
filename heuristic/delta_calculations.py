@@ -515,7 +515,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 12 * -isolated_day
+        return 10 * -isolated_day
 
     else:
         return 0
@@ -525,7 +525,7 @@ def regret_deviation_contracted_hours(state, e, shift, j, weeks):
     total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
     if total_negative_deviation_from_contracted_hours < 0:
         #Remeber that this is negative to begin with. The other two are positive
-        return 50 * total_negative_deviation_from_contracted_hours
+        return 100 * total_negative_deviation_from_contracted_hours
     elif total_negative_deviation_from_contracted_hours == 0:
         return 200
     return 1.5 * negative_deviation_from_contracted_hours
@@ -560,7 +560,7 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
     
     
     if total_negative_deviation_from_contracted_hours < 0:
-        contracted_hours = 500 * total_negative_deviation_from_contracted_hours
+        contracted_hours = 5 * total_negative_deviation_from_contracted_hours
     elif total_negative_deviation_from_contracted_hours == 0:
         contracted_hours = 100
     else:
