@@ -36,7 +36,6 @@ class BarchartPlotter(AbstractPlotter):
             self.ax.set_title(self.title)
             self.ax.set_xticks(self.label_locations)
             self.ax.set_xticklabels(self.labels)
-            self.ax.legend()
 
         above_maximum = data["above_demand"]
         below_minimum = data["below_demand"]
@@ -53,6 +52,7 @@ class BarchartPlotter(AbstractPlotter):
         self.autolabel(rects2, self.ax)
         self.autolabel(rects3, self.ax)
 
+        self.ax.legend()
         self.fig.tight_layout()
 
         self.show()
