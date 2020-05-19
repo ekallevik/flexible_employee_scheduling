@@ -8,4 +8,4 @@ class GreedyCriterion(AbstractCriterion):
         return "GreedyCriterion"
 
     def accept(self, candidate, current, random_state):
-        return candidate.get_objective_value() >= current.get_objective_value()
+        return candidate.get_objective_value() > current.get_objective_value()
