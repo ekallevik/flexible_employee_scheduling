@@ -313,18 +313,37 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
                                                                  time_periods_in_week, competencies,
                                                                  time_step)
 
-        shifts = {
-            (t1, v1, comp): -sum(state.soft_vars["deviation_from_ideal_demand"][c, t]
-                                 for c in comp
-                                 for t in t_covered_by_shift[t1, v1]
-                                 if (c, t) in state.soft_vars["deviation_from_ideal_demand"])
-                            - (20 * (len(comp) - 1) + v1)
-            for comp in employee_with_competency_combination
-            for t1, v1 in shifts_in_week[week[0]]
-            if (t1, v1, comp) not in impossible_shifts
-        }
+        if sum(state.hard_vars["below_minimum_demand"].values()) != 0:
+            shifts =    {
+                        (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
+                                        for c in comp
+                                        for t in t_covered_by_shift[t1, v1]
+                                        if (c,t) in state.hard_vars["below_minimum_demand"])
+                                        - (20*(len(comp)-1) + v1)
+                                        for comp in employee_with_competency_combination 
+                                        for t1, v1 in shifts_in_week[week[0]]
+                                        if (t1,v1,comp) not in impossible_shifts
+                        }
+  
 
-        shift = max(shifts.items(), key=itemgetter(1))[0]
+
+        else:
+            shifts =    {
+                        (t1, v1, comp): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
+                                        for c in comp
+                                        for t in t_covered_by_shift[t1, v1]
+                                        if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
+                                        - (20*(len(comp)-1) + v1)
+                                        for comp in employee_with_competency_combination 
+                                        for j in week
+                                        for t1, v1 in shifts_in_week[j]
+                                        if (t1,v1,comp) not in impossible_shifts
+                        }
+
+        best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
+        shift = choice([key for key, value in shifts.items() if value == best_shift_value])
+
+        #shift = max(shifts.items(), key=itemgetter(1))[0]
         competency_pair = shift[2]
 
         deviation_from_demand = -sum(
@@ -449,13 +468,14 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
                         (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
                                         for c in comp
                                         for t in t_covered_by_shift[t1, v1]
-                                        if (c,t) in state.hard_vars["below_minimum_demand"])
+                                        if (c,t) in state.hard_vars["below_minimum_demand"])/2
                                         - (20*(len(comp)-1) + v1)
                                         for comp in employee_with_competency_combination 
                                         for t1, v1 in shifts_in_week[week[0]]
                                         if (t1,v1,comp) not in impossible_shifts
-                        }          
-
+                        }
+  
+        #ABS(J27-J26)*4*J27
 
         else:
             shifts =    {
@@ -463,13 +483,16 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
                                         for c in comp
                                         for t in t_covered_by_shift[t1, v1]
                                         if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-                                        - (20*(len(comp)-1) + v1)
+                                        - v1
                                         for comp in employee_with_competency_combination 
                                         for j in week
                                         for t1, v1 in shifts_in_week[j]
                                         if (t1,v1,comp) not in impossible_shifts
                         }
-        shift = max(shifts.items(), key=itemgetter(1))[0]
+
+        best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
+        shift = choice([key for key, value in shifts.items() if value == best_shift_value])   
+        #shift = max(shifts.items(), key=itemgetter(1))[0]
 
         deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c, t]
                                      for c in shift[2]
@@ -491,7 +514,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
             impossible_shifts.append(shift)
             continue
 
-        if(deviation_from_demand < 6 or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
+        if(deviation_from_demand < (5 * 1/time_step) or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
             return repair_set
 
         # Hard Restrictions/Variables
@@ -570,7 +593,9 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
                                                     for t1, v1 in all_shifts
                     }
 
-        shift = max(shifts.items(), key=itemgetter(1))[0]
+        #shift = max(shifts.items(), key=itemgetter(1))[0]
+        best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
+        shift = choice([key for key, value in shifts.items() if value == best_shift_value])
 
         y_s = [
             min(
@@ -664,7 +689,9 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
                                         if (t1, v1, comp) not in impossible_shifts
                         }
 
-        shift = max(shifts.items(), key=itemgetter(1))[0]
+        #shift = max(shifts.items(), key=itemgetter(1))[0]
+        best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
+        shift = choice([key for key, value in shifts.items() if value == best_shift_value])
 
         y_s = [
             min(

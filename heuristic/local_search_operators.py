@@ -7,11 +7,13 @@ from heuristic.delta_calculations import (
     calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
     employee_shift_value,
+    worst_employee_regret_value
 )
 from heuristic.converter import set_x, remove_x
 from operator import itemgetter
 from random import choice
 from utils.const import DESIRED_SHIFT_DURATION
+import itertools
 
 def illegal_week_swap(
     shifts_in_week,
@@ -99,12 +101,18 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
     return destroy_set, repair_set
 
 
-def exploit_contracted_hours(state, shifts, t_covered_by_shift, weeks, employees, competencies):
+def exploit_contracted_hours(state, shifts, t_covered_by_shift, 
+                            weeks, employees, competencies, saturdays, 
+                            sundays, invalid_shifts, 
+                            shift_combinations_violating_daily_rest, 
+                            shift_sequences_violating_daily_rest, 
+                            shifts_at_week, shifts_at_day, days, time_step):
     destroy_set = []
     repair_set = []
-    below_demand_shifts = {shift: sum(1 if state.soft_vars["deviation_from_ideal_demand"].get((c, t)) else 0 for c in competencies for t in t_covered_by_shift[shift]) for shift in shifts}
+    below_demand_shifts = {shift: sum((time_step if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0 else 0) for c in competencies for t in t_covered_by_shift[shift]) for shift in shifts}
     contracted_hours_below = {}
     contracted_hours_above = {}
+    print(below_demand_shifts)
     for e in employees:
         value = sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks)
         if 0 < value < DESIRED_SHIFT_DURATION[0]:
@@ -113,7 +121,4 @@ def exploit_contracted_hours(state, shifts, t_covered_by_shift, weeks, employees
             contracted_hours_above[e] = value
     
     actual_shifts = {e: [(t,v) for t,v in shifts if state.x[e,t,v] == 1] for e in employees}
-    shifts_to_choose_from = {e: [(t,v) for t, v in below_demand_shifts for t_1, v_1 in actual_shifts[e] if set(t_covered_by_shift[t_1, v_1]).issubset(t_covered_by_shift[t, v]) and 0 < v - v_1 <= contracted_hours_below[e]] for e in contracted_hours_below} 
-    for e in shifts_to_choose_from:
-        for t,v in shifts_to_choose_from[e]:
-            pass
+    shifts_to_choose_from = {e: {(t_1, v_1): [(t,v) for t, v in below_demand_shifts if set(t_covered_by_shift[t_1, v_1]).issubset(t_covered_by_shift[t, v]) and 0 < v - v_1 <= contracted_hours_below[e]] for t_1, v_1 in actual_shifts[e]} for e in contracted_hours_below}

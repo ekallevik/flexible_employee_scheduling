@@ -528,7 +528,7 @@ def regret_deviation_contracted_hours(state, e, shift, j, weeks):
         return 50 * total_negative_deviation_from_contracted_hours
     elif total_negative_deviation_from_contracted_hours == 0:
         return 200
-    return negative_deviation_from_contracted_hours
+    return 1.5 * negative_deviation_from_contracted_hours
 
 
 def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):

@@ -432,8 +432,6 @@ class ALNS:
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
-
-        exploit_contracted_hours(candidate_solution, self.shifts, self.t_covered_by_shift, self.weeks, self.employees, self.competencies)
         self.best_solution.write("solutions/best_solution")
 
     def perform_iteration(self, iteration):
@@ -473,8 +471,10 @@ class ALNS:
         logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
-        if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0:
-                candidate_solution.write("before_breaking_weekly")
+
+
+        if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0 and sum(candidate_solution.hard_vars["below_minimum_demand"].values()) == 0:
+                #candidate_solution.write("before_breaking_weekly")
 
                 destroy_set, repair_set = illegal_week_swap(
                     self.shifts_per_week,
@@ -496,13 +496,13 @@ class ALNS:
 
                 destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
-                candidate_solution.write("After_breaking_weekly")
+                #candidate_solution.write("After_breaking_weekly")
 
-        elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0:
-                candidate_solution.write("Before_breaking_contracted")
+        elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0 and sum(candidate_solution.hard_vars["below_minimum_demand"].values()) == 0:
+                #candidate_solution.write("Before_breaking_contracted")
                 destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
-                candidate_solution.write("After_breaking_contracted")
+                #candidate_solution.write("After_breaking_contracted")
 
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
@@ -556,6 +556,15 @@ class ALNS:
 
             if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
                 logger.critical(f"Legal, best solution found")
+                # exploit_contracted_hours( candidate_solution, self.shifts, 
+                #                                                     self.t_covered_by_shift, self.weeks, 
+                #                                                     self.employees, self.competencies, 
+                #                                                     self.saturdays, self.sundays, 
+                #                                                     self.invalid_shifts, 
+                #                                                     self.shift_combinations_violating_daily_rest, 
+                #                                                     self.shift_sequences_violating_daily_rest, 
+                #                                                     self.shifts_per_week, self.shifts_at_day, self.days, self.time_step)
+
                 weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
                 self.best_legal_solution = candidate_solution
                 self.best_legal_solution.write("best_legal_solution")
