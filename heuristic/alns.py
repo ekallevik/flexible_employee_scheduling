@@ -86,7 +86,7 @@ class ALNS:
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # Plotting and statistics
-        self.violation_plotter = BarchartPlotter("Violations for candidate")
+        self.violation_plotter = None
         self.objective_plotter = None
         self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
 

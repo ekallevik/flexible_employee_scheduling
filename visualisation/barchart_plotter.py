@@ -17,13 +17,14 @@ class BarchartPlotter(AbstractPlotter):
 
         self.fig, self.ax = self.plt.subplots()
 
-    def set_labels(self, data):
+    def set_labels(self, values):
 
-        no_of_labels = len(data)
+        no_of_labels = len(values)
 
         self.labels = [i for i in range(no_of_labels)]
         self.label_locations = np.arange(no_of_labels)  # the label locations
         self.width = 0.25  # the width of the bars
+
 
     def plot_data(self, data):
 
@@ -31,9 +32,11 @@ class BarchartPlotter(AbstractPlotter):
 
         if not self.labels:
             self.set_labels(data["above_demand"])
-            self.ax.set_ylabel('Scores')
-            self.ax.set_title('Scores by group and gender')
+            self.ax.set_ylabel('Number of violations')
+            self.ax.set_title(self.title)
             self.ax.set_xticks(self.label_locations)
+            self.ax.set_xticklabels(self.labels)
+            self.ax.legend()
 
         above_maximum = data["above_demand"]
         below_minimum = data["below_demand"]
@@ -46,9 +49,6 @@ class BarchartPlotter(AbstractPlotter):
         rects3 = self.ax.bar(self.label_locations + self.width, contracted_hours, self.width,
                              label='contracted_hours')
 
-        self.ax.set_xticklabels(self.labels)
-        self.ax.legend()
-
         self.autolabel(rects1, self.ax)
         self.autolabel(rects2, self.ax)
         self.autolabel(rects3, self.ax)
@@ -57,8 +57,8 @@ class BarchartPlotter(AbstractPlotter):
 
         self.show()
 
-
-    def autolabel(self, rects, ax):
+    @staticmethod
+    def autolabel(rects, ax):
         """Attach a text label above each bar in *rects*, displaying its height."""
         for rect in rects:
             height = rect.get_height()

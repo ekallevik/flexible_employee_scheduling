@@ -59,8 +59,49 @@ class State:
         },
         copy(self.objective_function_value), copy(self.f))
 
-    def get_violations_per_week(self, weeks, time_periods_in_week, competencies, employees):
-        """ Calculations violations of hard constraints per week"""
+    def get_violations(self, weeks, time_periods_in_week, competencies, employees):
+        """ Extracts all violations of hard constraints per week"""
+
+        below_demand = {
+            j: {(c, t):
+                self.hard_vars["below_minimum_demand"][c, t]
+                for c in competencies
+                for t in time_periods_in_week[c, j]
+                if self.hard_vars["below_minimum_demand"].get((c, t))
+                }
+            for j in weeks
+        }
+
+        above_demand = {
+            j: {(c, t):
+                self.hard_vars["above_maximum_demand"][c, t]
+                for c in competencies
+                for t in time_periods_in_week[c, j]
+                if self.hard_vars["above_maximum_demand"].get((c, t))
+                }
+            for j in weeks
+        }
+
+        contracted_hours = {
+            j: {e:
+                self.soft_vars["deviation_contracted_hours"][e, j]
+                for e in employees
+                if self.hard_vars["deviation_contracted_hours"].get(e, j)
+                }
+            for j in weeks
+        }
+
+        violations = {
+            "above_demand": above_demand,
+            "below_demand": below_demand,
+            "contracted_hours": contracted_hours
+        }
+
+        return violations
+
+    def get_violations_per_week(self, weeks, time_periods_in_week, competencies,
+                                            employees):
+        """ Sums violations of hard constraints per week"""
 
         below_demand = [sum(self.hard_vars["below_minimum_demand"].get((c, t), 0)
                             for c in competencies
@@ -72,8 +113,8 @@ class State:
                             for t in time_periods_in_week[c, week])
                         for week in weeks]
 
-        contracted_hours = [sum(-min(0, self.soft_vars["deviation_contracted_hours"][e, j])
-                                for e in employees)
+        contracted_hours = [-sum(self.soft_vars["deviation_contracted_hours"].get((e, j), 0)
+                                 for e in employees)
                             for j in weeks]
 
         violations = {
