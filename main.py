@@ -17,6 +17,7 @@ from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
 from utils.weights import get_weights
+from visualisation.barchart_plotter import BarchartPlotter
 from visualisation.heatmap_plotter import HeatmapPlotter
 from visualisation.objective_plotter import ObjectivePlotter
 
@@ -71,19 +72,22 @@ class ProblemRunner:
         self.set_esp()
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
-                 plot_violations=False):
+                 plot_violations_map=False, plot_violations_bar=False):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns(decay)
 
-        if plot_objective and plot_violations:
-            raise ValueError("Cannot use two plots simultaneously")
+        if plot_objective + plot_violations_map + plot_violations_bar > 1:
+            raise ValueError("Cannot use more than one plot")
 
         if plot_objective:
             self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
 
-        if plot_violations:
+        if plot_violations_map:
             self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
+
+        if plot_violations_bar:
+            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration")
 
         self.alns.iterate(iterations, runtime)
 
