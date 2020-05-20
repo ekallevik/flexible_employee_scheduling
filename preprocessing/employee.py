@@ -6,6 +6,7 @@ class Employee:
         self.competencies = []
         self.contracted_hours = None
         self.daily_offset = None
+        self.weekly_offset = None
         self.blocked_hours = []
 
     def set_weekly_rest(self, weekly_rest):
@@ -22,6 +23,9 @@ class Employee:
 
     def set_daily_offset(self, offset):
         self.daily_offset = offset
+
+    def set_weekly_offset(self, offset):
+        self.weekly_offset = offset
 
     def set_blocked_hours(self, blocked_hours):
         self.blocked_hours = blocked_hours
