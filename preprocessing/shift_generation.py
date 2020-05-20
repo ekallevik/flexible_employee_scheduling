@@ -16,6 +16,7 @@ from utils.const import (
     NUMBER_OF_PREFERENCES_PER_WEEK,
     TIME_DEFINING_SHIFT_DAY,
     WEEKLY_REST_DURATION,
+    LIMIT_CONSECUTIVE_DAYS,
 )
 
 
@@ -36,13 +37,14 @@ def load_data(problem_name):
         "competencies": competencies,
         "demand": get_demand(root, competencies),
         "staff": staff,
-        "limit_on_consecutive_days": 5,
+        "limit_on_consecutive_days": LIMIT_CONSECUTIVE_DAYS,
         "preferences": generate_preferences(
             staff, time_sets, NUMBER_OF_PREFERENCES_PER_WEEK, DURATION_OF_PREFERENCES
         ),
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,
+        "shift_durations": get_durations(time_sets["step"]),
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(shift_sets["shifts"], time_sets),
             "shift_lookup": get_shift_lookup(shift_sets["shifts_per_day"]),
@@ -516,3 +518,27 @@ def get_updated_off_shift_sets(data, shifts):
         get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])), competencies)
     )
 
+
+def get_durations(time_step):
+
+    work = []
+    daily_off = [DEFAULT_DAILY_REST_HOURS]
+    weekly_off = []
+
+    t_work = ALLOWED_SHIFT_DURATION[0]
+
+    while t_work <= ALLOWED_SHIFT_DURATION[1]:
+        work.append(t_work)
+        t_work += time_step
+
+    t_weekly_off = WEEKLY_REST_DURATION[0]
+
+    while t_weekly_off <= WEEKLY_REST_DURATION[1]:
+        weekly_off.append(t_weekly_off)
+        t_weekly_off += time_step
+
+    return{
+        "work": work,
+        "daily_off": daily_off,
+        "weekly_off": weekly_off,
+    }
