@@ -534,6 +534,10 @@ class ALNS:
             logger.info(f"Current contracted:"
                         f"{sum(candidate_solution.hard_vars['delta_positive_contracted_hours'].values())}")
 
+            current_above = {t: violation for t, violation in candidate_solution.hard_vars[
+                'above_maximum_demand'].items() if violation}
+
+
             destroy_set, repair_set = reduce_overstaffing(candidate_solution, self.shifts,
                                                     self.employees, self.weeks,
                                 self.t_covered_by_shift, self.competencies,
@@ -549,6 +553,9 @@ class ALNS:
                         f"{sum(candidate_solution.hard_vars['below_minimum_demand'].values())}")
             logger.info(f"Updated contracted:"
                         f"{sum(candidate_solution.hard_vars['delta_positive_contracted_hours'].values())}")
+
+            updated_above = {t: violation for t, violation in candidate_solution.hard_vars[
+                'above_maximum_demand'].items() if violation}
 
             print("\n\n")
             breakpoint()

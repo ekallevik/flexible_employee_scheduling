@@ -165,6 +165,12 @@ def reduce_overstaffing(state, shifts, employees, weeks, t_covered_by_shift, com
     #pprint(overstaffed)
 
     for t, excess in overstaffed.items():
+
+        if not excess:
+            # if the violation has been fixed in a previous iteration
+            logger.info("The excess ")
+            continue
+
         logger.info(f"Fix overstaffing for t={t}, excess={excess}")
 
         current_offset = time_step
@@ -176,7 +182,7 @@ def reduce_overstaffing(state, shifts, employees, weeks, t_covered_by_shift, com
         potential_shifts = set()
 
         # todo: maybe improve this?
-        while current_offset <= 5:
+        while current_offset <= 2:
 
             related_excess_exists = False
 
@@ -207,7 +213,7 @@ def reduce_overstaffing(state, shifts, employees, weeks, t_covered_by_shift, com
         # remove impossible shifts
         possible_shifts = potential_shifts - impossible_shifts
 
-        max_excess_removal = 0
+        max_shift_score = 0
         chosen_shift = None
 
         if possible_shifts:
@@ -218,13 +224,13 @@ def reduce_overstaffing(state, shifts, employees, weeks, t_covered_by_shift, com
 
             for shift in possible_shifts:
                 time_periods = t_covered_by_shift[shift]
-                excess_removal = sum(min(excess, overstaffed.get(t, 0)) for t in time_periods)
+                shift_score = sum(min(excess, overstaffed.get(t, 0)) for t in time_periods)
 
-                if excess_removal >= max_excess_removal:
-                    max_excess_removal = excess_removal
+                if shift_score >= max_shift_score:
+                    max_shift_score = shift_score
                     chosen_shift = shift
 
-        logger.info(f"Chosen shift {chosen_shift} removes {max_excess_removal} excess")
+        logger.info(f"Chosen shift {chosen_shift} removes {max_shift_score} excess")
 
         # todo: fix this
         if not chosen_shift:

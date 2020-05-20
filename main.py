@@ -32,7 +32,7 @@ level_per_module = {
     "heuristic.alns": "TRACE",
     "heuristic.destroy_operators": "INFO",
     "heuristic.repair_operators": "INFO",
-    "heuristic.local_search_operators": "TRACE",
+    "heuristic.local_search_operators": "WARNING",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
