@@ -30,8 +30,9 @@ level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
     "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "TRACE",
-    "heuristic.repair_operators": "TRACE",
+    "heuristic.destroy_operators": "INFO",
+    "heuristic.repair_operators": "INFO",
+    "heuristic.local_search_operators": "TRACE",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 

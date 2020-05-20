@@ -11,7 +11,8 @@ from heuristic.destroy_operators import (
     random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
     worst_contract_removal,
 )
-from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
+from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours, \
+    reduce_overstaffing
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
@@ -83,6 +84,13 @@ class ALNS:
 
         #
         self.preferences = data["preferences"]
+
+        self.shifts_covering_t = defaultdict(list)
+        for j in self.weeks:
+            for t in self.combined_time_periods_in_week[j]:
+                for shift in self.shifts:
+                    if t in self.t_covered_by_shift[shift]:
+                        self.shifts_covering_t[t].append(shift)
 
         # Set for daily rest restriction
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
@@ -511,6 +519,39 @@ class ALNS:
         logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
+
+
+        if any(candidate_solution.hard_vars["above_maximum_demand"].values()):
+
+
+            print("\n\n")
+            logger.error("Fixing overstaffing")
+            logger.warning(f"Current objective: {candidate_solution.get_objective_value(): .2f}")
+            logger.info(f"Current above:"
+                        f"{sum(candidate_solution.hard_vars['above_maximum_demand'].values())}")
+            logger.info(f"Current below:"
+                        f"{sum(candidate_solution.hard_vars['below_minimum_demand'].values())}")
+            logger.info(f"Current contracted:"
+                        f"{sum(candidate_solution.hard_vars['delta_positive_contracted_hours'].values())}")
+
+            destroy_set, repair_set = reduce_overstaffing(candidate_solution, self.shifts,
+                                                    self.employees, self.weeks,
+                                self.t_covered_by_shift, self.competencies,
+                                self.combined_time_periods_in_week, self.time_step, self.shifts_covering_t)
+
+            self.calculate_objective(candidate_solution, destroy_set, repair_set)
+
+            print("\n\n")
+            logger.warning(f"Updated objective: {candidate_solution.get_objective_value(): .2f}")
+            logger.info(f"Updated above:"
+                        f"{sum(candidate_solution.hard_vars['above_maximum_demand'].values())}")
+            logger.info(f"Updated below:"
+                        f"{sum(candidate_solution.hard_vars['below_minimum_demand'].values())}")
+            logger.info(f"Updated contracted:"
+                        f"{sum(candidate_solution.hard_vars['delta_positive_contracted_hours'].values())}")
+
+            print("\n\n")
+            breakpoint()
 
         self.choose_local_search(candidate_solution)
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):

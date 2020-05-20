@@ -3,10 +3,9 @@ from pprint import pprint
 from gurobipy import *
 from loguru import logger
 
-from heuristic.delta_calculations import delta_calculate_deviation_from_demand, \
-    delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, \
+from heuristic.delta_calculations import delta_calculate_negative_deviation_from_contracted_hours, calculate_weekly_rest, \
     calculate_partial_weekends, calculate_isolated_working_days, calculate_isolated_off_days, \
-    calculate_consecutive_days, calc_weekly_objective_function, cover_multiple_demand_periods, \
+    calculate_consecutive_days, cover_multiple_demand_periods, \
     more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, \
     calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, \
     calculate_daily_rest_error, employee_shift_value, hard_constraint_penalties, \
@@ -14,6 +13,8 @@ from heuristic.delta_calculations import delta_calculate_deviation_from_demand, 
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice, choices
+
+from utils.heap import pop_from_max_heap, push_to_max_heap
 
 
 def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shift, demand,
@@ -59,7 +60,7 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
 
             while demand_per_shift_in_week[shift] and number_of_employees > len(considered_employees):
 
-                employee_score, employee = pop_from_heap(employee_heap)
+                employee_score, employee = pop_from_max_heap(employee_heap)
                 logger.trace(f"Employee {employee} (s: {employee_score}) chosen")
                 updated_employee_score = employee_score
 
@@ -81,7 +82,7 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                 considered_employees.append((updated_employee_score, employee))
 
             for employee_score, employee in considered_employees:
-                push_to_heap(employee_heap, employee_score, employee)
+                push_to_max_heap(employee_heap, employee_score, employee)
 
     delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
                                                              contracted_hours, weeks,
@@ -141,7 +142,7 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
             while allocations_needed and number_of_employees > len(considered_employees):
 
-                employee_score, employee = pop_from_heap(employee_heap)
+                employee_score, employee = pop_from_max_heap(employee_heap)
                 logger.trace(f"Employee {employee} (s: {employee_score}) chosen")
                 updated_employee_score = employee_score
 
@@ -167,7 +168,7 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
                 considered_employees.append((updated_employee_score, employee))
 
             for employee_score, employee in considered_employees:
-                push_to_heap(employee_heap, employee_score, employee)
+                push_to_max_heap(employee_heap, employee_score, employee)
 
             # TODO: Need to find a way to update demand after each iteration
             shift_heap = get_scored_shifts(shifts_in_week[week], t_covered_by_shift,
@@ -185,15 +186,15 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
 
 def get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift):
-    shift_score, shift = pop_from_heap(shift_heap)
+    shift_score, shift = pop_from_max_heap(shift_heap)
     updated_shift_score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
     #
     while shift_score != updated_shift_score:
         logger.trace(f"Outdated shift score {shift}: {shift_score} vs"
                      f" {updated_shift_score}")
-        push_to_heap(shift_heap, updated_shift_score, shift)
+        push_to_max_heap(shift_heap, updated_shift_score, shift)
 
-        shift_score, shift = pop_from_heap(shift_heap)
+        shift_score, shift = pop_from_max_heap(shift_heap)
         updated_shift_score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
     return shift, shift_score
 
@@ -219,7 +220,7 @@ def get_scored_employees(employees, week, state, shifts_in_week):
 
     for employee in employees:
         score = get_score_for_employee(employee, week, state, shifts_in_week)
-        push_to_heap(h, score, employee)
+        push_to_max_heap(h, score, employee)
 
     return h
 
@@ -252,7 +253,7 @@ def get_scored_shifts(shifts, t_covered_by_shift, remaining_demand):
             # further
             continue
 
-        push_to_heap(h, score, shift)
+        push_to_max_heap(h, score, shift)
 
     #breakpoint()
     return h
@@ -261,22 +262,6 @@ def get_scored_shifts(shifts, t_covered_by_shift, remaining_demand):
 def get_score_for_shift(shift, t_covered_by_shift, remaining_demand):
     score = sum(remaining_demand[t] for t in t_covered_by_shift[shift]) - shift[1]
     return score
-
-
-def pop_from_heap(h):
-
-    # TODO: add docstring
-
-    score, element = heappop(h)
-
-    return -score, element
-
-
-def push_to_heap(h, score, element):
-    # all the scores are inverted to convert the heap to a max heap. The heap sorts on first
-    # elements of the tuple
-
-    heappush(h, (-score, element))
 
 
 def get_demand_for_period(period, demand, competencies, demand_type="ideal"):
@@ -354,6 +339,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
         )
 
         if deviation_from_demand <= 6:
+
             return repair_set
 
         y_s_1 = {
