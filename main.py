@@ -13,6 +13,7 @@ from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
+from model.implicit_model import ImplicitModel
 from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
@@ -61,7 +62,7 @@ class ProblemRunner:
         self.log_to_console = 1
 
         self.sdp = None
-        if with_sdp:
+        if with_sdp and self.mode != "implicit":
             self.set_sdp()
             self.run_sdp()
 
@@ -152,7 +153,10 @@ class ProblemRunner:
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
 
-        logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
+        if self.mode != "implicit":
+            logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
+        else:
+            logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
         self.esp.run_model()
 
         return self
@@ -174,6 +178,9 @@ class ProblemRunner:
 
         elif self.mode == 2 or self.mode == "optimality":
             self.esp = OptimalityModel(model, data=self.data)
+
+        elif self.mode == 3 or self.mode == "implicit":
+            self.esp = ImplicitModel(model, data=self.data)
 
         else:
             raise ValueError(f"The model choice '{self.mode}' is not valid.")
