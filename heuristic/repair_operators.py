@@ -473,9 +473,8 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
                                         for comp in employee_with_competency_combination 
                                         for t1, v1 in shifts_in_week[week[0]]
                                         if (t1,v1,comp) not in impossible_shifts
-                        }
-  
-        #ABS(J27-J26)*4*J27
+                        }          
+
 
         else:
             shifts =    {
@@ -483,7 +482,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
                                         for c in comp
                                         for t in t_covered_by_shift[t1, v1]
                                         if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-                                        - v1
+                                        - (20*(len(comp)-1) + v1)
                                         for comp in employee_with_competency_combination 
                                         for j in week
                                         for t1, v1 in shifts_in_week[j]
@@ -794,7 +793,6 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
-            print("This is running")
             return repair_set
 
 def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_shift,
@@ -841,5 +839,4 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
-            print("This is running")
             return repair_set
