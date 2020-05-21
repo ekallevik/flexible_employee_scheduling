@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from utils.const import DEFAULT_CONTRACTED_HOURS
 from gurobipy.gurobipy import tupledict
 
@@ -15,14 +17,14 @@ def set_weights():
     return{
         # Weight of fairness aspects. Rest, contracted hours and preferences should be treated as hours.
         "rest": 0.5,
-        "contracted hours": 2,
+        "contracted hours": 1,
         "partial weekends": 8,
         "isolated working days": 10,
         "isolated off days": 10,
         "consecutive days": 12,
-        "preferences": 1.5,
+        "preferences": 5,
         # Weight of least favored employee. Use interval [0, 1].
-        "lowest fairness score": 0.5,
+        "lowest fairness score": 0.1,
         # Scaling excess and deficit of demand
         "excess demand deviation factor": 1.0,
         "deficit demand deviation factor": 1.0,
@@ -63,6 +65,12 @@ def get_weights(time_set, staff):
 
     weights = set_weights()
 
+    # Scale preferences to number of weeks
+    # weights["preferences"] = scale_weight_to_weeks(weights["preferences"], time_set["weeks"])
+
+    # Scale weights relatively
+    weights = scale_weights_relatively(weights, staff)
+
     # Scale weights to hours
     weights["excess demand deviation factor"] = scale_weight_to_hours(
         weights["excess demand deviation factor"], time_set["step"]
@@ -71,9 +79,6 @@ def get_weights(time_set, staff):
         weights["deficit demand deviation factor"], time_set["step"]
     )
     weights["preferences"] = scale_weight_to_hours(weights["preferences"], time_set["step"])
-
-    # Scale weights relatively
-    weights = scale_weights_relatively(weights, staff)
 
     # Scale up weights
     weights = scale_up_weights(weights, staff["employees"])
@@ -92,12 +97,20 @@ def scale_weight_to_hours(weight, time_step):
     return weight
 
 
+def scale_weight_to_weeks(weight, weeks):
+
+    weight *= len(weeks)
+
+    return weight
+
+
 def scale_weights_relatively(weights, staff):
 
     num_employees = len(staff["employees"])
     employee_contracted_hours = staff["employee_contracted_hours"]
 
     weights = scale_contracted_hours_relatively(weights, employee_contracted_hours)
+
     weights["lowest fairness score"] = scale_based_on_staff_sized(
         weights["lowest fairness score"], num_employees
     )
