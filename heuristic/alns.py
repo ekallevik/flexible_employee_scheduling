@@ -520,9 +520,7 @@ class ALNS:
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
 
-
         if any(candidate_solution.hard_vars["above_maximum_demand"].values()):
-
 
             print("\n\n")
             logger.error("Fixing overstaffing")
@@ -534,8 +532,11 @@ class ALNS:
             logger.info(f"Current contracted:"
                         f"{sum(candidate_solution.hard_vars['delta_positive_contracted_hours'].values())}")
 
-            current_above = {t: violation for t, violation in candidate_solution.hard_vars[
+            above = {t: violation for t, violation in candidate_solution.hard_vars[
                 'above_maximum_demand'].items() if violation}
+
+            below = {t: violation for t, violation in candidate_solution.hard_vars[
+                'below_minimum_demand'].items() if violation}
 
 
             destroy_set, repair_set = reduce_overstaffing_with_related_heap(candidate_solution,
