@@ -1,5 +1,6 @@
 from operator import itemgetter
 from pprint import pprint
+import numpy as np
 
 from loguru import logger
 
@@ -9,14 +10,26 @@ from heuristic.converter import remove_x
 
 def worst_week_removal(competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, shifts_in_week, t_covered_by_shift_combined, state, destroy_size=1):
 
+    random_state = np.random.RandomState(seed=0)
+    size = [(1, 1), (1, 0.5), (1, 1/3), (2, 1/3)]
+    probabilities = [1/4, 1/4, 1/4, 1/4]
+    index = random_state.choice(len(size), p=probabilities)
+    number_of_weeks, percentage_of_employees = size[index]
+    number_of_employees = int(len(employees)*percentage_of_employees)
+
+    selected_employees = list(random_state.choice(employees, size=number_of_employees,
+                                                  replace=False))
+
     worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week,
                                                    combined_time_periods_in_week, employees,
-                                                   weeks,  L_C_D, destroy_size, "worst")
+                                                   weeks,  L_C_D, number_of_weeks, "worst")
 
-    destroy_set_shifts = destroy_shifts(competencies, employees, shifts_in_week, state,
+    destroy_set_shifts = destroy_shifts(competencies, selected_employees, shifts_in_week, state,
                                         t_covered_by_shift_combined, worst_k_weeks)
 
-    logger.info(f"Destroyed {destroy_size} worst weeks: {worst_k_weeks}")
+    logger.info(f"Destroyed {number_of_employees} for {number_of_weeks} worst week")
+    #logger.info(f"Destroyed {destroy_size} worst weeks: {worst_k_weeks}")
+    #breakpoint()
 
     return destroy_set_shifts, worst_k_weeks
 
@@ -25,6 +38,16 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
                                  combined_time_periods_in_week, employees, weeks, L_C_D,
                                  shifts_in_week, t_covered_by_shift, random_state, state,
                                  destroy_size=1):
+
+    size = [(1, 1), (1, 0.5), (1, 0.3)]
+    probabilities = [1/3, 1/3, 1/3]
+    index = random_state.choice(len(size), p=probabilities)
+    number_of_weeks, percentage_of_employees = size[index]
+    number_of_employees = int(len(employees)*percentage_of_employees)
+
+    selected_employees = list(random_state.choice(employees, size=number_of_employees,
+                                                  replace=False))
+
 
     weekly_objective = calc_weekly_objective_function(state, competencies, time_periods_in_week,
                                                       combined_time_periods_in_week, employees,
@@ -37,7 +60,7 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
                                               replace=False))
 
     destroy_set_shifts = destroy_shifts(
-        competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
+        competencies, selected_employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
     )
 
     logger.info(f"Destroyed {destroy_size} selected weeks: {selected_weeks}")
@@ -48,10 +71,19 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
 def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covered_by_shift,
                         random_state, state,  destroy_size=1):
 
+    size = [(1, 1), (1, 0.5), (1, 0.3)]
+    probabilities = [1/3, 1/3, 1/3]
+    index = random_state.choice(len(size), p=probabilities)
+    number_of_weeks, percentage_of_employees = size[index]
+    number_of_employees = int(len(employees)*percentage_of_employees)
+
+    selected_employees = list(random_state.choice(employees, size=number_of_employees,
+                                                  replace=False))
+
     selected_weeks = list(random_state.choice(weeks, size=destroy_size, replace=False))
 
     destroy_set_shifts = destroy_shifts(
-        competencies, employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
+        competencies, selected_employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
     )
 
     logger.info(f"Destroyed {destroy_size} random weeks: {selected_weeks}")
@@ -82,6 +114,7 @@ def random_weekend_removal(
 
 
 def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, state, destroy_size=2):
+
 
     f_sorted = sorted(state.f, key=state.f.get, reverse=True)
 
