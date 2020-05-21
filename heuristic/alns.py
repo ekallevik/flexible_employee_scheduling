@@ -12,7 +12,6 @@ from heuristic.destroy_operators import (
     worst_contract_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours, \
-    reduce_overstaffing_with_swaps, reduce_overstaffing_with_destroy, \
     reduce_overstaffing_with_related_heap
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \

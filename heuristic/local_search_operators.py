@@ -143,251 +143,6 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
     return destroy_set, repair_set
 
 
-def reduce_overstaffing_with_swaps(state, shifts, employees, weeks, t_covered_by_shift, competencies,
-                                   combined_time_periods_in_week, time_step, shifts_covering_t):
-    destroy_set = []
-    repair_set = []
-
-    logger.warning(f"Reducing overstaffing from current level: "
-                   f"{sum(state.hard_vars['above_maximum_demand'].values())}")
-    print()
-
-    overstaffed = {t: sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t)))
-                   for j in weeks
-                   for t in combined_time_periods_in_week[j]
-                   if sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t))) > 0
-                   }
-
-    #pprint(overstaffed)
-
-    for t, excess in overstaffed.items():
-
-        if not excess:
-            # if the violation has been fixed in a previous iteration
-            logger.info("The excess ")
-            continue
-
-        logger.info(f"Fix overstaffing for t={t}, excess={excess}")
-
-        current_offset = time_step
-        chosen_shift = None
-        related_excess = {}
-        impossible_shifts = set(shifts_covering_t[t])
-
-        # note: this can contain impossible sets
-        potential_shifts = set()
-
-        # todo: maybe improve this?
-        while current_offset <= 1:
-
-            related_excess_exists = False
-
-            following_shifts = shifts_covering_t[t + current_offset]
-            potential_shifts.update(following_shifts)
-
-            previous_shifts = shifts_covering_t[t - current_offset]
-            potential_shifts.update(previous_shifts)
-
-            if t + current_offset in overstaffed.keys():
-                related_excess[t + current_offset] = overstaffed[t + current_offset]
-                logger.info(f"t={t + current_offset} contains excess={overstaffed[t + current_offset]}")
-                related_excess_exists = True
-
-            if t - current_offset in overstaffed.keys():
-                related_excess[t - current_offset] = overstaffed[t - current_offset]
-                logger.info(f"t={t - current_offset} contains excess={overstaffed[t - current_offset]}")
-                related_excess_exists = True
-
-            current_offset += time_step
-
-            if related_excess_exists:
-                #breakpoint()
-                continue
-
-            logger.trace(f"No shifts to swap to. Moving to next offset={current_offset}")
-
-        # remove impossible shifts
-        possible_shifts = potential_shifts - impossible_shifts
-
-        max_shift_score = 0
-        chosen_shift = None
-
-        if possible_shifts:
-            logger.trace(f"Possible shifts for t in [{t-current_offset}, {t+current_offset}]")
-            print()
-            pprint(possible_shifts)
-            print("\n\n")
-
-            for shift in possible_shifts:
-                time_periods = t_covered_by_shift[shift]
-                shift_score = sum(min(excess, overstaffed.get(t, 0)) for t in time_periods)
-
-                if shift_score >= max_shift_score:
-                    max_shift_score = shift_score
-                    chosen_shift = shift
-
-        logger.info(f"Chosen shift {chosen_shift} removes {max_shift_score} excess")
-
-        # todo: fix this
-        if not chosen_shift:
-            break
-
-        #breakpoint()
-
-        employee_taboo = []
-
-        for _ in range(int(excess)):
-
-            logger.info(f"Looking for {excess} employees")
-
-            #breakpoint()
-
-            if not shifts_covering_t[t]:
-                logger.info("How is this possible??")
-                breakpoint()
-
-            # todo: use a regret-approach / estimation-approach? or sort?
-            most_overworked_employee = None
-            shift_to_remove = None
-            largest_violation_of_contracted = 0
-
-            for shift in shifts_covering_t[t]:
-
-                for employee in employees:
-                    # todo: is there an easier way to extract the relevant employees?
-                    if (employee, shift[0], shift[1]) in state.x:
-
-                        overwork = sum(
-                            state.hard_vars["delta_positive_contracted_hours"].get((employee, j), 0)
-                            for j in weeks)
-
-                        # todo: use taboo?
-                        if overwork >= largest_violation_of_contracted and employee not in employee_taboo:
-                            most_overworked_employee = employee
-                            shift_to_remove = shift
-                            largest_violation_of_contracted = overwork
-
-            logger.info(f"Swapping shift {shift_to_remove} with {chosen_shift} for employee"
-                        f" {most_overworked_employee}")
-
-            destroy_set.append(
-                remove_x(state, t_covered_by_shift, competencies, most_overworked_employee,
-                         shift_to_remove[0], shift_to_remove[1])
-            )
-            employee_taboo.append(most_overworked_employee)
-
-            if chosen_shift:
-                logger.trace(f"Allocating employee {most_overworked_employee} to shift "
-                             f"{chosen_shift}")
-
-                repair_set.append(
-                    set_x(state, t_covered_by_shift, most_overworked_employee, chosen_shift[0],
-                          chosen_shift[1], 1)
-                )
-
-            else:
-                logger.trace(f"Could not find a shift to replace {shift_to_remove}")
-
-            #breakpoint()
-
-    #breakpoint()
-
-    logger.warning(f"Reduced overstaffing to updated level: "
-                   f"{sum(state.hard_vars['above_maximum_demand'].values())}")
-
-    return destroy_set, repair_set
-
-def reduce_overstaffing_with_destroy(state, shifts, employees, weeks, t_covered_by_shift,
-                                   competencies,
-                                   combined_time_periods_in_week, time_step, shifts_covering_t):
-    destroy_set = []
-    repair_set = []
-
-    print()
-
-    overstaffed = {t: sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t)))
-                   for j in weeks
-                   for t in combined_time_periods_in_week[j]
-                   if sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t))) > 0
-                   }
-
-    understaffed = {t: sum(state.hard_vars["below_minimum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["below_minimum_demand"].get((c, t)))
-                   for j in weeks
-                   for t in combined_time_periods_in_week[j]
-                   if sum(state.hard_vars["below_minimum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["below_minimum_demand"].get((c, t))) > 0
-                   }
-
-    shifts_with_overstaffing = {shift
-                                for t in overstaffed.keys()
-                                for shift in shifts_covering_t[t]}
-
-    shift_heap = []
-
-    for shift in shifts_with_overstaffing:
-        score = get_staffing_score_for_shift(overstaffed, shift, t_covered_by_shift, understaffed)
-
-        # It is not beneficial to include shifts with more understaffing than overstaffing
-        if score > -shift[1]:
-            push_to_max_heap(shift_heap, score, shift)
-
-    while shift_heap:
-
-        estimated_score, shift = pop_from_max_heap(shift_heap)
-        logger.trace(f"Looking into shift {shift}")
-
-        actual_score = get_staffing_score_for_shift(overstaffed, shift, t_covered_by_shift, understaffed)
-
-        if actual_score <= -shift[1]:
-            logger.trace(f"Shift {shift} covers more understaffing than overstaffing")
-            continue
-
-        relevant_employees = [employee for employee in employees
-                              if (employee, shift[0], shift[1]) in state.x]
-
-        # todo: use this in a better way
-        employee = relevant_employees[0]
-
-        destroy_set.append(
-            remove_x(state, t_covered_by_shift, competencies, employee,
-                     shift[0], shift[1])
-        )
-        logger.info(f"Employee {employee} removed from shift {shift}")
-
-        for t in t_covered_by_shift[shift]:
-
-            if overstaffed.get(t, 0) > 1:
-                overstaffed[t] -= 1
-            elif overstaffed.get(t) == 1:
-                del overstaffed[t]
-
-            if understaffed.get(t, 0) > 1:
-                understaffed[t] -= 1
-            elif understaffed.get(t) == 1:
-                del understaffed[t]
-
-        updated_score = get_staffing_score_for_shift(overstaffed, shift, t_covered_by_shift,
-                                                understaffed)
-
-        if updated_score > -shift[1]:
-            logger.trace(f"Shift {shift} still contains more overstaffing than understaffing")
-            push_to_max_heap(shift_heap, updated_score, shift)
-
-    return repair_set, destroy_set
-
-
-
 def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
                                           employee_with_competencies, weeks,
                                           t_covered_by_shift,
@@ -401,8 +156,6 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
     destroy_set = []
     repair_set = []
 
-    # todo: add can_allocate?
-
     overstaffed_times, understaffed_times = get_t_with_staffing_violations(
         combined_time_periods_in_week, competencies, state, weeks)
 
@@ -412,11 +165,6 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
 
         print()
 
-        if not overstaffed_heap:
-            logger.critical("No more shifts")
-            break
-
-        # todo: move to bottom and use heappoppush?
         estimated_score, overstaffed_shift = pop_from_max_heap(overstaffed_heap)
         actual_score = get_staffing_score_for_shift(overstaffed_times, understaffed_times, overstaffed_shift, t_covered_by_shift)
 
@@ -424,7 +172,6 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
 
             # if the actual score is negative the shift is not beneficial anymore
             if actual_score > 0:
-                # todo: this could be an heappushpop
                 push_to_max_heap(overstaffed_heap, actual_score, overstaffed_shift)
 
             if not overstaffed_heap:
@@ -436,9 +183,6 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
                                                         overstaffed_shift, t_covered_by_shift)
 
         logger.info(f"Fixing overstaffed shift {overstaffed_shift} (score={actual_score})")
-
-        overstaffed_times, understaffed_times = get_t_with_staffing_violations(
-            combined_time_periods_in_week, competencies, state, weeks)
 
         replacement_shift_set = get_replacement_shift_set(overstaffed_shift, shifts_covering_t,
                                                           time_step)
@@ -468,8 +212,6 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
         # todo: this can be improved
         chosen_employee = relevant_employees[0]
 
-        logger.trace(f"Employee {chosen_employee} chosen")
-
         destroy_set.append(
             remove_x(state, t_covered_by_shift, competencies, chosen_employee,
                      overstaffed_shift[0], overstaffed_shift[1])
@@ -486,15 +228,7 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
 
         destroy_repair_set = [destroy_set[-1], repair_set[-1]]
 
-        calculate_deviation_from_demand(
-            state,
-            competencies,
-            t_covered_by_shift,
-            employee_with_competencies,
-            demand,
-            destroy_repair_set,
-        )
-
+        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand,  destroy_repair_set)
         below_minimum_demand(state, destroy_repair_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
 
@@ -504,8 +238,11 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
         updated_score = get_staffing_score_for_shift(overstaffed_times, understaffed_times,
                                          overstaffed_shift, t_covered_by_shift)
 
-        if 0 < updated_score < actual_score:
-            logger.warning(f"Destroy+repair= {destroy_repair_set}")
+        if updated_score <= 0:
+            logger.trace(f"Shift {overstaffed_shift} does no longer violate maximum demand")
+        elif updated_score >= actual_score:
+            logger.trace(f"Could not remove excess demand from {overstaffed_shift}")
+        else:
             logger.warning(f"Shift {overstaffed_shift} now have score={actual_score}")
             push_to_max_heap(overstaffed_heap, actual_score, overstaffed_shift)
 

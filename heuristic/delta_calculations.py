@@ -446,6 +446,9 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
 """
 
 def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, competency_score):
+
+    # todo: differentiate on legality + objective value
+
     day = int(shift[0]/24)
     week = int(day/7)
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
