@@ -1,5 +1,7 @@
 from gurobipy.gurobipy import GRB, quicksum
 
+from utils.const import MAX_REWARDED_WEEKLY_REST
+
 
 class OptimalityObjective:
     def __init__(
@@ -26,7 +28,7 @@ class OptimalityObjective:
         self.model.addConstrs(
             (
                 f["plus"][e] - f["minus"][e]
-                == weights["rest"] * quicksum(v * w[e, t, v] for t, v in self.off_shifts)
+                == weights["rest"] * quicksum(min(v, MAX_REWARDED_WEEKLY_REST) * w[e, t, v] for t, v in self.off_shifts)
                 - weights["contracted hours"][e] * lam[e]
                 - weights["partial weekends"]
                 * quicksum(rho["sat"][e, i] + rho["sun"][e, i + 1] for i in self.saturdays)
