@@ -79,6 +79,9 @@ class ALNS:
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.L_C_D = data["limit_on_consecutive_days"]
 
+        #
+        self.preferences = data["preferences"]
+
         # Set for daily rest restriction
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
         self.shift_combinations_violating_daily_rest = data["shifts"]["shift_combinations_violating_daily_rest"]
@@ -654,7 +657,9 @@ class ALNS:
             self.L_C_D,
             self.days,
             self.weeks,
-            self.objective_weights
+            self.objective_weights,
+            self.preferences,
+            self.competencies
         )
 
     def get_best_solution_value(self):
