@@ -12,7 +12,8 @@ from heuristic.destroy_operators import (
     worst_contract_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours, \
-    reduce_overstaffing
+    reduce_overstaffing_with_swaps, reduce_overstaffing_with_destroy, \
+    reduce_overstaffing_with_related_heap
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
@@ -538,10 +539,11 @@ class ALNS:
                 'above_maximum_demand'].items() if violation}
 
 
-            destroy_set, repair_set = reduce_overstaffing(candidate_solution, self.shifts,
-                                                    self.employees, self.weeks,
-                                self.t_covered_by_shift, self.competencies,
-                                self.combined_time_periods_in_week, self.time_step, self.shifts_covering_t)
+            destroy_set, repair_set = reduce_overstaffing_with_related_heap(candidate_solution,
+                                                                     self.shifts, self.demand,
+                                                                     self.employees, self.employee_with_competencies, self.weeks,
+                                                                     self.t_covered_by_shift, self.competencies,
+                                                                     self.combined_time_periods_in_week, self.time_step, self.shifts_covering_t)
 
             self.calculate_objective(candidate_solution, destroy_set, repair_set)
 
