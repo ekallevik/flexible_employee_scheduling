@@ -134,7 +134,7 @@ class ProblemRunner:
         }
 
         objective_function, f = calculate_objective_function(self.data, soft_variables,
-                                                             self.weights, candidate_solution["w"])
+                                                             self.weights, candidate_solution["w"], candidate_solution["y"])
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 

@@ -125,19 +125,19 @@ def calculate_consecutive_days(data, x):
     return consecutive_days
 
 
-def calculate_f(data, soft_vars, weights, w, employees=None):
+def calculate_f(data, soft_vars, weights, w, y, employees=None):
 
     if not employees:
         employees = data["staff"]["employees"]
 
     f = {}
     for e in employees:
-        f[e] = calculate_f_for_employee(data, e, soft_vars, weights, w)
+        f[e] = calculate_f_for_employee(data, e, soft_vars, weights, w, y)
 
     return f
 
 
-def calculate_f_for_employee(data, e, soft_vars, weights, w):
+def calculate_f_for_employee(data, e, soft_vars, weights, w, y):
 
     f = (
         weights["rest"] * sum(
@@ -166,14 +166,19 @@ def calculate_f_for_employee(data, e, soft_vars, weights, w):
             soft_vars["consecutive_days"][e, i]
             for i in range(data["time"]["number_of_days"] - data["limit_on_consecutive_days"])
         )
+
+        + weights["preferences"] * sum(
+            data["preferences"][e][t] * y[c,e,t] 
+            for t in data["preferences"][e] for c in data["competencies"]
+        )
     )
 
     return f
 
 
-def calculate_objective_function(data, soft_vars, weights, w):
+def calculate_objective_function(data, soft_vars, weights, w, y):
 
-    f = calculate_f(data, soft_vars, weights, w)
+    f = calculate_f(data, soft_vars, weights, w, y)
     g = min(f.values())
 
     # todo: Split demand deviation into positive and negative
