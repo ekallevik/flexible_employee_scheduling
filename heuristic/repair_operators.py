@@ -629,7 +629,7 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
             )
             for (competency_level, e) in employee_with_competency_combination[competencies_needed]
             if (sum(state.x[e, t, v] for t, v in shifts_at_day[int(shift[0] / 24)])) == 0
-            if e in employees_changed
+            if e in employees
         }
 
         if (len(deviation_contracted_hours.keys()) == 0):
@@ -970,8 +970,8 @@ def mip_week_operator(  employees, shifts_in_week, competencies, time_periods_in
 
     model.setObjective(
     - quicksum(
-        quicksum(weights["excess demand deviation factor"] * delta_plus[c, t] +
-                weights["deficit demand deviation factor"] * delta_minus[c, t]
+        quicksum(1.1 * delta_plus[c, t] +
+                1.1* delta_minus[c, t]
                 for t in time_periods_in_week[c, week[0]])
         for c in competencies
     )
@@ -995,21 +995,13 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
 
     days_in_week = days[7*week[0]:(week[0]+1)*7]
     delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-    updated_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees)
+    updated_contracted_hours = min(sum(contracted_hours[e] for e in employees), sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees))
 
     model = Model(name="week_operator")
     y_dict = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
     plus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
     minus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
     mu = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    
-    covered_demand = {(c,t): sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]}
-    updated_demand = {
-                        "min":      {(c,t): demand["min"][c,t] - covered_demand[c,t] for c in competencies for t in time_periods_in_week[c, week[0]]},
-                        "max":      {(c,t): demand["max"][c,t] - covered_demand[c,t] for c in competencies for t in time_periods_in_week[c, week[0]]},
-                        "ideal":    {(c,t): demand["ideal"][c,t] - covered_demand[c,t] for c in competencies for t in time_periods_in_week[c, week[0]]}
-    }
-
 
     x = model.addVars(shifts_in_week[week[0]], vtype=GRB.INTEGER, name="x")
     mu = model.addVars(mu, vtype=GRB.INTEGER, name="mu")
@@ -1020,14 +1012,14 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
 
     model.addConstrs(
         (   y[c, t]
-            == updated_demand["min"][c, t] + mu[c, t]
+            == demand["min"][c, t] + mu[c, t]
             for c in competencies
             for t in time_periods_in_week[c, week[0]]
         ), name="minimum_demand_coverage",)
 
     model.addConstrs(
         (
-            mu[c, t] <= updated_demand["max"][c, t] - updated_demand["min"][c, t]
+            mu[c, t] <= demand["max"][c, t] - demand["min"][c, t]
             for c in competencies
             for t in time_periods_in_week[c, week[0]]
         ),
@@ -1035,7 +1027,7 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
     )
 
     model.addConstrs(
-        (   mu[c, t] + updated_demand["min"][c, t] - updated_demand["ideal"][c, t]
+        (   mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
             == delta_plus[c, t] - delta_minus[c, t]
             for c in competencies
             for t in time_periods_in_week[c, week[0]]), name="deviation_from_ideal_demand",)
@@ -1059,18 +1051,13 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
                 for t in time_periods_in_week[c, week[0]])
         for c in competencies
     )
-    + quicksum(x[t,v] for t, v in shifts_in_week[week[0]])
-    #+ lowest_lam
     ,GRB.MINIMIZE,)
 
-    model.setParam("MipFocus", 1)
+    #model.setParam("MipFocus", 1)
     model.setParam("TimeLimit", 10)
     model.optimize()
 
-    model.write("answer.sol")
     shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0}
-    print(shifts)
-
     saturdays = [5 + 7*week[0]]
     sundays = [6 + 7*week[0]]
     repair_set = []

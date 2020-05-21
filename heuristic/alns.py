@@ -1,7 +1,7 @@
 import numpy as np
 from functools import partial
 from timeit import default_timer as timer
-
+from math import copysign
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -401,13 +401,13 @@ class ALNS:
             # ],
 
             remove_worst_week: [
-            #     repair_worst_week_regret,
-            #     repair_worst_week_greedy,
-            # #     repair_week_demand,
+                repair_worst_week_regret,
+            #    repair_worst_week_greedy,
+            #     repair_week_demand,
             # #     repair_week_demand_per_shift,
             #     repair_worst_week_demand_based_random,
             #     repair_worst_week_demand_based_greedy,
-                mip_operator_week_repair_2
+            #     mip_operator_week_repair_2
             ],
 
             # remove_random_week: [
@@ -416,7 +416,8 @@ class ALNS:
             # #     repair_week_demand,
             # #     repair_week_demand_per_shift
             #     repair_worst_week_demand_based_random,
-            #     repair_worst_week_demand_based_greedy
+            #     repair_worst_week_demand_based_greedy,
+            #     mip_operator_week_repair_2
             # ],
 
             # remove_weighted_random_week: [
@@ -425,7 +426,8 @@ class ALNS:
             #     #repair_week_demand,
             #     #repair_week_demand_per_shift,
             #     repair_worst_week_demand_based_random,
-            #     repair_worst_week_demand_based_greedy
+            #     repair_worst_week_demand_based_greedy,
+            #     mip_operator_week_repair_2
             # ],
 
             # remove_random_weekend: [
@@ -495,9 +497,8 @@ class ALNS:
         repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
 
         destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
-        print(destroy_set)
         repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
-        #print(repair_set)
+
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
@@ -523,38 +524,7 @@ class ALNS:
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
 
-
-        if sum(candidate_solution.hard_vars["weekly_off_shift_error"].values()) != 0 and sum(candidate_solution.hard_vars["below_minimum_demand"].values()) == 0:
-                #candidate_solution.write("before_breaking_weekly")
-
-                destroy_set, repair_set = illegal_week_swap(
-                    self.shifts_per_week,
-                    self.employees,
-                    self.shifts_at_day,
-                    self.t_covered_by_shift,
-                    self.competencies,
-                    self.contracted_hours,
-                    self.invalid_shifts, 
-                    self.shift_combinations_violating_daily_rest, 
-                    self.shift_sequences_violating_daily_rest,
-                    self.time_periods_in_week,
-                    self.time_step,
-                    self.L_C_D,
-                    self.weeks,
-                    self.combined_time_periods_in_week,
-                    candidate_solution,
-                )
-
-                destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
-                self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
-                #candidate_solution.write("After_breaking_weekly")
-
-        elif sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()) != 0 and sum(candidate_solution.hard_vars["below_minimum_demand"].values()) == 0:
-                #candidate_solution.write("Before_breaking_contracted")
-                destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
-                self.calculate_objective(candidate_solution, destroy_set, repair_set)
-                #candidate_solution.write("After_breaking_contracted")
-
+        self.choose_local_search(candidate_solution)
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
@@ -644,15 +614,17 @@ class ALNS:
 
             if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
                 logger.critical(f"Legal, best solution found")
-                # exploit_contracted_hours( candidate_solution, self.shifts, 
-                #                                                     self.t_covered_by_shift, self.weeks, 
-                #                                                     self.employees, self.competencies, 
-                #                                                     self.saturdays, self.sundays, 
-                #                                                     self.invalid_shifts, 
-                #                                                     self.shift_combinations_violating_daily_rest, 
-                #                                                     self.shift_sequences_violating_daily_rest, 
-                #                                                     self.shifts_per_week, self.shifts_at_day, self.days, self.time_step)
-
+                candidate_solution.write("before_fixing_contracted_hours")
+                destroy_set, repair_set = exploit_contracted_hours( candidate_solution, self.shifts, 
+                                                                    self.t_covered_by_shift, self.weeks, 
+                                                                    self.employees, self.competencies, 
+                                                                    self.saturdays, self.sundays, 
+                                                                    self.invalid_shifts, 
+                                                                    self.shift_combinations_violating_daily_rest, 
+                                                                    self.shift_sequences_violating_daily_rest, 
+                                                                    self.shifts_per_week, self.shifts_at_day, self.days, self.time_step)
+                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                candidate_solution.write("after_fixing_contracted_hours")
                 weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
                 self.best_legal_solution = candidate_solution
                 self.best_legal_solution.write("best_legal_solution")
@@ -746,8 +718,7 @@ class ALNS:
             self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
 
     def calculate_objective(self, state, destroy, repair):
-        #destroy_repair_set = destroy + repair
-        destroy_repair_set = list(state.x.keys())
+        destroy_repair_set = destroy + repair
         employees = set([e for e, t, v in destroy_repair_set])
 
         # Updates the current states soft variables based on changed decision variables
@@ -803,3 +774,43 @@ class ALNS:
 
     def get_best_solution_value(self):
         return self.best_legal_solution.get_objective_value()
+
+    def choose_local_search(self, candidate_solution):
+        penalties = {
+            "below_minimum_demand": sum(candidate_solution.hard_vars["below_minimum_demand"].values()),
+            "above_maximum_demand": sum(candidate_solution.hard_vars["above_maximum_demand"].values()),
+            "negative_contracted_hours": sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()),
+            "weekly_off_shift_error": sum(candidate_solution.hard_vars["weekly_off_shift_error"].values())
+        }
+
+        if 0 < self.current_solution.get_objective_value()/candidate_solution.get_objective_value() < 2:
+            if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
+                    #candidate_solution.write("before_breaking_weekly")
+
+                    destroy_set, repair_set = illegal_week_swap(
+                        self.shifts_per_week,
+                        self.employees,
+                        self.shifts_at_day,
+                        self.t_covered_by_shift,
+                        self.competencies,
+                        self.contracted_hours,
+                        self.invalid_shifts, 
+                        self.shift_combinations_violating_daily_rest, 
+                        self.shift_sequences_violating_daily_rest,
+                        self.time_periods_in_week,
+                        self.time_step,
+                        self.L_C_D,
+                        self.weeks,
+                        self.combined_time_periods_in_week,
+                        candidate_solution,
+                    )
+
+                    destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                    self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
+                    #candidate_solution.write("After_breaking_weekly")
+
+            elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
+                    #candidate_solution.write("Before_breaking_contracted")
+                    destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                    self.calculate_objective(candidate_solution, destroy_set, repair_set)
+                    #candidate_solution.write("After_breaking_contracted")

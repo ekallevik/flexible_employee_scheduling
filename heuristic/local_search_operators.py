@@ -7,7 +7,8 @@ from heuristic.delta_calculations import (
     calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
     employee_shift_value,
-    worst_employee_regret_value
+    worst_employee_regret_value,
+    calculate_deviation_from_demand
 )
 from heuristic.converter import set_x, remove_x
 from operator import itemgetter
@@ -107,12 +108,12 @@ def exploit_contracted_hours(state, shifts, t_covered_by_shift,
                             shift_combinations_violating_daily_rest, 
                             shift_sequences_violating_daily_rest, 
                             shifts_at_week, shifts_at_day, days, time_step):
+    
     destroy_set = []
     repair_set = []
     below_demand_shifts = {shift: sum((time_step if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0 else 0) for c in competencies for t in t_covered_by_shift[shift]) for shift in shifts}
     contracted_hours_below = {}
     contracted_hours_above = {}
-    print(below_demand_shifts)
     for e in employees:
         value = sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks)
         if 0 < value < DESIRED_SHIFT_DURATION[0]:
@@ -122,4 +123,34 @@ def exploit_contracted_hours(state, shifts, t_covered_by_shift,
     
     actual_shifts = {e: [(t,v) for t,v in shifts if state.x[e,t,v] == 1] for e in employees}
     shifts_to_choose_from = {e: {(t_1, v_1): [(t,v) for t, v in below_demand_shifts if set(t_covered_by_shift[t_1, v_1]).issubset(t_covered_by_shift[t, v]) and 0 < v - v_1 <= contracted_hours_below[e]] for t_1, v_1 in actual_shifts[e]} for e in contracted_hours_below}
+    print(shifts_to_choose_from)
+    for e in contracted_hours_below:
+        print(e)
+        while contracted_hours_below[e] > 0:
+            keys = list(shifts_to_choose_from[e].keys())
+            print(keys)
+            for shift in keys:
+                shifts_to_choose_from[e][shift] = [ele for ele in shifts_to_choose_from[e][shift] if (ele[1] - shift[1]) <= contracted_hours_below[e] and below_demand_shifts[shift] > 0]
+                print(shifts_to_choose_from[e][shift])
+                if(len(shifts_to_choose_from[e][shift]) != 0):
+                    longest = max(shifts_to_choose_from[e][shift], key=itemgetter(1))
+                    print(longest)
+                    contracted_hours_below[e] -= longest[1]
+                    destroy_set.append(remove_x(state, t_covered_by_shift, competencies, e, shift[0], shift[1]))
+                    repair_set.append(set_x(state, t_covered_by_shift, e, longest[0], longest[1], 1))
+                    below_demand_shifts[longest] -= longest[1]
+                    del shifts_to_choose_from[e][shift]
+                else:
+                    del shifts_to_choose_from[e][shift]
+                print("\n")
+            if not shifts_to_choose_from[e].keys():
+                break
     
+    return destroy_set, repair_set
+                
+
+
+
+
+
+                    
