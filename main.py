@@ -62,7 +62,7 @@ class ProblemRunner:
         self.log_to_console = 1
 
         self.sdp = None
-        if with_sdp and self.mode != "implicit":
+        if with_sdp and (self.mode != "implicit" and self.mode != 3):
             self.set_sdp()
             self.run_sdp()
 
@@ -153,7 +153,7 @@ class ProblemRunner:
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
 
-        if self.mode != "implicit":
+        if self.mode != "implicit" and self.mode != 3:
             logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
         else:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
