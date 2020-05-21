@@ -122,3 +122,4 @@ def exploit_contracted_hours(state, shifts, t_covered_by_shift,
     
     actual_shifts = {e: [(t,v) for t,v in shifts if state.x[e,t,v] == 1] for e in employees}
     shifts_to_choose_from = {e: {(t_1, v_1): [(t,v) for t, v in below_demand_shifts if set(t_covered_by_shift[t_1, v_1]).issubset(t_covered_by_shift[t, v]) and 0 < v - v_1 <= contracted_hours_below[e]] for t_1, v_1 in actual_shifts[e]} for e in contracted_hours_below}
+    

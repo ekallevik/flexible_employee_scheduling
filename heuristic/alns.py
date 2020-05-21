@@ -15,7 +15,8 @@ from heuristic.local_search_operators import illegal_week_swap, illegal_contract
 
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
-    week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy
+    week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
+    worst_employee_regret_repair_2, mip_week_operator, mip_week_operator_2
 from visualisation.barchart_plotter import BarchartPlotter
 
 
@@ -80,6 +81,7 @@ class ALNS:
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.L_C_D = data["limit_on_consecutive_days"]
+
 
         # Set for daily rest restriction
         self.invalid_shifts = data["shifts"]["invalid_shifts"]
@@ -330,59 +332,106 @@ class ALNS:
             self.shifts_overlapping_t,
         )
 
+        mip_operator_week_repair = partial(
+            mip_week_operator,
+            self.employees, 
+            self.shifts_per_week, 
+            self.competencies, 
+            self.time_periods_in_week, 
+            self.combined_time_periods_in_week, 
+            self.employee_with_competencies, 
+            self.shifts_at_day, 
+            self.shifts_overlapping_t, 
+            self.t_covered_by_off_shift,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
+            self.weeks, 
+            self.time_step, 
+            self.demand, 
+            self.days,
+            self.objective_weights,
+            self.contracted_hours,
+            self.t_covered_by_shift
+        )
+
+        mip_operator_week_repair_2 = partial(
+            mip_week_operator_2,
+            self.employees, 
+            self.shifts_per_week, 
+            self.competencies, 
+            self.time_periods_in_week, 
+            self.combined_time_periods_in_week, 
+            self.employee_with_competencies, 
+            self.shifts_at_day, 
+            self.shifts_overlapping_t, 
+            self.t_covered_by_off_shift,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
+            self.weeks, 
+            self.time_step, 
+            self.demand, 
+            self.days,
+            self.objective_weights,
+            self.contracted_hours,
+            self.t_covered_by_shift
+        )
+        
 
         operators = {
-            remove_worst_employee: [
-                 repair_worst_employee_regret,
-                 repair_worst_employee_greedy
-            ],
+            # remove_worst_employee: [
+            #      repair_worst_employee_regret,
+            #      repair_worst_employee_greedy
+            # ],
 
-            remove_worst_contract: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy
-            ],
+            # remove_worst_contract: [
+            #     repair_worst_employee_regret,
+            #     repair_worst_employee_greedy
+            # ],
 
-            remove_random_employee: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy
-            ],
+            # remove_random_employee: [
+            #     repair_worst_employee_regret,
+            #     repair_worst_employee_greedy
+            # ],
 
-            remove_weighted_random_employee: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy,
-            ],
+            # remove_weighted_random_employee: [
+            #     repair_worst_employee_regret,
+            #     repair_worst_employee_greedy
+            # ],
 
             remove_worst_week: [
-                repair_worst_week_regret,
-                repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift,
-                repair_worst_week_demand_based_random,
-                repair_worst_week_demand_based_greedy
+            #     repair_worst_week_regret,
+            #     repair_worst_week_greedy,
+            # #     repair_week_demand,
+            # #     repair_week_demand_per_shift,
+            #     repair_worst_week_demand_based_random,
+            #     repair_worst_week_demand_based_greedy,
+                mip_operator_week_repair_2
             ],
 
-            remove_random_week: [
-                repair_worst_week_regret,
-                repair_worst_week_greedy,
-            #     repair_week_demand,
-            #     repair_week_demand_per_shift
-                repair_worst_week_demand_based_random,
-                repair_worst_week_demand_based_greedy
-            ],
+            # remove_random_week: [
+            #     repair_worst_week_regret,
+            #     repair_worst_week_greedy,
+            # #     repair_week_demand,
+            # #     repair_week_demand_per_shift
+            #     repair_worst_week_demand_based_random,
+            #     repair_worst_week_demand_based_greedy
+            # ],
 
-            remove_weighted_random_week: [
-                repair_worst_week_regret,
-                repair_worst_week_greedy,
-                #repair_week_demand,
-                #repair_week_demand_per_shift,
-                repair_worst_week_demand_based_random,
-                repair_worst_week_demand_based_greedy
-            ],
+            # remove_weighted_random_week: [
+            #     repair_worst_week_regret,
+            #     repair_worst_week_greedy,
+            #     #repair_week_demand,
+            #     #repair_week_demand_per_shift,
+            #     repair_worst_week_demand_based_random,
+            #     repair_worst_week_demand_based_greedy
+            # ],
 
-            remove_random_weekend: [
-                repair_worst_week_regret,
-                repair_worst_week_greedy
-            ],
+            # remove_random_weekend: [
+            #     repair_worst_week_regret,
+            #     repair_worst_week_greedy
+            # ],
         }
 
         self.add_destroy_and_repair_operators(operators)
@@ -433,7 +482,7 @@ class ALNS:
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
-        self.best_solution.write("solutions/best_solution")
+        #self.best_solution.write("solutions/best_solution")
 
     def perform_iteration(self, iteration):
 
@@ -446,8 +495,9 @@ class ALNS:
         repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
 
         destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
+        print(destroy_set)
         repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
-
+        #print(repair_set)
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
         self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
 
@@ -696,7 +746,8 @@ class ALNS:
             self.repair_operators[destroy_operator_id][new_operator.func.__name__] = new_operator
 
     def calculate_objective(self, state, destroy, repair):
-        destroy_repair_set = destroy + repair
+        #destroy_repair_set = destroy + repair
+        destroy_repair_set = list(state.x.keys())
         employees = set([e for e, t, v in destroy_repair_set])
 
         # Updates the current states soft variables based on changed decision variables
@@ -725,7 +776,7 @@ class ALNS:
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
         calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
         calculate_daily_rest_error(state, [destroy, repair], self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
-
+        
         # Updates the current states hard variables based on changed decision variables
         below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)

@@ -581,6 +581,39 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
             
     )
 
+def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_at_week, shifts_at_day, weights):
+    day = int(shift[0]/24)
+    week = int(day/7)
+
+    daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+    weekly_rest_other_weeks = sum(state.w[e,j][1] for j in weeks if j != week)
+    isolated_off_days_other_weeks = sum(state.soft_vars["isolated_off_days"][e,i+1] + state.soft_vars["isolated_working_days"][e,i+1] for i in range(len(days)-2))
+    partial_weekends_other_weeks = sum(state.soft_vars["partial_weekends"][e,i] for i in saturdays)
+    total_negative_deviation_from_contracted_hours = sum(state.soft_vars["deviation_contracted_hours"][e,j_2] for j_2 in weeks) - shift[1]
+    
+    
+    if total_negative_deviation_from_contracted_hours < 0:
+        contracted_hours = 5 * total_negative_deviation_from_contracted_hours
+    else:
+        contracted_hours = total_negative_deviation_from_contracted_hours
+
+    current_week_rest = regret_weekly_rest(state, shifts_at_week, e, week, shift)
+    current_isolated_days = regret_isolated_days(state, e, shifts_at_day, day, weeks)
+    current_partial_weekends = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
+
+    #I believe these sign to be correct. Remember that you have to check the values given from the functions about correct sign
+    f = (
+    weights["rest"] * (weekly_rest_other_weeks + max(0, current_week_rest))
+    + weights["partial weekends"] * (partial_weekends_other_weeks + current_partial_weekends)
+    + weights["isolated working days"] * (isolated_off_days_other_weeks + current_isolated_days)
+    - weights["contracted hours"][e] * max(0, contracted_hours)
+    )
+
+    penalties = daily_rest_error + 10 * min(0, contracted_hours) + min(0, current_week_rest)
+    print(penalties)
+
+    return f, penalties
+
 """
     Forskjell når man ser på en ansatt:
     2. isolated_days. Burde egentlig sjekke gjennom alle mulige isolated_days for å spre dem jevnt ut.
