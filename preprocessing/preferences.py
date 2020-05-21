@@ -72,6 +72,7 @@ def generate_preferences(staff, time_set, num_weekly_preferences, preferences_du
 
         preferences = normalize_preferences(employee, number_of_preferences, preferences)
 
+
     return preferences
 
 

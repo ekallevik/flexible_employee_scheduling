@@ -22,7 +22,6 @@ def set_weights():
         "isolated working days": 10,
         "isolated off days": 10,
         "consecutive days": 12,
-        # todo: scale to number of weeks
         "preferences": 5,
         # Weight of least favored employee. Use interval [0, 1].
         "lowest fairness score": 0.1,
@@ -67,13 +66,10 @@ def get_weights(time_set, staff):
     weights = set_weights()
 
     # Scale preferences to number of weeks
-    weights["preferences"] = scale_weight_to_weeks(weights["preferences"], time_set["weeks"])
+    # weights["preferences"] = scale_weight_to_weeks(weights["preferences"], time_set["weeks"])
 
     # Scale weights relatively
     weights = scale_weights_relatively(weights, staff)
-
-    pprint(weights)
-    breakpoint()
 
     # Scale weights to hours
     weights["excess demand deviation factor"] = scale_weight_to_hours(
