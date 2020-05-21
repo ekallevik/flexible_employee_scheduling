@@ -51,7 +51,10 @@ class ProblemRunner:
 
         self.problem = problem
         self.mode = mode
-        self.log_name = log_name
+
+        actual_name = log_name if log_name else f"{self.problem}_mode={self.mode}"
+        now = datetime.now()
+        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
 
         self.data = shift_generation.load_data(problem)
         self.weights = get_weights(self.data["time"], self.data["staff"])
@@ -67,6 +70,8 @@ class ProblemRunner:
             self.run_sdp(update_shifts)
 
         self.esp = None
+        self.save_esp = save_esp
+
         self.criterion = GreedyCriterion()
         self.alns = None
 
@@ -159,6 +164,10 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
         self.esp.run_model()
 
+        if self.save_esp:
+            self.esp.save_solution(self.log_name)
+            logger.warning(f"Saved ESP-solution to /solutions/{self.log_name}-ESP.sol")
+
         return self
 
     def set_esp(self):
@@ -212,6 +221,10 @@ class ProblemRunner:
             f"(-{100 * percentage_reduction:.2f}%)."
         )
 
+        if self.save_sdp:
+            self.sdp.save_solution(self.log_name)
+            logger.warning(f"Saved SDP-solution to /solutions/{self.log_name}-SDP.sol")
+
     def set_sdp(self):
         """ Creates an appropriate Gurobi model for SDP and saves it """
 
@@ -238,10 +251,8 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
-
-        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
-        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
-                                  f"{log_name}.log")
+        model.setParam("TimeLimit", 10000)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
