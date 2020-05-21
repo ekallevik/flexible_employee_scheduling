@@ -148,8 +148,8 @@ def reduce_overstaffing_with_swaps(state, shifts, employees, weeks, t_covered_by
     destroy_set = []
     repair_set = []
 
-    #logger.warning(f"Reducing overstaffing from current level:
-    # {sum(state.hard_vars['above_maximum_demand'].values())}")
+    logger.warning(f"Reducing overstaffing from current level: "
+                   f"{sum(state.hard_vars['above_maximum_demand'].values())}")
     print()
 
     overstaffed = {t: sum(state.hard_vars["above_maximum_demand"][c, t]
@@ -296,6 +296,9 @@ def reduce_overstaffing_with_swaps(state, shifts, employees, weeks, t_covered_by
 
     #breakpoint()
 
+    logger.warning(f"Reduced overstaffing to updated level: "
+                   f"{sum(state.hard_vars['above_maximum_demand'].values())}")
+
     return destroy_set, repair_set
 
 def reduce_overstaffing_with_destroy(state, shifts, employees, weeks, t_covered_by_shift,
@@ -391,48 +394,34 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
                                    competencies,
                                    combined_time_periods_in_week, time_step, shifts_covering_t):
 
+    print()
+    logger.warning(f"Reducing overstaffing from current level: "
+                   f"{sum(state.hard_vars['above_maximum_demand'].values())}")
+
     destroy_set = []
     repair_set = []
 
     # todo: add can_allocate?
 
-    overstaffed = {t: sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t)))
-                   for j in weeks
-                   for t in combined_time_periods_in_week[j]
-                   if sum(state.hard_vars["above_maximum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["above_maximum_demand"].get((c, t))) > 0
-                   }
-
-    understaffed = {t: sum(state.hard_vars["below_minimum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["below_minimum_demand"].get((c, t)))
-                   for j in weeks
-                   for t in combined_time_periods_in_week[j]
-                   if sum(state.hard_vars["below_minimum_demand"][c, t]
-                          for c in competencies
-                          if state.hard_vars["below_minimum_demand"].get((c, t))) > 0
-                   }
-
     overstaffed_times, understaffed_times = get_t_with_staffing_violations(
         combined_time_periods_in_week, competencies, state, weeks)
 
-    overstaffed_heap = get_overstaffed_heap(overstaffed, overstaffed_times, shifts_covering_t,
-                                            t_covered_by_shift, understaffed)
+    overstaffed_heap = get_overstaffed_heap(overstaffed_times, understaffed_times, shifts_covering_t, t_covered_by_shift)
 
     while overstaffed_heap:
 
-        if len(overstaffed_heap) == 0:
+        print()
+
+        if not overstaffed_heap:
             logger.critical("No more shifts")
             break
 
         # todo: move to bottom and use heappoppush?
         estimated_score, overstaffed_shift = pop_from_max_heap(overstaffed_heap)
-        actual_score = get_staffing_score_for_shift(overstaffed, overstaffed_shift, t_covered_by_shift, understaffed)
+        actual_score = get_staffing_score_for_shift(overstaffed_times, understaffed_times, overstaffed_shift, t_covered_by_shift)
 
         while actual_score != estimated_score:
+
             # if the actual score is negative the shift is not beneficial anymore
             if actual_score > 0:
                 # todo: this could be an heappushpop
@@ -443,8 +432,8 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
                 return destroy_set, repair_set
 
             estimated_score, overstaffed_shift = pop_from_max_heap(overstaffed_heap)
-            actual_score = get_staffing_score_for_shift(overstaffed, overstaffed_shift, t_covered_by_shift,
-                                                        understaffed)
+            actual_score = get_staffing_score_for_shift(overstaffed_times, understaffed_times,
+                                                        overstaffed_shift, t_covered_by_shift)
 
         logger.info(f"Fixing overstaffed shift {overstaffed_shift} (score={actual_score})")
 
@@ -454,27 +443,29 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
         replacement_shift_set = get_replacement_shift_set(overstaffed_shift, shifts_covering_t,
                                                           time_step)
 
-        replacement_shift_list = get_scored_replacement_list(competencies, demand,
-                                                             overstaffed_shift, overstaffed_times,
-                                                             replacement_shift_set, state,
-                                                             t_covered_by_shift, understaffed_times)
+        scored_replacement_shifts = get_scored_replacement_shifts(competencies, demand,
+                                                                  overstaffed_shift, overstaffed_times,
+                                                                  replacement_shift_set, state,
+                                                                  t_covered_by_shift, understaffed_times)
 
-        if not replacement_shift_list:
+        if not scored_replacement_shifts:
             # todo: need to find a better solution
             logger.info(f"No replacement shift exists for overstaffed shift {overstaffed_shift}")
             continue
 
-        target_score, target_shift = max(replacement_shift_list)
+        target_score, target_shift = max(scored_replacement_shifts)
 
-        # todo: take demand into account
         logger.warning(f"Swap increases objective value with {target_score}")
 
         relevant_employees = [employee for employee in employees
                               if (employee, overstaffed_shift[0], overstaffed_shift[1]) in state.x]
 
+        if not relevant_employees:
+            logger.critical("No more employees to allocate")
+            break
+
         # todo: must make sure the employee can work the target_shift
         # todo: this can be improved
-        chosen_index = 0
         chosen_employee = relevant_employees[0]
 
         logger.trace(f"Employee {chosen_employee} chosen")
@@ -490,14 +481,8 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
                   target_shift[1], 1)
         )
 
-        logger.error(f"Allocating employee {chosen_employee} to shift "
+        logger.error(f"Employee {chosen_employee} allocated to shift "
                      f"{target_shift}")
-
-        for t in t_covered_by_shift[overstaffed_shift]:
-            if t in overstaffed:
-                overstaffed[t] -= 1
-            if t in understaffed:
-                understaffed[t] -= 1
 
         destroy_repair_set = [destroy_set[-1], repair_set[-1]]
 
@@ -513,30 +498,40 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
         below_minimum_demand(state, destroy_repair_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         above_maximum_demand(state, destroy_repair_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
 
-        actual_score = get_staffing_score_for_shift(overstaffed, overstaffed_shift,
-                                                    t_covered_by_shift, understaffed)
+        overstaffed_times, understaffed_times = get_t_with_staffing_violations(
+            combined_time_periods_in_week, competencies, state, weeks)
 
-        if actual_score > 0:
+        updated_score = get_staffing_score_for_shift(overstaffed_times, understaffed_times,
+                                         overstaffed_shift, t_covered_by_shift)
+
+        if 0 < updated_score < actual_score:
+            logger.warning(f"Destroy+repair= {destroy_repair_set}")
+            logger.warning(f"Shift {overstaffed_shift} now have score={actual_score}")
             push_to_max_heap(overstaffed_heap, actual_score, overstaffed_shift)
 
     return destroy_set, repair_set
 
 
-def get_overstaffed_heap(overstaffed, overstaffed_times, shifts_covering_t, t_covered_by_shift,
-                         understaffed):
+def get_overstaffed_heap(overstaffed_times, understaffed_times, shifts_covering_t,
+                         t_covered_by_shift):
+
     overstaffed_shift_set = set()
+
     for t in overstaffed_times:
         shifts = shifts_covering_t[t]
         # todo: use update instead of add?
         for shift in shifts:
             overstaffed_shift_set.add(shift)
+
     overstaffed_heap = []
-    for shift in overstaffed_times:
-        score = get_staffing_score_for_shift(overstaffed, shift, t_covered_by_shift, understaffed)
+
+    for shift in overstaffed_shift_set:
+        score = get_staffing_score_for_shift(overstaffed_times, understaffed_times, shift, t_covered_by_shift)
         # the shift needs to be beneficial
         if score > 0:
             logger.trace(f"Shift {shift} is a potential swap with score={score}")
             push_to_max_heap(overstaffed_heap, score, shift)
+
     return overstaffed_heap
 
 
@@ -553,9 +548,9 @@ def get_t_with_staffing_violations(combined_time_periods_in_week, competencies, 
     return overstaffed_times, understaffed_times
 
 
-def get_scored_replacement_list(competencies, demand, overstaffed_shift, overstaffed_times,
-                                replacement_shift_set, state, t_covered_by_shift,
-                                understaffed_times):
+def get_scored_replacement_shifts(competencies, demand, overstaffed_shift, overstaffed_times,
+                                  replacement_shift_set, state, t_covered_by_shift,
+                                  understaffed_times):
     replacement_shift_list = []
     for replacement_shift in replacement_shift_set:
 
@@ -563,14 +558,8 @@ def get_scored_replacement_list(competencies, demand, overstaffed_shift, oversta
         delta_understaffing = 0
         delta_overstaffing = 0
 
-        relevant_times = set(t_covered_by_shift[replacement_shift] + t_covered_by_shift[
-            overstaffed_shift])
-
-        unique_t_for_overstaffed_shift = relevant_times - set(t_covered_by_shift[
-                                                                  replacement_shift])
-
-        unique_t_for_replacement_shift = relevant_times - set(t_covered_by_shift[
-                                                                  overstaffed_shift])
+        unique_t_for_overstaffed_shift, unique_t_for_replacement_shift = get_unique_t(
+            overstaffed_shift, replacement_shift, t_covered_by_shift)
 
         for t in unique_t_for_overstaffed_shift:
             if t in understaffed_times:
@@ -626,6 +615,16 @@ def get_scored_replacement_list(competencies, demand, overstaffed_shift, oversta
         if score > 0:
             replacement_shift_list.append((score, replacement_shift))
     return replacement_shift_list
+
+
+def get_unique_t(overstaffed_shift, replacement_shift, t_covered_by_shift):
+    relevant_times = set(t_covered_by_shift[replacement_shift] + t_covered_by_shift[
+        overstaffed_shift])
+    unique_t_for_overstaffed_shift = relevant_times - set(t_covered_by_shift[
+                                                              replacement_shift])
+    unique_t_for_replacement_shift = relevant_times - set(t_covered_by_shift[
+                                                              overstaffed_shift])
+    return unique_t_for_overstaffed_shift, unique_t_for_replacement_shift
 
 
 def get_replacement_shift_set(overstaffed_shift, shifts_covering_t, time_step):
