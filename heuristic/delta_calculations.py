@@ -108,13 +108,13 @@ def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
             state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
 
 
-def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks, weights):
+def calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks, weights, preferences, competencies):
 
     for e in employees:
-        state.f[e] = calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights)
+        state.f[e] = calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights, preferences, competencies)
 
 
-def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights):
+def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights, preferences, competencies):
 
     f = (
         sum(
@@ -137,6 +137,11 @@ def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights):
         - weights["consecutive days"] * sum(
             state.soft_vars["consecutive_days"][e, i]
             for i in range(len(days) - L_C_D)
+        )
+
+        + weights["preferences"] * sum(
+            preferences[e][t] * state.y[c,e,t] 
+            for t in preferences[e] for c in competencies
         )
     )
 
@@ -235,9 +240,9 @@ def hard_constraint_penalties(state):
 
 
 def calculate_objective_function(state, employees, off_shifts, saturdays, L_C_D, days,
-                                 weeks, weights):
+                                 weeks, weights, preferences, competencies):
 
-    calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks, weights)
+    calculate_f(state, employees, off_shifts, saturdays, days, L_C_D, weeks, weights, preferences, competencies)
 
     g = min(state.f.values())
 
