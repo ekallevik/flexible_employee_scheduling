@@ -204,7 +204,37 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
             logger.info(f"No replacement shift exists for overstaffed shift {overstaffed_shift}")
             #breakpoint()
             if actual_score > 0:
-                target_shift = None
+
+                delta_understaffing_for_destroy = 0
+
+                for t in t_covered_by_shift[overstaffed_shift]:
+                    if t not in overstaffed_times and t not in understaffed_times:
+                        # this could make understaffing worse
+                        deviation = sum(
+                            state.soft_vars["deviation_from_ideal_demand"][c, t] for c in
+                            competencies)
+                        allowed_deviation = sum(
+                            demand["ideal"].get((c, t), 0) for c in competencies) \
+                                            - sum(
+                            demand["min"].get((c, t), 0) for c in competencies)
+
+                        if deviation == allowed_deviation:
+                            # deletion of overstaffed_shift will make understaffing worse
+                            delta_understaffing_for_destroy -= 1
+
+
+                destroy_score = actual_score + delta_understaffing_for_destroy
+
+                # todo: gt or gte?
+                if destroy_score > 0:
+                    logger.trace(f"Destroying shift {overstaffed_shift} "
+                                 f"(destroy_score={destroy_score})")
+                    target_shift = None
+
+                else:
+                    logger.trace(f"Keeping shift {overstaffed_shift} "
+                                 f"(destroy_score={destroy_score})")
+                    continue
             else:
                 continue
         else:
@@ -220,8 +250,41 @@ def reduce_overstaffing_with_related_heap(state, shifts, demand, employees,
 
             logger.info(f"No positive replacement shift exists for overstaffed shift"
                         f" {overstaffed_shift}")
-            target_shift = None
-            #breakpoint()
+            #target_shift = None
+
+            if actual_score > 0:
+
+                delta_understaffing_for_destroy = 0
+
+                for t in t_covered_by_shift[overstaffed_shift]:
+                    if t not in overstaffed_times and t not in understaffed_times:
+                        # this could make understaffing worse
+                        deviation = sum(
+                            state.soft_vars["deviation_from_ideal_demand"][c, t] for c in
+                            competencies)
+                        allowed_deviation = sum(
+                            demand["ideal"].get((c, t), 0) for c in competencies) \
+                                            - sum(
+                            demand["min"].get((c, t), 0) for c in competencies)
+
+                        if deviation == allowed_deviation:
+                            # deletion of overstaffed_shift will make understaffing worse
+                            delta_understaffing_for_destroy -= 1
+
+                destroy_score = actual_score + delta_understaffing_for_destroy
+
+                # todo: gt or gte?
+                if destroy_score > 0:
+                    logger.trace(f"Destroying shift {overstaffed_shift} "
+                                 f"(destroy_score={destroy_score})")
+                    target_shift = None
+
+                else:
+                    logger.trace(f"Keeping shift {overstaffed_shift} "
+                                 f"(destroy_score={destroy_score})")
+                    continue
+            else:
+                continue
 
         logger.warning(f"Swap increases objective value with {target_score}")
 
@@ -414,6 +477,7 @@ def get_replacement_shift_set(overstaffed_shift, shifts_covering_t, time_step, o
     start = overstaffed_shift[0] - offset
     end = overstaffed_shift[0] + overstaffed_shift[1] + offset
 
+    # TODO: make the set more strict?
     #start = overstaffed_shift[0]
     #end = overstaffed_shift[0]
 

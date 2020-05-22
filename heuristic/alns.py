@@ -560,7 +560,7 @@ class ALNS:
                 'above_maximum_demand'].items() if violation}
 
             print("\n\n")
-            breakpoint()
+            #breakpoint()
 
         self.choose_local_search(candidate_solution)
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
