@@ -512,14 +512,10 @@ class ALNS:
                        f"({destroy_id}, {repair_id})")
 
         self.choose_local_search(candidate_solution)
+
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
-            
-        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
-
-            self.current_solution = candidate_solution
-
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
                 weight_update = self.WeightUpdate["IS_BETTER"]
