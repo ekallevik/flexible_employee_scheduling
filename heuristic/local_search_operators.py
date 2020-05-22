@@ -7,10 +7,14 @@ from heuristic.delta_calculations import (
     calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
     employee_shift_value,
+    worst_employee_regret_value,
+    calculate_deviation_from_demand
 )
 from heuristic.converter import set_x, remove_x
 from operator import itemgetter
 from random import choice
+from utils.const import DESIRED_SHIFT_DURATION
+import itertools
 
 def illegal_week_swap(
     shifts_in_week,
@@ -96,3 +100,8 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
                     if(illegal_hours <= 0):
                         break
     return destroy_set, repair_set
+
+
+
+
+                    
