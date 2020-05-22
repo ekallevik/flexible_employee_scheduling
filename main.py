@@ -37,7 +37,6 @@ level_per_module = {
 
 logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
-logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
@@ -55,6 +54,7 @@ class ProblemRunner:
         actual_name = log_name if log_name else f"{self.problem}_mode={self.mode}_with_sdp={with_sdp}"
         now = datetime.now()
         self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
 
         self.data = shift_generation.load_data(problem)
         self.weights = get_weights(self.data["time"], self.data["staff"])
