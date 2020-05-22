@@ -41,7 +41,7 @@ logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -52,7 +52,7 @@ class ProblemRunner:
         self.problem = problem
         self.mode = mode
 
-        actual_name = log_name if log_name else f"{self.problem}_mode={self.mode}"
+        actual_name = log_name if log_name else f"{self.problem}_mode={self.mode}_with_sdp={with_sdp}"
         now = datetime.now()
         self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
 
@@ -63,6 +63,7 @@ class ProblemRunner:
         self.mip_focus = "default"
         self.solution_limit = "default"
         self.log_to_console = 1
+        self.time_limit = time_limit
 
         self.sdp = None
         if with_sdp and (self.mode != "implicit" and self.mode != 3):
@@ -70,7 +71,6 @@ class ProblemRunner:
             self.run_sdp(update_shifts)
 
         self.esp = None
-        self.save_esp = save_esp
 
         self.criterion = GreedyCriterion()
         self.alns = None
@@ -164,10 +164,6 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
         self.esp.run_model()
 
-        if self.save_esp:
-            self.esp.save_solution(self.log_name)
-            logger.warning(f"Saved ESP-solution to /solutions/{self.log_name}-ESP.sol")
-
         return self
 
     def set_esp(self):
@@ -221,10 +217,6 @@ class ProblemRunner:
             f"(-{100 * percentage_reduction:.2f}%)."
         )
 
-        if self.save_sdp:
-            self.sdp.save_solution(self.log_name)
-            logger.warning(f"Saved SDP-solution to /solutions/{self.log_name}-SDP.sol")
-
     def set_sdp(self):
         """ Creates an appropriate Gurobi model for SDP and saves it """
 
@@ -251,13 +243,28 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
-        model.setParam("TimeLimit", 10000)
+        model.setParam("TimeLimit", self.time_limit)
         model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
+    def save_results(self):
+        """ Saves the results from the current run """
+
+        self.sdp.save_solution(self.log_name)
+        logger.warning(f"Saved SDP-solution to /solutions/{self.log_name}-SDP.sol")
+
+        self.esp.save_solution(self.log_name)
+        logger.warning(f"Saved ESP-solution to /solutions/{self.log_name}-ESP.sol")
+
     def __str__(self):
-        """ Necessary for playing nicely with terminal usage """
+        """
+        Necessary for playing nicely with terminal usage. This function is called
+        automagically after completion of the terminal command.
+        """
+
+        # Saves the results from the run
+        self.save_results()
 
         esp_value = self.esp.get_objective_value()
         message = f"ESP found solution:  {esp_value:.2f}."
