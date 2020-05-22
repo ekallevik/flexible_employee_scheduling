@@ -107,13 +107,16 @@ class ProblemRunner:
             raise ValueError("Cannot use more than one plot")
 
         if plot_objective:
-            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
+            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
+                                                           log_name=self.log_name)
 
         if plot_violations_map:
-            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
+            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration",
+                                                         log_name=self.log_name)
 
         if plot_violations_bar:
-            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration")
+            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
+                                                          log_name=self.log_name)
 
         self.alns.iterate(iterations, runtime)
 
@@ -287,15 +290,10 @@ class ProblemRunner:
         # Saves the results from the run
         self.save_results()
 
-        esp_value = self.esp.get_objective_value()
-        message = f"ESP found solution:  {esp_value:.2f}."
+        print()
+        logger.info(f"Completed run for {self.log_name}")
 
-        if self.alns:
-            alns_value = self.alns.get_best_solution_value()
-            diff = (alns_value - esp_value) / esp_value
-            message += f"\nALNS found solution: {alns_value}.\nDiff {diff:.2f}%"
-
-        return message
+        return self.log_name
 
 
 if __name__ == "__main__":
