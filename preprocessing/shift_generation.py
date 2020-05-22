@@ -20,18 +20,26 @@ from utils.const import (
 )
 
 
-def load_data(problem_name):
+def load_data(problem_name, use_predefined_shifts):
     root = xml_loader.get_root(problem_name)
 
     competencies = []
     
     staff = get_employee_lists(problem_name, root, competencies)
     time_sets = get_time_sets(root, competencies)
+
+    if use_predefined_shifts:
+        shifts, shifts_per_day, shifts_per_week = get_predefined_shift_set(root, time_sets["days"],
+                                                                           time_sets["weeks"], competencies)
+    else:
+        shifts = get_shifts(root)
+        shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
+        shifts_per_week = get_shifts_per_week(get_shifts_per_day(shifts, time_sets["days"]))
+
+    off_shift_sets = get_off_shift_sets(time_sets, shifts_per_week, competencies)
     
-    shifts = get_shifts(root)
-    off_shift_sets = get_off_shift_sets(time_sets, get_shifts_per_week(get_shifts_per_day(shifts, time_sets["days"])), competencies)
-    
-    shift_sets = get_shift_sets(root, staff, time_sets, shifts, off_shift_sets["off_shifts"], competencies)
+    shift_sets = get_shift_sets(root, staff, time_sets, shifts, shifts_per_day, shifts_per_week,
+                                off_shift_sets["off_shifts"], competencies)
 
     data = {
         "competencies": competencies,
@@ -71,10 +79,8 @@ def get_time_sets(root, competencies):
     }
 
 
-def get_shift_sets(root, staff, time_sets, shifts, off_shifts, competencies):
+def get_shift_sets(root, staff, time_sets, shifts, shifts_per_day, shifts_per_week, off_shifts, competencies):
 
-    shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
-    shifts_per_week = get_shifts_per_week(shifts_per_day)
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
 
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
@@ -400,9 +406,13 @@ def get_t_covered_by_shift(shifts, time_sets):
     combined_time_periods = time_sets["combined_time_periods"][0]
     t_covered_by_shift = {}
     for shift in shifts:
-        end = combined_time_periods.index(shift[0] + shift[1] - time_step)
-        start = combined_time_periods.index(shift[0])
-        t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start : (end + 1)]
+        try:
+            end = combined_time_periods.index(shift[0] + shift[1] - time_step)
+            start = combined_time_periods.index(shift[0])
+            t_covered_by_shift[shift[0], shift[1]] = combined_time_periods[start: (end + 1)]
+        except:
+            pass
+
     return t_covered_by_shift
 
 
@@ -542,3 +552,67 @@ def get_durations(time_step):
         "daily_off": daily_off,
         "weekly_off": weekly_off,
     }
+
+
+def get_predefined_shift_set(root, days, weeks, competencies):
+
+    shift_tuples = get_predefined_shifts(root)
+    predefined_shifts = tuplelist()
+    predefined_shifts_per_day = tupledict()
+    predefined_shifts_per_week = tupledict()
+
+    first_demand = get_time_periods(root, competencies)["combined_time_periods"][0][0]
+    last_demand = get_time_periods(root, competencies)["combined_time_periods"][0][-1]
+
+    for day in days:
+        predefined_shifts_per_day[day] = tuplelist()
+        if day % 7 == 0:
+            week = int(day / 7)
+            predefined_shifts_per_week[week] = tuplelist()
+        for shift_tuple in shift_tuples:
+            start_time = shift_tuple[0] + 24 * day
+            duration = shift_tuple[1]
+            predefined_shifts.append((start_time, duration))
+            predefined_shifts_per_day[day].append((start_time, duration))
+            predefined_shifts_per_week[week].append((start_time, duration))
+
+    shift_corresponding_to_first_demand_found = False
+    shift_corresponding_to_last_demand_found = False
+
+    for p_s in predefined_shifts_per_day[0]:
+        if p_s[0] == first_demand:
+            shift_corresponding_to_first_demand_found = True
+            break
+
+    for p_s in predefined_shifts_per_day[days[-1]]:
+        if p_s == last_demand:
+            shift_corresponding_to_last_demand_found = False
+            break
+
+    if not shift_corresponding_to_first_demand_found:
+        for p_s in predefined_shifts_per_day[0]:
+            if p_s[0] + p_s[1] > 24:
+                new_start_time = first_demand
+                new_duration = p_s[1] - (24 - p_s[0])
+                predefined_shifts.append((new_start_time, new_duration))
+                predefined_shifts_per_day[0].append((new_start_time, new_duration))
+                predefined_shifts_per_week[0].append((new_start_time, new_duration))
+
+    if not shift_corresponding_to_last_demand_found:
+        for p_s in predefined_shifts_per_day[days[-1]]:
+            if p_s[0] + p_s[1] > last_demand:
+                new_start_time = p_s[0]
+                new_duration = last_demand - new_start_time
+                predefined_shifts.append((new_start_time, new_duration))
+                predefined_shifts_per_day[days[-1]].append((new_start_time, new_duration))
+                predefined_shifts_per_week[weeks[-1]].append((new_start_time, new_duration))
+
+    predefined_shifts = remove_duplicates_and_sort(predefined_shifts)
+
+    for day in days:
+        predefined_shifts_per_day[day] = remove_duplicates_and_sort(predefined_shifts_per_day[day])
+
+    for week in weeks:
+        predefined_shifts_per_week[week] = remove_duplicates_and_sort(predefined_shifts_per_week[week])
+
+    return [predefined_shifts, predefined_shifts_per_day, predefined_shifts_per_week]
