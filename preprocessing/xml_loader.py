@@ -266,3 +266,24 @@ def get_days_with_demand2(root):
                 day_obj = today + timedelta(days = int(day.find("DayIndex").text))
                 days_with_demand[day_obj] = obj
     return days_with_demand
+
+
+def get_predefined_shifts(root):
+    predefined_shifts = []
+    for shift in root.findall('SchedulePeriod/Shifts/Shift'):
+        for interval in shift.find('Intervals').findall('Interval'):
+            start_time = interval.find('TimeStart').text
+            hour, minutes = start_time.split(":")
+            start_time = int(hour) + (int(minutes)/60)
+            end_time = interval.find('TimeEnd').text
+            hour, minutes = end_time.split(":")
+            end_time = int(hour) + (int(minutes) / 60)
+
+            if start_time < end_time:
+                duration = end_time - start_time
+            else:
+                duration = 24 + end_time - start_time
+
+            predefined_shifts.append((start_time, duration))
+
+    return predefined_shifts

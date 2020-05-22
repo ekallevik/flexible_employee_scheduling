@@ -40,7 +40,8 @@ logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -57,7 +58,7 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
 
-        self.data = shift_generation.load_data(problem)
+        self.data = shift_generation.load_data(problem, use_predefined_shifts)
         self.weights = get_weights(self.data["time"], self.data["staff"])
 
         # Standard Gurobi-config
@@ -67,7 +68,7 @@ class ProblemRunner:
         self.time_limit = time_limit
 
         self.sdp = None
-        if with_sdp and (self.mode != "implicit" and self.mode != 3):
+        if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
             self.set_sdp()
             self.run_sdp(update_shifts)
 
