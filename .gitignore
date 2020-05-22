@@ -135,6 +135,3 @@ data
 
 # Mac DS files
 .DS_Store
-
-# Solution files
-*.sol

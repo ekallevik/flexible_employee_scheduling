@@ -252,10 +252,10 @@ class ProblemRunner:
         """ Saves the results from the current run """
 
         self.sdp.save_solution(self.log_name)
-        logger.warning(f"Saved SDP-solution to /solutions/{self.log_name}-SDP.sol")
+        logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
 
         self.esp.save_solution(self.log_name)
-        logger.warning(f"Saved ESP-solution to /solutions/{self.log_name}-ESP.sol")
+        logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
 
     def __str__(self):
         """
