@@ -105,14 +105,13 @@ def get_updated_shift_sets(problem_name, data, shifts, ):
 
     root = xml_loader.get_root(problem_name)
 
-    off_shift_sets = get_off_shift_sets(
-            data["time"],
-            get_shifts_per_week(get_shifts_per_day(shifts, data["time"]["days"])),
-            data["competencies"]
-        )
+    shifts_per_day = get_shifts_per_day(shifts, data["time"]["days"])
+    shifts_per_week = get_shifts_per_week(shifts_per_day)
 
-    return get_shift_sets(root, data["staff"], data["time"], shifts, off_shift_sets["off_shifts"],
-                          data["competencies"])
+    off_shift_sets = get_off_shift_sets(data["time"], shifts_per_week, data["competencies"])
+
+    return get_shift_sets(root, data["staff"], data["time"], shifts, shifts_per_day, shifts_per_week,
+                          off_shift_sets["off_shifts"], data["competencies"])
 
 
 def get_shifts(root):
