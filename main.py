@@ -37,11 +37,10 @@ level_per_module = {
 
 logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
-logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000):
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -51,7 +50,12 @@ class ProblemRunner:
 
         self.problem = problem
         self.mode = mode
-        self.log_name = log_name
+
+        actual_name = log_name if log_name else \
+            f"{self.problem}_mode={self.mode}_{'with_sdp' if with_sdp else 'without_sdp'}"
+        now = datetime.now()
+        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
 
         self.data = shift_generation.load_data(problem)
         self.weights = get_weights(self.data["time"], self.data["staff"])
@@ -60,6 +64,7 @@ class ProblemRunner:
         self.mip_focus = "default"
         self.solution_limit = "default"
         self.log_to_console = 1
+        self.time_limit = time_limit
 
         self.sdp = None
         if with_sdp and (self.mode != "implicit" and self.mode != 3):
@@ -67,6 +72,7 @@ class ProblemRunner:
             self.run_sdp(update_shifts)
 
         self.esp = None
+
         self.criterion = GreedyCriterion()
         self.alns = None
 
@@ -238,15 +244,29 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
-
-        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
-        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
-                                  f"{log_name}.log")
+        model.setParam("TimeLimit", self.time_limit)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
+    def save_results(self):
+        """ Saves the results from the current run """
+
+        if self.sdp:
+            self.sdp.save_solution(self.log_name)
+            logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
+
+        self.esp.save_solution(self.log_name)
+        logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
     def __str__(self):
-        """ Necessary for playing nicely with terminal usage """
+        """
+        Necessary for playing nicely with terminal usage. This function is called
+        automagically after completion of the terminal command.
+        """
+
+        # Saves the results from the run
+        self.save_results()
 
         esp_value = self.esp.get_objective_value()
         message = f"ESP found solution:  {esp_value:.2f}."
