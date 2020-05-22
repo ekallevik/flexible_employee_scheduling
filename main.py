@@ -53,7 +53,7 @@ class ProblemRunner:
         self.mode = mode
 
         self.log_name = None
-        self.set_log_name(log_name, with_sdp, use_predefined_shifts)
+        self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
 
         self.data = shift_generation.load_data(problem, use_predefined_shifts)
         self.weights = get_weights(self.data["time"], self.data["staff"])
@@ -76,17 +76,20 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts):
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
 
         if log_name:
             actual_name = log_name
         else:
             if with_sdp:
-                shift_set = "with_sdp"
+                if update_shifts:
+                    shift_set = "sdp_reduce"
+                else:
+                    shift_set = "sdp_no_reduce"
             elif use_predefined_shifts:
                 shift_set = "predefined_shifts"
             else:
-                shift_set = "without_sdp"
+                shift_set = "no_sdp"
 
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
 
