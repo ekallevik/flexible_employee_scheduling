@@ -10,15 +10,11 @@ from heuristic.converter import remove_x
 
 def worst_week_removal(competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks, L_C_D, shifts_in_week, t_covered_by_shift_combined, state, destroy_size=1):
 
-    random_state = np.random.RandomState(seed=0)
     size = [(1, 1), (1, 0.5), (1, 1/3), (2, 1/3)]
     probabilities = [1/4, 1/4, 1/4, 1/4]
-    index = random_state.choice(len(size), p=probabilities)
-    number_of_weeks, percentage_of_employees = size[index]
-    number_of_employees = int(len(employees)*percentage_of_employees)
 
-    selected_employees = list(random_state.choice(employees, size=number_of_employees,
-                                                  replace=False))
+    number_of_employees, number_of_weeks, selected_employees = select_employees_and_number_of_weeks(
+        employees, probabilities, size)
 
     worst_k_weeks = calc_weekly_objective_function(state, competencies, time_periods_in_week,
                                                    combined_time_periods_in_week, employees,
@@ -28,10 +24,23 @@ def worst_week_removal(competencies, time_periods_in_week, combined_time_periods
                                         t_covered_by_shift_combined, worst_k_weeks)
 
     logger.info(f"Destroyed {number_of_employees} for {number_of_weeks} worst week")
-    #logger.info(f"Destroyed {destroy_size} worst weeks: {worst_k_weeks}")
-    #breakpoint()
+    logger.trace(f"Weeks={worst_k_weeks}, employees={selected_employees}")
 
     return destroy_set_shifts, worst_k_weeks
+
+
+def select_employees_and_number_of_weeks(employees, probabilities, size):
+
+    random_state = np.random.RandomState(seed=0)
+    index = random_state.choice(len(size), p=probabilities)
+
+    number_of_weeks, percentage_of_employees = size[index]
+
+    number_of_employees = int(len(employees) * percentage_of_employees)
+    selected_employees = list(random_state.choice(employees, size=number_of_employees,
+                                                  replace=False))
+
+    return number_of_employees, number_of_weeks, selected_employees
 
 
 def weighted_random_week_removal(competencies, time_periods_in_week,
@@ -41,22 +50,18 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
 
     size = [(1, 1), (1, 0.5), (1, 0.3)]
     probabilities = [1/3, 1/3, 1/3]
-    index = random_state.choice(len(size), p=probabilities)
-    number_of_weeks, percentage_of_employees = size[index]
-    number_of_employees = int(len(employees)*percentage_of_employees)
 
-    selected_employees = list(random_state.choice(employees, size=number_of_employees,
-                                                  replace=False))
-
+    number_of_employees, number_of_weeks, selected_employees = select_employees_and_number_of_weeks(
+        employees, probabilities, size)
 
     weekly_objective = calc_weekly_objective_function(state, competencies, time_periods_in_week,
                                                       combined_time_periods_in_week, employees,
-                                                      weeks, L_C_D, destroy_size,
+                                                      weeks, L_C_D, number_of_weeks,
                                                       setting="best")
 
     probabilities = get_weighted_probabilities(weekly_objective)
 
-    selected_weeks = list(random_state.choice(weeks, size=destroy_size, p=probabilities,
+    selected_weeks = list(random_state.choice(weeks, size=number_of_weeks, p=probabilities,
                                               replace=False))
 
     destroy_set_shifts = destroy_shifts(
@@ -64,6 +69,7 @@ def weighted_random_week_removal(competencies, time_periods_in_week,
     )
 
     logger.info(f"Destroyed {destroy_size} selected weeks: {selected_weeks}")
+    logger.trace(f"Weeks={selected_weeks}, employees={selected_employees}")
 
     return destroy_set_shifts, selected_weeks
 
@@ -73,12 +79,9 @@ def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covere
 
     size = [(1, 1), (1, 0.5), (1, 0.3)]
     probabilities = [1/3, 1/3, 1/3]
-    index = random_state.choice(len(size), p=probabilities)
-    number_of_weeks, percentage_of_employees = size[index]
-    number_of_employees = int(len(employees)*percentage_of_employees)
 
-    selected_employees = list(random_state.choice(employees, size=number_of_employees,
-                                                  replace=False))
+    number_of_employees, number_of_weeks, selected_employees = select_employees_and_number_of_weeks(
+        employees, probabilities, size)
 
     selected_weeks = list(random_state.choice(weeks, size=destroy_size, replace=False))
 
@@ -86,7 +89,8 @@ def random_week_removal(competencies, employees, weeks, shifts_in_week, t_covere
         competencies, selected_employees, shifts_in_week, state, t_covered_by_shift, selected_weeks
     )
 
-    logger.info(f"Destroyed {destroy_size} random weeks: {selected_weeks}")
+    logger.info(f"Destroyed {number_of_weeks} random weeks: {selected_weeks}")
+    logger.trace(f"Weeks={selected_weeks}, employees={selected_employees}")
 
     return destroy_set_shifts, selected_weeks
 
@@ -115,19 +119,26 @@ def random_weekend_removal(
 
 def worst_employee_removal(shifts, t_covered_by_shift_combined, competencies, state, destroy_size=2):
 
+    size = [(1, 1), (1, 0.5), (1, 1/3), (2, 1/3)]
+    probabilities = [1/4, 1/4, 1/4, 1/4]
 
     f_sorted = sorted(state.f, key=state.f.get, reverse=True)
-
     employees = []
     employees.extend(f_sorted[:destroy_size] + f_sorted[-destroy_size:])
 
+    # TODO: Either remove weeks here, or select only some weeks?
+    number_of_employees, number_of_weeks, selected_employees = select_employees_and_number_of_weeks(
+        employees, probabilities, size)
+
     destroy_set = destroy_employees(
-        competencies, employees, shifts, state, t_covered_by_shift_combined
+        competencies, selected_employees, shifts, state, t_covered_by_shift_combined
     )
 
     logger.info(f"Destroyed {destroy_size} worst employees: {employees}")
+    logger.trace(f"Employees={selected_employees}")
 
     return destroy_set, employees
+
 
 def worst_contract_removal(shifts, t_covered_by_shift_combined, competencies, weeks, employees,
                            state,
