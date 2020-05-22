@@ -615,7 +615,6 @@ def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violatin
     )
 
     penalties = daily_rest_error + 10 * min(0, contracted_hours) + min(0, current_week_rest)
-    print(penalties)
 
     return f, penalties
 

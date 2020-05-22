@@ -30,7 +30,6 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
-        self.initial_solution.write("Initial_solution")
 
 
         self.criterion = criterion
@@ -461,7 +460,6 @@ class ALNS:
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
-        #self.best_solution.write("solutions/best_solution")
 
     def perform_iteration(self):
 
