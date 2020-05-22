@@ -126,6 +126,7 @@ class State:
         return violations
 
     def write(self, filename):
+
         summasjon = defaultdict(float)
         f = open(f"{filename}.sol", "w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
@@ -157,3 +158,5 @@ class State:
                 f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.hard_vars[key][key2]))))
 
         f.close()
+        logger.warning(f"Saved ALNS-solution to {filename}.sol")
+
