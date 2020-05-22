@@ -1,11 +1,10 @@
+
 from gurobipy.gurobipy import GRB, quicksum
 
-from utils.const import MAX_REWARDED_WEEKLY_REST
 
-
-class OptimalityObjective:
+class ImplicitObjective:
     def __init__(
-        self, model, var, weights, competencies, preferences, staff, time_set, off_shifts_set
+        self, model, var, weights, competencies, preferences, staff, time_set, shift_durations
     ):
         self.model = model
 
@@ -17,7 +16,8 @@ class OptimalityObjective:
         self.saturdays = time_set["saturdays"]
         self.days = time_set["days"]
         self.weeks = time_set["weeks"]
-        self.off_shifts = off_shifts_set["off_shifts"]
+        self.weekly_rest = staff["employee_with_weekly_rest"]
+        self.shift_durations = shift_durations
 
         self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q, var.y, preferences)
         self.add_lowest_fairness_score(var.f, var.g)
@@ -28,7 +28,11 @@ class OptimalityObjective:
         self.model.addConstrs(
             (
                 f["plus"][e] - f["minus"][e]
-                == weights["rest"] * quicksum(min(v, MAX_REWARDED_WEEKLY_REST) * w[e, t, v] for t, v in self.off_shifts)
+                == weights["rest"] * quicksum(
+                    quicksum(
+                        (v - self.weekly_rest[e]) * w[e, t, v] for t in self.combined_time_periods
+                    ) for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
+                )
                 - weights["contracted hours"][e] * lam[e]
                 - weights["partial weekends"]
                 * quicksum(rho["sat"][e, i] + rho["sun"][e, i + 1] for i in self.saturdays)
@@ -38,7 +42,7 @@ class OptimalityObjective:
                 - weights["consecutive days"] * quicksum(q["con"][e, i] for i in self.days)
                 + weights["preferences"]
                 * quicksum(
-                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies if y.get((c,e,t)))
+                    preferences[e][t] * quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
                     for t in self.combined_time_periods
                 )
                 for e in self.employees
@@ -51,16 +55,6 @@ class OptimalityObjective:
         self.model.addConstrs(
             (g["plus"] - g["minus"] <= f["plus"][e] - f["minus"][e] for e in self.employees),
             name="lowest_fairness_score",
-        )
-
-    def add_objective_for_feasible_solution(self, y):
-
-        self.model.setObjective(
-            quicksum(
-                y[c, e, t] for e in self.employees for c in self.competencies
-                for t in self.time_periods[c]
-            ),
-            GRB.MINIMIZE,
         )
 
     def add_objective_for_optimal_solution(self, weights, f, g, delta):

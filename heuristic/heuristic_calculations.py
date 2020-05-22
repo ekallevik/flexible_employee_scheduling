@@ -2,6 +2,8 @@ from collections import defaultdict
 from operator import itemgetter
 from loguru import logger
 
+from utils.const import MAX_REWARDED_WEEKLY_REST
+
 
 def calculate_deviation_from_demand(data, y):
     delta = {}
@@ -141,7 +143,7 @@ def calculate_f_for_employee(data, e, soft_vars, weights, w, y):
 
     f = (
         weights["rest"] * sum(
-            min(72, w[e, j][1])
+            min(MAX_REWARDED_WEEKLY_REST, w[e, j][1])
             for j in data["time"]["weeks"]
         )
 

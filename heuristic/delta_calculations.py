@@ -1,7 +1,7 @@
 from operator import itemgetter
 from collections import defaultdict
 from copy import copy
-from utils.const import WEEKLY_REST_DURATION
+from utils.const import WEEKLY_REST_DURATION, MAX_REWARDED_WEEKLY_REST
 from loguru import logger
 
 
@@ -118,7 +118,7 @@ def calculate_f_for_employee(L_C_D, days, e, saturdays, state, weeks, weights, p
 
     f = (
         sum(
-            weights["rest"] * min(WEEKLY_REST_DURATION[1], state.w[e, j][1])
+            weights["rest"] * min(MAX_REWARDED_WEEKLY_REST, state.w[e, j][1])
             - weights["contracted hours"][e] * state.soft_vars["deviation_contracted_hours"][e, j]
             for j in weeks
         )
@@ -268,7 +268,7 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
 
         if setting == "worst":
             value[j] = (
-                        sum(min(WEEKLY_REST_DURATION[1], state.w[e, j][1]) for e in employees)
+                        sum(min(MAX_REWARDED_WEEKLY_REST, state.w[e, j][1]) for e in employees)
 
                         - sum(10 * abs(state.soft_vars["deviation_from_ideal_demand"][c, t])
                               for c in competencies
@@ -471,7 +471,7 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
   
     if not actual_shifts:
         off_shift_periods.append(float(week_interval[1] - week_interval[0]))
-        return 0.5 * min(WEEKLY_REST_DURATION[1], off_shift_periods[0])
+        return 0.5 * min(MAX_REWARDED_WEEKLY_REST, off_shift_periods[0])
 
     else:
         if(actual_shifts[0][0] - week_interval[0] >= 36):
@@ -486,7 +486,7 @@ def regret_weekly_rest(state, shifts_at_week, e, week, shift):
                 off_shift_periods.append(actual_shifts[i+1][0] - (actual_shifts[i][0] + actual_shifts[i][1]))
 
     if off_shift_periods:
-        return 0.5 * min(WEEKLY_REST_DURATION[1], max(off_shift_periods))
+        return 0.5 * min(MAX_REWARDED_WEEKLY_REST, max(off_shift_periods))
     
     return -200
 

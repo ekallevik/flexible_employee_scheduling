@@ -13,6 +13,7 @@ from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
 from model.optimality_model import OptimalityModel
 from model.shift_design_model import ShiftDesignModel
+from model.implicit_model import ImplicitModel
 from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
@@ -36,11 +37,11 @@ level_per_module = {
 
 logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
-logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -50,26 +51,51 @@ class ProblemRunner:
 
         self.problem = problem
         self.mode = mode
-        self.log_name = log_name
 
-        self.data = shift_generation.load_data(problem)
+        self.log_name = None
+        self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
+
+        self.data = shift_generation.load_data(problem, use_predefined_shifts)
         self.weights = get_weights(self.data["time"], self.data["staff"])
 
         # Standard Gurobi-config
         self.mip_focus = "default"
         self.solution_limit = "default"
         self.log_to_console = 1
+        self.time_limit = time_limit
 
         self.sdp = None
-        if with_sdp:
+        if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
             self.set_sdp()
             self.run_sdp(update_shifts)
 
         self.esp = None
+
         self.criterion = GreedyCriterion()
         self.alns = None
 
         self.set_esp()
+
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+
+        if log_name:
+            actual_name = log_name
+        else:
+            if with_sdp:
+                if update_shifts:
+                    shift_set = "sdp_reduce"
+                else:
+                    shift_set = "sdp_no_reduce"
+            elif use_predefined_shifts:
+                shift_set = "predefined_shifts"
+            else:
+                shift_set = "no_sdp"
+
+            actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
+
+        now = datetime.now()
+        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False):
@@ -81,13 +107,16 @@ class ProblemRunner:
             raise ValueError("Cannot use more than one plot")
 
         if plot_objective:
-            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration")
+            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
+                                                           log_name=self.log_name)
 
         if plot_violations_map:
-            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration")
+            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration",
+                                                         log_name=self.log_name)
 
         if plot_violations_bar:
-            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration")
+            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
+                                                          log_name=self.log_name)
 
         self.alns.iterate(iterations, runtime)
 
@@ -152,7 +181,10 @@ class ProblemRunner:
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
 
-        logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
+        if self.mode != "implicit" and self.mode != 3:
+            logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
+        else:
+            logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
         self.esp.run_model()
 
         return self
@@ -174,6 +206,9 @@ class ProblemRunner:
 
         elif self.mode == 2 or self.mode == "optimality":
             self.esp = OptimalityModel(model, data=self.data)
+
+        elif self.mode == 3 or self.mode == "implicit":
+            self.esp = ImplicitModel(model, data=self.data)
 
         else:
             raise ValueError(f"The model choice '{self.mode}' is not valid.")
@@ -231,25 +266,34 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
-
-        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
-        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
-                                  f"{log_name}.log")
+        model.setParam("TimeLimit", self.time_limit)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
+    def save_results(self):
+        """ Saves the results from the current run """
+
+        if self.sdp:
+            self.sdp.save_solution(self.log_name)
+            logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
+
+        self.esp.save_solution(self.log_name)
+        logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
     def __str__(self):
-        """ Necessary for playing nicely with terminal usage """
+        """
+        Necessary for playing nicely with terminal usage. This function is called
+        automagically after completion of the terminal command.
+        """
 
-        esp_value = self.esp.get_objective_value()
-        message = f"ESP found solution:  {esp_value:.2f}."
+        # Saves the results from the run
+        self.save_results()
 
-        if self.alns:
-            alns_value = self.alns.get_best_solution_value()
-            diff = (alns_value - esp_value) / esp_value
-            message += f"\nALNS found solution: {alns_value}.\nDiff {diff:.2f}%"
+        print()
+        logger.info(f"Completed run for {self.log_name}")
 
-        return message
+        return self.log_name
 
 
 if __name__ == "__main__":

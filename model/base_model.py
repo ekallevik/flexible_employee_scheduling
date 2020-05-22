@@ -33,6 +33,9 @@ class BaseModel:
         self.model.optimize()
         logger.error(f"Model is {self.model.status}")
 
+    def save_solution(self, filename):
+        self.model.write(f"solutions/{filename}-ESP.sol")
+
     def get_variables(self):
         """ This method is intended to be used in all subclasses of BaseModel"""
         return self.var

@@ -50,6 +50,9 @@ class ShiftDesignModel:
     def run_model(self):
         self.model.optimize()
 
+    def save_solution(self, filename):
+        self.model.write(f"solutions/{filename}-SDP.sol")
+
     def get_used_shifts(self):
 
         y = self.convert(self.var.y)

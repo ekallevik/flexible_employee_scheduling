@@ -852,7 +852,6 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
-            print("KJører denne?")
             return repair_set
     return repair_set
         

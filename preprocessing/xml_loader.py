@@ -17,6 +17,7 @@ from utils.const import (
     DEFAULT_DAILY_OFFSET,
     DEFAULT_DAILY_REST_HOURS,
     DEFAULT_WEEKLY_REST_HOURS,
+    DEFAULT_WEEKLY_OFFSET,
 )
 
 
@@ -27,6 +28,7 @@ def get_employee_lists(problem, root, competencies):
     employee_daily_rest = tupledict()
     employee_contracted_hours = tupledict()
     employee_daily_offset = tupledict()
+    employee_weekly_offset = tupledict()
     employee_blocked_hours = tupledict()
 
     emp = get_staff(problem, root, competencies)
@@ -44,6 +46,7 @@ def get_employee_lists(problem, root, competencies):
         employee_weekly_rest[id] = e.weekly_rest_hours
         employee_contracted_hours[id] = e.contracted_hours
         employee_daily_offset[id] = e.daily_offset
+        employee_weekly_offset[id] = e.weekly_offset
         employee_blocked_hours[id] = e.blocked_hours
 
     return {
@@ -53,6 +56,7 @@ def get_employee_lists(problem, root, competencies):
         "employee_daily_rest": employee_daily_rest,
         "employee_contracted_hours": employee_contracted_hours,
         "employee_daily_offset": employee_daily_offset,
+        "employee_weekly_offset": employee_weekly_offset,
         "employee_blocked_hours": employee_blocked_hours,
         "employee_with_competency_combination": get_competency_combinations(emp),
     }
@@ -69,6 +73,7 @@ def get_staff(problem, root, all_competencies):
         set_weekly_rest_rule_for_employee(employee, schedule_row, weekly_rest_rules)
         set_daily_rest_rule(daily_rest_rules, employee, schedule_row)
         set_daily_offset_for_employee(employee, problem)
+        set_weekly_offset_for_employee(employee)
         set_blocked_hours_for_employee(employee)
 
         competencies = []
@@ -199,6 +204,9 @@ def set_daily_offset_for_employee(employee, problem):
     else:
         employee.set_daily_offset(DEFAULT_DAILY_OFFSET)
 
+def set_weekly_offset_for_employee(employee):
+    employee.set_weekly_offset(DEFAULT_WEEKLY_OFFSET)
+
 
 def set_blocked_hours_for_employee(employee):
     # TODO: Implement code to retrieve blocked hours from xml. If there is no data to retrieve,
@@ -258,3 +266,24 @@ def get_days_with_demand2(root):
                 day_obj = today + timedelta(days = int(day.find("DayIndex").text))
                 days_with_demand[day_obj] = obj
     return days_with_demand
+
+
+def get_predefined_shifts(root):
+    predefined_shifts = []
+    for shift in root.findall('SchedulePeriod/Shifts/Shift'):
+        for interval in shift.find('Intervals').findall('Interval'):
+            start_time = interval.find('TimeStart').text
+            hour, minutes = start_time.split(":")
+            start_time = int(hour) + (int(minutes)/60)
+            end_time = interval.find('TimeEnd').text
+            hour, minutes = end_time.split(":")
+            end_time = int(hour) + (int(minutes) / 60)
+
+            if start_time < end_time:
+                duration = end_time - start_time
+            else:
+                duration = 24 + end_time - start_time
+
+            predefined_shifts.append((start_time, duration))
+
+    return predefined_shifts

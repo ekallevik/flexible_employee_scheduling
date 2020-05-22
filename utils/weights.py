@@ -66,7 +66,7 @@ def get_weights(time_set, staff):
     weights = set_weights()
 
     # Scale preferences to number of weeks
-    # weights["preferences"] = scale_weight_to_weeks(weights["preferences"], time_set["weeks"])
+    weights["preferences"] = scale_weight_to_weeks(weights["preferences"], time_set["weeks"])
 
     # Scale weights relatively
     weights = scale_weights_relatively(weights, staff)
