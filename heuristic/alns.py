@@ -355,7 +355,6 @@ class ALNS:
             self.contracted_hours,
             self.t_covered_by_shift
         )
-        
 
         operators = {
             remove_worst_employee: [
@@ -380,9 +379,9 @@ class ALNS:
 
             remove_worst_week: [
                 repair_worst_week_regret,
-               repair_worst_week_greedy,
-                #repair_week_demand,
-                #repair_week_demand_per_shift,
+                repair_worst_week_greedy,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2
@@ -391,8 +390,8 @@ class ALNS:
             remove_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                #repair_week_demand,
-                #repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2
@@ -401,8 +400,8 @@ class ALNS:
             remove_weighted_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                #repair_week_demand,
-                #repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2
