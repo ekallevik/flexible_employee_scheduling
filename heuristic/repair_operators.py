@@ -462,7 +462,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
         below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
 
-        if sum(state.hard_vars["below_minimum_demand"].values()) != 0:
+        if any(state.hard_vars["below_minimum_demand"].values()):
             shifts =    {
                         (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
                                         for c in comp
@@ -664,7 +664,7 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
         above_maximum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
 
-        if sum(state.hard_vars["below_minimum_demand"].values()) != 0:
+        if any(state.hard_vars["below_minimum_demand"].values()):
             shifts =    {
                         (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
                                         for c in comp
