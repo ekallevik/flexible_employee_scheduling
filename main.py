@@ -37,11 +37,11 @@ level_per_module = {
 
 logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
-logger.add("logs/log_{time}.log", format=formatter.format, retention="1 day")
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, use_predefined_shifts=False, log_name=None):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
@@ -51,7 +51,12 @@ class ProblemRunner:
 
         self.problem = problem
         self.mode = mode
-        self.log_name = log_name
+
+        actual_name = log_name if log_name else \
+            f"{self.problem}_mode={self.mode}_{'with_sdp' if with_sdp else 'without_sdp'}"
+        now = datetime.now()
+        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
 
         self.data = shift_generation.load_data(problem, use_predefined_shifts)
         self.weights = get_weights(self.data["time"], self.data["staff"])
@@ -60,13 +65,15 @@ class ProblemRunner:
         self.mip_focus = "default"
         self.solution_limit = "default"
         self.log_to_console = 1
+        self.time_limit = time_limit
 
         self.sdp = None
         if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
             self.set_sdp()
-            self.run_sdp()
+            self.run_sdp(update_shifts)
 
         self.esp = None
+
         self.criterion = GreedyCriterion()
         self.alns = None
 
@@ -185,7 +192,7 @@ class ProblemRunner:
         else:
             raise ValueError(f"The model choice '{self.mode}' is not valid.")
 
-    def run_sdp(self):
+    def run_sdp(self, update_shifts):
         """ Runs the Shift Design Model to optimize the shift generation and saves the result """
 
         original_shifts = self.data["shifts"]["shifts"]
@@ -197,13 +204,14 @@ class ProblemRunner:
 
         self.data["demand_per_shift"] = self.sdp.get_demand_per_shift()
 
-        self.data["shifts"] = shift_generation.get_updated_shift_sets(
-            self.problem, self.data, used_shifts
-        )
+        if update_shifts:
+            self.data["shifts"] = shift_generation.get_updated_shift_sets(
+                self.problem, self.data, used_shifts
+            )
 
-        self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
-            self.data, used_shifts
-        )
+            self.data["off_shifts"] = shift_generation.get_updated_off_shift_sets(
+                self.data, used_shifts
+            )
 
         percentage_reduction = (len(original_shifts) - len(used_shifts)) / len(original_shifts)
         logger.warning(
@@ -237,15 +245,29 @@ class ProblemRunner:
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
-
-        log_name = self.log_name if self.log_name else f"{self.problem} in mode {self.mode}"
-        model.setParam("LogFile", f"gurobi_logs/{datetime.date(datetime.now())}: "
-                                  f"{log_name}.log")
+        model.setParam("TimeLimit", self.time_limit)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
+    def save_results(self):
+        """ Saves the results from the current run """
+
+        if self.sdp:
+            self.sdp.save_solution(self.log_name)
+            logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
+
+        self.esp.save_solution(self.log_name)
+        logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
     def __str__(self):
-        """ Necessary for playing nicely with terminal usage """
+        """
+        Necessary for playing nicely with terminal usage. This function is called
+        automagically after completion of the terminal command.
+        """
+
+        # Saves the results from the run
+        self.save_results()
 
         esp_value = self.esp.get_objective_value()
         message = f"ESP found solution:  {esp_value:.2f}."

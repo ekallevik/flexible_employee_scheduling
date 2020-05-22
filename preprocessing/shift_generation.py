@@ -16,6 +16,7 @@ from utils.const import (
     NUMBER_OF_PREFERENCES_PER_WEEK,
     TIME_DEFINING_SHIFT_DAY,
     WEEKLY_REST_DURATION,
+    MAX_REWARDED_WEEKLY_REST,
     LIMIT_CONSECUTIVE_DAYS,
 )
 
@@ -543,7 +544,7 @@ def get_durations(time_step):
 
     t_weekly_off = WEEKLY_REST_DURATION[0]
 
-    while t_weekly_off <= WEEKLY_REST_DURATION[1]:
+    while t_weekly_off <= min(WEEKLY_REST_DURATION[1], MAX_REWARDED_WEEKLY_REST):
         weekly_off.append(t_weekly_off)
         t_weekly_off += time_step
 
