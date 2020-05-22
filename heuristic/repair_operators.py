@@ -764,7 +764,7 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
     saturdays = [5 + j * 7 for j in week]
     sundays = [6 + j * 7 for j in week]
     shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
-    while(True):
+    while(shifts):
         below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
@@ -799,6 +799,8 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
 
         if sum(shifts.values()) == 0:
             return repair_set
+    return shifts
+    
 
 def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_shift,
                              employee_with_competencies, employee_with_competency_combination,
@@ -815,7 +817,7 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
     saturdays = [5 + j * 7 for j in week]
     sundays = [6 + j * 7 for j in week]
     shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
-    while(True):
+    while(shifts):
         below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
@@ -850,7 +852,9 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
             del shifts[shift]
 
         if sum(shifts.values()) == 0:
+            print("KJører denne?")
             return repair_set
+    return repair_set
         
 
 def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_in_week, combined_time_periods_in_week, 
@@ -904,12 +908,12 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
             == quicksum(y[c, t] for c in competencies if y.get((c, t)))
             for t in combined_time_periods_in_week[week[0]]), name="mapping_shift_to_demand",)
     
-    model.addConstr(
-        quicksum(
-            v * x[t, v] for t, v in shifts_in_week[week[0]]
-            ) <= updated_contracted_hours
-        , name="less_than_contracted_hours"
-    )
+    # model.addConstr(
+    #     quicksum(
+    #         v * x[t, v] for t, v in shifts_in_week[week[0]]
+    #         ) <= updated_contracted_hours
+    #     , name="less_than_contracted_hours"
+    # )
 
     model.setObjective(
     quicksum(
