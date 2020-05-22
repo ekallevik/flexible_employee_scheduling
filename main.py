@@ -52,11 +52,8 @@ class ProblemRunner:
         self.problem = problem
         self.mode = mode
 
-        actual_name = log_name if log_name else \
-            f"{self.problem}_mode={self.mode}_{'with_sdp' if with_sdp else 'without_sdp'}"
-        now = datetime.now()
-        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
-        logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
+        self.log_name = None
+        self.set_log_name(log_name, with_sdp, use_predefined_shifts)
 
         self.data = shift_generation.load_data(problem, use_predefined_shifts)
         self.weights = get_weights(self.data["time"], self.data["staff"])
@@ -78,6 +75,24 @@ class ProblemRunner:
         self.alns = None
 
         self.set_esp()
+
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts):
+
+        if log_name:
+            actual_name = log_name
+        else:
+            if with_sdp:
+                shift_set = "with_sdp"
+            elif use_predefined_shifts:
+                shift_set = "predefined_shifts"
+            else:
+                shift_set = "without_sdp"
+
+            actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
+
+        now = datetime.now()
+        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False):
