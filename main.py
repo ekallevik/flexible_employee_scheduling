@@ -51,7 +51,8 @@ class ProblemRunner:
         self.problem = problem
         self.mode = mode
 
-        actual_name = log_name if log_name else f"{self.problem}_mode={self.mode}_with_sdp={with_sdp}"
+        actual_name = log_name if log_name else \
+            f"{self.problem}_mode={self.mode}_{'with_sdp' if with_sdp else 'without_sdp'}"
         now = datetime.now()
         self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format, retention="1 day")
@@ -251,8 +252,9 @@ class ProblemRunner:
     def save_results(self):
         """ Saves the results from the current run """
 
-        self.sdp.save_solution(self.log_name)
-        logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
+        if self.sdp:
+            self.sdp.save_solution(self.log_name)
+            logger.warning(f"Saved SDP-solution to solutions/{self.log_name}-SDP.sol")
 
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
