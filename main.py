@@ -109,6 +109,7 @@ class ProblemRunner:
         if plot_objective:
             self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
                                                            log_name=self.log_name)
+            self.alns.objective_plotter.set_scale("symlog")
 
         if plot_weights:
             self.alns.weight_plotter = ObjectivePlotter(title="Destroy weights per iteration",

@@ -9,8 +9,10 @@ class ObjectivePlotter(AbstractPlotter):
         self.fig = self.plt.figure()
         self.fig.suptitle(self.log_name, fontsize=14, fontweight='bold')
 
-        self.plt.yscale('linear')
         self.plt.grid(True)
+
+    def set_scale(self, scale):
+        self.plt.yscale(scale)
 
     def plot_data(self, data):
 
@@ -19,7 +21,7 @@ class ObjectivePlotter(AbstractPlotter):
         handles = []
         linestyle = [":", "-.", "--", "-"]
         colors = ["lightcoral", "darkviolet", "royalblue", "forestgreen", "orange", "slategray",
-                  "darkred", "palegreen", "chocalate"]
+                  "darkred", "palegreen", "chocolate"]
 
         for count, (key, value) in enumerate(data.items()):
             color_index = count % len(colors)
