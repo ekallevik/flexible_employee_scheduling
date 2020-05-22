@@ -5,10 +5,11 @@ from visualisation.abstract_plotter import AbstractPlotter
 
 class HeatmapPlotter(AbstractPlotter):
 
-    def __init__(self, title):
-        super().__init__(title)
+    def __init__(self, title, log_name):
+        super().__init__(title, log_name)
 
         self.fig, self.ax = self.plt.subplots()
+        self.fig.suptitle(self.log_name, fontsize=14, fontweight='bold')
         self.im = None
 
     def plot_data(self, data):

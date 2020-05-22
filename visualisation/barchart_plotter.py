@@ -5,9 +5,9 @@ from visualisation.abstract_plotter import AbstractPlotter
 
 class BarchartPlotter(AbstractPlotter):
 
-    def __init__(self, title):
+    def __init__(self, title, log_name):
 
-        super().__init__(title)
+        super().__init__(title, log_name)
 
         self.labels = None
         self.label_locations = None
@@ -16,6 +16,7 @@ class BarchartPlotter(AbstractPlotter):
         self.location_offset = None
 
         self.fig, self.ax = self.plt.subplots()
+        self.fig.suptitle(self.log_name, fontsize=14, fontweight='bold')
 
     def set_labels(self, values):
 

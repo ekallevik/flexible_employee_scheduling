@@ -3,10 +3,11 @@ from visualisation.abstract_plotter import AbstractPlotter
 
 class ObjectivePlotter(AbstractPlotter):
 
-    def __init__(self, title):
-        super().__init__(title)
+    def __init__(self, title, log_name):
+        super().__init__(title, log_name)
 
-        fig = self.plt.figure()
+        self.fig = self.plt.figure()
+        self.fig.suptitle(self.log_name, fontsize=14, fontweight='bold')
 
         self.plt.yscale('symlog')
         self.plt.grid(True)
