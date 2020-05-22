@@ -481,7 +481,7 @@ def get_off_shifts(shifts_per_week):
         # if first shift in week do not start first time period in week
         if shifts[0][0] != 24 * 7 * week:
             # insert dummy-shift used to extract maximum hours when creating off-shifts
-            shifts_per_week[week].insert(0, (0.0, 0.0))
+            shifts_per_week[week].insert(0, (float(24 * 7 * week), 0.0))
 
         # if last shift in week do not end in last time period in week
         if shifts[-1][0] != 24 * 7 * (week + 1):
@@ -498,6 +498,12 @@ def get_off_shifts(shifts_per_week):
                     if (end_of_work_shift, duration) not in off_shifts_in_week[week]:
                         off_shifts_in_week[week].append((end_of_work_shift, duration))
                         off_shifts.append((end_of_work_shift, duration))
+
+        # Remove added dummy shifts
+        if (float(24 * 7 * week), 0.0) in shifts_per_week[week]:
+            shifts_per_week[week].remove((float(24 * 7 * week), 0.0))
+        if (float(24 * 7 * (week + 1)), 0.0) in shifts_per_week[week]:
+            shifts_per_week[week].remove((float(24 * 7 * (week + 1)), 0.0))
 
     return [off_shifts, off_shifts_in_week]
  
