@@ -586,7 +586,7 @@ def get_predefined_shift_set(root, days, weeks, competencies):
 
     for p_s in predefined_shifts_per_day[days[-1]]:
         if p_s == last_demand:
-            shift_corresponding_to_last_demand_found = False
+            shift_corresponding_to_last_demand_found = True
             break
 
     if not shift_corresponding_to_first_demand_found:
