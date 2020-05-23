@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 from datetime import datetime
 
 import fire
@@ -103,32 +104,48 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def test_multiple_problems(self, runtime=1):
+    def test_parallel(self, runtime=15, name=None, no_workers=4):
 
-        problems = ["rproblem8", "rproblem2", "rproblem6", "rproblem7"]
-        #problems = ["rproblem8", "rproblem6", "rproblem9", "rproblem7", "rproblem2", "problem1"]
-        results = {problem: {} for problem in problems}
+        problems = [
+         #   "rproblem1",
+         #   "rproblem2",
+         #   "rproblem3",
+         #   "rproblem4",
+            "rproblem5",
+            "rproblem6",
+            "rproblem7",
+        #    "rproblem8",
+            "rproblem9"
+        ]
+
+        problems_per_worker = int(len(problems) / no_workers)
+
+        jobs = []
+        for i in range(no_workers):
+            work = problems[i*problems_per_worker:(i+1)*problems_per_worker]
+
+            p = multiprocessing.Process(target=self.run_test,
+                                        args=(work, runtime, i))
+            jobs.append(p)
+            p.start()
+
+        return self
+
+    def run_test(self, problems, runtime=15, name=None, idx=None):
 
         for problem in problems:
-
-            logger.critical(f"Testing problem {problem}")
+            logger.critical(f"Testing problem {problems} with runtime {runtime} in process {idx}")
             self.problem = problem
             self.set_sdp()
             self.run_sdp(True)
             self.set_esp()
             self.run_esp()
 
-            results[problem] = self.test_alns(runtime)
+            self.test_decay(runtime, name, idx)
 
-        with open('test_results.json', 'w') as fp:
-            json.dump(results, fp, sort_keys=True, indent=4)
+    def test_decay(self, runtime, name, idx):
 
-        return self
-
-    def test_alns(self, runtime):
-
-        decay_range = [0.1, 0.4, 0.9]
-        #decay_range = [0.1, 0.2, 0.4, 0.6, 0.8, 0.9]
+        decay_range = [0.1, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9]
         results = {decay: {} for decay in decay_range}
 
         for decay in decay_range:
@@ -142,9 +159,16 @@ class ProblemRunner:
                               "destroy_weights": self.alns.destroy_weights
                               }
 
+        if not name:
+            name = "multiple_problem_results"
+
+        now = datetime.now()
+        name = f"{now.strftime('%H:%M:%S')}-{name}"
+
+        with open(f"{name}-{idx}.json", "w") as fp:
+            json.dump(results, fp, sort_keys=True, indent=4)
+
         return results
-
-
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
