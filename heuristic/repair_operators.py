@@ -10,7 +10,7 @@ from heuristic.delta_calculations import delta_calculate_deviation_from_demand, 
     more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, \
     calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, \
     calculate_daily_rest_error, employee_shift_value, hard_constraint_penalties, \
-    worst_employee_regret_value, f_regret_values
+    worst_employee_regret_value, f_regret_values, calculate_f
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice, choices
@@ -956,3 +956,127 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
                 del shifts[shift]
         
     return repair_set
+
+
+
+
+
+
+
+
+def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shift,
+                             employee_with_competencies, employee_with_competency_combination,
+                             demand, time_step, time_periods_in_week, combined_time_periods_in_week,
+                             employees, contracted_hours,
+                             invalid_shifts, shift_combinations_violating_daily_rest,
+                             shift_sequences_violating_daily_rest,
+                             weeks, shifts_at_day, L_C_D, shifts_overlapping_t, 
+                             weights, preferences, shifts_with_demand,
+                             all_saturdays, all_days,
+                             state, destroy_set, week):
+    """
+        The decision variables are set in the destroy operator. This only applies to the x and y variables as w now is a implisit variable that should be calculated
+        At the beginning of a repair operator the soft variables and hard penalizing variables have not been updated to reflect the current changes to the decision variables
+
+        To be able to calculate the deviation from demand (as this is how we choose a shift to assign) we would have to update the deviation from demand for the shifts (t_covered_by_shift) that have been destroyed.
+        This is done efficiently in delta_calcualte_deviation_from_demand. It only checks the destroyed shifts (and their t's) and only in a negative direction (covering to much demand would give 0 in deviation)
+
+        If the total deviation from demand (for the week/s in question) are below a threshold (6) we are satisfied and would return the repair_set with shifts (e,t,v) set
+
+        If not we take the shift with highest deviation from demand (in the weeks in question) to be assigned. 
+        We only search for an employee to assign to this shift based on if the employee are not working the day the shift is on.
+
+        Which hard variables are important to calculate?:
+            1.  Above/Below demand is done on a destroy_repair_set basis. This means we would have to calculate the above and below to get correct hard variables here if they were broken before the destroy fixes it. 
+                A good thing here is that if we do so with the destroy_set we fix the entire week. This means we have a fresh start with no broken constraints this week.
+            2.  More than one shift per day is calculated on a employee basis. It checks every day on that employee. This would have to be done before as we need it in the calculation. We cannot do this on each employee as we loop through them.
+                We do have the days we would check though. Would also not need to do a calculation on these hard constraints, but rather just set them to 0. Most likely this is faster. 
+            3.  Cover multiple demand periods are also done on a destroy_repair_set basis. It would have to be run before. 
+            4.  Mapping shift to demand is also done on a destroy_repair_set basis. Would have to be run before to start fresh. 
+            5.  Positive contracted hours. This is run together with negative contracted hours. This is done on a employee and week basis. By not running it before for all employees we would not have updated the contracted hours after the destroy when calculating the new objective function. 
+                This would result in a wrong objective value. 
+            6.  Weekly rest. When a week have been destroyed everyone starts with a full week of rest if calculated. If not we would continue with the rest they had before. The smartest move would be to start fresh here as well. 
+
+        Which soft variables are important to calculate?:
+            1. Partial weekend are only depending on the employee. It is calculated for every week no matter what as it is not based on destroy_repair_set
+            2. The same is true for isolated working days, isolated off days and consecutive days
+
+    """
+
+    logger.info(f"Repairing week: {week}")
+
+    repair_set = []
+    # All employees gets changed in this operator atm. Employees changed are therefore set to all employees at the beginning.
+    employees_changed = employees
+    # Destroy_set is the shifts that have been destroyed.
+    destroy_set = destroy_set.copy()
+    saturdays = [5 + j * 7 for j in week]
+    sundays = [6 + j * 7 for j in week]
+    days = [i + (7 * j) for j in week for i in range(7)]
+    impossible_shifts = []
+    daily_destroy_and_repair = [destroy_set, []]
+    
+    shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
+
+    
+    while(shifts):
+
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
+        #calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
+
+        shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
+
+
+        possible_employees = [e for e in employees if (sum(state.x[e, t, v] for t, v in shifts_at_day[int(shift[0] / 24)])) == 0 and sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks) > 5]
+
+        if len(possible_employees) == 0:
+            for shift in shifts_at_day[int(shift[0]/24)]:
+                shifts.pop(shift, None)
+            continue
+
+
+        #Soft Restrictions/Variables
+        calculate_partial_weekends(state, employees_changed, shifts_at_day, saturdays)
+        calculate_isolated_working_days(state, employees_changed, shifts_at_day, days)
+        calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
+        calculate_consecutive_days(state, employees_changed, shifts_at_day, L_C_D, days)
+        calculate_weekly_rest(state, shifts_in_week, employees_changed, week)
+        calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+
+        calculate_f(state, employees_changed, all_saturdays, all_days, L_C_D, weeks, weights, preferences, competencies)
+        #print("Initial f-values: " + str(state.f))
+        value = {}
+        for e in possible_employees:
+            updated_f = state.f.copy()
+            f_diff, penalties = f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_in_week, shifts_at_day, weights, preferences, t_covered_by_shift)
+            updated_f[e] += f_diff
+
+            value[e] = sum(updated_f.values()) + len(employees) * 0.1 * min(updated_f.values()) + 10 * penalties
+        #print(value)
+        max_value = max(value.items(), key=itemgetter(1))[1]
+        employee = choice([key for key, value in value.items() if value == max_value])
+
+        repair_set.append(set_x(state, t_covered_by_shift, employee, shift[0], shift[1], 1))
+        employees_changed = [employee]
+        destroy_set = [(employee, shift[0], shift[1])]
+        daily_destroy_and_repair = [[], destroy_set]
+
+        shifts[shift] -= 1
+        if shifts[shift] == 0:
+            del shifts[shift]
+        #print()
+    return repair_set
+
+
+
+
+
+"""
+    Tanker til ny operator:
+    Skiftene må enten komme fra demand eller grådig. 
+    Det beste her vil nok være å velge det lengste skiftet som har demand hele sin periode fra skiftene gitt av SDP. Dette skal være de optimale skiftene og derfor burde brukes. Teoretisk sett skal man ikke behove å sjekke demand ettersom de skal være opptimale til å dekke demand.
+    Det som derimot er vanskelig er at hvis et man ikke har nok kontraktsfestede timer til å dekke dette skiftet så burde man velge det lengste skiftet som fortsatt dekker demand i hele sin periode.
+    I alle tilfeller hvor vi har ekstra kontraktsfestede timer så vil det ikke ha noe å si. I rproblem3 derimot vil man ofte få problem med å dekke skiftene pga kontraktsfestede timer. 
+
+    Valget av ansatte bør gjøres på bakgrunn av f- og g-verdier. Man tar da å velger den ansatte som gir best total f + g verdi (Dette vil si best økning i sin f-verdi samtidig som g-en tilfredstilles. )
+"""
