@@ -77,7 +77,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts, suffix=None):
 
         if log_name:
             actual_name = log_name
@@ -96,33 +96,49 @@ class ProblemRunner:
 
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
 
+            if suffix:
+                actual_name = f"{actual_name}-{suffix}"
+
         now = datetime.now()
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def test_problems(self):
+    def test_multiple_problems(self):
 
-        problems = ["rproblem2", "rproblem8", "rproblem6", "rproblem9"]
+        problems = ["rproblem8", "rproblem6", "rproblem9", "rproblem7", "rproblem2"]
+        results = {problem: {} for problem in problems}
 
         for problem in problems:
+
             logger.critical(f"Testing problem {problem}")
             self.problem = problem
-            self.set_log_name(None, True, False, True)
             self.set_sdp()
             self.run_sdp(True)
             self.set_esp()
             self.run_esp()
 
-            self.test_alns()
+            results[problem] = self.test_alns()
+
+        return self
 
     def test_alns(self):
 
         decay_range = [0.1, 0.2, 0.4, 0.6, 0.8, 0.9]
+        results = {decay: {} for decay in decay_range}
 
         for decay in decay_range:
+            suffix = f"decay={decay}"
+            self.set_log_name(None, True, False, True, suffix=suffix)
             logger.critical(f"Testing decay={decay}")
-            self.run_alns(decay, runtime=5)
+            self.run_alns(decay, runtime=1)
             self.save_results()
+            results[decay] = {"value": self.alns.get_best_solution_value(),
+                              "iterations": self.alns.iteration,
+                              "destroy_weights": self.alns.destroy_weights
+                              }
+
+        return results
+
 
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
