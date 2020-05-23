@@ -155,6 +155,9 @@ class ProblemRunner:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
 
+        self.alns.iterate(iterations, runtime)
+        self.alns.save_solutions(custom_name=self.log_name)
+
         return self
 
     def change_criterion(self, start_temp=100, end_temp=1, step=1, method="linear"):
@@ -201,6 +204,8 @@ class ProblemRunner:
                                                              self.weights, candidate_solution["w"], candidate_solution["y"])
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
+
+        alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
 
         self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
         logger.info(f"ALNS with {decay} and {self.criterion}")
@@ -382,4 +387,27 @@ if __name__ == "__main__":
          
     """
 
-    fire.Fire(ProblemRunner)
+    problems = [
+        #   "rproblem1",
+        #   "rproblem2",
+        #   "rproblem3",
+        #   "rproblem4",
+        "rproblem5",
+        "rproblem6",
+        "rproblem7",
+        #    "rproblem8",
+        "rproblem9"
+    ]
+
+    runtime = 1
+
+    jobs = []
+    for i in range(4):
+        problem_runner = ProblemRunner(problem=problems[i])
+        p = multiprocessing.Process(target=problem_runner.test_decay,
+                                    args=(runtime, None, i))
+        jobs.append(p)
+        p.start()
+        p.join()
+
+    #fire.Fire(ProblemRunner)
