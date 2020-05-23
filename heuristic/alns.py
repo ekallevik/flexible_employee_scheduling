@@ -24,7 +24,7 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 class ALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
-                 operator_weights=None, runtime=15, worker_name="worker-1"):
+                 operator_weights=None, runtime=15, worker_name="worker-1", seed=0, results=None):
 
         super().__init__()
 
@@ -40,7 +40,8 @@ class ALNS(multiprocessing.Process):
         self.best_legal_solution = state
 
         self.criterion = criterion
-        self.random_state = self.initialize_random_state()
+        self.seed = seed
+        self.random_state = self.initialize_random_state(self.seed)
 
         self.destroy_operators = {}
         self.destroy_weights = {}
@@ -100,6 +101,7 @@ class ALNS(multiprocessing.Process):
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # Plotting and statistics
+        self.results = results
         self.violation_plotter = None
         self.objective_plotter = None
         self.weight_plotter = None
@@ -471,13 +473,17 @@ class ALNS(multiprocessing.Process):
             "destroy_weights": self.destroy_weights,
             "repair_weights": self.repair_weights,
             "decay": self.decay,
-            "criterion:": str(self.criterion)
+            "criterion:": str(self.criterion),
+            "weight_update": self.WeightUpdate,
+            "random_seed": self.seed,
+            "random_state": str(self.random_state)
         }
 
-        with open(f"{self.log_name}-{self.worker_name}.json", "w") as fp:
-            json.dump(results, fp, sort_keys=True, indent=4)
-
-        return results
+        if self.results:
+            self.results[self.worker_name] = results
+        else:
+            with open(f"{self.log_name}-{self.worker_name}.json", "w") as fp:
+                json.dump(results, fp, sort_keys=True, indent=4)
 
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
@@ -691,9 +697,9 @@ class ALNS(multiprocessing.Process):
         return {operator: 1.0 for operator in operators}
 
     @staticmethod
-    def initialize_random_state():
+    def initialize_random_state(seed):
         """ Provides a seeded random state to ensure a deterministic output over different runs """
-        return np.random.RandomState(seed=0)
+        return np.random.RandomState(seed)
 
     def add_destroy_and_repair_operators(self, operators):
 

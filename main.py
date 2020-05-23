@@ -1,5 +1,6 @@
 import json
 import multiprocessing
+from copy import deepcopy
 from datetime import datetime
 
 import fire
@@ -104,13 +105,14 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=4, runtime=5):
+    def run_alns_multiple(self, threads=8, runtime=5):
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
+        manager = multiprocessing.Manager()
+        results = manager.dict()
 
-        decay_range = [0.4, 0.45, 0.5, 0.55, 0.6]
+        decay_range = [0.35, 0.65]
         candidate_solution = self.get_candidate_solution()
-
         operator_weights = [
             {"IS_BEST_AND_LEGAL": 3.0,
              "IS_LEGAL": 2.5,
@@ -138,13 +140,50 @@ class ProblemRunner:
              "IS_REJECTED": 0.97},
         ]
 
+        decay_weights_pair = [
+            (decay_range[0], operator_weights[0]),
+            (decay_range[0], operator_weights[1]),
+            (decay_range[0], operator_weights[2]),
+            (decay_range[0], operator_weights[3]),
+            (decay_range[1], operator_weights[0]),
+            (decay_range[1], operator_weights[1]),
+            (decay_range[1], operator_weights[2]),
+            (decay_range[1], operator_weights[3]),
+        ]
+
         # todo: make sure that state is not shared!
-        for j in range(threads):
-            state = self.get_state(candidate_solution)
-            alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name,
-                        decay=0.5, runtime=runtime, worker_name=f"worker-{j}",
-                        operator_weights=operator_weights[j])
-            alns.start()
+        processes = []
+        results = {}
+
+        for i in range(2):
+
+            if i == 0:
+                criterion = GreedyCriterion()
+            else:
+                criterion = SimulatedAnnealingCriterion(start_temperature=1500,
+                                                        end_temperature=500, step=10)
+
+            for j in range(threads):
+                candidate_copy = deepcopy(candidate_solution)
+                state = self.get_state(candidate_copy)
+                state_copy = deepcopy(state)
+
+                decay, ow = decay_weights_pair[j]
+
+                alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name,
+                            decay=decay, operator_weights=ow, runtime=runtime,
+                            worker_name=f"worker-{j}", results=results)
+                processes.append(alns)
+
+                # starting each process
+                alns.start()
+
+            for process in processes:
+                # terminate each process
+                process.join()
+
+        with open(f"{self.log_name}-threads={threads}.json", "w") as fp:
+            json.dump(results, fp, sort_keys=True, indent=4)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
@@ -406,4 +445,20 @@ if __name__ == "__main__":
          
     """
 
-    fire.Fire(ProblemRunner)
+    #fire.Fire(ProblemRunner)
+
+    problems = [
+        #"rproblem1",
+        #"rproblem2",
+        #"rproblem3",
+        #"rproblem4",
+        #"rproblem5",
+        #"rproblem6",
+        #"rproblem7",
+        #"rproblem8",
+        "rproblem9",
+    ]
+
+    for problem in problems:
+        pr = ProblemRunner(problem=problem)
+        pr.run_alns_multiple(runtime=1)
