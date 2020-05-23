@@ -515,13 +515,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
         if(deviation_from_demand < (5 * 1/time_step) or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
             return repair_set
 
-        # Hard Restrictions/Variables
-        cover_multiple_demand_periods(state, destroy_set, t_covered_by_shift, competencies)
-        more_than_one_shift_per_day(state, employees_changed, demand, shifts_at_day, days)
-        mapping_shift_to_demand(state, destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies)
-
         #Soft Restrictions/Variables
-        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         calculate_partial_weekends(state, employees_changed, shifts_at_day, saturdays)
         calculate_isolated_working_days(state, employees_changed, shifts_at_day, days)
         calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
@@ -1022,7 +1016,6 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
     while(shifts):
 
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-        #calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
 
         shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
 
@@ -1044,7 +1037,7 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
         calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
 
         calculate_f(state, employees_changed, all_saturdays, all_days, L_C_D, weeks, weights, preferences, competencies)
-        #print("Initial f-values: " + str(state.f))
+
         value = {}
         for e in possible_employees:
             updated_f = state.f.copy()
@@ -1052,7 +1045,7 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
             updated_f[e] += f_diff
 
             value[e] = sum(updated_f.values()) + len(employees) * 0.1 * min(updated_f.values()) + 10 * penalties
-        #print(value)
+
         max_value = max(value.items(), key=itemgetter(1))[1]
         employee = choice([key for key, value in value.items() if value == max_value])
 
@@ -1064,19 +1057,4 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
         shifts[shift] -= 1
         if shifts[shift] == 0:
             del shifts[shift]
-        #print()
     return repair_set
-
-
-
-
-
-"""
-    Tanker til ny operator:
-    Skiftene må enten komme fra demand eller grådig. 
-    Det beste her vil nok være å velge det lengste skiftet som har demand hele sin periode fra skiftene gitt av SDP. Dette skal være de optimale skiftene og derfor burde brukes. Teoretisk sett skal man ikke behove å sjekke demand ettersom de skal være opptimale til å dekke demand.
-    Det som derimot er vanskelig er at hvis et man ikke har nok kontraktsfestede timer til å dekke dette skiftet så burde man velge det lengste skiftet som fortsatt dekker demand i hele sin periode.
-    I alle tilfeller hvor vi har ekstra kontraktsfestede timer så vil det ikke ha noe å si. I rproblem3 derimot vil man ofte få problem med å dekke skiftene pga kontraktsfestede timer. 
-
-    Valget av ansatte bør gjøres på bakgrunn av f- og g-verdier. Man tar da å velger den ansatte som gir best total f + g verdi (Dette vil si best økning i sin f-verdi samtidig som g-en tilfredstilles. )
-"""

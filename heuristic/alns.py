@@ -30,7 +30,6 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
-        self.initial_solution.write("initial_solution")
 
 
         self.criterion = criterion
@@ -728,8 +727,6 @@ class ALNS:
 
         if 0 < self.current_solution.get_objective_value()/candidate_solution.get_objective_value() < 2:
             if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
-                    #candidate_solution.write("before_breaking_weekly")
-
                     destroy_set, repair_set = illegal_week_swap(
                         self.shifts_per_week,
                         self.employees,
@@ -750,10 +747,7 @@ class ALNS:
 
                     destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                     self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
-                    #candidate_solution.write("After_breaking_weekly")
 
             elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
-                    #candidate_solution.write("Before_breaking_contracted")
                     destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
                     self.calculate_objective(candidate_solution, destroy_set, repair_set)
-                    #candidate_solution.write("After_breaking_contracted")
