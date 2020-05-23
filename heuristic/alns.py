@@ -385,8 +385,8 @@ class ALNS:
         
         operators = {
             remove_worst_employee: [
-                 repair_worst_employee_regret,
-                 repair_worst_employee_greedy
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
             ],
 
             remove_worst_contract: [

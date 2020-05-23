@@ -105,7 +105,7 @@ def calculate_isolated_off_days(state, employees, shifts_at_day, days):
 def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
     for e in employees:
         for i in range(len(days)-L_C_D):
-            state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
+            state.soft_vars["consecutive_days"][e,i] = max(0, (sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D+1)))- L_C_D)
 
 
 def calculate_f(state, employees, saturdays, days, L_C_D, weeks, weights, preferences, competencies):
