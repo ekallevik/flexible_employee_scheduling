@@ -30,8 +30,8 @@ level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
     "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "TRACE",
-    "heuristic.repair_operators": "TRACE",
+    "heuristic.destroy_operators": "INFO",
+    "heuristic.repair_operators": "INFO",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
@@ -167,7 +167,7 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -280,6 +280,9 @@ class ProblemRunner:
 
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
+        if self.alns:
+            self.alns.save_solutions()
 
     def __str__(self):
         """
