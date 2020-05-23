@@ -869,6 +869,9 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
     updated_contracted_hours = min(sum(contracted_hours[e] for e in employees), sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees))
 
     model = Model(name="week_operator")
+    # Disable logging to file
+    model.setParam("LogFile", "")
+
     y_dict = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
     plus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
     minus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
