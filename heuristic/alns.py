@@ -1,7 +1,9 @@
+import json
+import multiprocessing
+
 import numpy as np
 from functools import partial
 from timeit import default_timer as timer
-from math import copysign
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -20,12 +22,17 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
 from visualisation.barchart_plotter import BarchartPlotter
 
 
-class ALNS:
-    def __init__(self, state, criterion, data, objective_weights, log_name, decay):
+class ALNS(multiprocessing.Process):
+    def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
+                 operator_weights=None, runtime=15, worker_name="worker-1"):
+
+        super().__init__()
 
         self.objective_weights = objective_weights
         self.decay = decay
         self.log_name = log_name
+        self.worker_name = worker_name
+        self.runtime = runtime
 
         self.initial_solution = state
         self.current_solution = state
@@ -40,12 +47,15 @@ class ALNS:
         self.repair_operators = defaultdict(dict)
         self.repair_weights = {}
 
-        self.WeightUpdate = {
-            "IS_BEST": 1.50,
-            "IS_BETTER": 1.06,
-            "IS_ACCEPTED": 1.03,
-            "IS_REJECTED": 0.97
-        }
+        if not operator_weights:
+            self.WeightUpdate = {
+                "IS_BEST": 1.12,
+                "IS_BETTER": 1.06,
+                "IS_ACCEPTED": 1.03,
+                "IS_REJECTED": 0.97
+            }
+        else:
+            self.WeightUpdate = operator_weights
 
         # Sets
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
@@ -477,6 +487,29 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
+    def run(self):
+        """ Automatically called when multiprocess.start() is run """
+
+        self.iterate(runtime=self.runtime)
+
+        self.save_solutions()
+
+        results = {
+            "log": self.log_name,
+            "worker": self.worker_name,
+            "best_solution": self.get_best_solution_value(),
+            "iterations": self.iteration,
+            "destroy_weights": self.destroy_weights,
+            "repair_weights": self.repair_weights,
+            "decay": self.decay,
+            "criterion:": str(self.criterion)
+        }
+
+        with open(f"{self.log_name}-{self.worker_name}.json", "w") as fp:
+            json.dump(results, fp, sort_keys=True, indent=4)
+
+        return results
+
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
@@ -485,7 +518,7 @@ class ALNS:
 
         if not iterations:
 
-            logger.warning(f"Running ALNS for {runtime} minutes")
+            logger.warning(f"Running ALNS for {runtime} minutes in {self.worker_name}")
 
             while timer() < start + runtime_in_seconds:
                 try:
@@ -532,7 +565,7 @@ class ALNS:
 
         # Add a newline between the output of each iteration
         print()
-        logger.trace(f"Iteration: {self.iteration}")
+        logger.trace(f"Iteration: {self.iteration} in process={self.worker_name}")
 
         candidate_solution = self.current_solution.copy()
         destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)

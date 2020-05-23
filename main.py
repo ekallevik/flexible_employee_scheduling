@@ -42,23 +42,18 @@ logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 
 
-class ProblemRunner(multiprocessing.Process):
+class ProblemRunner:
     def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None,
-                 update_shifts=True, time_limit=10000, use_predefined_shifts=False,
-                 process_id=None, runtime=15):
+                 update_shifts=True, time_limit=10000, use_predefined_shifts=False):
 
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
         """
 
-        super().__init__()
-
-        logger.info(f"Setting up runner for {problem} for process_id={process_id}")
+        logger.info(f"Setting up runner for {problem}")
         self.problem = problem
         self.mode = mode
-        self.process_id = process_id
-        self.runtime = runtime
 
         self.log_name = None
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
@@ -73,16 +68,16 @@ class ProblemRunner(multiprocessing.Process):
         self.time_limit = time_limit
 
         self.sdp = None
-        #if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
-        #    self.set_sdp()
-        #    self.run_sdp(update_shifts)
+        if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
+            self.set_sdp()
+            self.run_sdp(update_shifts)
 
         self.esp = None
 
         self.criterion = GreedyCriterion()
         self.alns = None
 
-        #self.set_esp()
+        self.set_esp()
 
     def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts, suffix=None):
 
@@ -110,10 +105,50 @@ class ProblemRunner(multiprocessing.Process):
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
+    def run_alns_multiple(self, threads=4, runtime=5):
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
 
+        logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
         solution = self.alns.best_solution
+
+        decay_range = [0.4, 0.45, 0.5, 0.55, 0.6]
+        candidate_solution = self.get_candidate_solution()
+
+        operator_weights = [
+            {"IS_BEST_AND_LEGAL": 3.0,
+             "IS_LEGAL": 2.5,
+             "IS_BEST": 2.0,
+             "IS_BETTER": 1.5,
+             "IS_ACCEPTED": 1.25,
+             "IS_REJECTED": 0.75},
+            {"IS_BEST_AND_LEGAL": 2.5,
+             "IS_LEGAL": 2.0,
+             "IS_BEST": 1.75,
+             "IS_BETTER": 1.5,
+             "IS_ACCEPTED": 1.1,
+             "IS_REJECTED": 0.90},
+            {"IS_BEST_AND_LEGAL": 2.0,
+             "IS_LEGAL": 1.3,
+             "IS_BEST": 1.8,
+             "IS_BETTER": 1.15,
+             "IS_ACCEPTED": 1.06,
+             "IS_REJECTED": 0.92},
+            {"IS_BEST_AND_LEGAL": 1.50,
+             "IS_LEGAL": 1.30,
+             "IS_BEST": 1.12,
+             "IS_BETTER": 1.06,
+             "IS_ACCEPTED": 1.03,
+             "IS_REJECTED": 0.97},
+        ]
+
+        # todo: make sure that state is not shared!
+        for j in range(threads):
+            state = self.get_state(candidate_solution)
+            alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name,
+                        decay=0.5, runtime=runtime, worker_name=f"worker-{j}",
+                        operator_weights=operator_weights[j])
+            alns.start()
 
         model = self.create_model("rerun_esp")
         esp = OptimalityModel(model, data=self.data)
@@ -161,7 +196,6 @@ class ProblemRunner(multiprocessing.Process):
                              diagnose=True, backtrace=True)
 
         self.alns.iterate(iterations, runtime)
-        self.alns.save_solutions(custom_name=self.log_name)
 
         return self
 
@@ -178,7 +212,12 @@ class ProblemRunner(multiprocessing.Process):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
+        state = self.get_state(candidate_solution)
 
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
+        logger.info(f"ALNS with {decay} and {self.criterion}")
+
+    def get_state(self, candidate_solution):
         soft_variables = {
             "deviation_from_ideal_demand": calculate_deviation_from_demand(
                 self.data, candidate_solution["y"]
@@ -193,7 +232,6 @@ class ProblemRunner(multiprocessing.Process):
                 self.data, candidate_solution["y"]
             ),
         }
-
         hard_variables = {
             "below_minimum_demand": {},
             "above_maximum_demand": {},
@@ -204,17 +242,11 @@ class ProblemRunner(multiprocessing.Process):
             "daily_rest_error": {},
             "delta_positive_contracted_hours": {},
         }
-
         objective_function, f = calculate_objective_function(self.data, soft_variables,
-                                                             self.weights, candidate_solution["w"], candidate_solution["y"])
-
+                                                             self.weights, candidate_solution["w"],
+                                                             candidate_solution["y"])
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
-
-        #alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
-
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
-                         self.process_id)
-        logger.info(f"ALNS with {decay} and {self.criterion}")
+        return state
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
@@ -332,20 +364,19 @@ class ProblemRunner(multiprocessing.Process):
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
 
-        if self.alns:
-            self.alns.save_solutions()
+        #if self.alns:
+        #    self.alns.save_solutions()
 
     def __str__(self):
         """
         Necessary for playing nicely with terminal usage. This function is called
         automagically after completion of the terminal command.
         """
+        print()
+        logger.info(f"Completed run for {self.log_name}")
 
         # Saves the results from the run
         self.save_results()
-
-        print()
-        logger.info(f"Completed run for {self.log_name}")
 
         return self.log_name
 
@@ -393,23 +424,4 @@ if __name__ == "__main__":
          
     """
 
-    problems = [
-        #   "rproblem1",
-        #   "rproblem2",
-        #   "rproblem3",
-        #   "rproblem4",
-        "rproblem5",
-        "rproblem6",
-        "rproblem7",
-        #    "rproblem8",
-        "rproblem9"
-    ]
-
-    runtime = 10
-
-    jobs = []
-    for i in range(4):
-        pr = ProblemRunner(problem=problems[i], process_id=i)
-        pr.start()
-
-    #fire.Fire(ProblemRunner)
+    fire.Fire(ProblemRunner)
