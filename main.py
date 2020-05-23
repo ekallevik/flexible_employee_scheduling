@@ -99,6 +99,31 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
+    def test_problems(self):
+
+        problems = ["rproblem2", "rproblem8", "rproblem6", "rproblem9"]
+
+        for problem in problems:
+            logger.critical(f"Testing problem {problem}")
+            self.problem = problem
+            self.set_log_name(None, True, False, True)
+            self.set_sdp()
+            self.run_sdp(True)
+            self.set_esp()
+            self.run_esp()
+
+            self.test_alns()
+
+    def test_alns(self):
+
+        decay_range = [0.1, 0.2, 0.4, 0.6, 0.8, 0.9]
+
+        for decay in decay_range:
+            logger.critical(f"Testing decay={decay}")
+            self.run_alns(decay, runtime=5)
+            self.save_results()
+
+
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
