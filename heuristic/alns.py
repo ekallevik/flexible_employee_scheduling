@@ -2,6 +2,8 @@ import numpy as np
 from functools import partial
 from timeit import default_timer as timer
 from math import copysign
+
+from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -30,7 +32,6 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
-
 
         self.criterion = criterion
         self.random_state = self.initialize_random_state()
@@ -489,8 +490,26 @@ class ALNS:
 
         self.iteration += 1
 
-        return candidate_solution
+        if self.iteration % 100 == 0 and self.iteration >= 50:
+            min_weight = min(self.destroy_weights, key=self.destroy_weights.get)
+            max_weight = max(self.destroy_weights, key=self.destroy_weights.get)
 
+            logger.error("Consider changing criterion")
+
+            if self.destroy_weights[min_weight]*1.05 > self.destroy_weights[max_weight]:
+                #start_temp = self.best_legal_solution.get_objective_value() * 0.5
+                #end_temp = self.best_legal_solution.get_objective_value() * 0.2
+                #step = max(1, int((start_temp-end_temp)/500))
+
+                start_temp = 250
+                end_temp = 150
+                step = 1
+
+                sa = SimulatedAnnealingCriterion(start_temp, end_temp, step)
+                self.criterion = sa
+                logger.critical(f"Critertion changed to {self.criterion}")
+
+        return candidate_solution
 
     def update_history(self, candidate_solution):
 
