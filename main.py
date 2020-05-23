@@ -268,11 +268,11 @@ class ProblemRunner:
         """ Creates a Gurobi model with standard config """
 
         model = Model(name=name)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
         model.setParam("TimeLimit", self.time_limit)
-        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
