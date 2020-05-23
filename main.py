@@ -30,8 +30,8 @@ level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
     "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "TRACE",
-    "heuristic.repair_operators": "TRACE",
+    "heuristic.destroy_operators": "INFO",
+    "heuristic.repair_operators": "INFO",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
@@ -98,17 +98,22 @@ class ProblemRunner:
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
-                 plot_violations_map=False, plot_violations_bar=False):
+                 plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns(decay)
 
-        if plot_objective + plot_violations_map + plot_violations_bar > 1:
+        if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
 
         if plot_objective:
             self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
                                                            log_name=self.log_name)
+            self.alns.objective_plotter.set_scale("symlog")
+
+        if plot_weights:
+            self.alns.weight_plotter = ObjectivePlotter(title="Destroy weights per iteration",
+                                                        log_name=self.log_name)
 
         if plot_violations_map:
             self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration",
@@ -167,7 +172,7 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -280,6 +285,9 @@ class ProblemRunner:
 
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
+        if self.alns:
+            self.alns.save_solutions()
 
     def __str__(self):
         """

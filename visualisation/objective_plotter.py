@@ -9,30 +9,31 @@ class ObjectivePlotter(AbstractPlotter):
         self.fig = self.plt.figure()
         self.fig.suptitle(self.log_name, fontsize=14, fontweight='bold')
 
-        self.plt.yscale('symlog')
         self.plt.grid(True)
+
+    def set_scale(self, scale):
+        self.plt.yscale(scale)
 
     def plot_data(self, data):
 
         # todo: add time as x-value?
-        # todo: change to line plotter?
 
-        candidate_plot, = self.plt.plot(data["candidate"],
-                                        label="candidate",
-                                        color="lightcoral",
-                                        linestyle=":")
+        handles = []
+        linestyle = [":", "-.", "--", "-"]
+        colors = ["lightcoral", "darkviolet", "royalblue", "forestgreen", "orange", "slategray",
+                  "darkred", "palegreen", "chocolate"]
 
-        current_plot, = self.plt.plot(data["current"],
-                                      label="current",
-                                      color="darkviolet",
-                                      linestyle="-.")
+        for count, (key, value) in enumerate(data.items()):
+            color_index = count % len(colors)
+            line_index = count % len(linestyle)
+            line, = self.plt.plot(value,
+                                  label=key,
+                                  color=colors[color_index],
+                                  linestyle=linestyle[line_index])
+            handles.append(line)
 
-        best_plot, = self.plt.plot(data["best"], label="best", color="royalblue", linestyle="--")
-
-        best_legal_plot, = self.plt.plot(data["best_legal"], label="best legal", color="forestgreen",
-                                         linestyle="-")
-
-        self.plt.legend(handles=[candidate_plot, current_plot, best_plot, best_legal_plot],
-                        loc='lower left')
+        self.plt.legend(handles=handles,
+                        loc='lower center', bbox_to_anchor=(0.5, -0.15),
+                        fancybox=True, shadow=True, ncol=3)
 
         self.show()
