@@ -971,34 +971,7 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
                              weights, preferences, shifts_with_demand,
                              all_saturdays, all_days,
                              state, destroy_set, week):
-    """
-        The decision variables are set in the destroy operator. This only applies to the x and y variables as w now is a implisit variable that should be calculated
-        At the beginning of a repair operator the soft variables and hard penalizing variables have not been updated to reflect the current changes to the decision variables
 
-        To be able to calculate the deviation from demand (as this is how we choose a shift to assign) we would have to update the deviation from demand for the shifts (t_covered_by_shift) that have been destroyed.
-        This is done efficiently in delta_calcualte_deviation_from_demand. It only checks the destroyed shifts (and their t's) and only in a negative direction (covering to much demand would give 0 in deviation)
-
-        If the total deviation from demand (for the week/s in question) are below a threshold (6) we are satisfied and would return the repair_set with shifts (e,t,v) set
-
-        If not we take the shift with highest deviation from demand (in the weeks in question) to be assigned. 
-        We only search for an employee to assign to this shift based on if the employee are not working the day the shift is on.
-
-        Which hard variables are important to calculate?:
-            1.  Above/Below demand is done on a destroy_repair_set basis. This means we would have to calculate the above and below to get correct hard variables here if they were broken before the destroy fixes it. 
-                A good thing here is that if we do so with the destroy_set we fix the entire week. This means we have a fresh start with no broken constraints this week.
-            2.  More than one shift per day is calculated on a employee basis. It checks every day on that employee. This would have to be done before as we need it in the calculation. We cannot do this on each employee as we loop through them.
-                We do have the days we would check though. Would also not need to do a calculation on these hard constraints, but rather just set them to 0. Most likely this is faster. 
-            3.  Cover multiple demand periods are also done on a destroy_repair_set basis. It would have to be run before. 
-            4.  Mapping shift to demand is also done on a destroy_repair_set basis. Would have to be run before to start fresh. 
-            5.  Positive contracted hours. This is run together with negative contracted hours. This is done on a employee and week basis. By not running it before for all employees we would not have updated the contracted hours after the destroy when calculating the new objective function. 
-                This would result in a wrong objective value. 
-            6.  Weekly rest. When a week have been destroyed everyone starts with a full week of rest if calculated. If not we would continue with the rest they had before. The smartest move would be to start fresh here as well. 
-
-        Which soft variables are important to calculate?:
-            1. Partial weekend are only depending on the employee. It is calculated for every week no matter what as it is not based on destroy_repair_set
-            2. The same is true for isolated working days, isolated off days and consecutive days
-
-    """
 
     logger.info(f"Repairing week: {week}")
 
