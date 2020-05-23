@@ -53,11 +53,11 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                     shift = s
                     max_demand = d
 
-            logger.info(f"Repairing {shift} (d: {demand_per_shift[shift]})")
+            logger.info(f"Repairing {shift} (demand for shift: {demand_per_shift.get(shift)})")
 
             considered_employees = []
 
-            while demand_per_shift_in_week[shift] and number_of_employees > len(considered_employees):
+            while demand_per_shift_in_week.get(shift) and number_of_employees > len(considered_employees):
 
                 employee_score, employee = pop_from_heap(employee_heap)
                 logger.trace(f"Employee {employee} (s: {employee_score}) chosen")
@@ -123,6 +123,9 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
         number_of_shifts = len(shift_heap)
 
         for _ in range(number_of_shifts):
+
+            if not shift_heap:
+                return repair_set
 
             shift, shift_score = get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift)
             allocations_needed = min([remaining_demand[t] for t in t_covered_by_shift[shift]])
