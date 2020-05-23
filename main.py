@@ -32,8 +32,8 @@ level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
     "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "INFO",
-    "heuristic.repair_operators": "INFO",
+    "heuristic.destroy_operators": "WARNING",
+    "heuristic.repair_operators": "WARNING",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
@@ -41,18 +41,23 @@ logger.remove()
 logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 
 
-class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+class ProblemRunner(multiprocessing.Process):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None,
+                 update_shifts=True, time_limit=10000, use_predefined_shifts=False,
+                 process_id=None, runtime=15):
 
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
         use non-default values
         """
 
-        logger.info(f"Setting up runner for {problem}")
+        super().__init__()
 
+        logger.info(f"Setting up runner for {problem} for process_id={process_id}")
         self.problem = problem
         self.mode = mode
+        self.process_id = process_id
+        self.runtime = runtime
 
         self.log_name = None
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
@@ -67,16 +72,16 @@ class ProblemRunner:
         self.time_limit = time_limit
 
         self.sdp = None
-        if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
-            self.set_sdp()
-            self.run_sdp(update_shifts)
+        #if with_sdp and (self.mode != "implicit" and self.mode != 3) and not use_predefined_shifts:
+        #    self.set_sdp()
+        #    self.run_sdp(update_shifts)
 
         self.esp = None
 
         self.criterion = GreedyCriterion()
         self.alns = None
 
-        self.set_esp()
+        #self.set_esp()
 
     def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts, suffix=None):
 
@@ -131,22 +136,31 @@ class ProblemRunner:
 
         return self
 
-    def run_test(self, problems, runtime=15, name=None, idx=None):
+    def run_test(self, problems, runtime=15, name=None, process_id=None):
 
         for problem in problems:
-            logger.critical(f"Testing problem {problems} with runtime {runtime} in process {idx}")
+            logger.critical(f"Testing {problems} with runtime {runtime} in process {process_id}")
             self.problem = problem
             self.set_sdp()
             self.run_sdp(True)
             self.set_esp()
             self.run_esp()
 
-            self.test_decay(runtime, name, idx)
+            #self.test_decay(runtime, process_id, problem)
 
-    def test_decay(self, runtime, name, idx):
+    def run(self):
 
+        logger.critical(f"Running {self.problem} with runtime {self.runtime} in process"
+                        f" {self.process_id}")
         decay_range = [0.4, 0.45, 0.5, 0.55, 0.6]
         results = {decay: {} for decay in decay_range}
+        results["problem"] = self.problem
+        results["process_id"] = self.process_id
+
+        self.set_sdp()
+        self.run_sdp(True)
+        self.set_esp()
+        self.run_esp()
 
         for decay in decay_range:
             suffix = f"decay={decay}"
@@ -159,13 +173,10 @@ class ProblemRunner:
                               "destroy_weights": self.alns.destroy_weights
                               }
 
-        if not name:
-            name = "multiple_problem_results"
-
         now = datetime.now()
-        name = f"{now.strftime('%H:%M:%S')}-{name}"
+        name = f"{now.strftime('%H:%M:%S')}-{self.problem}"
 
-        with open(f"{name}-{idx}.json", "w") as fp:
+        with open(f"{name}-{self.process_id}.json", "w") as fp:
             json.dump(results, fp, sort_keys=True, indent=4)
 
         return results
@@ -174,7 +185,7 @@ class ProblemRunner:
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
-        self.set_alns(decay)
+        self.set_alns(decay=decay)
 
         if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
@@ -251,9 +262,10 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
+        #alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
+                         self.process_id)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -445,15 +457,11 @@ if __name__ == "__main__":
         "rproblem9"
     ]
 
-    runtime = 1
+    runtime = 10
 
     jobs = []
     for i in range(4):
-        problem_runner = ProblemRunner(problem=problems[i])
-        p = multiprocessing.Process(target=problem_runner.test_decay,
-                                    args=(runtime, None, i))
-        jobs.append(p)
-        p.start()
-        p.join()
+        pr = ProblemRunner(problem=problems[i], process_id=i)
+        pr.start()
 
     #fire.Fire(ProblemRunner)
