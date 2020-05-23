@@ -92,7 +92,9 @@ class ALNS:
         # Plotting and statistics
         self.violation_plotter = None
         self.objective_plotter = None
+        self.weight_plotter = None
         self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
+        self.weight_history = defaultdict(list)
         self.iteration = 0
 
         # todo: these seems to be unused. Delete?
@@ -493,14 +495,21 @@ class ALNS:
             self.violation_plotter.plot_data(violations)
 
         if self.objective_plotter:
-            self.update_history(candidate_solution)
+            self.update_objective_history(candidate_solution)
             self.objective_plotter.plot_data(self.objective_history)
+
+        if self.weight_plotter:
+
+            for key, value in self.destroy_weights.items():
+                self.weight_history[key].append(value)
+                self.weight_plotter.plot_data(self.weight_history)
 
         self.iteration += 1
 
         return candidate_solution
 
-    def update_history(self, candidate_solution):
+    def update_objective_history(self, candidate_solution):
+
 
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
