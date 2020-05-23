@@ -77,7 +77,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts, suffix=None):
 
         if log_name:
             actual_name = log_name
@@ -95,6 +95,9 @@ class ProblemRunner:
                 shift_set = "no_sdp"
 
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
+
+            if suffix:
+                actual_name = f"{actual_name}-{suffix}"
 
         now = datetime.now()
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
