@@ -21,10 +21,11 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 
 class ALNS:
-    def __init__(self, state, criterion, data, objective_weights, decay):
+    def __init__(self, state, criterion, data, objective_weights, log_name, decay):
 
         self.objective_weights = objective_weights
         self.decay = decay
+        self.log_name = log_name
 
         self.initial_solution = state
         self.current_solution = state
@@ -433,14 +434,25 @@ class ALNS:
                 except KeyboardInterrupt:
                     command = input("\n\nAvailable commands: \n"
                                     "1 - Continue running \n"
-                                    "2 - Drop into debugger \n"
-                                    "3 - Stop running \n")
+                                    "2 - Save solutions and continue running \n"
+                                    "3 - Drop into debugger \n"
+                                    "4 - Save solutions and stop running\n"
+                                    )
 
                     if command == "1":
                         continue
                     elif command == "2":
+                        custom_filename = input("\nEnter custom filename or hit enter to use "
+                                                "log_name\n")
+
+                        custom_filename = custom_filename if len(custom_filename) else None
+                        self.save_solutions(custom_filename)
+
+                        continue
+
+                    elif command == "3":
                         breakpoint()
-                    else:
+                    elif command == "4":
                         break
 
         else:
@@ -498,6 +510,7 @@ class ALNS:
 
     def update_objective_history(self, candidate_solution):
 
+
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
@@ -516,57 +529,54 @@ class ALNS:
                        f"({destroy_id}, {repair_id})")
 
         self.choose_local_search(candidate_solution)
+
         if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
 
             self.current_solution = candidate_solution
-            
-        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
-
-            self.current_solution = candidate_solution
-
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
+                logger.debug("Candidate is better")
                 weight_update = self.WeightUpdate["IS_BETTER"]
-                logger.trace("Candidate is better")
             else:
                 weight_update = self.WeightUpdate["IS_ACCEPTED"]
-                logger.trace("Candidate is accepted")
+                logger.info("Candidate is accepted")
 
         else:
-            weight_update = self.WeightUpdate["IS_REJECTED"]
             logger.trace("Candidate is rejected")
+            weight_update = self.WeightUpdate["IS_REJECTED"]
 
         if candidate_solution.is_legal():
 
             if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                logger.critical(f"Legal, best solution found")
+                logger.critical(f"Candidate is legal and best")
                 weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
-                self.best_legal_solution = candidate_solution
-                self.best_legal_solution.write("best_legal_solution")
-                self.update_best_solution(candidate_solution)
+                self.update_best_solutions(candidate_solution)
 
             elif candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value():
-                logger.warning("Legal solution found")
+                logger.error("Candidate is legal")
                 weight_update = self.WeightUpdate["IS_LEGAL"]
                 self.best_legal_solution = candidate_solution
-                self.best_legal_solution.write("best_legal_solution")
 
         elif candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-
+            logger.warning("Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
-            self.update_best_solution(candidate_solution)
-            logger.trace("Candidate is best")
-
-            self.best_solution = candidate_solution
-            self.current_solution = candidate_solution
-            self.best_solution.write("heuristic_solution_2")
+            self.update_best_solutions(candidate_solution)
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
-    def update_best_solution(self, candidate_solution):
+    def save_solutions(self, custom_name=None):
+
+        if custom_name:
+            filename = custom_name
+        else:
+            filename = self.log_name
+
+        self.best_legal_solution.write(f"solutions/{filename}-BEST_LEGAL")
+        self.best_solution.write(f"solutions/{filename}-BEST")
+
+    def update_best_solutions(self, candidate_solution):
         self.best_solution = candidate_solution
         self.current_solution = candidate_solution
-        self.best_solution.write("heuristic_solution_2")
 
     def select_operator(self, operators, weights):
         """
@@ -580,8 +590,10 @@ class ALNS:
 
         message = f"Probabilities for " \
                   f"{'Destroy' if 'worst_week_removal' in operators.keys() else 'Repair'} ["
+
         for p in probabilities:
             message += f" {p*100:.1f}%"
+
         message += " ]"
         logger.trace(message)
 
@@ -700,9 +712,10 @@ class ALNS:
             "weekly_off_shift_error": sum(candidate_solution.hard_vars["weekly_off_shift_error"].values())
         }
 
-        if 0 < self.current_solution.get_objective_value()/candidate_solution.get_objective_value() < 2:
+        current_value = self.current_solution.get_objective_value()
+
+        if 0 < current_value/candidate_solution.get_objective_value() < 2:
             if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
-                    #candidate_solution.write("before_breaking_weekly")
 
                     destroy_set, repair_set = illegal_week_swap(
                         self.shifts_per_week,
@@ -723,11 +736,20 @@ class ALNS:
                     )
 
                     destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+
                     self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
-                    #candidate_solution.write("After_breaking_weekly")
+
+                    updated_value = self.current_solution.get_objective_value()
+                    logger.trace(f"week_swap and contracted_hours increased value from "
+                                 f"{current_value} to {updated_value}")
+
 
             elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
-                    #candidate_solution.write("Before_breaking_contracted")
+
                     destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+
                     self.calculate_objective(candidate_solution, destroy_set, repair_set)
-                    #candidate_solution.write("After_breaking_contracted")
+
+                    updated_value = self.current_solution.get_objective_value()
+                    logger.trace(f"week_swap and contracted_hours increased value from "
+                                 f"{current_value} to {updated_value}")
