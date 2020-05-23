@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import fire
@@ -103,9 +104,10 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def test_multiple_problems(self):
+    def test_multiple_problems(self, runtime=1):
 
-        problems = ["rproblem8", "rproblem6", "rproblem9", "rproblem7", "rproblem2"]
+        problems = ["rproblem8", "rproblem2", "rproblem6", "rproblem7"]
+        #problems = ["rproblem8", "rproblem6", "rproblem9", "rproblem7", "rproblem2", "problem1"]
         results = {problem: {} for problem in problems}
 
         for problem in problems:
@@ -117,20 +119,24 @@ class ProblemRunner:
             self.set_esp()
             self.run_esp()
 
-            results[problem] = self.test_alns()
+            results[problem] = self.test_alns(runtime)
+
+        with open('test_results.json', 'w') as fp:
+            json.dump(results, fp, sort_keys=True, indent=4)
 
         return self
 
-    def test_alns(self):
+    def test_alns(self, runtime):
 
-        decay_range = [0.1, 0.2, 0.4, 0.6, 0.8, 0.9]
+        decay_range = [0.1, 0.4, 0.9]
+        #decay_range = [0.1, 0.2, 0.4, 0.6, 0.8, 0.9]
         results = {decay: {} for decay in decay_range}
 
         for decay in decay_range:
             suffix = f"decay={decay}"
             self.set_log_name(None, True, False, True, suffix=suffix)
             logger.critical(f"Testing decay={decay}")
-            self.run_alns(decay, runtime=1)
+            self.run_alns(decay, runtime=runtime)
             self.save_results()
             results[decay] = {"value": self.alns.get_best_solution_value(),
                               "iterations": self.alns.iteration,
