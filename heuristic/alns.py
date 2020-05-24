@@ -503,8 +503,8 @@ class ALNS(multiprocessing.Process):
         runtime_in_seconds = runtime * 60 if runtime else None
 
         if not iterations:
-            prefix = f"{self.worker_name}: " if self.worker_name else None
-            logger.warning(f"{prefix if prefix else ''}Running ALNS for {runtime} minutes")
+            prefix = f"{self.worker_name}: " if self.worker_name else ""
+            logger.warning(f"{prefix}Running ALNS for {runtime} minutes")
 
             while timer() < self.start_time + runtime_in_seconds:
                 try:
@@ -553,8 +553,8 @@ class ALNS(multiprocessing.Process):
 
         # Add a newline between the output of each iteration
         print()
-        prefix = f"{self.worker_name}: " if self.worker_name else None
-        logger.trace(f"{prefix if prefix else ''}Iteration: {self.iteration}")
+        prefix = f"{self.worker_name}: " if self.worker_name else ""
+        logger.trace(f"{prefix}Iteration: {self.iteration}")
 
         if self.share_times and timer()-self.start_time > self.share_times[0]:
             self.share_solutions()
@@ -680,7 +680,7 @@ class ALNS(multiprocessing.Process):
         else:
             filename = self.log_name
 
-        suffix = f"-{self.worker_name}"
+        suffix = f"-{self.worker_name}" if self.worker_name else ""
         self.best_legal_solution.write(f"solutions/{filename}-BEST_LEGAL{suffix}")
         self.best_solution.write(f"solutions/{filename}-BEST{suffix}")
 
