@@ -65,4 +65,4 @@ class ImplicitModel:
         return self.model.getObjective().getValue()
 
     def save_solution(self, filename):
-        self.model.write(f"solutions/{filename}-ESP.sol")
+        self.model.write(f"solutions/{filename}-IMP.sol")

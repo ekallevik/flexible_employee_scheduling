@@ -88,6 +88,8 @@ class ProblemRunner:
                     shift_set = "sdp_no_reduce"
             elif use_predefined_shifts:
                 shift_set = "predefined_shifts"
+            elif self.mode == "implicit" or self.mode == 3:
+                shift_set = "implicit_shifts"
             else:
                 shift_set = "no_sdp"
 
