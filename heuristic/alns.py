@@ -463,7 +463,7 @@ class ALNS(multiprocessing.Process):
 
         self.iterate(runtime=self.runtime)
 
-        self.save_solutions()
+        # self.save_solutions()
 
         results = {
             "log": self.log_name,
