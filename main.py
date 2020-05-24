@@ -45,8 +45,8 @@ level_per_module = {
     "heuristic.criterions.record_to_record_travel": "CRITICAL",
 }
 
-logger.remove()
-logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
+#logger.remove()
+#logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 
 
 class ProblemRunner:
@@ -126,8 +126,8 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
-
+        #share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
+        share_times = None
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
         variant = "critertion"
@@ -155,7 +155,7 @@ class ProblemRunner:
 
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
-                        queue=queue, seed=j, start_time=self.start_time, share_times=share_times)
+                        queue=queue, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
 
             alns.start()
