@@ -20,18 +20,19 @@ class ImplicitObjective:
         self.weekly_rest = staff["employee_with_weekly_rest"]
         self.shift_durations = shift_durations
 
-        self.add_fairness_score(weights, var.f, var.w, var.lam, var.rho, var.q, var.y, preferences)
+        self.add_fairness_score(weights, var.f, var.w_week, var.lam, var.rho, var.q, var.y, preferences)
         self.add_lowest_fairness_score(var.f, var.g)
         self.add_objective_for_optimal_solution(weights, var.f, var.g, var.delta)
 
-    def add_fairness_score(self, weights, f, w, lam, rho, q, y, preferences):
+    def add_fairness_score(self, weights, f, w_week, lam, rho, q, y, preferences):
 
         self.model.addConstrs(
             (
                 f["plus"][e] - f["minus"][e]
-                == weights["rest"] * quicksum(
+                ==
+                weights["rest"] * quicksum(
                     quicksum(
-                        (v - self.weekly_rest[e]) * w[e, t, v] for t in self.every_time_period
+                        (v - self.weekly_rest[e]) * w_week[e, t, v] for t in self.every_time_period
                     ) for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
                 )
                 - weights["contracted hours"][e] * lam[e]
