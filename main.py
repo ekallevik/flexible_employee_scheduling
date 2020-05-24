@@ -96,8 +96,7 @@ class ProblemRunner:
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
 
         now = datetime.now()
-        self.log_name = f"{now}-{actual_name}"
-        breakpoint()
+        self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
