@@ -63,3 +63,6 @@ class ImplicitModel:
     def get_objective_value(self):
         """ Returns the object value of the found solution """
         return self.model.getObjective().getValue()
+
+    def save_solution(self, filename):
+        self.model.write(f"solutions/{filename}-ESP.sol")
