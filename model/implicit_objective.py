@@ -13,6 +13,7 @@ class ImplicitObjective:
 
         self.time_periods = time_set["periods"][0]
         self.combined_time_periods = time_set["combined_time_periods"][0]
+        self.every_time_period = time_set["every_time_period"]
         self.saturdays = time_set["saturdays"]
         self.days = time_set["days"]
         self.weeks = time_set["weeks"]
@@ -30,7 +31,7 @@ class ImplicitObjective:
                 f["plus"][e] - f["minus"][e]
                 == weights["rest"] * quicksum(
                     quicksum(
-                        (v - self.weekly_rest[e]) * w[e, t, v] for t in self.combined_time_periods
+                        (v - self.weekly_rest[e]) * w[e, t, v] for t in self.every_time_period
                     ) for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
                 )
                 - weights["contracted hours"][e] * lam[e]

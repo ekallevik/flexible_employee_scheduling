@@ -19,6 +19,7 @@ class ImplicitConstraints:
         self.time_periods = data["time"]["periods"][0]
         self.combined_time_periods = data["time"]["combined_time_periods"][0]
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][2]
+        self.every_time_period = data["time"]["every_time_period"]
         self.shift_durations = data["shift_durations"]
         self.days = data["time"]["days"]
         self.weeks = data["time"]["weeks"]
@@ -193,7 +194,7 @@ class ImplicitConstraints:
             (
                 quicksum(
                     quicksum(
-                        w[e, t, v] for t in self.combined_time_periods
+                        w[e, t, v] for t in self.every_time_period
                         if self.daily_offset[e] + (i + 1) * HOURS_IN_A_DAY - v
                         >= t >= self.daily_offset[e] + i * HOURS_IN_A_DAY
                     )
@@ -212,7 +213,7 @@ class ImplicitConstraints:
             (
                 quicksum(
                     quicksum(
-                        w[e, t, v] for t in self.combined_time_periods
+                        w[e, t, v] for t in self.every_time_period
                         if self.weekly_offset[e] + j * HOURS_IN_A_WEEK
                         <= t < self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
                     )

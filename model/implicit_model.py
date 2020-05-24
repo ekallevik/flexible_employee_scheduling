@@ -18,6 +18,7 @@ class ImplicitModel:
         self.employees = data["staff"]["employees"]
         self.combined_time_periods = data["time"]["combined_time_periods"][0]
         self.time_periods = data["time"]["periods"][0]
+        self.every_time_period = data["time"]["every_time_period"]
         self.competencies = data["competencies"]
         self.days = data["time"]["days"]
         self.preferences = data["preferences"]
@@ -28,6 +29,7 @@ class ImplicitModel:
             employees=self.employees,
             combined_time_periods=self.combined_time_periods,
             time_periods=self.time_periods,
+            every_time_period=self.every_time_period,
             shift_durations=self.shift_durations,
             competencies=self.competencies,
             days=self.days
