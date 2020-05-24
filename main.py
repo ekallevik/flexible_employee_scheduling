@@ -7,6 +7,8 @@ from multiprocessing import Queue
 import fire
 from gurobipy import *
 from loguru import logger
+from timeit import default_timer as timer
+
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
@@ -57,6 +59,8 @@ class ProblemRunner:
         self.problem = problem
         self.mode = mode
         self.runtime = None
+        self.start_time = None
+        self.construction_runtime = None
 
         self.log_name = None
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
@@ -114,10 +118,13 @@ class ProblemRunner:
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
         initial_solution = state.get_objective_value()
+        self.construction_runtime = timer() - self.start_time
 
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
+        # includes dummy to make sure to avoid an empty list
+        share_times = [3*60, 5*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
@@ -146,14 +153,10 @@ class ProblemRunner:
 
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
-                        queue=queue, seed=j)
+                        queue=queue, seed=j, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
 
-            # starting each process
             alns.start()
-
-        while not queue.empty():
-            print(queue.get())
 
         for process in processes:
             # terminate each process
@@ -169,6 +172,8 @@ class ProblemRunner:
 
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
+        shared_results["start"] = self.start_time
+        shared_results["construction_runtime"] = self.construction_runtime
         shared_results["initial_solution"] = initial_solution
         shared_results["global_best_solution"] = global_best_solution
         shared_results["global_iterations"] = global_iterations
@@ -226,8 +231,9 @@ class ProblemRunner:
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
         logger.info(f"ALNS with {decay} and {self.criterion}")
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
+                         start_time=self.start_time)
 
     def get_state(self, candidate_solution):
         soft_variables = {
@@ -277,6 +283,9 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
 
         try:
+            if not self.start_time:
+                self.start_time = timer()
+                logger.trace(f"Model run started at: {self.start_time}")
             self.esp.run_model()
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
@@ -297,7 +306,6 @@ class ProblemRunner:
 
         elif self.mode == 1 or self.mode == "feasibility":
             self.esp = FeasibilityModel(model, data=self.data)
-            # todo: add same config as ConstructionModel?
 
         elif self.mode == 2 or self.mode == "optimality":
             self.esp = OptimalityModel(model, data=self.data)
@@ -314,6 +322,8 @@ class ProblemRunner:
         original_shifts = self.data["shifts"]["shifts"]
         logger.info(f"Running SDP with {len(original_shifts)} shifts")
 
+        self.start_time = timer()
+        logger.warning(f"Model run started at: {self.start_time}")
         self.sdp.run_model()
 
         used_shifts, unused_shifts = self.sdp.get_used_shifts()
