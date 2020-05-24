@@ -41,6 +41,7 @@ level_per_module = {
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
     "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
+    "heuristic.criterions.record_to_record_travel": "CRITICAL",
 }
 
 logger.remove()

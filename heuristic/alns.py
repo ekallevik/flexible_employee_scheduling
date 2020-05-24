@@ -564,7 +564,7 @@ class ALNS(multiprocessing.Process):
 
         # Add a newline between the output of each iteration
         print()
-        logger.trace(f"{self.prefix}Iteration: {self.iteration} at {timer()-self.start_time}")
+        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {timer()-self.start_time}")
 
         if self.share_times and timer()-self.start_time > self.share_times[0]:
             self.share_solutions()
@@ -611,7 +611,8 @@ class ALNS(multiprocessing.Process):
             logger.error(f"Shared solution={shared_solution.get_objective_value()} vs best "
                          f"legal={self.get_best_solution_value()}")
 
-            if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
+            if self.criterion.accept(shared_solution, self.current_solution,
+                                     self.best_legal_solution, self.random_state):
                 self.current_solution = shared_solution
                 logger.error("Shared solution is accepted")
 
