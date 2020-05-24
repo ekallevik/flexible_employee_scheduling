@@ -2,6 +2,7 @@ import json
 import multiprocessing
 from copy import deepcopy
 from datetime import datetime
+from multiprocessing import Queue
 
 import fire
 from gurobipy import *
@@ -33,10 +34,11 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "WARNING",
-    "heuristic.repair_operators": "WARNING",
-    "heuristic.criterions.simulated_annealing_criterion": "WARNING",
+    "heuristic.alns": "ERROR",
+    "heuristic.delta_calculations": "CRITICAL",
+    "heuristic.destroy_operators": "CRITICAL",
+    "heuristic.repair_operators": "CRITICAL",
+    "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
 }
 
 logger.remove()
@@ -55,6 +57,7 @@ class ProblemRunner:
         logger.info(f"Setting up runner for {problem}")
         self.problem = problem
         self.mode = mode
+        self.runtime = None
 
         self.log_name = None
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
@@ -106,6 +109,8 @@ class ProblemRunner:
     def run_alns_multiple(self, threads=8, runtime=1):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
+        self.runtime = runtime
+
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
@@ -113,6 +118,7 @@ class ProblemRunner:
 
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
+        queue = Queue()
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
@@ -120,11 +126,15 @@ class ProblemRunner:
         variants = [
             GreedyCriterion(),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
+            GreedyCriterion(),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=10),
-            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=500, step=10),
-            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=250, step=50),
-            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=500, step=50),
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=50),
+            GreedyCriterion(),
             SimulatedAnnealingCriterion(start_temperature=600, end_temperature=300, step=1),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
             SimulatedAnnealingCriterion(start_temperature=600, end_temperature=500, step=1),
         ]
 
@@ -136,18 +146,22 @@ class ProblemRunner:
             decay = 0.5 if variant != "decay" else variants[j]
 
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        runtime=runtime, worker_name=f"worker-{j}", results=shared_results)
+                        runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
+                        queue=queue, seed=j)
             processes.append(alns)
 
             # starting each process
             alns.start()
+
+        while not queue.empty():
+            print(queue.get())
 
         for process in processes:
             # terminate each process
             process.join()
 
         filename = f"{self.log_name}_threads={threads}_variants={variant}"
-        self.save_shared_results(shared_results, filename,initial_solution=initial_solution)
+        self.save_shared_results(shared_results, filename, initial_solution=initial_solution)
 
     def save_shared_results(self, shared_results, filename, initial_solution):
 
@@ -155,6 +169,7 @@ class ProblemRunner:
         global_best_solution = max(result["best_solution"] for result in shared_results.values())
 
         shared_results["problem"] = self.problem
+        shared_results["runtime"] = self.runtime
         shared_results["initial_solution"] = initial_solution
         shared_results["global_best_solution"] = global_best_solution
         shared_results["global_iterations"] = global_iterations
@@ -427,10 +442,10 @@ if __name__ == "__main__":
     problems = [
         #"rproblem1",
         #"rproblem2",
-        "rproblem3",
+        #"rproblem3",
         #"rproblem4",
         #"rproblem5",
-        #"rproblem6",
+        "rproblem9",
         #"rproblem7",
         #"rproblem8",
         #"rproblem9",
@@ -438,4 +453,4 @@ if __name__ == "__main__":
 
     for problem in problems:
         pr = ProblemRunner(problem=problem)
-        pr.run_alns_multiple(runtime=10)
+        pr.run_alns_multiple(runtime=15)
