@@ -1,4 +1,3 @@
-import json
 import multiprocessing
 
 import numpy as np
@@ -24,15 +23,19 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 class ALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
-                 operator_weights=None, runtime=15, worker_name="worker-1", seed=0, results=None):
+                 operator_weights=None, runtime=15, worker_name="worker-1", seed=0, results=None,
+                 queue=None, share_times=None, start_time=None):
 
         super().__init__()
+        self.queue = queue
+        self.share_times = share_times
 
         self.objective_weights = objective_weights
         self.decay = decay
         self.log_name = log_name
         self.worker_name = worker_name
         self.runtime = runtime
+        self.start_time = start_time
 
         self.initial_solution = state
         self.current_solution = state
@@ -512,6 +515,19 @@ class ALNS(multiprocessing.Process):
 
         self.results[self.worker_name] = results
 
+    def close_queue(self):
+
+        while True:
+            shared_solution = self.queue.get()
+            if shared_solution is None:
+                # Poison pill means shutdown
+                logger.warning(f"Exiting {self.worker_name}")
+                self.queue.put(None)
+                break
+
+        self.queue.close()
+        self.queue.join_thread()
+
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
@@ -522,7 +538,7 @@ class ALNS(multiprocessing.Process):
 
             logger.warning(f"Running ALNS for {runtime} minutes in {self.worker_name}")
 
-            while timer() < start + runtime_in_seconds:
+            while timer() < self.start_time + runtime_in_seconds:
                 try:
                     self.perform_iteration()
                 except KeyboardInterrupt:
@@ -569,6 +585,9 @@ class ALNS(multiprocessing.Process):
         print()
         logger.trace(f"Iteration: {self.iteration} in process={self.worker_name}")
 
+        if timer()-self.start_time > self.share_times[0]:
+            self.share_solutions()
+
         candidate_solution = self.current_solution.copy()
         destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
         repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
@@ -599,6 +618,30 @@ class ALNS(multiprocessing.Process):
         self.iteration += 1
 
         return candidate_solution
+
+    def share_solutions(self):
+
+        del self.share_times[0]
+        logger.error(f"Sharing data. {len(self.share_times) - 1} shares remaining")
+
+        if not self.queue.empty():
+            shared_solution = self.queue.get()
+
+            if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
+                self.current_solution = shared_solution
+                logger.warning("Shared solution is accepted")
+
+                if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
+                    self.best_solution = shared_solution
+                    logger.warning("Shared solution is best solution")
+                if shared_solution.get_objective_value() >= \
+                        self.best_legal_solution.get_objective_value():
+                    self.best_legal_solution = shared_solution
+                    logger.warning("Shared solution is best, legal solution")
+            else:
+                logger.warning("Shared solution is rejected")
+
+        self.queue.put(self.best_legal_solution)
 
     def update_objective_history(self, candidate_solution):
 
