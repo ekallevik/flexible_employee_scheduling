@@ -87,7 +87,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+    def  set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
 
         if log_name:
             actual_name = log_name
@@ -125,7 +125,7 @@ class ProblemRunner:
         shared_results = manager.dict()
         queue = Queue()
         # includes dummy to make sure to avoid an empty list
-        share_times = [3*60, 5*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
+        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
