@@ -110,7 +110,7 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=4, runtime=1):
+    def run_alns_multiple(self, threads=12, runtime=15):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         self.runtime = runtime
@@ -125,24 +125,25 @@ class ProblemRunner:
         shared_results = manager.dict()
         queue = Queue()
         # includes dummy to make sure to avoid an empty list
-        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
+        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
+        #share_times = [1*60, 2*60]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
         variant = "critertion"
         variants = [
             GreedyCriterion(),
+            GreedyCriterion(),
+            GreedyCriterion(),
+            GreedyCriterion(),
+            RecordToRecordTravel(start_threshold=1000, end_threshold=250, step=5),
+            RecordToRecordTravel(start_threshold=500, end_threshold=125, step=5),
+            RecordToRecordTravel(start_threshold=1000, end_threshold=500, step=5),
+            RecordToRecordTravel(start_threshold=2000, end_threshold=500, step=25),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=10),
-            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=750, step=10),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
-            GreedyCriterion(),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=50),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=300, step=1),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
-            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=500, step=1),
         ]
 
         processes = []
