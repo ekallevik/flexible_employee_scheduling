@@ -105,85 +105,57 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=8, runtime=5):
+    def run_alns_multiple(self, threads=8, runtime=1):
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
-        manager = multiprocessing.Manager()
-        results = manager.dict()
-
-        decay_range = [0.35, 0.65]
         candidate_solution = self.get_candidate_solution()
-        operator_weights = [
-            {"IS_BEST_AND_LEGAL": 3.0,
-             "IS_LEGAL": 2.5,
-             "IS_BEST": 2.0,
-             "IS_BETTER": 1.5,
-             "IS_ACCEPTED": 1.25,
-             "IS_REJECTED": 0.75},
-            {"IS_BEST_AND_LEGAL": 2.5,
-             "IS_LEGAL": 2.0,
-             "IS_BEST": 1.75,
-             "IS_BETTER": 1.5,
-             "IS_ACCEPTED": 1.1,
-             "IS_REJECTED": 0.90},
-            {"IS_BEST_AND_LEGAL": 2.0,
-             "IS_LEGAL": 1.3,
-             "IS_BEST": 1.8,
-             "IS_BETTER": 1.15,
-             "IS_ACCEPTED": 1.06,
-             "IS_REJECTED": 0.92},
-            {"IS_BEST_AND_LEGAL": 1.50,
-             "IS_LEGAL": 1.30,
-             "IS_BEST": 1.12,
-             "IS_BETTER": 1.06,
-             "IS_ACCEPTED": 1.03,
-             "IS_REJECTED": 0.97},
+        state = self.get_state(candidate_solution)
+        initial_solution = state.get_objective_value()
+
+        manager = multiprocessing.Manager()
+        shared_results = manager.dict()
+
+        criterions = [
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
+            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=10),
+            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=500, step=10),
+            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=250, step=50),
+            SimulatedAnnealingCriterion(start_temperature=2500, end_temperature=500, step=50),
+            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=300, step=1),
+            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=500, step=1),
         ]
 
-        decay_weights_pair = [
-            (decay_range[0], operator_weights[0]),
-            (decay_range[0], operator_weights[1]),
-            (decay_range[0], operator_weights[2]),
-            (decay_range[0], operator_weights[3]),
-            (decay_range[1], operator_weights[0]),
-            (decay_range[1], operator_weights[1]),
-            (decay_range[1], operator_weights[2]),
-            (decay_range[1], operator_weights[3]),
-        ]
-
-        # todo: make sure that state is not shared!
         processes = []
-        results = {}
+        for j in range(threads):
+            state_copy = deepcopy(state)
 
-        for i in range(2):
+            alns = ALNS(state_copy, criterions[j], self.data, self.weights, self.log_name,
+                        runtime=runtime, worker_name=f"worker-{j}", results=shared_results)
+            processes.append(alns)
 
-            if i == 0:
-                criterion = GreedyCriterion()
-            else:
-                criterion = SimulatedAnnealingCriterion(start_temperature=1500,
-                                                        end_temperature=500, step=10)
+            # starting each process
+            alns.start()
 
-            for j in range(threads):
-                candidate_copy = deepcopy(candidate_solution)
-                state = self.get_state(candidate_copy)
-                state_copy = deepcopy(state)
+        for process in processes:
+            # terminate each process
+            process.join()
 
-                decay, ow = decay_weights_pair[j]
+        self.save_shared_results(shared_results, filename=f"{self.log_name}-threads={threads}",
+                                 initial_solution=initial_solution)
 
-                alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name,
-                            decay=decay, operator_weights=ow, runtime=runtime,
-                            worker_name=f"worker-{j}", results=results)
-                processes.append(alns)
+    def save_shared_results(self, shared_results, filename, initial_solution):
 
-                # starting each process
-                alns.start()
+        global_iterations = sum(result["iterations"] for result in shared_results.values())
+        global_best_solution = max(result["best_solution"] for result in shared_results.values())
 
-            for process in processes:
-                # terminate each process
-                process.join()
+        shared_results["problem"] = self.problem
+        shared_results["initial_solution"] = initial_solution
+        shared_results["global_best_solution"] = global_best_solution
+        shared_results["global_iterations"] = global_iterations
 
-        with open(f"{self.log_name}-threads={threads}.json", "w") as fp:
-            json.dump(results, fp, sort_keys=True, indent=4)
+        with open(f"{filename}.json", "w") as fp:
+            json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
@@ -455,8 +427,8 @@ if __name__ == "__main__":
         #"rproblem5",
         #"rproblem6",
         #"rproblem7",
-        #"rproblem8",
-        "rproblem9",
+        "rproblem8",
+        #"rproblem9",
     ]
 
     for problem in problems:
