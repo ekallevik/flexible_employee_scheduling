@@ -578,13 +578,13 @@ class ALNS:
         if candidate_solution.is_legal():
 
             if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                logger.critical(f"Candidate is legal and best")
-                weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
+                logger.error("Candidate is legal")
+                weight_update = self.WeightUpdate["IS_LEGAL"]
                 self.update_best_solutions(candidate_solution)
 
             elif candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value():
-                logger.error("Candidate is legal")
-                weight_update = self.WeightUpdate["IS_LEGAL"]
+                logger.critical(f"Candidate is legal and best")
+                weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
                 self.best_legal_solution = candidate_solution
 
         elif candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
