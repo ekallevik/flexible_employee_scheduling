@@ -1,5 +1,6 @@
 import json
 import multiprocessing
+import random
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
@@ -111,7 +112,7 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=12, runtime=15):
+    def run_alns_multiple(self, threads=32, runtime=15):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         self.runtime = runtime
@@ -125,27 +126,25 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-        # includes dummy to make sure to avoid an empty list
         share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
-        #share_times = [1*60, 2*60]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
         variant = "critertion"
-        variants = [
-            GreedyCriterion(),
-            GreedyCriterion(),
-            GreedyCriterion(),
-            GreedyCriterion(),
-            RecordToRecordTravel(start_threshold=1000, end_threshold=250, step=5),
-            RecordToRecordTravel(start_threshold=500, end_threshold=125, step=5),
-            RecordToRecordTravel(start_threshold=1000, end_threshold=500, step=5),
-            RecordToRecordTravel(start_threshold=2000, end_threshold=500, step=25),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=750, step=10),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=50),
-        ]
+        variants = []
+        start_threshold_range = (500, 2000)
+        end_threshold_range = (150, 500)
+        step_range = (1, 25)
+
+        for _ in range(64):
+            variants.append(GreedyCriterion)
+
+            start_threshold = random.randint(*start_threshold_range)
+            end_threshold = random.randint(*end_threshold_range)
+            step = random.randint(*step_range)
+
+            variants.append(SimulatedAnnealingCriterion(start_threshold, end_threshold, step))
+            variants.append(RecordToRecordTravel(start_threshold, end_threshold, step))
 
         processes = []
         for j in range(threads):
@@ -447,20 +446,30 @@ if __name__ == "__main__":
          
     """
 
-    fire.Fire(ProblemRunner)
+    #fire.Fire(ProblemRunner)
 
-    #problems = [
-        #"rproblem1",
-     #   "rproblem2",
-        #"rproblem3",
-        #"rproblem4",
-        #"rproblem5",
-        #"rproblem6",
-        #"rproblem7",
-        #"rproblem8",
-        #"rproblem9",
-    #]
+    problems = [
+        "rproblem1",
+        "rproblem2",
+        "rproblem3",
+        "rproblem4",
+        "rproblem5",
+        "rproblem6",
+        "rproblem7",
+        "rproblem8",
+        "rproblem9",
+        "rproblem3_2_weeks",
+        "rproblem3_8_weeks",
+        "rproblem5_4_weeks",
+        "rproblem5_12_weeks",
+        "rproblem6_8_weeks",
+        "rproblem6_16_weeks",
+        "rproblem7_8_weeks",
+        "rproblem7_16_weeks",
+        "rproblem9_8_weeks",
+        "rproblem9_16_weeks",
+    ]
 
-    #for problem in problems:
-    #    pr = ProblemRunner(problem=problem)
-    #    pr.run_alns_multiple(runtime=1)
+    for problem in problems:
+        pr = ProblemRunner(problem=problem)
+        pr.run_alns_multiple(runtime=15)
