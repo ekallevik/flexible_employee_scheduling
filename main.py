@@ -6,6 +6,7 @@ from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.criterions.record_to_record_travel import RecordToRecordTravel
 from heuristic.heuristic_calculations import *
 from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
