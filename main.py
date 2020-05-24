@@ -80,7 +80,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts, suffix=None):
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
 
         if log_name:
             actual_name = log_name
@@ -99,14 +99,12 @@ class ProblemRunner:
 
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
 
-            if suffix:
-                actual_name = f"{actual_name}-{suffix}"
-
         now = datetime.now()
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
     def run_alns_multiple(self, threads=8, runtime=1):
+        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
         candidate_solution = self.get_candidate_solution()
@@ -116,7 +114,10 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
 
-        criterions = [
+        # Modify this data to change ALNS-instantiation. The number of variants needs to be
+        # greater than the number of threads
+        variant = "critertion"
+        variants = [
             GreedyCriterion(),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
             SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=10),
@@ -131,7 +132,10 @@ class ProblemRunner:
         for j in range(threads):
             state_copy = deepcopy(state)
 
-            alns = ALNS(state_copy, criterions[j], self.data, self.weights, self.log_name,
+            criterion = GreedyCriterion() if variant != "critertion" else variants[j]
+            decay = 0.5 if variant != "decay" else variants[j]
+
+            alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         runtime=runtime, worker_name=f"worker-{j}", results=shared_results)
             processes.append(alns)
 
@@ -142,8 +146,8 @@ class ProblemRunner:
             # terminate each process
             process.join()
 
-        self.save_shared_results(shared_results, filename=f"{self.log_name}-threads={threads}",
-                                 initial_solution=initial_solution)
+        filename = f"{self.log_name}_threads={threads}_variants={variant}"
+        self.save_shared_results(shared_results, filename,initial_solution=initial_solution)
 
     def save_shared_results(self, shared_results, filename, initial_solution):
 
@@ -358,8 +362,8 @@ class ProblemRunner:
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
 
-        #if self.alns:
-        #    self.alns.save_solutions()
+        if self.alns:
+            self.alns.save_solutions()
 
     def __str__(self):
         """
@@ -423,15 +427,15 @@ if __name__ == "__main__":
     problems = [
         #"rproblem1",
         #"rproblem2",
-        #"rproblem3",
+        "rproblem3",
         #"rproblem4",
         #"rproblem5",
         #"rproblem6",
         #"rproblem7",
-        "rproblem8",
+        #"rproblem8",
         #"rproblem9",
     ]
 
     for problem in problems:
         pr = ProblemRunner(problem=problem)
-        pr.run_alns_multiple(runtime=1)
+        pr.run_alns_multiple(runtime=10)
