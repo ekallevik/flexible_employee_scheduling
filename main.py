@@ -36,7 +36,7 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "ERROR",
+    "heuristic.alns": "TRACE",
     "heuristic.delta_calculations": "CRITICAL",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
@@ -87,7 +87,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def  set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
 
         if log_name:
             actual_name = log_name
@@ -173,7 +173,7 @@ class ProblemRunner:
 
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
-        shared_results["start"] = self.start_time
+        shared_results["start_time"] = self.start_time
         shared_results["construction_runtime"] = self.construction_runtime
         shared_results["initial_solution"] = initial_solution
         shared_results["global_best_solution"] = global_best_solution
@@ -212,8 +212,6 @@ class ProblemRunner:
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
-
-        self.alns.iterate(iterations, runtime)
 
         return self
 
@@ -447,20 +445,20 @@ if __name__ == "__main__":
          
     """
 
-    #fire.Fire(ProblemRunner)
+    fire.Fire(ProblemRunner)
 
-    problems = [
+    #problems = [
         #"rproblem1",
-        #"rproblem2",
+     #   "rproblem2",
         #"rproblem3",
         #"rproblem4",
         #"rproblem5",
-        "rproblem9",
+        #"rproblem6",
         #"rproblem7",
         #"rproblem8",
         #"rproblem9",
-    ]
+    #]
 
-    for problem in problems:
-        pr = ProblemRunner(problem=problem)
-        pr.run_alns_multiple(runtime=15)
+    #for problem in problems:
+    #    pr = ProblemRunner(problem=problem)
+    #    pr.run_alns_multiple(runtime=1)
