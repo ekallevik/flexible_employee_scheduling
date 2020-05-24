@@ -87,7 +87,7 @@ class ProblemRunner:
 
         self.set_esp()
 
-    def set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
+    def  set_log_name(self, log_name, with_sdp, use_predefined_shifts, update_shifts):
 
         if log_name:
             actual_name = log_name

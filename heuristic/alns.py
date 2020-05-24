@@ -621,25 +621,28 @@ class ALNS(multiprocessing.Process):
 
     def share_solutions(self):
 
+        logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]} min."
+                     f" {len(self.share_times) - 1} shares remaining")
         del self.share_times[0]
-        logger.error(f"Sharing data. {len(self.share_times) - 1} shares remaining")
 
         if not self.queue.empty():
             shared_solution = self.queue.get()
+            logger.error(f"Shared solution={shared_solution.get_objective_value()} vs best "
+                         f"legal={self.get_best_solution_value()}")
 
             if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
                 self.current_solution = shared_solution
-                logger.warning("Shared solution is accepted")
+                logger.error("Shared solution is accepted")
 
                 if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
                     self.best_solution = shared_solution
-                    logger.warning("Shared solution is best solution")
+                    logger.error("Shared solution is best solution")
                 if shared_solution.get_objective_value() >= \
                         self.best_legal_solution.get_objective_value():
                     self.best_legal_solution = shared_solution
-                    logger.warning("Shared solution is best, legal solution")
+                    logger.error("Shared solution is best, legal solution")
             else:
-                logger.warning("Shared solution is rejected")
+                logger.error("Shared solution is rejected")
 
         self.queue.put(self.best_legal_solution)
 
