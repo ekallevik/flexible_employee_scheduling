@@ -540,7 +540,6 @@ class ALNS:
 
     def update_objective_history(self, candidate_solution):
 
-
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
@@ -560,7 +559,8 @@ class ALNS:
 
         self.choose_local_search(candidate_solution)
 
-        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
+        if self.criterion.accept(candidate_solution, self.current_solution,
+                                 self.best_legal_solution, self.random_state):
 
             self.current_solution = candidate_solution
 
