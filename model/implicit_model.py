@@ -53,10 +53,8 @@ class ImplicitModel:
         )
 
     def run_model(self):
-        self.model.write("out_implicit.lp")
         self.model.optimize()
         logger.error(f"Model is {self.model.status}")
-        self.model.write("solution.sol")
 
     def get_variables(self):
         """ Return vars used in the model """
