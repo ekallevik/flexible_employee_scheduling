@@ -150,8 +150,11 @@ def create_gantt_chart(data, solution, maximum, minimum):
     #               Demand_30='rgb(100, 100, 100)', Demand_31='rgb(120, 120, 120)', Demand_32='rgb(140, 140, 140)', Demand_33='rgb(160, 160, 160)')
     # print(colors)
     red = Color("#8ff9ff")
-    c = list(red.range_to(Color("#146266"),(maximum-minimum)+2))
-    colors2 = {"Demand_" + str(i): c[i-1].hex for i in range(minimum,maximum+1)}
+    print(minimum)
+    print(maximum)
+    c = list(red.range_to(Color("#146266"),(maximum-minimum+1)))
+    print(c)
+    colors2 = {"Demand_" + str(i): c[i-minimum-1].hex for i in range(minimum, maximum+1)}
     colors2["Work"] = 'rgb(46, 137, 205)'
     colors2["Off"] = 'rgb(198, 47, 105)'
     fig = ff.create_gantt(df, colors=colors2, show_colorbar=True, index_col='Resource', group_tasks=True, height=1200, showgrid_x=True)
@@ -161,11 +164,11 @@ def create_gantt_chart(data, solution, maximum, minimum):
 def main():
     
     data_folder = Path(__file__).resolve().parents[2] / 'flexible_employee_scheduling_data/xml data/Real Instances/'
-    root = ET.parse(data_folder / ('rproblem3.xml')).getroot()
+    root = ET.parse(data_folder / ('rproblem4.xml')).getroot()
     demand = get_days_with_demand2(root)
     maks = max([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
     minst = min([demand[day].ideal[i] for day in demand for i in range(len(demand[day].start))])
-    solution = str(solution_folder / "optimality_solution_rproblem3.sol")
+    solution = str(solution_folder / "best_legal_solution.sol")
     create_gantt_chart(demand, solution, maks, minst)
 
 

@@ -37,7 +37,13 @@ class Demand:
         start = start.split(":")
         end = end.split(":")
         self.start.append(time(int(start[0]), int(start[1])))
-        self.end.append(time(int(end[0]), int(end[1])))
+        try:
+            self.end.append(time(int(end[0]), int(end[1])))
+        except:
+            if(end[0] == "24"):
+                end[0] = "23"
+                end[1] = "59"
+            self.end.append(time(int(end[0]), int(end[1])))
         self.minimum.append(int(minimum))
         self.maximum.append(int(maximum))
         self.ideal.append(int(ideal))

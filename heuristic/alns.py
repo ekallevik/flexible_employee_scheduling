@@ -16,7 +16,7 @@ from heuristic.local_search_operators import illegal_week_swap, illegal_contract
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
-    mip_week_operator_2
+    mip_week_operator_2, repair_week_based_on_f_values
 from visualisation.barchart_plotter import BarchartPlotter
 
 
@@ -356,10 +356,37 @@ class ALNS:
             self.t_covered_by_shift
         )
 
+        repair_worst_week_f_value = partial(
+            repair_week_based_on_f_values,
+            self.shifts_per_week,
+            self.competencies,
+            self.t_covered_by_shift,
+            self.employee_with_competencies,
+            self.employee_with_competency_combination,
+            self.demand,
+            self.time_step,
+            self.time_periods_in_week,
+            self.combined_time_periods_in_week,
+            self.employees,
+            self.contracted_hours,
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
+            self.shift_sequences_violating_daily_rest,
+            self.weeks,
+            self.shifts_at_day,
+            self.L_C_D,
+            self.shifts_overlapping_t,
+            self.objective_weights, 
+            self.preferences, 
+            self.demand_per_shift,
+            self.saturdays,
+            self.days
+        )
+        
         operators = {
             remove_worst_employee: [
-                 repair_worst_employee_regret,
-                 repair_worst_employee_greedy
+                repair_worst_employee_regret,
+                repair_worst_employee_greedy
             ],
 
             remove_worst_contract: [
@@ -384,7 +411,8 @@ class ALNS:
                 repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
-                mip_operator_week_repair_2
+                mip_operator_week_repair_2,
+                repair_worst_week_f_value
             ],
 
             remove_random_week: [
@@ -394,7 +422,8 @@ class ALNS:
                 repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
-                mip_operator_week_repair_2
+                mip_operator_week_repair_2,
+                repair_worst_week_f_value
             ],
 
             remove_weighted_random_week: [
@@ -404,7 +433,8 @@ class ALNS:
                 repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
-                mip_operator_week_repair_2
+                mip_operator_week_repair_2,
+                repair_worst_week_f_value
             ],
 
             remove_random_weekend: [
@@ -691,7 +721,6 @@ class ALNS:
         return calculate_objective_function(
             state,
             employees,
-            self.off_shifts,
             self.saturdays,
             self.L_C_D,
             self.days,
@@ -753,3 +782,4 @@ class ALNS:
                     updated_value = self.current_solution.get_objective_value()
                     logger.trace(f"week_swap and contracted_hours increased value from "
                                  f"{current_value} to {updated_value}")
+

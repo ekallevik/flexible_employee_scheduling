@@ -10,7 +10,7 @@ from heuristic.delta_calculations import delta_calculate_deviation_from_demand, 
     more_than_one_shift_per_day, above_maximum_demand, below_minimum_demand, \
     calculate_deviation_from_demand, regret_objective_function, mapping_shift_to_demand, \
     calculate_daily_rest_error, employee_shift_value, hard_constraint_penalties, \
-    worst_employee_regret_value, f_regret_values
+    worst_employee_regret_value, f_regret_values, calculate_f
 from operator import itemgetter
 from heuristic.converter import set_x
 from random import choice, choices
@@ -518,13 +518,7 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
         if(deviation_from_demand < (5 * 1/time_step) or max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
             return repair_set
 
-        # Hard Restrictions/Variables
-        cover_multiple_demand_periods(state, destroy_set, t_covered_by_shift, competencies)
-        more_than_one_shift_per_day(state, employees_changed, demand, shifts_at_day, days)
-        mapping_shift_to_demand(state, destroy_set, t_covered_by_shift, shifts_overlapping_t, competencies)
-
         #Soft Restrictions/Variables
-        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         calculate_partial_weekends(state, employees_changed, shifts_at_day, saturdays)
         calculate_isolated_working_days(state, employees_changed, shifts_at_day, days)
         calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
@@ -961,4 +955,85 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
         if shifts[shift] == 0:
                 del shifts[shift]
         
+    return repair_set
+
+
+
+
+
+
+
+
+def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shift,
+                             employee_with_competencies, employee_with_competency_combination,
+                             demand, time_step, time_periods_in_week, combined_time_periods_in_week,
+                             employees, contracted_hours,
+                             invalid_shifts, shift_combinations_violating_daily_rest,
+                             shift_sequences_violating_daily_rest,
+                             weeks, shifts_at_day, L_C_D, shifts_overlapping_t, 
+                             weights, preferences, shifts_with_demand,
+                             all_saturdays, all_days,
+                             state, destroy_set, week):
+
+
+    logger.info(f"Repairing week: {week}")
+
+    repair_set = []
+    # All employees gets changed in this operator atm. Employees changed are therefore set to all employees at the beginning.
+    employees_changed = employees
+    # Destroy_set is the shifts that have been destroyed.
+    destroy_set = destroy_set.copy()
+    saturdays = [5 + j * 7 for j in week]
+    sundays = [6 + j * 7 for j in week]
+    days = [i + (7 * j) for j in week for i in range(7)]
+    impossible_shifts = []
+    daily_destroy_and_repair = [destroy_set, []]
+    
+    shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
+
+    
+    while(shifts):
+
+        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
+
+        shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
+
+
+        possible_employees = [e for e in employees if (sum(state.x[e, t, v] for t, v in shifts_at_day[int(shift[0] / 24)])) == 0 and sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks) > 5]
+
+        if len(possible_employees) == 0:
+            for shift in shifts_at_day[int(shift[0]/24)]:
+                shifts.pop(shift, None)
+            continue
+
+
+        #Soft Restrictions/Variables
+        calculate_partial_weekends(state, employees_changed, shifts_at_day, saturdays)
+        calculate_isolated_working_days(state, employees_changed, shifts_at_day, days)
+        calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
+        calculate_consecutive_days(state, employees_changed, shifts_at_day, L_C_D, days)
+        calculate_weekly_rest(state, shifts_in_week, employees_changed, week)
+        calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
+
+        calculate_f(state, employees_changed, all_saturdays, all_days, L_C_D, weeks, weights, preferences, competencies)
+
+        value = {}
+        for e in possible_employees:
+            updated_f = state.f.copy()
+            f_diff, penalties = f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_in_week, shifts_at_day, weights, preferences, t_covered_by_shift)
+            updated_f[e] += f_diff
+
+            value[e] = sum(updated_f.values()) + len(employees) * 0.1 * min(updated_f.values()) + 10 * penalties
+
+        max_value = max(value.items(), key=itemgetter(1))[1]
+        employee = choice([key for key, value in value.items() if value == max_value])
+
+        repair_set.append(set_x(state, t_covered_by_shift, employee, shift[0], shift[1], 1))
+        employees_changed = [employee]
+        destroy_set = [(employee, shift[0], shift[1])]
+        daily_destroy_and_repair = [[], destroy_set]
+
+        shifts[shift] -= 1
+        if shifts[shift] == 0:
+            del shifts[shift]
     return repair_set
