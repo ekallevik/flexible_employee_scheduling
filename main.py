@@ -45,8 +45,8 @@ level_per_module = {
     "heuristic.criterions.record_to_record_travel": "CRITICAL",
 }
 
-logger.remove()
-logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
+#logger.remove()
+#logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 
 
 class ProblemRunner:
