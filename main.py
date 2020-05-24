@@ -110,7 +110,7 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=8, runtime=1):
+    def run_alns_multiple(self, threads=4, runtime=1):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """

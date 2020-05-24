@@ -29,11 +29,12 @@ class ALNS(multiprocessing.Process):
         super().__init__()
         self.queue = queue
         self.share_times = share_times
+        self.worker_name = worker_name
+        self.prefix = f"{self.worker_name}: " if self.worker_name else ""
 
         self.objective_weights = objective_weights
         self.decay = decay
         self.log_name = log_name
-        self.worker_name = worker_name
         self.runtime = runtime
         self.start_time = start_time
 
@@ -514,6 +515,7 @@ class ALNS(multiprocessing.Process):
         }
 
         self.results[self.worker_name] = results
+        self.close_queue()
 
     def close_queue(self):
 
@@ -535,8 +537,7 @@ class ALNS(multiprocessing.Process):
         start = timer()
 
         if not iterations:
-            prefix = f"{self.worker_name}: " if self.worker_name else ""
-            logger.warning(f"{prefix}Running ALNS for {runtime} minutes")
+            logger.warning(f"{self.prefix}Running ALNS for {runtime} minutes")
 
             while timer() < self.start_time + runtime_in_seconds:
                 try:
@@ -574,17 +575,18 @@ class ALNS(multiprocessing.Process):
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
-                       f" {timer() - start:.2f}s ")
-        logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
-        logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
+        logger.warning(f"{self.prefix}Performed {iterations if iterations else self.iteration} iterations over"
+                       f" {timer() - self.start_time:.2f}s (including construction)")
+
+        logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
+        logger.error(f"{self.prefix}Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
+        logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
 
         # Add a newline between the output of each iteration
         print()
-        prefix = f"{self.worker_name}: " if self.worker_name else ""
-        logger.trace(f"{prefix}Iteration: {self.iteration}")
+        logger.trace(f"{self.prefix}Iteration: {self.iteration}")
 
         if self.share_times and timer()-self.start_time > self.share_times[0]:
             self.share_solutions()
@@ -622,7 +624,7 @@ class ALNS(multiprocessing.Process):
 
     def share_solutions(self):
 
-        logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]} min."
+        logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]}s."
                      f" {len(self.share_times) - 1} shares remaining")
         del self.share_times[0]
 
