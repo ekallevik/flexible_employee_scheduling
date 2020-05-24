@@ -105,7 +105,7 @@ def calculate_isolated_off_days(state, employees, shifts_at_day, days):
 def calculate_consecutive_days(state, employees, shifts_at_day, L_C_D, days):
     for e in employees:
         for i in range(len(days)-L_C_D):
-            state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
+            state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D+1)))- L_C_D)
 
 
 def calculate_f(state, employees, saturdays, days, L_C_D, weeks, weights, preferences, competencies):
@@ -246,7 +246,7 @@ def calculate_objective_function(state, employees, saturdays, L_C_D, days,
 
     g = min(state.f.values())
 
-    penalty = 20 * hard_constraint_penalties(state)
+    penalty = 12 * hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())
@@ -309,15 +309,15 @@ def calc_weekly_objective_function(state, competencies, time_periods_in_week, co
                                    for t in combined_time_periods_in_week[j]
                                    )
 
-                        # - max(0,
-                        #       sum(2 * state.soft_vars["deviation_contracted_hours"].get((e, j), 0)
-                        #           for e in employees
-                        #           )
-                        #       )
+                        - max(0,
+                              sum(2 * state.soft_vars["deviation_contracted_hours"].get((e, j), 0)
+                                  for e in employees
+                                  )
+                              )
 
-                        # - 10 * sum(state.hard_vars["delta_positive_contracted_hours"].get(e, 0)
-                        #            for e in employees
-                        #            )
+                        - 10 * sum(state.hard_vars["delta_positive_contracted_hours"].get(e, 0)
+                                   for e in employees
+                                   )
 
                         - 10 * sum(state.hard_vars["daily_rest_error"].get((e, i), 0)
                                    for e in employees
@@ -445,7 +445,7 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
             12. daily_rest bør sjekkes. Bare sjekke den dagen. 
 """
 
-def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, competency_score):
+def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, L_C_D, preferences, competencies, t_covered_by_shift, competency_score):
     day = int(shift[0]/24)
     week = int(day/7)
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
@@ -453,13 +453,16 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
     partial_weekend_error = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
     isolated_days_error = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
-
+    consecutive_days = regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day)
+    allowed_preferences = sum(preferences[e][t] * state.y[c, e, t] for c in competencies for t in t_covered_by_shift[shift[0], shift[1]])
     return (weekly_rest_error
             + daily_rest_error  
             + partial_weekend_error 
             + isolated_days_error 
-            + deviation_contracted_hours 
+            + deviation_contracted_hours
+            + 12 * consecutive_days
             - 100 * competency_score
+            + 5 * allowed_preferences
             )
 
 
@@ -546,13 +549,17 @@ def regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinat
     else:
         return 0
 
-# def calculate_consecutive_days(state, e, shifts_at_day, L_C_D, day):
-#         for i in range(len(days)-L_C_D):
-#             state.soft_vars["consecutive_days"][e,i] = max(0,(sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D)))- L_C_D)
+def regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day):
+    consecutive_days = 0
+    start = [i for i in range(day - L_C_D, day + 1) if 0 <= i <= (len(weeks)) * 7 - (L_C_D+1)]
+    for i in start:
+        if sum(sum(state.x[e,t,v] for t,v in shifts_at_day[i_marked]) for i_marked in range(i, i+L_C_D + 1)) == L_C_D:
+            consecutive_days -= 1
+    return consecutive_days
+    
 
 
-
-def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, days, competency_score):
+def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, days, L_C_D, preferences, competencies, t_covered_by_shift, competency_score):
     day = int(shift[0]/24)
     week = int(day/7)
 
@@ -574,19 +581,22 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
     current_week_rest = regret_weekly_rest(state, shifts_at_week, e, week, shift)
     current_isolated_days = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     current_partial_weekends = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
-
+    consecutive_days = regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day)
+    allowed_preferences = sum(preferences[e][t] * state.y[c, e, t] for c in competencies for t in t_covered_by_shift[shift[0], shift[1]])
     return (
             current_week_rest
             + daily_rest_error
             + contracted_hours
             + current_isolated_days
-            + current_partial_weekends #* (-partial_weekends_other_weeks)
+            + current_partial_weekends 
+            + 12 * consecutive_days
+            + allowed_preferences
+            #* (-partial_weekends_other_weeks)
             #weekly_rest_other_weeks
             #isolated_off_days_other_weeks
-            
     )
 
-def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_at_week, shifts_at_day, weights, preferences, t_covered_by_shift):
+def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_at_week, shifts_at_day, weights, preferences, t_covered_by_shift, L_C_D):
     day = int(shift[0]/24)
     week = int(day/7)
 
@@ -606,6 +616,7 @@ def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violatin
     current_week_rest = regret_weekly_rest(state, shifts_at_week, e, week, shift)
     current_isolated_days = regret_isolated_days(state, e, shifts_at_day, day, weeks)
     current_partial_weekends = regret_partial_weekend(state, e, shifts_at_day, saturdays, sundays, day)
+    consecutive_days = regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day)
 
     #I believe these sign to be correct. Remember that you have to check the values given from the functions about correct sign
     f = (
@@ -613,6 +624,7 @@ def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violatin
         + current_partial_weekends/5
         + current_isolated_days
         + weights["contracted hours"][e]/10 * max(0, contracted_hours)
+        + weights["consecutive days"] * consecutive_days
         + weights["preferences"] * sum(preferences[e][t] for t in t_covered_by_shift[shift])
         )
     #print("F: " + str(f) + ", Partial Weekends: " + str(current_partial_weekends) + ", Isolated Days: " + str(current_isolated_days) + ", Preferences: " + str(sum(preferences[e][t] for t in t_covered_by_shift[shift])))

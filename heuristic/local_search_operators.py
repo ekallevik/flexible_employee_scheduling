@@ -29,6 +29,7 @@ def illegal_week_swap(
     time_periods_in_week,
     time_step,
     L_C_D,
+    preferences,
     weeks,
     combined_time_periods_in_week,
     state,
@@ -62,7 +63,7 @@ def illegal_week_swap(
                     print("Not enough employees")
 
                 for e_p in possible_employees:
-                    objective_values[e_p, shift] = employee_shift_value(state, e_p, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, j, 0)
+                    objective_values[e_p, shift] = employee_shift_value(state, e_p, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, j, L_C_D, preferences, competencies, t_covered_by_shift, 0)
 
             max_value = max(objective_values.items(), key=itemgetter(1))[1]
             employee = choice([key for key, value in objective_values.items() if value == max_value])
