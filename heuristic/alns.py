@@ -23,7 +23,7 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 class ALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
-                 operator_weights=None, runtime=15, worker_name="worker-1", seed=0, results=None,
+                 operator_weights=None, runtime=15, worker_name=None, seed=0, results=None,
                  queue=None, share_times=None, start_time=None):
 
         super().__init__()
@@ -535,8 +535,8 @@ class ALNS(multiprocessing.Process):
         start = timer()
 
         if not iterations:
-
-            logger.warning(f"Running ALNS for {runtime} minutes in {self.worker_name}")
+            prefix = f"{self.worker_name}: " if self.worker_name else None
+            logger.warning(f"{prefix if prefix else ''}Running ALNS for {runtime} minutes")
 
             while timer() < self.start_time + runtime_in_seconds:
                 try:
@@ -583,9 +583,10 @@ class ALNS(multiprocessing.Process):
 
         # Add a newline between the output of each iteration
         print()
-        logger.trace(f"Iteration: {self.iteration} in process={self.worker_name}")
+        prefix = f"{self.worker_name}: " if self.worker_name else None
+        logger.trace(f"{prefix if prefix else ''}Iteration: {self.iteration}")
 
-        if timer()-self.start_time > self.share_times[0]:
+        if self.share_times and timer()-self.start_time > self.share_times[0]:
             self.share_solutions()
 
         candidate_solution = self.current_solution.copy()
@@ -701,7 +702,8 @@ class ALNS(multiprocessing.Process):
         else:
             filename = self.log_name
 
-        self.best_solution.write(f"solutions/{filename}-ALNS")
+        suffix = f"-{self.worker_name}"
+        self.best_solution.write(f"solutions/{filename}-BEST{suffix}")
 
     def update_best_solutions(self, candidate_solution):
         self.current_solution = candidate_solution
