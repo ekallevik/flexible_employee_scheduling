@@ -37,10 +37,10 @@ class ImplicitConstraints:
         self.add_mapping_shift_to_demand(var.x, var.y)
         self.add_max_one_demand_cover_each_time(var.y)
         self.add_maximum_one_daily_shift(var.x)
-        self.add_no_demand_cover_while_off_shift(var.y, var.w)
+        self.add_no_demand_cover_while_off_shift(var.y, var.w_day, var.w_week)
         self.add_allocate_to_work_when_covering_demand(var.y, var.gamma)
-        self.add_minimum_daily_rest(var.w)
-        self.add_minimum_weekly_rest(var.w)
+        self.add_minimum_daily_rest(var.w_day)
+        self.add_minimum_weekly_rest(var.w_week)
         self.add_contracted_hours(var.y, var.lam)
         self.add_partial_weekends(var.gamma, var.rho)
         self.add_isolated_working_days(var.gamma, var.q)
@@ -130,7 +130,7 @@ class ImplicitConstraints:
             name="maximum_one_daily_shift"
         )
 
-    def add_no_demand_cover_while_off_shift(self, y, w):
+    def add_no_demand_cover_while_off_shift(self, y, w_day, w_week):
 
         self.model.addConstrs(
             (
@@ -144,12 +144,32 @@ class ImplicitConstraints:
                     self.time_step for t_marked_2 in self.combined_time_periods
                     if t <= t_marked_2 <= t + (v - 1)
                 )
-                * w[e, t, v]
+                * w_day[e, t, v]
                 for e in self.employees
-                for v in self.shift_durations["daily_off"] + self.shift_durations["weekly_off"]
+                for v in self.shift_durations["daily_off"]
                 for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
             ),
-            name="cover_no_demand_while_off_shift"
+            name="cover_no_demand_while_daily_off_shift"
+        )
+
+        self.model.addConstrs(
+            (
+                self.time_step *
+                quicksum(
+                    (1 - quicksum(y[c, e, t_marked] for c in self.competencies if y.get((c, e, t_marked))))
+                    for t_marked in self.combined_time_periods
+                    if t <= t_marked <= t + (v - 1)
+                )
+                >= quicksum(
+                    self.time_step for t_marked_2 in self.combined_time_periods
+                    if t <= t_marked_2 <= t + (v - 1)
+                )
+                * w_week[e, t, v]
+                for e in self.employees
+                for v in self.shift_durations["weekly_off"]
+                for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
+            ),
+            name="cover_no_demand_while_weekly_off_shift"
         )
 
     def add_allocate_to_work_when_covering_demand(self, y, gamma):
@@ -188,13 +208,13 @@ class ImplicitConstraints:
             name='allocated_to_work_2'
         )
 
-    def add_minimum_daily_rest(self, w):
+    def add_minimum_daily_rest(self, w_day):
 
         self.model.addConstrs(
             (
                 quicksum(
                     quicksum(
-                        w[e, t, v] for t in self.every_time_period
+                        w_day[e, t, v] for t in self.every_time_period
                         if self.daily_offset[e] + (i + 1) * HOURS_IN_A_DAY - v
                         >= t >= self.daily_offset[e] + i * HOURS_IN_A_DAY
                     )
@@ -207,15 +227,15 @@ class ImplicitConstraints:
             name='minimum_daily_rest'
         )
 
-    def add_minimum_weekly_rest(self, w):
+    def add_minimum_weekly_rest(self, w_week):
 
         self.model.addConstrs(
             (
                 quicksum(
                     quicksum(
-                        w[e, t, v] for t in self.every_time_period
-                        if self.weekly_offset[e] + j * HOURS_IN_A_WEEK
-                        <= t < self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
+                        w_week[e, t, v] for t in self.every_time_period
+                        if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
+                        >= t >= self.weekly_offset[e] + j * HOURS_IN_A_WEEK
                     )
                     for v in self.shift_durations["weekly_off"]
                     if v >= self.weekly_rest[e]
@@ -225,6 +245,23 @@ class ImplicitConstraints:
                 for j in self.weeks
             ),
             name="minimum_weekly_rest"
+        )
+
+        self.model.addConstrs(
+            (
+                quicksum(
+                    quicksum(
+                        w_week[e, t, v] for t in self.every_time_period
+                        if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK
+                        >= t > self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
+                    )
+                    for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
+                )
+                == 0
+                for e in self.employees
+                for j in self.weeks
+            ),
+            name="not_allocating_invalid_weekly_rest"
         )
 
     def add_contracted_hours(self, y, lam):
