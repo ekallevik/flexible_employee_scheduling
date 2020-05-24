@@ -7,5 +7,5 @@ class GreedyCriterion(AbstractCriterion):
     def __str__(self):
         return "GreedyCriterion"
 
-    def accept(self, candidate, current, random_state):
+    def accept(self, candidate, current, best, random_state):
         return candidate.get_objective_value() > current.get_objective_value()
