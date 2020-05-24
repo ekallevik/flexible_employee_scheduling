@@ -22,8 +22,7 @@ class RecordToRecordTravel(AbstractCriterion):
 
     def accept(self, candidate, current, best, random_state):
 
-        is_accepted = (best.get_objective_value() - candidate.get_objective_value()) <= \
-                      self.current_threshold
+        is_accepted = (best.get_objetive_value() - candidate.get_objective_value()) <= self.current_threshold
 
         self.update_threshold()
         logger.info(f"Accept candidate: {is_accepted}. t={self.current_threshold})")
