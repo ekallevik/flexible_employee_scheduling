@@ -510,11 +510,7 @@ class ALNS(multiprocessing.Process):
             "random_state": str(self.random_state)
         }
 
-        if self.results:
-            self.results[self.worker_name] = results
-        else:
-            with open(f"{self.log_name}-{self.worker_name}.json", "w") as fp:
-                json.dump(results, fp, sort_keys=True, indent=4)
+        self.results[self.worker_name] = results
 
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
