@@ -29,8 +29,8 @@ class ALNS:
 
         self.initial_solution = state
         self.current_solution = state
+        # current global best and feasible solution
         self.best_solution = state
-        self.best_legal_solution = state
 
         self.criterion = criterion
         self.random_state = self.initialize_random_state()
@@ -41,9 +41,7 @@ class ALNS:
         self.repair_weights = {}
 
         self.WeightUpdate = {
-            "IS_BEST_AND_LEGAL": 1.50,
-            "IS_LEGAL": 1.30,
-            "IS_BEST": 1.12,
+            "IS_BEST": 1.50,
             "IS_BETTER": 1.06,
             "IS_ACCEPTED": 1.03,
             "IS_REJECTED": 0.97
@@ -81,7 +79,6 @@ class ALNS:
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.L_C_D = data["limit_on_consecutive_days"]
 
-        #
         self.preferences = data["preferences"]
 
         # Set for daily rest restriction
@@ -97,7 +94,6 @@ class ALNS:
         self.weight_history = defaultdict(list)
         self.iteration = 0
 
-        # todo: these seems to be unused. Delete?
         self.sundays = data["time"]["sundays"]
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
@@ -484,9 +480,7 @@ class ALNS:
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-        candidate_solution = None
         runtime_in_seconds = runtime * 60 if runtime else None
-
         start = timer()
 
         if not iterations:
@@ -495,7 +489,7 @@ class ALNS:
 
             while timer() < start + runtime_in_seconds:
                 try:
-                    candidate_solution = self.perform_iteration()
+                    self.perform_iteration()
                 except KeyboardInterrupt:
                     command = input("\n\nAvailable commands: \n"
                                     "1 - Continue running \n"
@@ -532,7 +526,6 @@ class ALNS:
         logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
                        f" {timer() - start:.2f}s ")
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
-        logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
@@ -577,7 +570,6 @@ class ALNS:
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
-        self.objective_history["best_legal"].append(self.best_legal_solution.get_objective_value())
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -594,7 +586,7 @@ class ALNS:
         self.choose_local_search(candidate_solution)
 
         if self.criterion.accept(candidate_solution, self.current_solution,
-                                 self.best_legal_solution, self.random_state):
+                                 self.best_solution, self.random_state):
 
             self.current_solution = candidate_solution
 
@@ -609,22 +601,15 @@ class ALNS:
             logger.trace("Candidate is rejected")
             weight_update = self.WeightUpdate["IS_REJECTED"]
 
-        if candidate_solution.is_legal():
+        # only feasible solution can be considered for best solution
+        if (candidate_solution.is_feasible()
+                and candidate_solution.get_objective_value() >=
+                self.best_solution.get_objective_value()):
 
-            if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                logger.error("Candidate is legal")
-                weight_update = self.WeightUpdate["IS_LEGAL"]
-                self.update_best_solutions(candidate_solution)
-
-            elif candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value():
-                logger.critical(f"Candidate is legal and best")
-                weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
-                self.best_legal_solution = candidate_solution
-
-        elif candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-            logger.warning("Candidate is best")
+            logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
-            self.update_best_solutions(candidate_solution)
+            self.best_solution = candidate_solution
+            self.current_solution = candidate_solution
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
@@ -635,11 +620,9 @@ class ALNS:
         else:
             filename = self.log_name
 
-        self.best_legal_solution.write(f"solutions/{filename}-BEST_LEGAL")
-        self.best_solution.write(f"solutions/{filename}-BEST")
+        self.best_solution.write(f"solutions/{filename}-ALNS")
 
     def update_best_solutions(self, candidate_solution):
-        self.best_solution = candidate_solution
         self.current_solution = candidate_solution
 
     def select_operator(self, operators, weights):
@@ -765,7 +748,7 @@ class ALNS:
         )
 
     def get_best_solution_value(self):
-        return self.best_legal_solution.get_objective_value()
+        return self.best_solution.get_objective_value()
 
     def choose_local_search(self, candidate_solution):
         penalties = {
