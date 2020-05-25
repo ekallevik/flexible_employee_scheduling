@@ -150,31 +150,34 @@ class ProblemRunner:
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
-        variant = "critertion"
-        variants = [
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=10),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=10),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=250, step=50),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=300, step=1),
-            SimulatedAnnealingCriterion(start_temperature=1500, end_temperature=500, step=20),
-            SimulatedAnnealingCriterion(start_temperature=600, end_temperature=500, step=1),
+        variant = "weight+decay"
+        decay_tune = [i for i in range(8)]
+        operator_weights_tune = [
+            [0.80, 1.20, 1.40, 1.60],
+            [0.85, 1.15, 1.35, 1.50],
+            [0.90, 1.10, 1.25, 1.40],
+            [0.95, 1.05, 1.15, 1.25],
         ]
 
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
-            criterion = GreedyCriterion() if variant != "critertion" else variants[j]
-            decay = 0.5 if variant != "decay" else variants[j]
+            criterion = GreedyCriterion()
+
+            decay = 0.5 if not decay_tune else decay_tune[j % len(decay_tune)]
+
+            operator_weights = None
+            if operator_weights_tune:
+                operator_weights = {
+                    "IS_REJECTED": operator_weights_tune[j % len(operator_weights_tune)][0],
+                    "IS_ACCECPTED": operator_weights_tune[j % len(operator_weights_tune)][1],
+                    "IS_BETTER": operator_weights_tune[j % len(operator_weights_tune)][2],
+                    "IS_BEST": operator_weights_tune[j % len(operator_weights_tune)][3],
+                }
 
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
-                        queue=queue, seed=j, start_time=self.start_time, share_times=share_times)
+                        operator_weights=operator_weights, runtime=runtime, worker_name=f"worker-{j}",
+                        results=shared_results, queue=queue, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
 
             # starting each process
