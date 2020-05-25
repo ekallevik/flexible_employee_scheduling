@@ -17,7 +17,7 @@ from heuristic.local_search_operators import illegal_week_swap, illegal_contract
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
-    mip_week_operator_2, repair_week_based_on_f_values
+    mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
 from visualisation.barchart_plotter import BarchartPlotter
 
 
@@ -40,8 +40,8 @@ class ALNS(multiprocessing.Process):
 
         self.initial_solution = state
         self.current_solution = state
+        # current global best and feasible solution
         self.best_solution = state
-        self.best_legal_solution = state
 
         self.criterion = criterion
         self.seed = seed
@@ -54,8 +54,6 @@ class ALNS(multiprocessing.Process):
 
         if not operator_weights:
             self.WeightUpdate = {
-                "IS_BEST_AND_LEGAL": 1.50,
-                "IS_LEGAL": 1.30,
                 "IS_BEST": 1.12,
                 "IS_BETTER": 1.06,
                 "IS_ACCEPTED": 1.03,
@@ -96,7 +94,6 @@ class ALNS(multiprocessing.Process):
         self.shifts_overlapping_t = data["shifts"]["shifts_overlapping_t"]
         self.L_C_D = data["limit_on_consecutive_days"]
 
-        #
         self.preferences = data["preferences"]
 
         # Set for daily rest restriction
@@ -245,6 +242,7 @@ class ALNS(multiprocessing.Process):
             self.shifts_at_day,
             self.L_C_D,
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_week_greedy = partial(
@@ -285,6 +283,7 @@ class ALNS(multiprocessing.Process):
             self.time_periods_in_week,
             self.time_step,
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_employee_greedy = partial(
@@ -323,6 +322,7 @@ class ALNS(multiprocessing.Process):
             self.shifts_at_day,
             self.L_C_D, 
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_week_demand_based_greedy = partial(
@@ -346,6 +346,7 @@ class ALNS(multiprocessing.Process):
             self.shifts_at_day,
             self.L_C_D, 
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         mip_operator_week_repair_2 = partial(
@@ -368,7 +369,35 @@ class ALNS(multiprocessing.Process):
             self.days,
             self.objective_weights,
             self.contracted_hours,
-            self.t_covered_by_shift
+            self.t_covered_by_shift,
+            self.L_C_D, 
+            self.preferences
+        )
+
+        mip_operator_week_repair_3 = partial(
+            mip_week_operator_3,
+            self.employees, 
+            self.shifts_per_week, 
+            self.competencies, 
+            self.time_periods_in_week, 
+            self.combined_time_periods_in_week, 
+            self.employee_with_competencies, 
+            self.shifts_at_day, 
+            self.shifts_overlapping_t, 
+            self.t_covered_by_off_shift,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
+            self.weeks, 
+            self.time_step, 
+            self.demand, 
+            self.days,
+            self.objective_weights,
+            self.contracted_hours,
+            self.t_covered_by_shift,
+            self.demand_per_shift,
+            self.L_C_D,
+            self.preferences
         )
 
         repair_worst_week_f_value = partial(
@@ -400,23 +429,23 @@ class ALNS(multiprocessing.Process):
         
         operators = {
             remove_worst_employee: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                 repair_worst_employee_regret,
+                 #repair_worst_employee_greedy
             ],
 
             remove_worst_contract: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_random_employee: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_weighted_random_employee: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_worst_week: [
@@ -427,7 +456,8 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_random_week: [
@@ -438,7 +468,8 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_weighted_random_week: [
@@ -449,7 +480,8 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_random_weekend: [
@@ -501,7 +533,6 @@ class ALNS(multiprocessing.Process):
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-        candidate_solution = None
         runtime_in_seconds = runtime * 60 if runtime else None
 
         if not iterations:
@@ -509,7 +540,7 @@ class ALNS(multiprocessing.Process):
 
             while timer() < self.start_time + runtime_in_seconds:
                 try:
-                    candidate_solution = self.perform_iteration()
+                    self.perform_iteration()
                 except KeyboardInterrupt:
                     command = input("\n\nAvailable commands: \n"
                                     "1 - Continue running \n"
@@ -622,7 +653,6 @@ class ALNS(multiprocessing.Process):
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
-        self.objective_history["best_legal"].append(self.best_legal_solution.get_objective_value())
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -638,7 +668,8 @@ class ALNS(multiprocessing.Process):
 
         self.choose_local_search(candidate_solution)
 
-        if self.criterion.accept(candidate_solution, self.current_solution, self.random_state):
+        if self.criterion.accept(candidate_solution, self.current_solution,
+                                 self.best_solution, self.random_state):
 
             self.current_solution = candidate_solution
 
@@ -653,22 +684,15 @@ class ALNS(multiprocessing.Process):
             logger.trace("Candidate is rejected")
             weight_update = self.WeightUpdate["IS_REJECTED"]
 
-        if candidate_solution.is_legal():
+        # only feasible solution can be considered for best solution
+        if (candidate_solution.is_feasible()
+                and candidate_solution.get_objective_value() >=
+                self.best_solution.get_objective_value()):
 
-            if candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                logger.error("Candidate is legal")
-                weight_update = self.WeightUpdate["IS_LEGAL"]
-                self.update_best_solutions(candidate_solution)
-
-            elif candidate_solution.get_objective_value() >= self.best_legal_solution.get_objective_value():
-                logger.critical(f"Candidate is legal and best")
-                weight_update = self.WeightUpdate["IS_BEST_AND_LEGAL"]
-                self.best_legal_solution = candidate_solution
-
-        elif candidate_solution.get_objective_value() >= self.best_solution.get_objective_value():
-            logger.warning("Candidate is best")
+            logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
-            self.update_best_solutions(candidate_solution)
+            self.best_solution = candidate_solution
+            self.current_solution = candidate_solution
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
@@ -684,7 +708,6 @@ class ALNS(multiprocessing.Process):
         self.best_solution.write(f"solutions/{filename}-BEST{suffix}")
 
     def update_best_solutions(self, candidate_solution):
-        self.best_solution = candidate_solution
         self.current_solution = candidate_solution
 
     def select_operator(self, operators, weights):
@@ -810,7 +833,7 @@ class ALNS(multiprocessing.Process):
         )
 
     def get_best_solution_value(self):
-        return self.best_legal_solution.get_objective_value()
+        return self.best_solution.get_objective_value()
 
     def choose_local_search(self, candidate_solution):
         penalties = {
@@ -838,6 +861,7 @@ class ALNS(multiprocessing.Process):
                         self.time_periods_in_week,
                         self.time_step,
                         self.L_C_D,
+                        self.preferences,
                         self.weeks,
                         self.combined_time_periods_in_week,
                         candidate_solution,
