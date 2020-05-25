@@ -103,7 +103,7 @@ class ProblemRunner:
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
 
-        solution = self.alns.best_legal_solution
+        solution = self.alns.best_solution
 
         model = self.create_model("rerun_esp")
         esp = OptimalityModel(model, data=self.data)

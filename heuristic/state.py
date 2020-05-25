@@ -26,7 +26,7 @@ class State:
     def get_objective_value(self):
         return self.objective_function_value
 
-    def is_legal(self):
+    def is_feasible(self):
         """ Returns True if all hard_vars is 0, otherwise will return False """
 
         return (
