@@ -227,14 +227,16 @@ def hard_constraint_penalties(state):
     break_weekly_off = sum(state.hard_vars["weekly_off_shift_error"].values())
     break_shift_to_demand = sum(state.hard_vars["mapping_shift_to_demand"].values())
     break_contracted_hours = sum(state.hard_vars["delta_positive_contracted_hours"].values())
+    break_daily_rest = sum(state.hard_vars["daily_rest_error"].values())
 
-    logger.info(f"Violations: [d: ({below_demand}, {above_demand}), x: {break_one_shift_per_day}, "
-                f"y: {break_one_demand_per_time}, w: {break_weekly_off}, "
-                f"s-d: {break_shift_to_demand}, c: {break_contracted_hours}]")
+    logger.info(f"Violations: [d=({below_demand}, {above_demand}), x={break_one_shift_per_day}, "
+                f"y={break_one_demand_per_time}, w={break_weekly_off}, "
+                f"s-d={break_shift_to_demand}, c={break_contracted_hours}, "
+                f"dr={break_daily_rest}]")
 
     hard_penalties = (below_demand + above_demand + break_one_shift_per_day +
                       break_one_demand_per_time + break_weekly_off + break_shift_to_demand +
-                      break_contracted_hours)
+                      break_contracted_hours + break_daily_rest)
 
     return hard_penalties
 
