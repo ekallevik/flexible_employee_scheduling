@@ -31,7 +31,6 @@ class ALNS:
         self.current_solution = state
         self.best_solution = state
         self.best_legal_solution = state
-        self.initial_solution.write("initial_solution")
 
         self.criterion = criterion
         self.random_state = self.initialize_random_state()
@@ -532,7 +531,6 @@ class ALNS:
         print()
         logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
                        f" {timer() - start:.2f}s ")
-        candidate_solution.write("heuristic_solution_2")
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")

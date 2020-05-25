@@ -57,10 +57,6 @@ def illegal_week_swap(
                 calculate_consecutive_days(current_state, [emp], shifts_at_day, L_C_D, days_in_week)
                 delta_calculate_negative_deviation_from_contracted_hours(current_state, [emp], contracted_hours, weeks, time_periods_in_week, competencies, time_step)
 
-                
-                #if sum(state.soft_vars["contracted_hours"][e,j] for j in weeks) - shift[1] >= 0
-                if len(possible_employees) == 0:
-                    print("Not enough employees")
 
                 for e_p in possible_employees:
                     objective_values[e_p, shift] = employee_shift_value(state, e_p, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, j, L_C_D, preferences, competencies, t_covered_by_shift, 0)
