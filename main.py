@@ -3,6 +3,7 @@ import multiprocessing
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
+import pandas as pd
 
 import fire
 from gurobipy import *
@@ -123,8 +124,10 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-        # includes dummy to make sure to avoid an empty list
-        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
+
+        # the interval for which the PALNS should share data
+        #old_share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
+        share_times = [i for i in range(60, 15*60, 20)]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
@@ -163,9 +166,10 @@ class ProblemRunner:
             process.join()
 
         filename = f"{self.log_name}_threads={threads}_variants={variant}"
-        self.save_shared_results(shared_results, filename, initial_solution=initial_solution)
+        self.save_shared_results(shared_results, filename, initial_solution=initial_solution,
+                                 share_times=share_times)
 
-    def save_shared_results(self, shared_results, filename, initial_solution):
+    def save_shared_results(self, shared_results, filename, initial_solution, share_times):
 
         global_iterations = sum(result["iterations"] for result in shared_results.values())
         global_best_solution = max(result["best_solution"] for result in shared_results.values())
@@ -173,6 +177,7 @@ class ProblemRunner:
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
         shared_results["start_time"] = self.start_time
+        shared_results["share_times"] = share_times
         shared_results["construction_runtime"] = self.construction_runtime
         shared_results["initial_solution"] = initial_solution
         shared_results["global_best_solution"] = global_best_solution
@@ -401,6 +406,34 @@ class ProblemRunner:
         return self.log_name
 
 
+def run_multiple_problems():
+
+    problems = [
+        "rproblem1",
+        "rproblem2",
+        "rproblem3",
+        "rproblem4",
+        "rproblem5",
+        "rproblem6",
+        "rproblem7",
+        "rproblem8",
+        "rproblem9",
+        "rproblem3_2_weeks",
+        "rproblem3_8_weeks",
+        "rproblem5_4_weeks",
+        "rproblem5_12_weeks",
+        "rproblem6_8_weeks",
+        "rproblem6_16_weeks",
+        "rproblem7_8_weeks",
+        "rproblem7_16_weeks",
+        "rproblem9_8_weeks",
+        "rproblem9_16_weeks",
+    ]
+
+    for problem in problems:
+        pr = ProblemRunner(problem=problem)
+        pr.run_alns_multiple(runtime=15, threads=4)
+
 if __name__ == "__main__":
     """ 
     Run any function with arguments ARGS by using:
@@ -444,20 +477,8 @@ if __name__ == "__main__":
          
     """
 
-    fire.Fire(ProblemRunner)
+    #fire.Fire(ProblemRunner)
+    #run_multiple_problems()
+    pr = ProblemRunner(problem="rproblem3")
+    pr.run_alns_multiple(runtime=15, threads=8)
 
-    #problems = [
-        #"rproblem1",
-     #   "rproblem2",
-        #"rproblem3",
-        #"rproblem4",
-        #"rproblem5",
-        #"rproblem6",
-        #"rproblem7",
-        #"rproblem8",
-        #"rproblem9",
-    #]
-
-    #for problem in problems:
-    #    pr = ProblemRunner(problem=problem)
-    #    pr.run_alns_multiple(runtime=1)
