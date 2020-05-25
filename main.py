@@ -100,6 +100,25 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
+    def rerun_esp(self):
+        """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
+
+        solution = self.alns.best_legal_solution
+
+        model = self.create_model("rerun_esp")
+        esp = OptimalityModel(model, data=self.data)
+
+        for key, value in solution.x.items():
+            esp.var.x[key].start = value
+
+        for key, value in solution.y.items():
+            esp.var.y[key].start = value
+
+        logger.warning("Rerunning model")
+        esp.run_model()
+
+        return self
+
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
