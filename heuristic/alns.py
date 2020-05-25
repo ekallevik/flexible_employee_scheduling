@@ -498,8 +498,6 @@ class ALNS(multiprocessing.Process):
 
         self.iterate(runtime=self.runtime)
 
-        # self.save_solutions()
-
         results = {
             "log": self.log_name,
             "worker": self.worker_name,
@@ -520,10 +518,15 @@ class ALNS(multiprocessing.Process):
     def close_queue(self):
 
         while True:
+            if self.queue.empty():
+                logger.warning(f"{self.prefix}Queue is empty")
+                self.queue.put(None)
+                break
+
             shared_solution = self.queue.get()
             if shared_solution is None:
                 # Poison pill means shutdown
-                logger.warning(f"Exiting {self.worker_name}")
+                logger.warning(f"{self.prefix}Solution is None")
                 self.queue.put(None)
                 break
 
@@ -570,7 +573,7 @@ class ALNS(multiprocessing.Process):
             logger.warning(f"Running ALNS for {iterations} iterations")
 
             for iteration in range(iterations):
-                candidate_solution = self.perform_iteration()
+                self.perform_iteration()
 
         # Add a newline after the output from the last iteration
         print()
@@ -578,16 +581,17 @@ class ALNS(multiprocessing.Process):
                        f" {timer() - self.start_time:.2f}s (including construction)")
 
         logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
-        logger.error(f"{self.prefix}Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
+        logger.error(f"{self.prefix}Best legal solution: {self.best_solution.get_objective_value(): .2f}")
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
 
         # Add a newline between the output of each iteration
         print()
-        logger.trace(f"{self.prefix}Iteration: {self.iteration}")
+        current_time = timer()-self.start_time
+        logger.trace(f"{self.prefix}Iteration: {self.iteration} at {current_time:.2f}s")
 
-        if self.share_times and timer()-self.start_time > self.share_times[0]:
+        if self.share_times and current_time > self.share_times[0]:
             self.share_solutions()
 
         candidate_solution = self.current_solution.copy()
@@ -623,30 +627,31 @@ class ALNS(multiprocessing.Process):
 
     def share_solutions(self):
 
-        logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]}s."
+        logger.error(f"{self.prefix}Sharing at {self.share_times[0]}s."
                      f" {len(self.share_times) - 1} shares remaining")
         del self.share_times[0]
 
         if not self.queue.empty():
             shared_solution = self.queue.get()
-            logger.error(f"Shared solution={shared_solution.get_objective_value()} vs best "
-                         f"legal={self.get_best_solution_value()}")
+            logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
+                         f"best={self.get_best_solution_value(): 7.2f}")
 
             if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
                 self.current_solution = shared_solution
-                logger.error("Shared solution is accepted")
+                logger.error(f"{self.prefix}Shared solution is accepted")
 
                 if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
                     self.best_solution = shared_solution
-                    logger.error("Shared solution is best solution")
-                if shared_solution.get_objective_value() >= \
-                        self.best_legal_solution.get_objective_value():
-                    self.best_legal_solution = shared_solution
-                    logger.error("Shared solution is best, legal solution")
-            else:
-                logger.error("Shared solution is rejected")
+                    logger.error(f"{self.prefix}Shared solution is best solution")
+                if (shared_solution.get_objective_value() >=
+                        self.best_solution.get_objective_value()):
 
-        self.queue.put(self.best_legal_solution)
+                    self.best_solution = shared_solution
+                    logger.error(f"{self.prefix}Shared solution is best solution")
+            else:
+                logger.error(f"{self.prefix}Shared solution is rejected")
+
+        self.queue.put(self.best_solution)
 
     def update_objective_history(self, candidate_solution):
 
@@ -704,11 +709,7 @@ class ALNS(multiprocessing.Process):
             filename = self.log_name
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
-        self.best_legal_solution.write(f"solutions/{filename}-BEST_LEGAL{suffix}")
-        self.best_solution.write(f"solutions/{filename}-BEST{suffix}")
-
-    def update_best_solutions(self, candidate_solution):
-        self.current_solution = candidate_solution
+        self.best_solution.write(f"solutions/{filename}-ALNS{suffix}")
 
     def select_operator(self, operators, weights):
         """
