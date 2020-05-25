@@ -16,7 +16,7 @@ from heuristic.local_search_operators import illegal_week_swap, illegal_contract
 from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
-    mip_week_operator_2, repair_week_based_on_f_values
+    mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
 from visualisation.barchart_plotter import BarchartPlotter
 
 
@@ -230,6 +230,7 @@ class ALNS:
             self.shifts_at_day,
             self.L_C_D,
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_week_greedy = partial(
@@ -270,6 +271,7 @@ class ALNS:
             self.time_periods_in_week,
             self.time_step,
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_employee_greedy = partial(
@@ -308,6 +310,7 @@ class ALNS:
             self.shifts_at_day,
             self.L_C_D, 
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         repair_worst_week_demand_based_greedy = partial(
@@ -331,6 +334,7 @@ class ALNS:
             self.shifts_at_day,
             self.L_C_D, 
             self.shifts_overlapping_t,
+            self.preferences
         )
 
         mip_operator_week_repair_2 = partial(
@@ -353,7 +357,35 @@ class ALNS:
             self.days,
             self.objective_weights,
             self.contracted_hours,
-            self.t_covered_by_shift
+            self.t_covered_by_shift,
+            self.L_C_D, 
+            self.preferences
+        )
+
+        mip_operator_week_repair_3 = partial(
+            mip_week_operator_3,
+            self.employees, 
+            self.shifts_per_week, 
+            self.competencies, 
+            self.time_periods_in_week, 
+            self.combined_time_periods_in_week, 
+            self.employee_with_competencies, 
+            self.shifts_at_day, 
+            self.shifts_overlapping_t, 
+            self.t_covered_by_off_shift,
+            self.invalid_shifts, 
+            self.shift_combinations_violating_daily_rest, 
+            self.shift_sequences_violating_daily_rest,
+            self.weeks, 
+            self.time_step, 
+            self.demand, 
+            self.days,
+            self.objective_weights,
+            self.contracted_hours,
+            self.t_covered_by_shift,
+            self.demand_per_shift,
+            self.L_C_D,
+            self.preferences
         )
 
         repair_worst_week_f_value = partial(
@@ -385,23 +417,23 @@ class ALNS:
         
         operators = {
             remove_worst_employee: [
-                repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                 repair_worst_employee_regret,
+                 #repair_worst_employee_greedy
             ],
 
             remove_worst_contract: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_random_employee: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_weighted_random_employee: [
                 repair_worst_employee_regret,
-                repair_worst_employee_greedy
+                #repair_worst_employee_greedy
             ],
 
             remove_worst_week: [
@@ -412,7 +444,8 @@ class ALNS:
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_random_week: [
@@ -423,7 +456,8 @@ class ALNS:
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_weighted_random_week: [
@@ -434,7 +468,8 @@ class ALNS:
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                repair_worst_week_f_value
+                repair_worst_week_f_value,
+                mip_operator_week_repair_3
             ],
 
             remove_random_weekend: [
@@ -496,7 +531,6 @@ class ALNS:
         print()
         logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
                        f" {timer() - start:.2f}s ")
-
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best legal solution: {self.best_legal_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
@@ -759,6 +793,7 @@ class ALNS:
                         self.time_periods_in_week,
                         self.time_step,
                         self.L_C_D,
+                        self.preferences,
                         self.weeks,
                         self.combined_time_periods_in_week,
                         candidate_solution,
