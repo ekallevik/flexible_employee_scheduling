@@ -111,14 +111,31 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
-    def run_alns_multiple(self, threads=4, runtime=1):
-        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
 
-        self.runtime = runtime
+        solution = self.alns.best_solution
+
+        model = self.create_model("rerun_esp")
+        esp = OptimalityModel(model, data=self.data)
+
+        for key, value in solution.x.items():
+            esp.var.x[key].start = value
+
+        for key, value in solution.y.items():
+            esp.var.y[key].start = value
+
+        logger.warning("Rerunning model")
+        esp.run_model()
+
+        return self
+
+    def run_alns_multiple(self, threads=4, runtime=1):
+        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
+
+        self.runtime = runtime
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
         initial_solution = state.get_objective_value()
@@ -127,12 +144,8 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-        # includes dummy to make sure to avoid an empty list
-        share_times = [3*60, 5*60, 8*60, 10*60, 12*60, 13*60, 14*60, 20*60]
-        solution = self.alns.best_solution
 
         # the interval for which the PALNS should share data
-        #old_share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
         share_times = [i for i in range(60, 15*60, 20)]
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
@@ -156,7 +169,6 @@ class ProblemRunner:
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
-
             criterion = GreedyCriterion() if variant != "critertion" else variants[j]
             decay = 0.5 if variant != "decay" else variants[j]
 
@@ -164,21 +176,6 @@ class ProblemRunner:
                         runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
                         queue=queue, seed=j, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
-        model = self.create_model("rerun_esp")
-        esp = OptimalityModel(model, data=self.data)
-
-        for key, value in solution.x.items():
-            esp.var.x[key].start = value
-
-        for key, value in solution.y.items():
-            esp.var.y[key].start = value
-
-        logger.warning("Rerunning model")
-        esp.run_model()
-
-        return self
-
-        for i in range(2):
 
             # starting each process
             alns.start()
@@ -499,8 +496,7 @@ if __name__ == "__main__":
          
     """
 
-    #fire.Fire(ProblemRunner)
+    fire.Fire(ProblemRunner)
     #run_multiple_problems()
-    pr = ProblemRunner(problem="rproblem3")
-    pr.run_alns_multiple(runtime=15, threads=8)
+
 
