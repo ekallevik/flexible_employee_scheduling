@@ -72,6 +72,7 @@ def get_time_sets(root, competencies):
         "step": get_time_steps(root),
         "periods": periods["periods"],
         "combined_time_periods": periods["combined_time_periods"],
+        "every_time_period": periods["every_time_period"],
         "days": days,
         "number_of_days": len(days),
         "weeks": [i for i in range(number_of_weeks)],

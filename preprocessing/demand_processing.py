@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from gurobipy import *
 
-from preprocessing.xml_loader import get_days_with_demand, get_demand_definitions
+from preprocessing.xml_loader import get_days_with_demand, get_demand_definitions, get_days
 
 
 def get_time_steps(root):
@@ -84,8 +84,19 @@ def get_time_periods(root, competencies):
                         combined_time_periods_in_week[week] = [time]
                     combined_time_periods_in_day[day].append(time)
                 time += time_step
+
+    # Used in Implicit Model
+    days = get_days(root)
+    every_time_period = tuplelist()
+    t = 0
+    while t < 24 * len(days):
+        every_time_period.append(t)
+        t += time_step
+
     return {"periods": [time_periods, time_periods_in_week, time_periods_in_day],
-            "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day]}
+            "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day],
+            "every_time_period": every_time_period
+            }
 
 
 def get_demand(root, competencies):

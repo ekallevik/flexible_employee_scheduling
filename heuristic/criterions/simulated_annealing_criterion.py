@@ -21,12 +21,12 @@ class SimulatedAnnealingCriterion(AbstractCriterion):
         return f"SimulatedAnnealingCriterion [t0={self.start_temperature}, " \
                f"t1={self.end_temperature}, step={self.step}, method={self.method}]"
 
-    def accept(self, candidate, current, random_state):
+    def accept(self, candidate, current, best, random_state):
 
         probability = self.get_probability(candidate, current)
 
-        self.update_temperature()
         is_accepted = probability >= random_state.random()
+        self.update_temperature()
 
         logger.info(f"Accept candidate: {is_accepted} (p={probability:.3f}, "
                     f"t={self.current_temperature})")

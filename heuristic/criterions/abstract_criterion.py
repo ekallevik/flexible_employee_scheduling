@@ -4,5 +4,5 @@ class AbstractCriterion:
     def __str__(self):
         raise NotImplementedError
 
-    def accept(self, candidate, current, random_state):
+    def accept(self, candidate, current, best, random_state):
         raise NotImplementedError

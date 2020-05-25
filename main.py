@@ -6,6 +6,7 @@ from loguru import logger
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
+from heuristic.criterions.record_to_record_travel import RecordToRecordTravel
 from heuristic.heuristic_calculations import *
 from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
@@ -30,8 +31,8 @@ level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
     "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "TRACE",
-    "heuristic.repair_operators": "TRACE",
+    "heuristic.destroy_operators": "INFO",
+    "heuristic.repair_operators": "INFO",
     "heuristic.criterions.simulated_annealing_criterion": "WARNING",
 }
 
@@ -88,27 +89,53 @@ class ProblemRunner:
                     shift_set = "sdp_no_reduce"
             elif use_predefined_shifts:
                 shift_set = "predefined_shifts"
+            elif self.mode == "implicit" or self.mode == 3:
+                shift_set = "implicit_shifts"
             else:
                 shift_set = "no_sdp"
 
             actual_name = f"{self.problem}_mode={self.mode}_{shift_set}"
 
         now = datetime.now()
-        self.log_name = f"{now.strftime('%H:%M:%S')}-{actual_name}"
+        self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
+    def rerun_esp(self):
+        """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
+
+        solution = self.alns.best_legal_solution
+
+        model = self.create_model("rerun_esp")
+        esp = OptimalityModel(model, data=self.data)
+
+        for key, value in solution.x.items():
+            esp.var.x[key].start = value
+
+        for key, value in solution.y.items():
+            esp.var.y[key].start = value
+
+        logger.warning("Rerunning model")
+        esp.run_model()
+
+        return self
+
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
-                 plot_violations_map=False, plot_violations_bar=False):
+                 plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
         self.set_alns(decay)
 
-        if plot_objective + plot_violations_map + plot_violations_bar > 1:
+        if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
 
         if plot_objective:
             self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
                                                            log_name=self.log_name)
+            self.alns.objective_plotter.set_scale("symlog")
+
+        if plot_weights:
+            self.alns.weight_plotter = ObjectivePlotter(title="Destroy weights per iteration",
+                                                        log_name=self.log_name)
 
         if plot_violations_map:
             self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration",
@@ -117,8 +144,11 @@ class ProblemRunner:
         if plot_violations_bar:
             self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
                                                           log_name=self.log_name)
-
-        self.alns.iterate(iterations, runtime)
+        try:
+            self.alns.iterate(iterations, runtime)
+        except Exception as e:
+            logger.exception(f"An exception occured in {self.log_name}", exception=e,
+                             diagnose=True, backtrace=True)
 
         return self
 
@@ -167,7 +197,7 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -185,7 +215,12 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with {len(self.esp.shifts_set['shifts'])}")
         else:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
-        self.esp.run_model()
+
+        try:
+            self.esp.run_model()
+        except Exception as e:
+            logger.exception(f"An exception occured in {self.log_name}", exception=e,
+                             diagnose=True, backtrace=True)
 
         return self
 
@@ -263,11 +298,11 @@ class ProblemRunner:
         """ Creates a Gurobi model with standard config """
 
         model = Model(name=name)
+        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
         model.setParam("MIPFocus", self.mip_focus)
         model.setParam("SolutionLimit", self.solution_limit)
         model.setParam("LogToConsole", self.log_to_console)
         model.setParam("TimeLimit", self.time_limit)
-        model.setParam("LogFile", f"gurobi_logs/{self.log_name}.log")
 
         return model
 
@@ -280,6 +315,9 @@ class ProblemRunner:
 
         self.esp.save_solution(self.log_name)
         logger.warning(f"Saved ESP-solution to solutions/{self.log_name}-ESP.sol")
+
+        if self.alns:
+            self.alns.save_solutions()
 
     def __str__(self):
         """
