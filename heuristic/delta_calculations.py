@@ -188,7 +188,6 @@ def mapping_shift_to_demand(state, repair_destroy_set, t_covered_by_shift, shift
 def calculate_daily_rest_error(state, destroy_and_repair, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest):
     destroy = destroy_and_repair[0]
     repair = destroy_and_repair[1]
-    #print(repair)
     days_in_destroy = [(e,int(t/24)) for e,t,v in destroy]
 
     for e, i in days_in_destroy:
@@ -196,18 +195,14 @@ def calculate_daily_rest_error(state, destroy_and_repair, invalid_shifts, shift_
             del state.hard_vars["daily_rest_error"][e, i]
 
     for e, t, v in repair:
-        #print("Shift: " + str((t, v)))
         i = int(t/24)
 
         if (t, v) in invalid_shifts[e]:
-            #print("Invalid shifts violation")
             state.hard_vars["daily_rest_error"][e, i] = 1
             
         if (t, v) in shift_combinations_violating_daily_rest[e]:
             value = min(1, sum(state.x[e, t1, v1] for t1, v1 in shift_combinations_violating_daily_rest[e][t, v]))
             if value > 0:
-                #print("Combination violation: " + str((e, t, v)))
-                #print(shift_combinations_violating_daily_rest[e])
                 state.hard_vars["daily_rest_error"][e, i] = value
             elif (e, i) in state.hard_vars["daily_rest_error"]:
                 del state.hard_vars["daily_rest_error"][e, i]
@@ -217,7 +212,6 @@ def calculate_daily_rest_error(state, destroy_and_repair, invalid_shifts, shift_
                                for t2, v2 in shift_sequences_violating_daily_rest[e][t, v]) - 1)
 
             if value > 0:
-                #print("Sequence violation")
                 state.hard_vars["daily_rest_error"][e, i] = value
             elif (e, i) in state.hard_vars["daily_rest_error"]:
                 del state.hard_vars["daily_rest_error"][e, i]
@@ -441,7 +435,6 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
     deviation_contracted_hours = regret_deviation_contracted_hours(state, e, shift, week, weeks)
     consecutive_days = regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day)
     allowed_preferences = sum(preferences[e][t] * state.y[c, e, t] for c in competencies for t in t_covered_by_shift[shift[0], shift[1]])
-    #print("Daily rest error: " + str(daily_rest_error))
     return (weekly_rest_error
             + daily_rest_error  
             + partial_weekend_error 
@@ -610,8 +603,6 @@ def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violatin
         + weights["consecutive days"] * consecutive_days
         + weights["preferences"] * sum(preferences[e][t] for t in t_covered_by_shift[shift])
         )
-    #print("F: " + str(f) + ", Partial Weekends: " + str(current_partial_weekends) + ", Isolated Days: " + str(current_isolated_days) + ", Preferences: " + str(sum(preferences[e][t] for t in t_covered_by_shift[shift])))
-    #print("Daily rest error: " + str(daily_rest_error) + ", Contracted hours: " + str(contracted_hours) + ", Weekly rest: " + str(current_week_rest))
     penalties = daily_rest_error + min(0, contracted_hours) + min(0, current_week_rest)
 
     return f, penalties
