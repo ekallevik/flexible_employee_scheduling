@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from pprint import pprint
 
@@ -6,6 +7,7 @@ import skopt
 import fire
 from gurobipy import *
 from loguru import logger
+from skopt.plots import plot_convergence
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
@@ -126,7 +128,7 @@ class ProblemRunner:
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
-        self.set_alns(decay)
+        #self.set_alns(decay)
 
         if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
@@ -165,7 +167,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self, decay):
+    def set_alns(self, decay, hard_penalty, operator_weights):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -199,9 +201,11 @@ class ProblemRunner:
         objective_function, f = calculate_objective_function(self.data, soft_variables,
                                                              self.weights, candidate_solution["w"], candidate_solution["y"])
 
-        state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
+        state = State(candidate_solution, soft_variables, hard_variables, objective_function, f,
+                      hard_penalty=hard_penalty)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
+                         operator_weights=operator_weights)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -337,110 +341,47 @@ class ProblemRunner:
 
         return self.log_name
 
+    def evaluate_parameters(self, search_params):
 
+        decay = search_params[0]
+        operator_weights = {
+            "IS_REJECTED": search_params[1],
+            "IS_ACCEPTED": search_params[2],
+            "IS_BETTER": search_params[3],
+            "IS_BEST": search_params[4],
+        }
+        hard_penalty = search_params[4]
 
-def evaluate_parameters(search_params):
+        self.set_alns(decay, hard_penalty, operator_weights)
+        self.run_alns(runtime=10)
 
-    pr = ProblemRunner()
+        score = self.alns.get_best_solution_value()
 
-    breakpoint()
+        return score
 
-    decay = search_params["decay"]
-    operator_weights = {
-        "IS_REJECTED": search_params["IS_REJECTED"],
-        "IS_ACCEPTED": search_params["IS_ACCEPTED"],
-        "IS_BETTER": search_params["IS_BETTER"],
-        "IS_BEST": search_params["IS_BEST"],
-    }
+    def objective_func(self, params):
+        """ Convert to minimization objective """
+        return -1.0 * self.evaluate_parameters(params)
 
-    pr.alns.decay = decay
-    pr.alns.WeightUpdate = operator_weights
+    def tune_hyperparameters(self):
 
-    pr.run_alns(runtime=1)
+        SPACE = [
+            skopt.space.Real(0.01, 0.99, name='decay', prior='uniform'),
+            skopt.space.Real(0.5, 1.0, name='is_rejected', prior='uniform'),
+            skopt.space.Real(1.0, 1.3, name='is_accepted', prior='uniform'),
+            skopt.space.Real(1.2, 1.5, name='is_better', prior='uniform'),
+            skopt.space.Real(1.4, 1.8, name='is_best', prior='uniform'),
+            skopt.space.Integer(1, 25, name='hard_penalties'),
+        ]
 
-    score = pr.alns.get_best_solution_value()
+        results = skopt.forest_minimize(self.objective_func, SPACE, n_calls=50, n_random_starts=15)
+        best_result = -1.0 * results.fun
+        best_params = results.x
 
-    return score
+        logger.warning(f"Best result: {best_result}")
+        logger.warning(f"Best parameters: {best_params}")
+        logger.warning(f"Result: {results}")
 
-def objective(**params):
-    return -1.0 * evaluate_parameters(params)
-
-def tune_hyperparameters():
-
-    SPACE = [
-        skopt.space.Real(0.01, 0.99, name='decay', prior='uniform'),
-        #skopt.space.Integer(1, 30, name='max_depth'),
-        skopt.space.Real(0.5, 1.0, name='is_rejected', prior='uniform'),
-        skopt.space.Real(1.0, 1.3, name='is_accepted', prior='uniform'),
-        skopt.space.Real(1.2, 1.5, name='is_better', prior='uniform'),
-        skopt.space.Real(1.4, 1.8, name='is_best', prior='uniform'),
-    ]
-
-    results = skopt.forest_minimize(objective, SPACE, n_calls=5, n_random_starts=1)
-    best_auc = -1.0 * results.fun
-    best_params = results.x
-
-    print('best result: ', best_auc)
-    print('best parameters: ', best_params)
-
-    print("Results")
-    pprint(results)
-
-    breakpoint()
-
-
-
-def run_multiple_problems(variant=0, threads=32, runtime=15):
-
-    problems = [
-        "rproblem1",
-        "rproblem2",
-        "rproblem3",
-        "rproblem4",
-        "rproblem5",
-        "rproblem6",
-        "rproblem7",
-        "rproblem8",
-        "rproblem9",
-        "rproblem3_2_weeks",
-        "rproblem3_8_weeks",
-        "rproblem5_4_weeks",
-        "rproblem5_12_weeks",
-        "rproblem6_8_weeks",
-        "rproblem6_16_weeks",
-        "rproblem7_8_weeks",
-        "rproblem7_16_weeks",
-        "rproblem9_8_weeks",
-        "rproblem9_16_weeks",
-    ]
-
-    if variant == 0:
-        problems = ["rproblem9"]
-        share_times = None
-    if variant == 1:
-        problems = ["rproblem9"]
-        share_times = [i for i in range(60, 15 * 60, 10)]
-    if variant == 2:
-        problems = ["rproblem9"]
-        share_times = [i for i in range(60, 15 * 60, 30)]
-    if variant == 3:
-        problems = ["rproblem8"]
-
-    share_time_list = [
-        [i for i in range(60, 15 * 60, 10)],
-        [i for i in range(60, 15 * 60, 30)],
-        [i for i in range(60, 15 * 60, 45)],
-        [i for i in range(60, 15 * 60, 60)]
-                   ]
-
-    #for share_times in share_time_list:
-
-    for problem in problems:
-        logger.critical(f"Running {problem} with {threads} threads and shares=\n{share_times}")
-
-        pr = ProblemRunner(problem=problem)
-        pr.run_palns(share_times=share_times, threads=threads, runtime=runtime)
-        logger.critical(f"Completed run of {problem} with {threads} threads and shares=\n{share_times}")
 
 if __name__ == "__main__":
     """ 
