@@ -144,7 +144,11 @@ class ProblemRunner:
         if plot_violations_bar:
             self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
                                                           log_name=self.log_name)
-        self.alns.iterate(iterations, runtime)
+        try:
+            self.alns.iterate(iterations, runtime)
+        except Exception as e:
+            logger.exception(f"An exception occured in {self.log_name}", exception=e,
+                             diagnose=True, backtrace=True)
                              
 
         return self
