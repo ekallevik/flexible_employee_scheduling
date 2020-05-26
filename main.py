@@ -3,7 +3,6 @@ import multiprocessing
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
-import pandas as pd
 
 import fire
 from gurobipy import *
@@ -130,7 +129,7 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=32, runtime=15):
+    def run_palns(self, threads=32, runtime=15, share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
@@ -147,7 +146,7 @@ class ProblemRunner:
 
         # the interval for which the PALNS should share data
         #share_times = [i for i in range(60, 15*60, 20)]
-        share_times = None
+        #share_times = None
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
@@ -177,17 +176,17 @@ class ProblemRunner:
                     "IS_BETTER": operator_weights_tune[j % len(operator_weights_tune)][2],
                     "IS_BEST": operator_weights_tune[j % len(operator_weights_tune)][3],
                 }
-
+            worker_name = f"worker-{j}"
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        operator_weights=operator_weights, runtime=runtime, worker_name=f"worker-{j}",
+                        operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
                         results=shared_results, queue=queue, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
 
-            # starting each process
+            logger.info(f"Starting {worker_name}")
             alns.start()
 
         for process in processes:
-            # terminate each process
+            logger.warning(f"Terminating {process.worker_name}")
             process.join()
 
         filename = f"{self.log_name}_threads={threads}_variants={variant}"
@@ -457,9 +456,11 @@ def run_multiple_problems(variant=0):
     ]
 
     if variant == 0:
-        problems = ["rproblem1", "rproblem2"]
+        problems = ["rproblem9"]
+        share_times = None
     if variant == 1:
-        problems = ["rproblem3", "rproblem4"]
+        problems = ["rproblem9"]
+        share_times = [i for i in range(60, 15*60, 20)]
     if variant == 2:
         problems = ["rproblem5", "rproblem6"]
     if variant == 3:
