@@ -382,6 +382,8 @@ class ProblemRunner:
         logger.warning(f"Best parameters: {best_params}")
         logger.warning(f"Result: {results}")
 
+        return self
+
 
 if __name__ == "__main__":
     """ 
