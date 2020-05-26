@@ -114,6 +114,8 @@ class ALNS(multiprocessing.Process):
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
 
+        get_shift_combinations(self.shift_combinations_violating_daily_rest, self.employees)
+
         remove_worst_week = partial(
             worst_week_removal,
             self.competencies,
@@ -581,7 +583,6 @@ class ALNS(multiprocessing.Process):
                        f" {timer() - self.start_time:.2f}s (including construction)")
 
         logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
-        logger.error(f"{self.prefix}Best legal solution: {self.best_solution.get_objective_value(): .2f}")
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
@@ -666,7 +667,6 @@ class ALNS(multiprocessing.Process):
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
-
         logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
@@ -675,7 +675,6 @@ class ALNS(multiprocessing.Process):
 
         if self.criterion.accept(candidate_solution, self.current_solution,
                                  self.best_solution, self.random_state):
-
             self.current_solution = candidate_solution
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
@@ -693,7 +692,6 @@ class ALNS(multiprocessing.Process):
         if (candidate_solution.is_feasible()
                 and candidate_solution.get_objective_value() >=
                 self.best_solution.get_objective_value()):
-
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution

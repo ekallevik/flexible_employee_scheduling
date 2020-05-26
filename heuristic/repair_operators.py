@@ -524,22 +524,23 @@ def worst_week_regret_repair(shifts_in_week, competencies, t_covered_by_shift,
         calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
         calculate_consecutive_days(state, employees_changed, shifts_at_day, L_C_D, days)
         calculate_weekly_rest(state, shifts_in_week, employees_changed, week)
-        calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts,
-                                   shift_combinations_violating_daily_rest,
-                                   shift_sequences_violating_daily_rest)
+        # calculate_daily_rest_error(state, daily_destroy_and_repair, invalid_shifts,
+        #                           shift_combinations_violating_daily_rest,
+        #                           shift_sequences_violating_daily_rest)
 
 
         objective_values = {}
         for e, score in possible_employees:
             competency_score = score - len(competencies_needed)
             objective_values[e] = employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, week[0], L_C_D, preferences, competencies, t_covered_by_shift, competency_score)
-
+        
+        #print(objective_values)
         max_value = max(objective_values.items(), key=itemgetter(1))[1]
         employee = choice([key for key, value in objective_values.items() if value == max_value])
         repair_set.append(set_x(state, t_covered_by_shift, employee, shift[0], shift[1], 1, y_s))
         employees_changed = [employee]
         destroy_set = [(employee, shift[0], shift[1])]
-        daily_destroy_and_repair = [[], destroy_set]
+        #daily_destroy_and_repair = [[], destroy_set]
 
 
 def worst_employee_repair(competencies, t_covered_by_shift, employee_with_competencies,
@@ -856,38 +857,60 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
                          state, destroy_set, week):
 
     days_in_week = days[7*week[0]:(week[0]+1)*7]
-    delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-    updated_contracted_hours = min(sum(contracted_hours[e] for e in employees), sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees))
+    days_in_week_x = [x_day for x_day in range(max(0, 7*week[0] - 1), min(7*(week[0] + 1) + 1, len(days)))]
+    #delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
+    #updated_contracted_hours = min(sum(contracted_hours[e] for e in employees), sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees))
 
+    updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
+    #updated_time_periods.sort()
+
+
+ 
     model = Model(name="week_operator")
     # Disable logging to file
     model.setParam("LogFile", "")
 
-    y_dict = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    plus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    minus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    mu = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    x_dict = {(t,v): 0 for c in competencies for t_1 in time_periods_in_week[c, week[0]] for t,v in shifts_overlapping_t[t_1]}
+    y_dict = {(c, t): 0 for c in competencies for t in updated_time_periods}
+    x_dict = {(t,v): 0 for c in competencies for i in days_in_week_x for t,v in shifts_per_day[i]}
+
+
+    plus = {(c, t): 0 for c in competencies for t in updated_time_periods}
+    minus = {(c, t): 0 for c in competencies for t in updated_time_periods}
+    mu = {(c, t): 0 for c in competencies  for t in updated_time_periods}
 
     x = model.addVars(x_dict, vtype=GRB.INTEGER, name="x")
     mu = model.addVars(mu, vtype=GRB.INTEGER, name="mu")
     y = model.addVars(y_dict, vtype=GRB.INTEGER, name="y")
     delta_plus = model.addVars(plus, vtype=GRB.INTEGER, name="delta_plus")
     delta_minus = model.addVars(minus, vtype=GRB.INTEGER, name="delta_minus")
+    
+    if(days_in_week_x[0] == 7*week[0] - 1):
+        for t,v in shifts_per_day[days_in_week_x[0]]:
+            x[t,v].lb = sum(state.x[e,t,v] for e in employees)
+            x[t,v].ub = sum(state.x[e,t,v] for e in employees)
 
+    if(days_in_week_x[-1] == 7*(week[0] + 1)):
+        for t,v in shifts_per_day[days_in_week_x[-1]]:
+            x[t,v].lb = sum(state.x[e,t,v] for e in employees)
+            x[t,v].ub = sum(state.x[e,t,v] for e in employees)
+
+
+    for c,t in y_dict:
+        if sum(state.y[c,e,t] for e in employees) > 0:
+            y[c, t].lb = sum(state.y[c,e,t] for e in employees)
 
     model.addConstrs(
         (   y[c, t]
             == demand["min"][c, t] + mu[c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ), name="minimum_demand_coverage")
 
     model.addConstrs(
         (
             mu[c, t] <= demand["max"][c, t] - demand["min"][c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ),
         name="mu_less_than_difference")
 
@@ -895,14 +918,14 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
         (   mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
             == delta_plus[c, t] - delta_minus[c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ), name="deviation_from_ideal_demand")
 
 
     model.addConstrs(
         (   quicksum(x[t_marked, v] for t_marked, v in shifts_overlapping_t[t])
             == quicksum(y[c, t] for c in competencies if y.get((c, t)))
-            for t in combined_time_periods_in_week[week[0]]
+            for t in updated_time_periods
         ), name="mapping_shift_to_demand")
     
     model.addConstrs((
@@ -919,18 +942,17 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
 
     model.setObjective(
     quicksum(
-        quicksum(delta_plus[c, t] + delta_minus[c, t]
-                for t in time_periods_in_week[c, week[0]])
+        quicksum(delta_plus[c, t] + delta_minus[c, t] for t in updated_time_periods)
         for c in competencies
     )
     ,GRB.MINIMIZE,)
 
     #model.setParam("MipFocus", 1)
-    model.setParam("TimeLimit", 10)
     model.setParam("Threads", 1)
+    model.setParam("TimeLimit", 5)
     model.optimize()
 
-    shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0}
+    shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0.5}
     saturdays = [5 + 7*week[0]]
     sundays = [6 + 7*week[0]]
     repair_set = []
@@ -1065,24 +1087,38 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
                             state, destroy_set, week):
 
     days_in_week = days[7*week[0]:(week[0]+1)*7]
+    days_in_week_x = [x_day for x_day in range(max(0, 7*week[0] - 1), min(7*(week[0] + 1) + 1, len(days)))]
     delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
+    calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employees_with_competencies, demand, destroy_set)
     updated_contracted_hours = {e: sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e in employees}
     
+    updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
+    #updated_time_periods.sort()
+
     sunday = [days_in_week[-1]]
     saturday = [days_in_week[-2]]
 
     model = Model(name="week_operator_2")
-    y_dict = {(c, e, t): 0 for c in competencies for e in employees for t in time_periods_in_week[c, week[0]]}
-    plus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    minus = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    mu = {(c, t): 0 for c in competencies for t in time_periods_in_week[c, week[0]]}
-    x_dict = {(e,t,v): 0 for e in employees for c in competencies for t_1 in time_periods_in_week[c, week[0]] for t,v in shifts_overlapping_t[t_1]}
+    y_dict = {(c, e, t): 0 for c in competencies for e in employees for t in updated_time_periods}
+    x_dict = {(e,t,v): 0 for e in employees for c in competencies for i in days_in_week_x for t,v in shifts_per_day[i]}
+
+    updated_invalid_shifts = {e: [(t,v) for t,v in invalid_shifts[e] if (e,t,v) in x_dict] for e in employees}
+    
+    updated_shift_combinations_violating_daily_rest = {e: {(t,v): [(t_1,v_1) for t_1,v_1 in shift_combinations_violating_daily_rest[e][t,v] if (e, t_1, v_1) in x_dict] for t,v in shift_combinations_violating_daily_rest[e] if (e,t,v) in x_dict} for e in employees}
+
+    #print(time_periods_in_week)
+    updated_shift_sequences_violating_daily_rest = {e: {(t,v): [(t_1,v_1) for t_1,v_1 in shift_sequences_violating_daily_rest[e][t,v] if (e, t_1, v_1) in x_dict] for t,v in shift_sequences_violating_daily_rest[e] if (e,t,v) in x_dict} for e in employees}
+    plus = {(c, t): 0 for c in competencies for t in updated_time_periods}
+    minus = {(c, t): 0 for c in competencies for t in updated_time_periods}
+    mu = {(c, t): 0 for c in competencies  for t in updated_time_periods}
+    
     #x_dict = {(e,t,v): 0 for e in employees for c in competencies for t_1 in time_periods_in_week[c, week[0]] for t,v in shifts_overlapping_t[t_1] if (t, v) in shifts_with_demand}
-    updated_demand = {
-        "min": {(c,t): demand["min"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]},
-        "ideal": {(c,t): demand["ideal"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]},
-        "max": {(c,t): demand["max"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]}
-    }
+    # updated_demand = {
+    #     "min": {(c,t): demand["min"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in updated_time_periods},
+    #     "ideal": {(c,t): demand["ideal"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in updated_time_periods},
+    #     "max": {(c,t): demand["max"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in updated_time_periods}
+    # }
+
     x = model.addVars(x_dict, vtype=GRB.BINARY, name="x")
     mu = model.addVars(mu, vtype=GRB.INTEGER, name="mu")
     y = model.addVars(y_dict, vtype=GRB.BINARY, name="y")
@@ -1098,33 +1134,51 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     con = model.addVars(employees, days_in_week[:-L_C_D], vtype=GRB.BINARY, name="consecutive_days")
     g = model.addVar(vtype=GRB.CONTINUOUS, name="lowest_contracted_hours")
 
+    if(days_in_week_x[0] == 7*week[0] - 1):
+        for e in employees:
+            for t,v in shifts_per_day[days_in_week_x[0]]:
+                x[e,t,v].lb = state.x[e,t,v]
+                x[e,t,v].ub = state.x[e,t,v]
+
+    if(days_in_week_x[-1] == 7*(week[0] + 1)):
+        for e in employees:
+            for t,v in shifts_per_day[days_in_week_x[-1]]:
+                x[e,t,v].lb = state.x[e,t,v]
+                x[e,t,v].ub = state.x[e,t,v]
+
+
+    for c,e,t in y_dict:
+        if(state.y[c,e,t] == 1):
+            y[c, e, t].lb = state.y[c,e,t]
+    
+
     model.addConstrs(
         (   quicksum(y[c, e, t] for e in employees_with_competencies[c])
-            == updated_demand["min"][c, t] + mu[c, t]
+            == demand["min"][c, t] + mu[c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ), name="minimum_demand_coverage")
     
     model.addConstrs(
-        (   mu[c, t] <= updated_demand["max"][c, t] - updated_demand["min"][c, t]
+        (   mu[c, t] <= demand["max"][c, t] - demand["min"][c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ),
         name="mu_less_than_difference")
 
     model.addConstrs(
-        (   mu[c, t] + updated_demand["min"][c, t] - updated_demand["ideal"][c, t]
+        (   mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
             == delta_plus[c, t] - delta_minus[c, t]
             for c in competencies
-            for t in time_periods_in_week[c, week[0]]
+            for t in updated_time_periods
         ), name="deviation_from_ideal_demand")
 
 
     model.addConstrs(
         (   quicksum(x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t])
-            == quicksum(y[c, e, t] for c in competencies if y.get((c,e,t)))
+            == quicksum(y[c, e, t] for c in competencies)
             for e in employees
-            for t in time_periods_in_week[0, week[0]]
+            for t in updated_time_periods
         ), name="mapping_shift_to_demand")
 
     model.addConstrs(
@@ -1150,7 +1204,7 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     #     ), name="contracted_hours")
     
     model.addConstrs(
-        (   quicksum(time_step * y[c, e, t] for c in competencies for t in time_periods_in_week[c, week[0]]) == updated_contracted_hours[e] + lam_plus[e] - lam_minus[e]
+        (   quicksum(time_step * y[c, e, t] for c in competencies for t in updated_time_periods) == updated_contracted_hours[e] + lam_plus[e] - lam_minus[e]
             for e in employees
         ), name="contracted_hours")
 
@@ -1186,6 +1240,30 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
         ), name="if_employee_e_works_day_i")
 
     model.addConstrs(
+            (   x[e, t, v]
+                + quicksum(
+                    x[e, t_marked, v_marked]
+                    for t_marked, v_marked in updated_shift_sequences_violating_daily_rest[e][t, v]) <= 2
+                for e in employees
+                for t, v in updated_shift_sequences_violating_daily_rest[e]
+                if len(updated_shift_sequences_violating_daily_rest[e]) > 0
+            ), name="daily_rest_shift_sequences",)
+
+    model.addConstrs(
+            (   2 * x[e, t, v]
+                + quicksum(
+                    x[e, t_marked, v_marked]
+                    for t_marked, v_marked in updated_shift_combinations_violating_daily_rest[e][t, v]) <= 2
+                for e in employees
+                for t, v in updated_shift_combinations_violating_daily_rest[e]
+                if len(updated_shift_combinations_violating_daily_rest[e]) > 0
+            ), name="daily_rest_shift_combinations",)
+
+    model.addConstrs(
+            (quicksum(x[e, t, v] for t, v in updated_invalid_shifts[e]) == 0 for e in employees
+            ), name="invalid_shifts",)
+
+    model.addConstrs(
         g >= lam_minus[e] for e in employees
     )
     model.setObjective(
@@ -1194,18 +1272,15 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
                 - weights["isolated working days"] * quicksum(iso_work[e, i] for i in days_in_week)
                 - weights["isolated off days"] * quicksum(iso_off[e, i] for i in days_in_week)
                 - weights["consecutive days"] * quicksum(con[e, i] for i in days_in_week[:-L_C_D])
-                + weights["preferences"] * quicksum(preferences[e][t] * quicksum(y[c, e, t] for c in competencies) for t in time_periods_in_week[0, week[0]])
-                - lam_plus[e]
+                + weights["preferences"] * quicksum(preferences[e][t] * quicksum(y[c, e, t] for c in competencies) for t in updated_time_periods)
+                -  1.2 * lam_plus[e]/time_step
                 - g
         for e in employees)
-        - quicksum(delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in time_periods_in_week[c, week[0]])
+        
+        - quicksum(delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in updated_time_periods)
     , GRB.MAXIMIZE)
 
-
-    
-    #model.setParam("MIPFocus", 1)
     model.setParam("TimeLimit", 5)
     model.optimize()
-    model.write("answer_problem7.sol")
-    repair_set = [set_x(state, t_covered_by_shift, e, t, v, 1) for e, t, v in x if abs(x[e,t,v].x) == 1]
+    repair_set = [set_x(state, t_covered_by_shift, e, t, v, 1) for e in employees for t,v in shifts_in_week[week[0]] if abs(x[e,t,v].x) > 0.5]
     return repair_set
