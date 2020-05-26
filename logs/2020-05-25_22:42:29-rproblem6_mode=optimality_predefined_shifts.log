@@ -1,0 +1,8 @@
+22:42:30  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:42:30  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:42:30  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 10 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:42:30  |  set_daily_rest_rule:161                |  ScheduleRow 10 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:43:01  |  run_esp:196                            |  Running ESP in mode optimality with 758
+03:43:01  |  run_model:34                           |  Model is 9
+03:43:02  |  save_results:298                       |  Saved ESP-solution to solutions/2020-05-25_22:42:29-rproblem6_mode=optimality_predefined_shifts-ESP.sol
+03:43:02  |  __str__:313                            |  Completed run for 2020-05-25_22:42:29-rproblem6_mode=optimality_predefined_shifts

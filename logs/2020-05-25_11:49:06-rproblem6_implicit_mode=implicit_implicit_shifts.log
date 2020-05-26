@@ -1,0 +1,6 @@
+11:49:06  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+11:49:06  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+11:49:06  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 10 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+11:49:06  |  set_daily_rest_rule:161                |  ScheduleRow 10 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+11:51:22  |  run_esp:198                            |  Running ESP in mode implicit with implicitly generated shifts
+11:51:26  |  run_model:57                           |  Model is 4

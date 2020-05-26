@@ -1,0 +1,33 @@
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 7 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 7 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 8 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 8 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 10 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 10 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 11 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 11 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 12 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 12 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 13 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+09:00:56  |  set_daily_rest_rule:161                |  ScheduleRow 13 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+09:00:56  |  run_sdp:236                            |  Running SDP with 53 shifts
+09:00:56  |  run_sdp:255                            |  SDP-reduction from 53 to 29 shifts (-45.28%).
+09:00:57  |  run_esp:196                            |  Running ESP in mode optimality with 29
+09:02:58  |  run_model:34                           |  Model is 2
+09:02:58  |  save_results:295                       |  Saved SDP-solution to solutions/2020-05-25_09:00:56-rproblem8_implicit_mode=optimality_sdp_reduce-SDP.sol
+09:02:58  |  save_results:298                       |  Saved ESP-solution to solutions/2020-05-25_09:00:56-rproblem8_implicit_mode=optimality_sdp_reduce-ESP.sol
+09:02:58  |  __str__:313                            |  Completed run for 2020-05-25_09:00:56-rproblem8_implicit_mode=optimality_sdp_reduce

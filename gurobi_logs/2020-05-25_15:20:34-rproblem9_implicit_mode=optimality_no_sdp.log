@@ -1,0 +1,32 @@
+
+Gurobi 9.0.2 (linux64) logging started Mon May 25 15:20:34 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-25_15:20:34-rproblem9_implicit_mode=optimality_no_sdp.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 18000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 21300 rows, 14768 columns and 650452 nonzeros
+Model fingerprint: 0xa158b350
+Variable types: 56 continuous, 14712 integer (13410 binary)
+Coefficient statistics:
+  Matrix range     [1e-02, 2e+02]
+  Objective range  [2e-01, 2e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Presolve removed 8878 rows and 5378 columns
+Presolve time: 0.07s
+
+Explored 0 nodes (0 simplex iterations) in 0.14 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -

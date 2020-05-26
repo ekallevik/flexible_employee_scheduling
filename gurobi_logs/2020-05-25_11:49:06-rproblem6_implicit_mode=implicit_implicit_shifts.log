@@ -1,0 +1,31 @@
+
+Gurobi 9.0.2 (linux64) logging started Mon May 25 11:49:06 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-25_11:49:06-rproblem6_implicit_mode=implicit_implicit_shifts.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 18000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 179308 rows, 303860 columns and 19213012 nonzeros
+Model fingerprint: 0x94263510
+Variable types: 32 continuous, 303828 integer (302820 binary)
+Coefficient statistics:
+  Matrix range     [6e-02, 1e+03]
+  Objective range  [5e-01, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+03]
+Presolve time: 1.52s
+
+Explored 0 nodes (0 simplex iterations) in 2.48 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -

@@ -1,0 +1,25 @@
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 7 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 7 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 8 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 8 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:48  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:07:48  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:07:50  |  run_sdp:235                            |  Running SDP with 260 shifts
+21:07:51  |  run_sdp:254                            |  SDP-reduction from 260 to 224 shifts (-13.85%).
+21:07:58  |  run_esp:195                            |  Running ESP in mode optimality with 224
+21:40:44  |  run_model:34                           |  Model is 2
+21:40:44  |  save_results:294                       |  Saved SDP-solution to solutions/2020-05-24_21:07:48-rproblem1_mode=optimality_sdp_reduce-SDP.sol
+21:40:44  |  save_results:297                       |  Saved ESP-solution to solutions/2020-05-24_21:07:48-rproblem1_mode=optimality_sdp_reduce-ESP.sol
+21:40:44  |  __str__:312                            |  Completed run for 2020-05-24_21:07:48-rproblem1_mode=optimality_sdp_reduce

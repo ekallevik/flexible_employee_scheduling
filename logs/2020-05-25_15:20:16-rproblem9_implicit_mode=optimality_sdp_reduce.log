@@ -1,0 +1,5 @@
+15:20:16  |  run_sdp:236  |  Running SDP with 70 shifts
+15:20:17  |  run_sdp:255  |  SDP-reduction from 70 to 42 shifts (-40.00%).
+15:20:20  |  run_esp:196  |  Running ESP in mode optimality with 42
+15:20:20  |  run_model:34  |  Model is 4
+15:20:20  |  save_results:295  |  Saved SDP-solution to solutions/2020-05-25_15:20:16-rproblem9_implicit_mode=optimality_sdp_reduce-SDP.sol

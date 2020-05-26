@@ -1,0 +1,88 @@
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 7 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 7 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 8 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 8 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 10 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 10 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 11 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 11 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 12 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 12 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 13 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 13 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 14 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 14 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_contracted_hours_for_employee:108  |  ScheduleRow 15 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 15 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 15 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 16 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 16 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 17 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 17 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 18 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 18 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 19 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 19 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 20 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 20 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 21 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 21 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 22 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 22 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 23 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 23 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 24 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 24 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 25 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 25 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 26 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 26 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 27 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 27 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 28 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 28 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 29 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 29 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 30 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 30 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 31 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 31 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 32 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 32 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 33 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 33 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 34 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 34 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_contracted_hours_for_employee:108  |  ScheduleRow 35 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 35 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 35 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 36 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 36 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 37 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 37 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 38 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 38 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 39 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 39 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 40 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 40 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_contracted_hours_for_employee:108  |  ScheduleRow 41 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 41 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 41 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:36:32  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 42 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:36:32  |  set_daily_rest_rule:161                |  ScheduleRow 42 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:51:58  |  run_esp:198                            |  Running ESP in mode implicit with implicitly generated shifts

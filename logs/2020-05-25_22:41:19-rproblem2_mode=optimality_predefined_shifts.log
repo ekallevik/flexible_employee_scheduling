@@ -1,0 +1,17 @@
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:19  |  set_contracted_hours_for_employee:108  |  ScheduleRow 6 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+22:41:19  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+22:41:19  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+22:41:30  |  run_esp:196                            |  Running ESP in mode optimality with 915
+23:11:58  |  run_model:34                           |  Model is 2
+23:11:58  |  save_results:298                       |  Saved ESP-solution to solutions/2020-05-25_22:41:19-rproblem2_mode=optimality_predefined_shifts-ESP.sol
+23:11:58  |  __str__:313                            |  Completed run for 2020-05-25_22:41:19-rproblem2_mode=optimality_predefined_shifts

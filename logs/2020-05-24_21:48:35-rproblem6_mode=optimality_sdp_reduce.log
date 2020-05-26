@@ -1,0 +1,11 @@
+21:48:35  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 9 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:48:35  |  set_daily_rest_rule:161                |  ScheduleRow 9 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:48:35  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 10 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:48:35  |  set_daily_rest_rule:161                |  ScheduleRow 10 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:48:41  |  run_sdp:235                            |  Running SDP with 840 shifts
+21:48:44  |  run_sdp:254                            |  SDP-reduction from 840 to 540 shifts (-35.71%).
+21:49:15  |  run_esp:195                            |  Running ESP in mode optimality with 540
+02:49:16  |  run_model:34                           |  Model is 9
+02:49:16  |  save_results:294                       |  Saved SDP-solution to solutions/2020-05-24_21:48:35-rproblem6_mode=optimality_sdp_reduce-SDP.sol
+02:49:16  |  save_results:297                       |  Saved ESP-solution to solutions/2020-05-24_21:48:35-rproblem6_mode=optimality_sdp_reduce-ESP.sol
+02:49:16  |  __str__:312                            |  Completed run for 2020-05-24_21:48:35-rproblem6_mode=optimality_sdp_reduce

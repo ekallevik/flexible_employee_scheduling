@@ -1,0 +1,20 @@
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:11  |  set_contracted_hours_for_employee:108  |  ScheduleRow 6 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+21:34:11  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:34:11  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:34:12  |  run_sdp:235                            |  Running SDP with 360 shifts
+21:34:14  |  run_sdp:254                            |  SDP-reduction from 360 to 185 shifts (-48.61%).
+21:34:15  |  run_esp:195                            |  Running ESP in mode optimality with 185
+21:35:07  |  run_model:34                           |  Model is 2
+21:35:07  |  save_results:294                       |  Saved SDP-solution to solutions/2020-05-24_21:34:11-rproblem2_mode=optimality_sdp_reduce-SDP.sol
+21:35:07  |  save_results:297                       |  Saved ESP-solution to solutions/2020-05-24_21:34:11-rproblem2_mode=optimality_sdp_reduce-ESP.sol
+21:35:07  |  __str__:312                            |  Completed run for 2020-05-24_21:34:11-rproblem2_mode=optimality_sdp_reduce

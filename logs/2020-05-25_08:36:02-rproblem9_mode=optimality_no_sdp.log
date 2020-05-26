@@ -1,0 +1,4 @@
+08:36:49  |  run_esp:196  |  Running ESP in mode optimality with 840
+13:36:50  |  run_model:34  |  Model is 9
+13:36:50  |  save_results:298  |  Saved ESP-solution to solutions/2020-05-25_08:36:02-rproblem9_mode=optimality_no_sdp-ESP.sol
+13:36:50  |  __str__:313       |  Completed run for 2020-05-25_08:36:02-rproblem9_mode=optimality_no_sdp

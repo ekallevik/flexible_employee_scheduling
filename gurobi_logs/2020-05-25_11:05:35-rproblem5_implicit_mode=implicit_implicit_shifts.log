@@ -1,0 +1,67 @@
+
+Gurobi 9.0.2 (linux64) logging started Mon May 25 11:05:35 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-25_11:05:35-rproblem5_implicit_mode=implicit_implicit_shifts.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 18000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 155499 rows, 422966 columns and 10717669 nonzeros
+Model fingerprint: 0x9031d86b
+Variable types: 47 continuous, 422919 integer (422310 binary)
+Coefficient statistics:
+  Matrix range     [5e-02, 1e+03]
+  Objective range  [5e-01, 2e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [5e-01, 1e+03]
+Presolve removed 6406 rows and 249775 columns (presolve time = 5s) ...
+Presolve removed 8701 rows and 252085 columns (presolve time = 12s) ...
+Presolve removed 8701 rows and 252085 columns (presolve time = 15s) ...
+Presolve removed 8701 rows and 252085 columns (presolve time = 38s) ...
+Presolve removed 5461 rows and 248845 columns
+Presolve time: 39.03s
+Presolved: 150038 rows, 174121 columns, 2939934 nonzeros
+Variable types: 1 continuous, 174120 integer (170865 binary)
+
+Deterministic concurrent LP optimizer: primal simplex, dual simplex, and barrier
+Showing barrier log only...
+
+Root barrier log...
+
+Ordering time: 1.77s
+
+Barrier statistics:
+ Dense cols : 2130
+ AA' NZ     : 8.053e+06
+ Factor NZ  : 1.342e+07 (roughly 240 MBytes of memory)
+ Factor Ops : 5.833e+09 (less than 1 second per iteration)
+ Threads    : 21
+
+Barrier performed 0 iterations in 47.04 seconds
+Barrier solve interrupted - model solved by another algorithm
+
+Concurrent spin time: 0.18s
+
+Solved with primal simplex
+
+Root relaxation: infeasible, 20094 iterations, 4.91 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 infeasible    0               - infeasible      -     -   47s
+
+Explored 0 nodes (20094 simplex iterations) in 47.08 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 0
+No other solutions better than -1e+100
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -

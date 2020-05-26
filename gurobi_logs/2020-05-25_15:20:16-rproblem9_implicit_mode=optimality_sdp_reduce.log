@@ -1,0 +1,67 @@
+
+Gurobi 9.0.2 (linux64) logging started Mon May 25 15:20:16 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-25_15:20:16-rproblem9_implicit_mode=optimality_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 18000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 1398 rows, 1468 columns and 4469 nonzeros
+Model fingerprint: 0xf1f9786e
+Variable types: 26 continuous, 1442 integer (70 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 6e+00]
+Presolve removed 1395 rows and 1463 columns
+Presolve time: 0.00s
+Presolved: 3 rows, 5 columns, 8 nonzeros
+Variable types: 0 continuous, 5 integer (4 binary)
+Found heuristic solution: objective 109.5000000
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 109.5 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.095000000000e+02, best bound 1.095000000000e+02, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Mon May 25 15:20:17 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-25_15:20:16-rproblem9_implicit_mode=optimality_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 18000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 20598 rows, 13562 columns and 527350 nonzeros
+Model fingerprint: 0xde5e67e1
+Variable types: 56 continuous, 13506 integer (12204 binary)
+Coefficient statistics:
+  Matrix range     [1e-02, 2e+02]
+  Objective range  [2e-01, 2e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Presolve removed 9670 rows and 5990 columns
+Presolve time: 0.06s
+
+Explored 0 nodes (0 simplex iterations) in 0.11 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -

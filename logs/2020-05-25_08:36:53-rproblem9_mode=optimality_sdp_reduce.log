@@ -1,0 +1,7 @@
+08:37:00  |  run_sdp:236  |  Running SDP with 840 shifts
+08:37:06  |  run_sdp:255  |  SDP-reduction from 840 to 504 shifts (-40.00%).
+08:37:43  |  run_esp:196  |  Running ESP in mode optimality with 504
+13:37:43  |  run_model:34  |  Model is 9
+13:37:43  |  save_results:295  |  Saved SDP-solution to solutions/2020-05-25_08:36:53-rproblem9_mode=optimality_sdp_reduce-SDP.sol
+13:37:44  |  save_results:298  |  Saved ESP-solution to solutions/2020-05-25_08:36:53-rproblem9_mode=optimality_sdp_reduce-ESP.sol
+13:37:44  |  __str__:313       |  Completed run for 2020-05-25_08:36:53-rproblem9_mode=optimality_sdp_reduce

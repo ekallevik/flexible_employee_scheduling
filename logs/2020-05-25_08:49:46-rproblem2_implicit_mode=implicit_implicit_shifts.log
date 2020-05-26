@@ -1,0 +1,17 @@
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:46  |  set_contracted_hours_for_employee:108  |  ScheduleRow 6 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+08:49:46  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+08:49:46  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+08:49:57  |  run_esp:198                            |  Running ESP in mode implicit with implicitly generated shifts
+08:50:20  |  run_model:57                           |  Model is 2
+08:50:20  |  save_results:298                       |  Saved ESP-solution to solutions/2020-05-25_08:49:46-rproblem2_implicit_mode=implicit_implicit_shifts-ESP.sol
+08:50:20  |  __str__:313                            |  Completed run for 2020-05-25_08:49:46-rproblem2_implicit_mode=implicit_implicit_shifts

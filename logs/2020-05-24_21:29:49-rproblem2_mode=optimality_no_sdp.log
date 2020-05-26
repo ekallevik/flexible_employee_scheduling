@@ -1,0 +1,17 @@
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 1 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 1 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 2 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 2 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 3 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 3 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 4 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 4 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 5 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 5 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:49  |  set_contracted_hours_for_employee:108  |  ScheduleRow 6 don't have WeekHours tag. DEFAULT_CONTRACTED_HOURS applied
+21:29:49  |  set_weekly_rest_rule_for_employee:174  |  ScheduleRow 6 don't have WeeklyRestRule tag. DEFAULT_WEEKLY_REST applied
+21:29:49  |  set_daily_rest_rule:161                |  ScheduleRow 6 don't have a set DayRestRule tag. Using DEFAULT_DAILY_REST
+21:29:52  |  run_esp:195                            |  Running ESP in mode optimality with 360
+21:30:59  |  run_model:34                           |  Model is 2
+21:30:59  |  save_results:297                       |  Saved ESP-solution to solutions/2020-05-24_21:29:49-rproblem2_mode=optimality_no_sdp-ESP.sol
+21:30:59  |  __str__:312                            |  Completed run for 2020-05-24_21:29:49-rproblem2_mode=optimality_no_sdp
