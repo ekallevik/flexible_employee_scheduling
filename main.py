@@ -356,6 +356,8 @@ def evaluate_parameters(search_params):
     pr.alns.decay = decay
     pr.alns.WeightUpdate = operator_weights
 
+    pr.run_alns(runtime=1)
+
     score = pr.alns.get_best_solution_value()
 
     return score
@@ -374,7 +376,7 @@ def tune_hyperparameters():
         skopt.space.Real(1.4, 1.8, name='is_best', prior='uniform'),
     ]
 
-    results = skopt.forest_minimize(objective, SPACE, n_calls=10, n_random_starts=3)
+    results = skopt.forest_minimize(objective, SPACE, n_calls=5, n_random_starts=1)
     best_auc = -1.0 * results.fun
     best_params = results.x
 
