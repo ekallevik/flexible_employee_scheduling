@@ -26,7 +26,6 @@ class ALNS:
         self.objective_weights = objective_weights
         self.decay = decay
         self.log_name = log_name
-
         self.initial_solution = state
         self.current_solution = state
         # current global best and feasible solution
@@ -97,6 +96,8 @@ class ALNS:
         self.sundays = data["time"]["sundays"]
         self.shift_lookup = data["heuristic"]["shift_lookup"]
         self.shifts_covered_by_off_shift = data["shifts"]["shifts_covered_by_off_shift"]
+
+        get_shift_combinations(self.shift_combinations_violating_daily_rest, self.employees)
 
         remove_worst_week = partial(
             worst_week_removal,
@@ -435,8 +436,8 @@ class ALNS:
             remove_worst_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                # repair_week_demand,
-                # repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
@@ -447,8 +448,8 @@ class ALNS:
             remove_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                # repair_week_demand,
-                # repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
@@ -459,8 +460,8 @@ class ALNS:
             remove_weighted_random_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
-                # repair_week_demand,
-                # repair_week_demand_per_shift,
+                repair_week_demand,
+                repair_week_demand_per_shift,
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
@@ -528,6 +529,7 @@ class ALNS:
         logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
 
+
     def perform_iteration(self):
 
         # Add a newline between the output of each iteration
@@ -578,7 +580,6 @@ class ALNS:
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
-
         logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
                        f"{candidate_solution.get_objective_value(): 7.2f} "
                        f"({destroy_id}, {repair_id})")
@@ -587,7 +588,6 @@ class ALNS:
 
         if self.criterion.accept(candidate_solution, self.current_solution,
                                  self.best_solution, self.random_state):
-
             self.current_solution = candidate_solution
 
             if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
@@ -605,7 +605,6 @@ class ALNS:
         if (candidate_solution.is_feasible()
                 and candidate_solution.get_objective_value() >=
                 self.best_solution.get_objective_value()):
-
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
