@@ -350,7 +350,7 @@ class ProblemRunner:
             "IS_BETTER": search_params[3],
             "IS_BEST": search_params[4],
         }
-        hard_penalty = search_params[4]
+        hard_penalty = search_params[5]
 
         self.set_alns(decay, hard_penalty, operator_weights)
         self.run_alns(runtime=10)
