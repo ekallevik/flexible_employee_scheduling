@@ -8,6 +8,7 @@ fire==0.3.1
 pdbpp==0.10.2
 loguru==0.5.0
 numpy==1.18.4
+scikit-optimize
 
 
 matplotlib~=3.2.1
