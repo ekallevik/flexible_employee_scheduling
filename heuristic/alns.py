@@ -21,7 +21,7 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 
 class ALNS:
-    def __init__(self, state, criterion, data, objective_weights, log_name, decay):
+    def __init__(self, state, criterion, data, objective_weights, log_name, decay, operator_weights):
 
         self.objective_weights = objective_weights
         self.decay = decay
@@ -39,12 +39,15 @@ class ALNS:
         self.repair_operators = defaultdict(dict)
         self.repair_weights = {}
 
-        self.WeightUpdate = {
-            "IS_BEST": 1.50,
-            "IS_BETTER": 1.06,
-            "IS_ACCEPTED": 1.03,
-            "IS_REJECTED": 0.97
-        }
+        if operator_weights:
+            self.WeightUpdate = operator_weights
+        else:
+            self.WeightUpdate = {
+                "IS_BEST": 1.50,
+                "IS_BETTER": 1.06,
+                "IS_ACCEPTED": 1.03,
+                "IS_REJECTED": 0.97
+            }
 
         # Sets
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]

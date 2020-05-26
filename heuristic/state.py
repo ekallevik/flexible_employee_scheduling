@@ -7,7 +7,8 @@ from heuristic.delta_calculations import hard_constraint_penalties
 
 
 class State:
-    def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f):
+    def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f,
+                 hard_penalty=1):
 
         #Hard decision variables
         self.x = decision_vars["x"]
@@ -19,6 +20,7 @@ class State:
 
         # Hard Penalty Variables
         self.hard_vars = hard_vars
+        self.hard_penalty = hard_penalty
 
         self.objective_function_value = objective_function_value
         self.f = f
