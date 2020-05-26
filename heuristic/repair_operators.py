@@ -859,17 +859,13 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
     days_in_week = days[7*week[0]:(week[0]+1)*7]
     days_in_week_x = [x_day for x_day in range(max(0, 7*week[0] - 1), min(7*(week[0] + 1) + 1, len(days)))]
     #delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
-    
-    updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
-    updated_time_periods.sort()
-
-
     #updated_contracted_hours = min(sum(contracted_hours[e] for e in employees), sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks for e in employees))
-    # updated_demand = {
-    #     "min": {(c,t): demand["min"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]},
-    #     "ideal": {(c,t): demand["ideal"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]},
-    #     "max": {(c,t): demand["max"][c,t] - sum(state.y[c,e,t] for e in employees) for c in competencies for t in time_periods_in_week[c, week[0]]}
-    # }
+
+    updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
+    #updated_time_periods.sort()
+
+
+ 
     model = Model(name="week_operator")
     # Disable logging to file
     model.setParam("LogFile", "")
@@ -952,10 +948,8 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
     ,GRB.MINIMIZE,)
 
     #model.setParam("MipFocus", 1)
-    model.write("Restrictions.lp")
     model.setParam("TimeLimit", 5)
     model.optimize()
-    model.write("answer.sol")
 
     shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0.5}
     saturdays = [5 + 7*week[0]]
@@ -1098,7 +1092,7 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     updated_contracted_hours = {e: sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e in employees}
     
     updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
-    updated_time_periods.sort()
+    #updated_time_periods.sort()
 
     sunday = [days_in_week[-1]]
     saturday = [days_in_week[-2]]
@@ -1285,9 +1279,7 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
         - quicksum(delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in updated_time_periods)
     , GRB.MAXIMIZE)
 
-    model.write("restrictions.lp")
     model.setParam("TimeLimit", 5)
     model.optimize()
-    model.write("answer_problem7.sol")
     repair_set = [set_x(state, t_covered_by_shift, e, t, v, 1) for e in employees for t,v in shifts_in_week[week[0]] if abs(x[e,t,v].x) > 0.5]
     return repair_set
