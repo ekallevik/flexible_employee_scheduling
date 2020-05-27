@@ -376,59 +376,6 @@ class ProblemRunner:
         return self
 
 
-def evaluate_parameters(search_params):
-
-    pr = ProblemRunner()
-
-    breakpoint()
-
-    decay = search_params["decay"]
-    operator_weights = {
-        "IS_REJECTED": search_params["IS_REJECTED"],
-        "IS_ACCEPTED": search_params["IS_ACCEPTED"],
-        "IS_BETTER": search_params["IS_BETTER"],
-        "IS_BEST": search_params["IS_BEST"],
-    }
-
-    pr.alns.decay = decay
-    pr.alns.WeightUpdate = operator_weights
-
-    pr.run_alns(runtime=1)
-
-    score = pr.alns.get_best_solution_value()
-
-    return score
-
-def objective(**params):
-    return -1.0 * evaluate_parameters(params)
-
-def tune_hyperparameters():
-
-    SPACE = [
-        skopt.space.Real(0.01, 0.99, name='decay', prior='uniform'),
-        #skopt.space.Integer(1, 30, name='max_depth'),
-        skopt.space.Real(0.5, 1.0, name='is_rejected', prior='uniform'),
-        skopt.space.Real(1.0, 1.3, name='is_accepted', prior='uniform'),
-        skopt.space.Real(1.2, 1.5, name='is_better', prior='uniform'),
-        skopt.space.Real(1.4, 1.8, name='is_best', prior='uniform'),
-    ]
-
-    results = skopt.forest_minimize(objective, SPACE, n_calls=5, n_random_starts=1)
-    best_auc = -1.0 * results.fun
-    best_params = results.x
-
-    print('best result: ', best_auc)
-    print('best parameters: ', best_params)
-
-    print("Results")
-    pprint(results)
-
-    breakpoint()
-
-
-
-
-
 if __name__ == "__main__":
     """ 
     Run any function with arguments ARGS by using:
