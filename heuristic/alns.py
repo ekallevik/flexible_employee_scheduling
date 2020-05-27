@@ -608,7 +608,6 @@ class ALNS:
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
-            self.current_solution = candidate_solution
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
