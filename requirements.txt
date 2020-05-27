@@ -10,6 +10,7 @@ loguru==0.5.0
 numpy==1.18.4
 scikit-optimize
 neptune-client==0.4.114
+psutil==5.7.0
 
 
 matplotlib~=3.2.1

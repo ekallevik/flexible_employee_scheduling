@@ -2,6 +2,7 @@ from datetime import datetime
 from pprint import pprint
 
 import skopt
+import neptune
 
 import fire
 from gurobipy import *
@@ -337,6 +338,42 @@ class ProblemRunner:
 
         return self.log_name
 
+    def run_neptune(self, tags, description=None):
+        """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
+
+        self.save_results()
+
+        logger.info("Logging to Neptune")
+
+        params = {
+            "problem": self.problem,
+            "with_sdp": True if self.sdp else False,
+            "esp_mode": self.mode,
+            "weights": self.weights,
+        }
+
+        # NEPTUNE_API_TOKEN environment variable needs to be defined.
+        neptune_project = "ekallevik/ALNS" if self.alns else "ekallevik/esp"
+        logger.info(f"Logging to Neptune project: {neptune_project}")
+        neptune.init(neptune_project)
+
+        if self.alns:
+            params["critertion"] = self.alns.criterion
+            params["operator_weights"] = self.alns.WeightUpdate
+            params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
+            params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
+            params["iterations"] = self.alns.iteration
+            params["random_state"] = self.alns.random_state
+
+        neptune.create_experiment(name=self.log_name, params=params, description=description,
+                                  tags=tags)
+
+        neptune.log_artifact(f"gurobi_logs/{self.log_name}.log")
+        neptune.log_artifact(f"logs/{self.log_name}.log")
+        neptune.log_artifact(f"solutions/{self.log_name}-SDP.sol")
+        neptune.log_artifact(f"solutions/{self.log_name}-ESP.sol")
+
+        return self
 
 
 def evaluate_parameters(search_params):
@@ -389,72 +426,8 @@ def tune_hyperparameters():
     breakpoint()
 
 
-def neptune():
-    import neptune
 
-    # The init() function called this way assumes that
-    # NEPTUNE_API_TOKEN environment variable is defined.
 
-    neptune.init('ekallevik/sandbox')
-    neptune.create_experiment(name='minimal_example')
-
-    # log some metrics
-    for i in range(100):
-        neptune.log_metric('loss', 0.95 ** i)
-
-    neptune.log_metric('AUC', 0.96)
-
-def run_multiple_problems(variant=0, threads=32, runtime=15):
-
-    problems = [
-        "rproblem1",
-        "rproblem2",
-        "rproblem3",
-        "rproblem4",
-        "rproblem5",
-        "rproblem6",
-        "rproblem7",
-        "rproblem8",
-        "rproblem9",
-        "rproblem3_2_weeks",
-        "rproblem3_8_weeks",
-        "rproblem5_4_weeks",
-        "rproblem5_12_weeks",
-        "rproblem6_8_weeks",
-        "rproblem6_16_weeks",
-        "rproblem7_8_weeks",
-        "rproblem7_16_weeks",
-        "rproblem9_8_weeks",
-        "rproblem9_16_weeks",
-    ]
-
-    if variant == 0:
-        problems = ["rproblem9"]
-        share_times = None
-    if variant == 1:
-        problems = ["rproblem9"]
-        share_times = [i for i in range(60, 15 * 60, 10)]
-    if variant == 2:
-        problems = ["rproblem9"]
-        share_times = [i for i in range(60, 15 * 60, 30)]
-    if variant == 3:
-        problems = ["rproblem8"]
-
-    share_time_list = [
-        [i for i in range(60, 15 * 60, 10)],
-        [i for i in range(60, 15 * 60, 30)],
-        [i for i in range(60, 15 * 60, 45)],
-        [i for i in range(60, 15 * 60, 60)]
-                   ]
-
-    #for share_times in share_time_list:
-
-    for problem in problems:
-        logger.critical(f"Running {problem} with {threads} threads and shares=\n{share_times}")
-
-        pr = ProblemRunner(problem=problem)
-        pr.run_palns(share_times=share_times, threads=threads, runtime=runtime)
-        logger.critical(f"Completed run of {problem} with {threads} threads and shares=\n{share_times}")
 
 if __name__ == "__main__":
     """ 
