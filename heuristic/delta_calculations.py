@@ -236,7 +236,7 @@ def hard_constraint_penalties(state):
                       break_one_demand_per_time + break_weekly_off + break_shift_to_demand +
                       break_contracted_hours + break_daily_rest)
 
-    return hard_penalties
+    return hard_penalties * state.hard_penalty
 
 
 def calculate_objective_function(state, employees, saturdays, L_C_D, days,
@@ -246,7 +246,7 @@ def calculate_objective_function(state, employees, saturdays, L_C_D, days,
 
     g = min(state.f.values())
 
-    penalty = 12 * hard_constraint_penalties(state)
+    penalty = hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())
