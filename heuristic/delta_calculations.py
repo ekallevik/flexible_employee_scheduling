@@ -440,7 +440,7 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
             + partial_weekend_error 
             + isolated_days_error 
             + deviation_contracted_hours
-            + 12 * consecutive_days
+            + 40 * consecutive_days
             - 100 * competency_score
             + 5 * allowed_preferences
             )
@@ -503,7 +503,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 10 * -isolated_day
+        return 20 * -isolated_day
 
     else:
         return 0
@@ -565,7 +565,7 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
             + contracted_hours
             + current_isolated_days
             + current_partial_weekends 
-            + 12 * consecutive_days
+            + 40 * consecutive_days
             + allowed_preferences
             #* (-partial_weekends_other_weeks)
             #weekly_rest_other_weeks
