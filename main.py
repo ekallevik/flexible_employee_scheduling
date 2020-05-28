@@ -5,7 +5,6 @@ from pprint import pprint
 import fire
 from gurobipy import *
 from loguru import logger
-from skopt.plots import plot_convergence
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
@@ -126,7 +125,7 @@ class ProblemRunner:
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
-        #self.set_alns(decay)
+        self.set_alns(decay)
 
         if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
@@ -165,7 +164,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self, decay, hard_penalty, operator_weights):
+    def set_alns(self, decay, operator_weights=None):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -199,8 +198,7 @@ class ProblemRunner:
         objective_function, f = calculate_objective_function(self.data, soft_variables,
                                                              self.weights, candidate_solution["w"], candidate_solution["y"])
 
-        state = State(candidate_solution, soft_variables, hard_variables, objective_function, f,
-                      hard_penalty=hard_penalty)
+        state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
         self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
                          operator_weights=operator_weights)
