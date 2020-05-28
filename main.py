@@ -1,6 +1,9 @@
 import json
 from datetime import datetime
 from pprint import pprint
+import skopt
+import neptune
+
 
 import fire
 from gurobipy import *
@@ -336,6 +339,45 @@ class ProblemRunner:
         logger.info(f"Completed run for {self.log_name}")
 
         return self.log_name
+
+
+    def run_neptune(self, tags, description=None):
+        """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
+
+        self.save_results()
+
+        logger.info("Logging to Neptune")
+
+        params = {
+            "problem": self.problem,
+            "with_sdp": True if self.sdp else False,
+            "esp_mode": self.mode,
+            "weights": self.weights,
+        }
+
+        # NEPTUNE_API_TOKEN environment variable needs to be defined.
+        neptune_project = "ekallevik/ALNS" if self.alns else "ekallevik/esp"
+        logger.info(f"Logging to Neptune project: {neptune_project}")
+        neptune.init(neptune_project)
+
+        if self.alns:
+            params["critertion"] = self.alns.criterion
+            params["operator_weights"] = self.alns.WeightUpdate
+            params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
+            params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
+            params["iterations"] = self.alns.iteration
+            params["random_state"] = self.alns.random_state
+
+        neptune.create_experiment(name=self.log_name, params=params, description=description,
+                                  tags=tags)
+
+        neptune.log_artifact(f"gurobi_logs/{self.log_name}.log")
+        neptune.log_artifact(f"logs/{self.log_name}.log")
+        neptune.log_artifact(f"solutions/{self.log_name}-SDP.sol")
+        neptune.log_artifact(f"solutions/{self.log_name}-ESP.sol")
+
+        return self
+
 
 if __name__ == "__main__":
     """ 
