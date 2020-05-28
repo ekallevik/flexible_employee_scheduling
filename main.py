@@ -1,8 +1,9 @@
+import json
 from datetime import datetime
 from pprint import pprint
-
 import skopt
 import neptune
+
 
 import fire
 from gurobipy import *
@@ -166,7 +167,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self, decay):
+    def set_alns(self, decay, operator_weights=None):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -202,7 +203,8 @@ class ProblemRunner:
 
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
 
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay)
+        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
+                         operator_weights=operator_weights)
         logger.info(f"ALNS with {decay} and {self.criterion}")
 
     def get_candidate_solution(self):
@@ -337,6 +339,7 @@ class ProblemRunner:
         logger.info(f"Completed run for {self.log_name}")
 
         return self.log_name
+
 
     def run_neptune(self, tags, description=None):
         """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
