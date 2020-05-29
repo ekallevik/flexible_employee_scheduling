@@ -513,7 +513,8 @@ class ALNS(multiprocessing.Process):
             "criterion:": str(self.criterion),
             "weight_update": self.WeightUpdate,
             "random_seed": self.seed,
-            "random_state": str(self.random_state)
+            "random_state": str(self.random_state),
+            "objective_history": self.objective_history
         }
 
         self.results[self.worker_name] = results
@@ -621,6 +622,7 @@ class ALNS(multiprocessing.Process):
             self.violation_plotter.plot_data(violations)
 
         self.update_objective_history(candidate_solution, current_time)
+
         if self.objective_plotter:
             self.objective_plotter.plot_data(self.objective_history)
 
