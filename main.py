@@ -129,7 +129,7 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=32, runtime=15, share_times=None):
+    def run_palns(self, threads=64, runtime=15, share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
@@ -150,14 +150,17 @@ class ProblemRunner:
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
-        variant = "weight+decay"
-        decay_tune = [i/8 for i in range(8)]
-        operator_weights_tune = [
-            [0.80, 1.20, 1.40, 1.60],
-            [0.85, 1.15, 1.35, 1.50],
-            [0.90, 1.10, 1.25, 1.40],
-            [0.95, 1.05, 1.15, 1.25],
-        ]
+        variant = "seed"
+        decay_tune = None
+        operator_weights_tune = None
+
+        #decay_tune = [i/8 for i in range(8)]
+        #operator_weights_tune = [
+        #    [0.80, 1.20, 1.40, 1.60],
+        #    [0.85, 1.15, 1.35, 1.50],
+        #    [0.90, 1.10, 1.25, 1.40],
+        #    [0.95, 1.05, 1.15, 1.25],
+        #]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
@@ -166,20 +169,13 @@ class ProblemRunner:
             state_copy = deepcopy(state)
             criterion = GreedyCriterion()
 
-            decay = 0.5 if not decay_tune else decay_tune[j % len(decay_tune)]
-
+            decay = 0.5
             operator_weights = None
-            if operator_weights_tune:
-                operator_weights = {
-                    "IS_REJECTED": operator_weights_tune[j % len(operator_weights_tune)][0],
-                    "IS_ACCEPTED": operator_weights_tune[j % len(operator_weights_tune)][1],
-                    "IS_BETTER": operator_weights_tune[j % len(operator_weights_tune)][2],
-                    "IS_BEST": operator_weights_tune[j % len(operator_weights_tune)][3],
-                }
+
             worker_name = f"worker-{j}"
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
-                        results=shared_results, queue=queue, start_time=self.start_time, share_times=share_times)
+                        results=shared_results, queue=queue, start_time=self.start_time, share_times=share_times, seed=j)
             processes.append(alns)
 
             logger.info(f"Starting {worker_name}")
@@ -433,28 +429,6 @@ class ProblemRunner:
 
 def run_multiple_problems(variant=0):
 
-    problems = [
-        "rproblem1",
-        "rproblem2",
-        "rproblem3",
-        "rproblem4",
-        "rproblem5",
-        "rproblem6",
-        "rproblem7",
-        "rproblem8",
-        "rproblem9",
-        "rproblem3_2_weeks",
-        "rproblem3_8_weeks",
-        "rproblem5_4_weeks",
-        "rproblem5_12_weeks",
-        "rproblem6_8_weeks",
-        "rproblem6_16_weeks",
-        "rproblem7_8_weeks",
-        "rproblem7_16_weeks",
-        "rproblem9_8_weeks",
-        "rproblem9_16_weeks",
-    ]
-
     if variant == 0:
         problems = ["rproblem9"]
         share_times = None
@@ -513,7 +487,6 @@ if __name__ == "__main__":
          
     """
 
-    #fire.Fire(ProblemRunner)
-    fire.Fire()
+    fire.Fire(ProblemRunner)
 
 
