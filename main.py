@@ -457,12 +457,12 @@ class ProblemRunner:
         neptune.init(neptune_project)
 
         if project == "ALNS":
-            params["critertion"] = self.alns.criterion
-            params["operator_weights"] = self.alns.WeightUpdate
-            params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
-            params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
-            params["iterations"] = self.alns.iteration
-            params["random_state"] = self.alns.random_state
+            #params["critertion"] = self.alns.criterion
+            #params["operator_weights"] = self.alns.WeightUpdate
+            #params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
+            #params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
+            #params["iterations"] = self.alns.iteration
+            #params["random_state"] = self.alns.random_state
             params["palns_results"] = self.palns_results
 
         neptune.create_experiment(name=self.log_name, params=params, description=description,
