@@ -1128,10 +1128,10 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     lam_minus = model.addVars(employees, vtype=GRB.CONTINUOUS, name="Lambda_minus")
     rho_sat = model.addVars(employees, saturday, vtype=GRB.BINARY, name="rho_sat")
     rho_sun = model.addVars(employees, sunday, vtype=GRB.BINARY, name="rho_sun")
-    iso_work = model.addVars(employees, days_in_week, vtype=GRB.BINARY, name="q_iso_work")
-    iso_off = model.addVars(employees, days_in_week, vtype=GRB.BINARY, name="q_iso_off")
-    gamma = model.addVars(employees, days_in_week, vtype=GRB.BINARY, name="gamma")
-    con = model.addVars(employees, days_in_week[:-L_C_D], vtype=GRB.BINARY, name="consecutive_days")
+    iso_work = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="q_iso_work")
+    iso_off = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="q_iso_off")
+    gamma = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="gamma")
+    con = model.addVars(employees, days_in_week_x[:-L_C_D], vtype=GRB.BINARY, name="consecutive_days")
     g = model.addVar(vtype=GRB.CONTINUOUS, name="lowest_contracted_hours")
 
     if(days_in_week_x[0] == 7*week[0] - 1):
@@ -1217,26 +1217,26 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     model.addConstrs(
         (   gamma[e, i] - gamma[e, (i + 1)] + gamma[e, (i + 2)] - 1 <= iso_off[e, (i + 1)]
             for e in employees
-            for i in days_in_week[:-2]
+            for i in days_in_week_x[:-2]
         ), name="isolated_off_days")
     
     model.addConstrs(
         (   -gamma[e, i] + gamma[e, (i + 1)] - gamma[e, (i + 2)] <= iso_work[e, (i + 1)]
             for e in employees
-            for i in days_in_week[:-2]
+            for i in days_in_week_x[:-2]
         ), name="isolated_working_days")
 
     model.addConstrs(
         (   quicksum(gamma[e, i_marked] for i_marked in range(i, i + L_C_D + 1)) - L_C_D
                 <= con[e, i] - 1
                 for e in employees
-                for i in days_in_week[:-L_C_D]
+                for i in days_in_week_x[:-L_C_D]
             ), name="consecutive_days")
 
     model.addConstrs(
         (   quicksum(x[e, t, v] for t, v in shifts_per_day[i]) == gamma[e, i]
             for e in employees
-            for i in days_in_week
+            for i in days_in_week_x
         ), name="if_employee_e_works_day_i")
 
     model.addConstrs(
@@ -1263,18 +1263,18 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
             (quicksum(x[e, t, v] for t, v in updated_invalid_shifts[e]) == 0 for e in employees
             ), name="invalid_shifts",)
 
-    model.addConstrs(
-        g >= lam_minus[e] for e in employees
-    )
+    # model.addConstrs(
+    #     g >= lam_minus[e] for e in employees
+    # )
     model.setObjective(
         quicksum(
                 - weights["partial weekends"] * quicksum(rho_sat[e, i] + rho_sun[e, i + 1] for i in saturday)
-                - weights["isolated working days"] * quicksum(iso_work[e, i] for i in days_in_week)
-                - weights["isolated off days"] * quicksum(iso_off[e, i] for i in days_in_week)
-                - weights["consecutive days"] * quicksum(con[e, i] for i in days_in_week[:-L_C_D])
+                - weights["isolated working days"] * quicksum(iso_work[e, i] for i in days_in_week_x)
+                - weights["isolated off days"] * quicksum(iso_off[e, i] for i in days_in_week_x)
+                - weights["consecutive days"] * quicksum(con[e, i] for i in days_in_week_x[:-L_C_D])
                 + weights["preferences"] * quicksum(preferences[e][t] * quicksum(y[c, e, t] for c in competencies) for t in updated_time_periods)
                 -  1.2 * lam_plus[e]/time_step
-                - g
+                #- g
         for e in employees)
         
         - quicksum(delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in updated_time_periods)

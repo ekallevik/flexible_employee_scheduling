@@ -236,7 +236,7 @@ def hard_constraint_penalties(state):
                       break_one_demand_per_time + break_weekly_off + break_shift_to_demand +
                       break_contracted_hours + break_daily_rest)
 
-    return hard_penalties
+    return hard_penalties * state.hard_penalty
 
 
 def calculate_objective_function(state, employees, saturdays, L_C_D, days,
@@ -246,7 +246,7 @@ def calculate_objective_function(state, employees, saturdays, L_C_D, days,
 
     g = min(state.f.values())
 
-    penalty = 12 * hard_constraint_penalties(state)
+    penalty = hard_constraint_penalties(state)
 
     objective_function_value = (
             sum(state.f.values())
@@ -440,7 +440,7 @@ def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, sh
             + partial_weekend_error 
             + isolated_days_error 
             + deviation_contracted_hours
-            + 12 * consecutive_days
+            + 40 * consecutive_days
             - 100 * competency_score
             + 5 * allowed_preferences
             )
@@ -503,7 +503,7 @@ def regret_isolated_days(state, e, shifts_at_day, day, weeks):
             if sum(1 for t,v in shifts_at_day[day + 1] if state.x.get((e,t,v))) == 0 :
                 isolated_day += 1
         
-        return 10 * -isolated_day
+        return 20 * -isolated_day
 
     else:
         return 0
@@ -565,7 +565,7 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
             + contracted_hours
             + current_isolated_days
             + current_partial_weekends 
-            + 12 * consecutive_days
+            + 40 * consecutive_days
             + allowed_preferences
             #* (-partial_weekends_other_weeks)
             #weekly_rest_other_weeks
