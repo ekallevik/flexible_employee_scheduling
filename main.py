@@ -3,6 +3,10 @@ import multiprocessing
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
+from pprint import pprint
+import skopt
+import neptune
+
 
 import fire
 from gurobipy import *
@@ -84,6 +88,7 @@ class ProblemRunner:
 
         self.criterion = GreedyCriterion()
         self.alns = None
+        self.palns_results = None
 
         self.set_esp()
 
@@ -185,17 +190,21 @@ class ProblemRunner:
             logger.warning(f"Terminating {process.worker_name}")
             process.join()
 
-        filename = f"{self.log_name}_threads={threads}_variants={variant}"
-        self.save_shared_results(shared_results, filename, initial_solution=initial_solution,
-                                 share_times=share_times)
+        self.save_shared_results(shared_results, initial_solution=initial_solution,
+                                 share_times=share_times, threads=threads, variant=variant)
 
-    def save_shared_results(self, shared_results, filename, initial_solution, share_times):
+        return self
+
+    def save_shared_results(self, shared_results, initial_solution, share_times,
+                            threads, variant):
 
         global_iterations = sum(result["iterations"] for result in shared_results.values())
         global_best_solution = max(result["best_solution"] for result in shared_results.values())
 
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
+        shared_results["variant"] = variant
+        shared_results["threads"] = threads
         shared_results["start_time"] = self.start_time
         shared_results["share_times"] = share_times
         shared_results["construction_runtime"] = self.construction_runtime
@@ -203,7 +212,9 @@ class ProblemRunner:
         shared_results["global_best_solution"] = global_best_solution
         shared_results["global_iterations"] = global_iterations
 
-        with open(f"{filename}.json", "w") as fp:
+        self.palns_results = shared_results
+
+        with open(f"{self.log_name}.json", "w") as fp:
             json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
@@ -249,7 +260,7 @@ class ProblemRunner:
 
         return self
 
-    def set_alns(self, decay):
+    def set_alns(self, decay, operator_weights=None):
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
@@ -426,23 +437,51 @@ class ProblemRunner:
 
         return self.log_name
 
+    def run_neptune(self, tags, description=None, project="ALNS"):
+        """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
 
-def run_multiple_problems(variant=0):
+        self.save_results()
 
-    if variant == 0:
-        problems = ["rproblem9"]
-        share_times = None
-    if variant == 1:
-        problems = ["rproblem9"]
-        share_times = [i for i in range(60, 15*60, 20)]
-    if variant == 2:
-        problems = ["rproblem5", "rproblem6"]
-    if variant == 3:
-        problems = ["rproblem7", "rproblem8"]
+        logger.info("Logging to Neptune")
 
-    for problem in problems:
-        pr = ProblemRunner(problem=problem)
-        pr.run_palns()
+        params = {
+            "problem": self.problem,
+            "with_sdp": True if self.sdp else False,
+            "esp_mode": self.mode,
+            "weights": self.weights,
+        }
+
+        # NEPTUNE_API_TOKEN environment variable needs to be defined.
+        neptune_project = f"ekallevik/{project}"
+        logger.info(f"Logging to Neptune project: {neptune_project}")
+        neptune.init(neptune_project)
+
+        if project == "ALNS":
+            #params["critertion"] = self.alns.criterion
+            #params["operator_weights"] = self.alns.WeightUpdate
+            #params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
+            #params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
+            #params["iterations"] = self.alns.iteration
+            #params["random_state"] = self.alns.random_state
+            params["palns_results"] = self.palns_results
+
+        neptune.create_experiment(name=self.log_name, params=params, description=description,
+                                  tags=tags)
+
+        neptune.log_artifact(f"gurobi_logs/{self.log_name}.log")
+        neptune.log_artifact(f"logs/{self.log_name}.log")
+        neptune.log_artifact(f"solutions/{self.log_name}-SDP.sol")
+        neptune.log_artifact(f"solutions/{self.log_name}-ESP.sol")
+
+        try:
+            logger.info("Uploading JSON results")
+            neptune.log_artifact(f"{self.log_name}.json")
+        except:
+            logger.info("No JSON results found")
+            pass
+
+        return self
+
 
 if __name__ == "__main__":
     """ 
