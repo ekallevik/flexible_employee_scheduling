@@ -1,6 +1,5 @@
 import json
 import multiprocessing
-import random
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
@@ -37,12 +36,11 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "WARNING",
+    "heuristic.alns": "TRACE",
     "heuristic.delta_calculations": "CRITICAL",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
     "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
-    "heuristic.criterions.record_to_record_travel": "CRITICAL",
 }
 
 #logger.remove()
@@ -131,12 +129,12 @@ class ProblemRunner:
 
         return self
 
-    def run_alns_multiple(self, threads=32, runtime=15):
+    def run_palns(self, threads=32, runtime=15, share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
-        self.runtime = runtime
-
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
+
+        self.runtime = runtime
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
         initial_solution = state.get_objective_value()
@@ -145,48 +143,57 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-        share_times = [2*60, 4*60, 6*60, 8*60, 10*60, 12*60, 13*60, 14*60]
+
+        # the interval for which the PALNS should share data
+        #share_times = [i for i in range(60, 15*60, 20)]
+        #share_times = None
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
-        variant = "critertion"
-        variants = []
-        start_threshold_range = (500, 2000)
-        end_threshold_range = (150, 500)
-        step_range = (1, 25)
+        variant = "weight+decay"
+        decay_tune = [i/8 for i in range(8)]
+        operator_weights_tune = [
+            [0.80, 1.20, 1.40, 1.60],
+            [0.85, 1.15, 1.35, 1.50],
+            [0.90, 1.10, 1.25, 1.40],
+            [0.95, 1.05, 1.15, 1.25],
+        ]
 
-        for _ in range(64):
-            variants.append(GreedyCriterion)
-
-            start_threshold = random.randint(*start_threshold_range)
-            end_threshold = random.randint(*end_threshold_range)
-            step = random.randint(*step_range)
-
-            variants.append(SimulatedAnnealingCriterion(start_threshold, end_threshold, step))
-            variants.append(RecordToRecordTravel(start_threshold, end_threshold, step))
+        logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
+            criterion = GreedyCriterion()
 
-            criterion = GreedyCriterion() if variant != "critertion" else variants[j]
-            decay = 0.5 if variant != "decay" else variants[j]
+            decay = 0.5 if not decay_tune else decay_tune[j % len(decay_tune)]
 
+            operator_weights = None
+            if operator_weights_tune:
+                operator_weights = {
+                    "IS_REJECTED": operator_weights_tune[j % len(operator_weights_tune)][0],
+                    "IS_ACCEPTED": operator_weights_tune[j % len(operator_weights_tune)][1],
+                    "IS_BETTER": operator_weights_tune[j % len(operator_weights_tune)][2],
+                    "IS_BEST": operator_weights_tune[j % len(operator_weights_tune)][3],
+                }
+            worker_name = f"worker-{j}"
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        runtime=runtime, worker_name=f"worker-{j}", results=shared_results,
-                        queue=queue, seed=j, start_time=self.start_time, share_times=share_times)
+                        operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
+                        results=shared_results, queue=queue, start_time=self.start_time, share_times=share_times)
             processes.append(alns)
 
+            logger.info(f"Starting {worker_name}")
             alns.start()
 
         for process in processes:
-            # terminate each process
+            logger.warning(f"Terminating {process.worker_name}")
             process.join()
 
         filename = f"{self.log_name}_threads={threads}_variants={variant}"
-        self.save_shared_results(shared_results, filename, initial_solution=initial_solution)
+        self.save_shared_results(shared_results, filename, initial_solution=initial_solution,
+                                 share_times=share_times)
 
-    def save_shared_results(self, shared_results, filename, initial_solution):
+    def save_shared_results(self, shared_results, filename, initial_solution, share_times):
 
         global_iterations = sum(result["iterations"] for result in shared_results.values())
         global_best_solution = max(result["best_solution"] for result in shared_results.values())
@@ -194,6 +201,7 @@ class ProblemRunner:
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
         shared_results["start_time"] = self.start_time
+        shared_results["share_times"] = share_times
         shared_results["construction_runtime"] = self.construction_runtime
         shared_results["initial_solution"] = initial_solution
         shared_results["global_best_solution"] = global_best_solution
@@ -423,6 +431,45 @@ class ProblemRunner:
         return self.log_name
 
 
+def run_multiple_problems(variant=0):
+
+    problems = [
+        "rproblem1",
+        "rproblem2",
+        "rproblem3",
+        "rproblem4",
+        "rproblem5",
+        "rproblem6",
+        "rproblem7",
+        "rproblem8",
+        "rproblem9",
+        "rproblem3_2_weeks",
+        "rproblem3_8_weeks",
+        "rproblem5_4_weeks",
+        "rproblem5_12_weeks",
+        "rproblem6_8_weeks",
+        "rproblem6_16_weeks",
+        "rproblem7_8_weeks",
+        "rproblem7_16_weeks",
+        "rproblem9_8_weeks",
+        "rproblem9_16_weeks",
+    ]
+
+    if variant == 0:
+        problems = ["rproblem9"]
+        share_times = None
+    if variant == 1:
+        problems = ["rproblem9"]
+        share_times = [i for i in range(60, 15*60, 20)]
+    if variant == 2:
+        problems = ["rproblem5", "rproblem6"]
+    if variant == 3:
+        problems = ["rproblem7", "rproblem8"]
+
+    for problem in problems:
+        pr = ProblemRunner(problem=problem)
+        pr.run_palns()
+
 if __name__ == "__main__":
     """ 
     Run any function with arguments ARGS by using:
@@ -467,29 +514,6 @@ if __name__ == "__main__":
     """
 
     #fire.Fire(ProblemRunner)
+    fire.Fire()
 
-    problems = [
-        "rproblem1",
-        "rproblem2",
-        "rproblem3",
-        "rproblem4",
-        "rproblem5",
-        "rproblem6",
-        "rproblem7",
-        "rproblem8",
-        "rproblem9",
-        "rproblem3_2_weeks",
-        "rproblem3_8_weeks",
-        "rproblem5_4_weeks",
-        "rproblem5_12_weeks",
-        "rproblem6_8_weeks",
-        "rproblem6_16_weeks",
-        "rproblem7_8_weeks",
-        "rproblem7_16_weeks",
-        "rproblem9_8_weeks",
-        "rproblem9_16_weeks",
-    ]
 
-    for problem in problems:
-        pr = ProblemRunner(problem=problem)
-        pr.run_alns_multiple(runtime=15)

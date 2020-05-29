@@ -582,7 +582,7 @@ class ALNS(multiprocessing.Process):
             logger.warning(f"Running ALNS for {iterations} iterations")
 
             for iteration in range(iterations):
-                candidate_solution = self.perform_iteration()
+                self.perform_iteration()
 
         # Add a newline after the output from the last iteration
         print()
@@ -635,6 +635,34 @@ class ALNS(multiprocessing.Process):
         return candidate_solution
 
     def share_solutions(self):
+
+        logger.error(f"{self.prefix}Sharing at {self.share_times[0]}s."
+                     f" {len(self.share_times) - 1} shares remaining")
+        del self.share_times[0]
+
+        if not self.queue.empty():
+            shared_solution = self.queue.get()
+            logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
+                         f"best={self.get_best_solution_value(): 7.2f}")
+
+            if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
+                self.current_solution = shared_solution
+                logger.error(f"{self.prefix}Shared solution is accepted")
+
+                if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
+                    self.best_solution = shared_solution
+                    logger.error(f"{self.prefix}Shared solution is best solution")
+                if (shared_solution.get_objective_value() >=
+                        self.best_solution.get_objective_value()):
+
+                    self.best_solution = shared_solution
+                    logger.error(f"{self.prefix}Shared solution is best solution")
+            else:
+                logger.error(f"{self.prefix}Shared solution is rejected")
+
+        self.queue.put(self.best_solution)
+
+    def update_objective_history(self, candidate_solution):
 
         logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]}s."
                      f" {len(self.share_times) - 1} shares remaining")
@@ -717,9 +745,6 @@ class ALNS(multiprocessing.Process):
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
         self.best_solution.write(f"solutions/{filename}-ALNS{suffix}")
-
-    def update_best_solutions(self, candidate_solution):
-        self.current_solution = candidate_solution
 
     def select_operator(self, operators, weights):
         """

@@ -948,8 +948,8 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
     ,GRB.MINIMIZE,)
 
     #model.setParam("MipFocus", 1)
-    model.setParam("TimeLimit", 10)
     model.setParam("Threads", 1)
+    model.setParam("TimeLimit", 5)
     model.optimize()
 
     shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0.5}
