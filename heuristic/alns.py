@@ -52,12 +52,15 @@ class ALNS(multiprocessing.Process):
         self.repair_operators = defaultdict(dict)
         self.repair_weights = {}
 
-        self.WeightUpdate = {
-            "IS_BEST": 1.50,
-            "IS_BETTER": 1.06,
-            "IS_ACCEPTED": 1.03,
-            "IS_REJECTED": 0.97
-        }
+        if operator_weights:
+            self.WeightUpdate = operator_weights
+        else:
+            self.WeightUpdate = {
+                "IS_BEST": 1.50,
+                "IS_BETTER": 1.06,
+                "IS_ACCEPTED": 1.03,
+                "IS_REJECTED": 0.97
+            }
 
         # Sets
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
@@ -103,7 +106,7 @@ class ALNS(multiprocessing.Process):
         self.violation_plotter = None
         self.objective_plotter = None
         self.weight_plotter = None
-        self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
+        self.objective_history = {"candidate": [], "current": [], "best": [], "time": []}
         self.weight_history = defaultdict(list)
         self.iteration = 0
 
@@ -594,9 +597,10 @@ class ALNS(multiprocessing.Process):
 
         # Add a newline between the output of each iteration
         print()
-        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {timer()-self.start_time}")
+        current_time = timer()-self.start_time
+        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {current_time}")
 
-        if self.share_times and timer()-self.start_time > self.share_times[0]:
+        if self.share_times and current_time > self.share_times[0]:
             self.share_solutions()
 
         candidate_solution = self.current_solution.copy()
@@ -616,8 +620,8 @@ class ALNS(multiprocessing.Process):
 
             self.violation_plotter.plot_data(violations)
 
+        self.update_objective_history(candidate_solution, current_time)
         if self.objective_plotter:
-            self.update_objective_history(candidate_solution)
             self.objective_plotter.plot_data(self.objective_history)
 
         if self.weight_plotter:
@@ -638,11 +642,11 @@ class ALNS(multiprocessing.Process):
 
         if not self.queue.empty():
             shared_solution = self.queue.get()
-            logger.error(f"Shared solution={shared_solution.get_objective_value()} vs best "
-                         f"legal={self.get_best_solution_value()}")
+            logger.error(f"Shared solution={shared_solution.get_objective_value()} vs "
+                         f"best={self.get_best_solution_value()}")
 
             if self.criterion.accept(shared_solution, self.current_solution,
-                                     self.best_legal_solution, self.random_state):
+                                     self.best_solution, self.random_state):
                 self.current_solution = shared_solution
                 logger.error("Shared solution is accepted")
 
@@ -650,19 +654,20 @@ class ALNS(multiprocessing.Process):
                     self.best_solution = shared_solution
                     logger.error("Shared solution is best solution")
                 if shared_solution.get_objective_value() >= \
-                        self.best_legal_solution.get_objective_value():
-                    self.best_legal_solution = shared_solution
+                        self.best_solution.get_objective_value():
+                    self.best_solution = shared_solution
                     logger.error("Shared solution is best, legal solution")
             else:
                 logger.error("Shared solution is rejected")
 
-        self.queue.put(self.best_legal_solution)
+        self.queue.put(self.best_solution)
 
-    def update_objective_history(self, candidate_solution):
+    def update_objective_history(self, candidate_solution, current_time):
 
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
+        self.objective_history["time"].append(current_time)
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """

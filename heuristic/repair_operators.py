@@ -1281,6 +1281,7 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     , GRB.MAXIMIZE)
 
     model.setParam("TimeLimit", 5)
+    model.setParam("Threads", 1)
     model.optimize()
     repair_set = [set_x(state, t_covered_by_shift, e, t, v, 1) for e in employees for t,v in shifts_in_week[week[0]] if abs(x[e,t,v].x) > 0.5]
     return repair_set
