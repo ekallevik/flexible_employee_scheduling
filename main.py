@@ -112,6 +112,25 @@ class ProblemRunner:
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
         logger.add(f"logs/{self.log_name}.log", format=formatter.format)
 
+    def rerun_esp(self):
+        """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
+
+        solution = self.alns.best_solution
+
+        model = self.create_model("rerun_esp")
+        esp = OptimalityModel(model, data=self.data)
+
+        for key, value in solution.x.items():
+            esp.var.x[key].start = value
+
+        for key, value in solution.y.items():
+            esp.var.y[key].start = value
+
+        logger.warning("Rerunning model")
+        esp.run_model()
+
+        return self
+
     def run_alns_multiple(self, threads=32, runtime=15):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
@@ -213,6 +232,7 @@ class ProblemRunner:
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
+                             
 
         return self
 
