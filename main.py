@@ -47,8 +47,8 @@ level_per_module = {
     "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
 }
 
-#logger.remove()
-#logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
+logger.remove()
+logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_module)
 
 
 class ProblemRunner:
