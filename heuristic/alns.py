@@ -647,7 +647,8 @@ class ALNS(multiprocessing.Process):
             logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
                          f"best={self.get_best_solution_value(): 7.2f}")
 
-            if self.criterion.accept(shared_solution, self.current_solution, self.random_state):
+            if self.criterion.accept(shared_solution, self.current_solution,
+                                     self.best_solution, self.random_state):
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is accepted")
 
@@ -661,34 +662,6 @@ class ALNS(multiprocessing.Process):
                     logger.error(f"{self.prefix}Shared solution is best solution")
             else:
                 logger.error(f"{self.prefix}Shared solution is rejected")
-
-        self.queue.put(self.best_solution)
-
-    def update_objective_history(self, candidate_solution):
-
-        logger.error(f"{self.worker_name}: Sharing at {self.share_times[0]}s."
-                     f" {len(self.share_times) - 1} shares remaining")
-        del self.share_times[0]
-
-        if not self.queue.empty():
-            shared_solution = self.queue.get()
-            logger.error(f"Shared solution={shared_solution.get_objective_value()} vs "
-                         f"best={self.get_best_solution_value()}")
-
-            if self.criterion.accept(shared_solution, self.current_solution,
-                                     self.best_solution, self.random_state):
-                self.current_solution = shared_solution
-                logger.error("Shared solution is accepted")
-
-                if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                    self.best_solution = shared_solution
-                    logger.error("Shared solution is best solution")
-                if shared_solution.get_objective_value() >= \
-                        self.best_solution.get_objective_value():
-                    self.best_solution = shared_solution
-                    logger.error("Shared solution is best, legal solution")
-            else:
-                logger.error("Shared solution is rejected")
 
         self.queue.put(self.best_solution)
 
