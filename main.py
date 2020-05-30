@@ -150,7 +150,7 @@ class ProblemRunner:
         queue = Queue()
 
         # the interval for which the PALNS should share data
-        #share_times = [i for i in range(60, 15*60, 20)]
+        share_times = [i for i in range(60, 15*60, 20)]
         #share_times = None
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
