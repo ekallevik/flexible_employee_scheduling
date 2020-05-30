@@ -318,9 +318,8 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
 
         try:
-            if not self.start_time:
-                self.start_time = timer()
-                logger.trace(f"Model run started at: {self.start_time}")
+            self.start_time = timer()
+            logger.trace(f"Model run started at: {self.start_time}")
             self.esp.run_model()
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
@@ -357,8 +356,6 @@ class ProblemRunner:
         original_shifts = self.data["shifts"]["shifts"]
         logger.info(f"Running SDP with {len(original_shifts)} shifts")
 
-        self.start_time = timer()
-        logger.warning(f"Model run started at: {self.start_time}")
         self.sdp.run_model()
 
         used_shifts, unused_shifts = self.sdp.get_used_shifts()
