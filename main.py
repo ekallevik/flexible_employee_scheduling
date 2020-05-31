@@ -188,7 +188,7 @@ class ProblemRunner:
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
-            criterion = criterions[len(criterions) % j]
+            criterion = criterions[j % len(criterions)]
 
             decay = 0.5
             operator_weights = None
