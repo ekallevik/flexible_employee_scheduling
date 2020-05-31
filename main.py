@@ -206,7 +206,7 @@ class ProblemRunner:
         for process in processes:
             logger.critical(f"Terminating {process.worker_name}")
             try:
-                process.queue.join()
+                process.queue.join_thread()
             except Exception as e:
                 logger.exception(f"{process.worker_name}: Could not join queue", e)
                 pass
