@@ -520,38 +520,9 @@ class ALNS(multiprocessing.Process):
 
         self.results[self.worker_name] = results
         logger.warning(f"{self.prefix}Saved results")
-        #self.close_queue()
-        self.queue.close()
-        logger.error(f"{self.prefix}Queue closed")
-
-
-    def close_queue(self):
-
-        logger.info(f"{self.prefix}Cooling off before closing queue")
-        time.sleep(10)
-
-        logger.info(f"{self.prefix}Closing queue")
-        while True:
-            logger.trace(f"{self.prefix}Trying to flush queue")
-            if self.queue.empty():
-                logger.warning(f"{self.prefix}Queue is empty")
-                self.queue.put(None)
-                break
-            shared_solution = self.queue.get()
-            if shared_solution is None:
-                # Poison pill means shutdown
-                logger.warning(f"{self.prefix}Shared solution is None and Queue is empty")
-                self.queue.put(None)
-                break
 
         self.queue.close()
         logger.error(f"{self.prefix}Queue closed")
-
-        #self.queue.cancel_join_thread()
-        #logger.trace(f"{self.prefix}Cancel join thread")
-
-        #self.queue.join_thread()
-        #logger.trace(f"{self.prefix}Join thread")
 
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
