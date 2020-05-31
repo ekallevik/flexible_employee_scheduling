@@ -545,6 +545,7 @@ class ALNS(multiprocessing.Process):
         logger.error(f"{self.prefix}Queue closed")
 
         self.queue.cancel_join_thread()
+        logger.trace(f"{self.prefix}Cancel join thread")
 
         #self.queue.join_thread()
         #logger.trace(f"{self.prefix}Join thread")

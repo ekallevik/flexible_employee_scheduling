@@ -168,12 +168,27 @@ class ProblemRunner:
         #    [0.95, 1.05, 1.15, 1.25],
         #]
 
+        criterions = [
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1000, end_temperature=300, step=30),
+            RecordToRecordTravel(start_threshold=1000, end_threshold=300, step=30),
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=500, end_temperature=300, step=30),
+            RecordToRecordTravel(start_threshold=500, end_threshold=300, step=30),
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=1000, end_temperature=500, step=30),
+            RecordToRecordTravel(start_threshold=1000, end_threshold=500, step=30),
+            GreedyCriterion(),
+            SimulatedAnnealingCriterion(start_temperature=500, end_temperature=100, step=30),
+            RecordToRecordTravel(start_threshold=500, end_threshold=100, step=30),
+        ]
+
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
-            criterion = GreedyCriterion()
+            criterion = criterions[len(criterions) % j]
 
             decay = 0.5
             operator_weights = None
