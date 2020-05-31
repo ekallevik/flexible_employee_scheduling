@@ -135,7 +135,7 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=64, runtime=15, share_times=None, seed_offset=0):
+    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
