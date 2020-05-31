@@ -188,8 +188,6 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
-        time.sleep(30)
-
         for process in processes:
             logger.critical(f"Terminating {process.worker_name}")
             try:
