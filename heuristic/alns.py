@@ -655,11 +655,6 @@ class ALNS(multiprocessing.Process):
                 if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
                     self.best_solution = shared_solution
                     logger.error(f"{self.prefix}Shared solution is best solution")
-                if (shared_solution.get_objective_value() >=
-                        self.best_solution.get_objective_value()):
-
-                    self.best_solution = shared_solution
-                    logger.error(f"{self.prefix}Shared solution is best solution")
             else:
                 logger.error(f"{self.prefix}Shared solution is rejected")
 
@@ -702,7 +697,7 @@ class ALNS(multiprocessing.Process):
 
         # only feasible solution can be considered for best solution
         if (candidate_solution.is_feasible()
-                and candidate_solution.get_objective_value() >=
+                and candidate_solution.get_objective_value() >
                 self.best_solution.get_objective_value()):
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]

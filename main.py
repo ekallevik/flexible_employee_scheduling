@@ -247,7 +247,6 @@ class ProblemRunner:
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
-                             
 
         return self
 
