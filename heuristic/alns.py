@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 
 import numpy as np
 from functools import partial
@@ -522,6 +523,9 @@ class ALNS(multiprocessing.Process):
         self.close_queue()
 
     def close_queue(self):
+
+        logger.info(f"{self.prefix}Cooling off before closing queue")
+        time.sleep(15)
 
         logger.info(f"{self.prefix}Closing queue")
         while True:

@@ -1,0 +1,71 @@
+
+Gurobi 8.1.1 (mac64) logging started Sun May 31 00:26:14 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-31_00:26:12-rproblem1_mode=feasibility_sdp_reduce.log
+   Prev: gurobi.log  Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 10008 rows, 10268 columns and 24498 nonzeros
+Variable types: 4 continuous, 10264 integer (260 binary)
+Coefficient statistics:
+  Matrix range     [8e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 5e+00]
+Presolve removed 10008 rows and 10268 columns
+Presolve time: 0.01s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds
+Thread count was 1 (of 8 available processors)
+
+Solution count 1: 236 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.360000000000e+02, best bound 2.360000000000e+02, gap 0.0000%
+
+Gurobi 8.1.1 (mac64) logging started Sun May 31 00:26:16 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-05-31_00:26:12-rproblem1_mode=feasibility_sdp_reduce.log
+   Prev: gurobi.log  Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 75858 rows, 48057 columns and 1192441 nonzeros
+Variable types: 9 continuous, 48048 integer (38304 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 3e+02]
+Presolve removed 66943 rows and 37597 columns
+Presolve time: 1.33s
+Presolved: 8915 rows, 10460 columns, 110810 nonzeros
+Variable types: 0 continuous, 10460 integer (10458 binary)
+
+Root relaxation: objective 7.944000e+03, 2598 iterations, 0.09 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+H    0     0                    7944.0000000    0.00000   100%     -    1s
+     0     0          -    0      7944.00000 7944.00000  0.00%     -    1s
+
+Explored 0 nodes (3158 simplex iterations) in 1.69 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 7944 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.944000000000e+03, best bound 7.944000000000e+03, gap 0.0000%
