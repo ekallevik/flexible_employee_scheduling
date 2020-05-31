@@ -231,8 +231,13 @@ class ProblemRunner:
     def save_shared_results(self, shared_results, initial_solution, share_times,
                             threads, variant):
 
-        global_iterations = sum(result["iterations"] for result in shared_results.values())
+        print()
+        logger.warning("Saving multiprocessing results")
+
         global_best_solution = max(result["best_solution"] for result in shared_results.values())
+        global_iterations = sum(result["iterations"] for result in shared_results.values())
+        logger.info(f"Global best solution: {global_best_solution}")
+        logger.info(f"Global iterations: {global_iterations}")
 
         shared_results["problem"] = self.problem
         shared_results["runtime"] = self.runtime
@@ -247,8 +252,9 @@ class ProblemRunner:
 
         self.palns_results = shared_results
 
-        with open(f"{self.log_name}.json", "w") as fp:
+        with open(f"results/{self.log_name}.json", "w") as fp:
             json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
+        logger.info(f"Saved PALNS results to results/{self.log_name}.json")
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
