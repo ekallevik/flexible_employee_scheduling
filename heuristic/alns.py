@@ -525,7 +525,7 @@ class ALNS(multiprocessing.Process):
     def close_queue(self):
 
         logger.info(f"{self.prefix}Cooling off before closing queue")
-        time.sleep(15)
+        time.sleep(10)
 
         logger.info(f"{self.prefix}Closing queue")
         while True:
@@ -542,10 +542,10 @@ class ALNS(multiprocessing.Process):
                 break
 
         self.queue.close()
-        logger.trace(f"{self.prefix}Queue closed")
+        logger.error(f"{self.prefix}Queue closed")
 
-        self.queue.join_thread()
-        logger.trace(f"{self.prefix}Join thread")
+        #self.queue.join_thread()
+        #logger.trace(f"{self.prefix}Join thread")
 
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """

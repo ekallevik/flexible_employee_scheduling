@@ -1,5 +1,6 @@
 import json
 import multiprocessing
+import time
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
@@ -187,9 +188,20 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
+        time.sleep(30)
+
         for process in processes:
-            logger.warning(f"Terminating {process.worker_name}")
-            process.join()
+            logger.critical(f"Terminating {process.worker_name}")
+            try:
+                process.queue.join()
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Could not join queue", e)
+                pass
+            try:
+                process.join()
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Could not join thread", e)
+                pass
 
         self.save_shared_results(shared_results, initial_solution=initial_solution,
                                  share_times=share_times, threads=threads, variant=variant)
