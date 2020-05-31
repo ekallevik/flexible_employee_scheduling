@@ -520,7 +520,10 @@ class ALNS(multiprocessing.Process):
 
         self.results[self.worker_name] = results
         logger.warning(f"{self.prefix}Saved results")
-        self.close_queue()
+        #self.close_queue()
+        self.queue.close()
+        logger.error(f"{self.prefix}Queue closed")
+
 
     def close_queue(self):
 

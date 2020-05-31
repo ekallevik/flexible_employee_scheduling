@@ -41,7 +41,7 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "TRACE",
+    "heuristic.alns": "WARNING",
     "heuristic.delta_calculations": "CRITICAL",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
@@ -206,12 +206,19 @@ class ProblemRunner:
         for process in processes:
             logger.critical(f"Terminating {process.worker_name}")
             try:
-                process.queue.join_thread()
+                process.queue.close()
+                logger.info(f"{process.worker_name}: Queue closed in main")
             except Exception as e:
-                logger.exception(f"{process.worker_name}: Could not join queue", e)
+                logger.exception(f"{process.worker_name}: Queue not closed in main", e)
+            try:
+                process.queue.join_thread()
+                logger.info(f"{process.worker_name}: Queue joined in main")
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Queue not joined in main", e)
                 pass
             try:
                 process.join()
+                logger.info(f"{process.worker_name}: Process joined in main")
             except Exception as e:
                 logger.exception(f"{process.worker_name}: Could not join thread", e)
                 pass
