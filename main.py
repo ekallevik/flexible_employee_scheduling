@@ -192,7 +192,7 @@ class ProblemRunner:
             #criterion = criterions[j % len(criterions)]
             criterion = GreedyCriterion()
 
-            decay = 0.8
+            decay = 0.99
             operator_weights = {
                 "IS_BEST": 10,
                 "IS_BETTER": 4,
