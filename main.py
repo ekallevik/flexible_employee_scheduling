@@ -192,8 +192,13 @@ class ProblemRunner:
             #criterion = criterions[j % len(criterions)]
             criterion = GreedyCriterion()
 
-            decay = 0.5
-            operator_weights = None
+            decay = 0.8
+            operator_weights = {
+                "IS_BEST": 10,
+                "IS_BETTER": 4,
+                "IS_ACCEPTED": 2,
+                "IS_REJECTED": 0.7
+            }
 
             worker_name = f"worker-{j}"
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
