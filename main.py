@@ -167,6 +167,7 @@ class ProblemRunner:
         #    [0.90, 1.10, 1.25, 1.40],
         #    [0.95, 1.05, 1.15, 1.25],
         #]
+        operator_weights_tune = [0.8, 2, 4, 10]
 
         criterions = [
             GreedyCriterion(),
