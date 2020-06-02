@@ -135,7 +135,7 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=48, runtime=15, share_freq=20, seed_offset=0, accept="g", variant="default"):
+    def run_palns(self, threads=48, runtime=15, share_freq=10, share_start=60, seed_offset=0, accept="g", variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         if accept == "sa":
@@ -160,7 +160,7 @@ class ProblemRunner:
         queue = Queue()
 
         # the interval for which the PALNS should share data
-        share_times = [i for i in range(60, 15*60, share_freq)]
+        share_times = [i for i in range(share_freq, 15*60, share_freq)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
