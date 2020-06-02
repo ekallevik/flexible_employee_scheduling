@@ -628,8 +628,7 @@ class ALNS(multiprocessing.Process):
             logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
                          f"best={self.get_best_solution_value(): 7.2f}")
 
-            if self.criterion.accept(shared_solution, self.current_solution,
-                                     self.best_solution, self.random_state):
+            if self.criterion.accept(shared_solution, self.current_solution, self.best_solution, self.random_state):
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is accepted")
 

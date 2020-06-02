@@ -135,16 +135,25 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, accept="g"):
-        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
+    def test_acceptance(self, accept="g"):
+
+        temps = [1000, 1250, 1500, 1750, 2000]
 
         if accept == "sa":
-            criterion = SimulatedAnnealingCriterion(start_temperature=1700, end_temperature=150,
-                                                     step=30)
+            for temp in temps:
+                criterion = SimulatedAnnealingCriterion(start_temperature=temp, end_temperature=0,
+                                                        step=10)
+                self.run_palns(criterion=criterion)
         elif accept == "rrt":
-            criterion = RecordToRecordTravel(start_threshold=1700, end_threshold=150, step=30)
+            for temp in temps:
+                criterion = RecordToRecordTravel(start_threshold=temp, end_threshold=0, step=10)
+                self.run_palns(criterion=criterion)
         else:
-            criterion = GreedyCriterion()    
+            criterion = GreedyCriterion()
+            self.run_palns(criterion=criterion)
+
+    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, criterion=None):
+        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
         logger.warning(f"Using {criterion}")
@@ -171,6 +180,7 @@ class ProblemRunner:
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
+            cr = deepcopy(criterion)
 
             decay = 0.9
             operator_weights = {
@@ -181,7 +191,7 @@ class ProblemRunner:
             }
 
             worker_name = f"worker-{j}"
-            alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
+            alns = ALNS(state_copy, cr, self.data, self.weights, self.log_name, decay=decay,
                         operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
                         results=shared_results, queue=queue, start_time=self.start_time,
                         share_times=share_times, seed=j+seed_offset)
