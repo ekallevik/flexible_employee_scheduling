@@ -160,7 +160,7 @@ class ProblemRunner:
         queue = Queue()
 
         # the interval for which the PALNS should share data
-        share_times = [i for i in range(share_freq, 15*60, share_freq)]
+        share_times = [i for i in range(share_start, 15*60, share_freq)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
