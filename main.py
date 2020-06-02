@@ -141,12 +141,12 @@ class ProblemRunner:
 
         if accept == "sa":
             for temp in temps:
-                criterion = SimulatedAnnealingCriterion(start_temperature=temp, end_temperature=0,
+                criterion = SimulatedAnnealingCriterion(start_temperature=temp, end_temperature=1,
                                                         step=10)
                 self.run_palns(criterion=criterion)
         elif accept == "rrt":
             for temp in temps:
-                criterion = RecordToRecordTravel(start_threshold=temp, end_threshold=0, step=10)
+                criterion = RecordToRecordTravel(start_threshold=temp, end_threshold=1, step=10)
                 self.run_palns(criterion=criterion)
         else:
             criterion = GreedyCriterion()
