@@ -135,7 +135,7 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, accept="g"):
+    def run_palns(self, threads=48, runtime=15, share_freq=10, share_start=60, seed_offset=0, accept="g", variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         if accept == "sa":
@@ -160,11 +160,7 @@ class ProblemRunner:
         queue = Queue()
 
         # the interval for which the PALNS should share data
-        share_times = [i for i in range(60, 15*60, 20)]
-
-        # Modify this data to change ALNS-instantiation. The number of variants needs to be
-        # greater than the number of threads
-        variant = "tuned"
+        share_times = [i for i in range(share_freq, 15*60, share_freq)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
@@ -194,18 +190,18 @@ class ProblemRunner:
             logger.critical(f"Terminating {process.worker_name}")
             try:
                 process.queue.close()
-                logger.info(f"{process.worker_name}: Queue closed in main")
+                logger.info(f"{process.worker_name}: Queue closed")
             except Exception as e:
-                logger.exception(f"{process.worker_name}: Queue not closed in main", e)
+                logger.exception(f"{process.worker_name}: Queue not closed", e)
             try:
                 process.queue.join_thread()
-                logger.info(f"{process.worker_name}: Queue joined in main")
+                logger.info(f"{process.worker_name}: Queue joined")
             except Exception as e:
-                logger.exception(f"{process.worker_name}: Queue not joined in main", e)
+                logger.exception(f"{process.worker_name}: Queue not joined", e)
                 pass
             try:
                 process.join()
-                logger.info(f"{process.worker_name}: Process joined in main")
+                logger.info(f"{process.worker_name}: Process joined")
             except Exception as e:
                 logger.exception(f"{process.worker_name}: Could not join thread", e)
                 pass
@@ -226,22 +222,22 @@ class ProblemRunner:
         logger.info(f"Global best solution: {global_best_solution}")
         logger.info(f"Global iterations: {global_iterations}")
 
-        shared_results["problem"] = self.problem
-        shared_results["runtime"] = self.runtime
-        shared_results["variant"] = variant
-        shared_results["threads"] = threads
-        shared_results["start_time"] = self.start_time
-        shared_results["share_times"] = share_times
-        shared_results["construction_runtime"] = self.construction_runtime
-        shared_results["initial_solution"] = initial_solution
-        shared_results["global_best_solution"] = global_best_solution
-        shared_results["global_iterations"] = global_iterations
+        shared_results["_problem"] = self.problem
+        shared_results["_variant"] = variant
+        shared_results["_solution"] = {"initial_solution": initial_solution,
+                                       "global_best_solution": global_best_solution,
+                                       "global_iterations": global_iterations}
+        shared_results["_threads"] = threads
+        shared_results["_time"] = {"runtime_total": self.runtime,
+                                   "time_start": self.start_time,
+                                   "runtime_construction": self.construction_runtime,
+                                   "time_share": share_times}
 
         self.palns_results = shared_results
 
-        with open(f"results/{self.log_name}.json", "w") as fp:
+        with open(f"results/{self.log_name}-{variant}.json", "w") as fp:
             json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
-        logger.info(f"Saved PALNS results to results/{self.log_name}.json")
+        logger.info(f"Saved PALNS results to results/{self.log_name}-{variant}.json")
 
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):

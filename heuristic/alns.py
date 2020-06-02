@@ -57,10 +57,10 @@ class ALNS(multiprocessing.Process):
             self.WeightUpdate = operator_weights
         else:
             self.WeightUpdate = {
-                "IS_BEST": 1.50,
-                "IS_BETTER": 1.06,
-                "IS_ACCEPTED": 1.03,
-                "IS_REJECTED": 0.97
+                "IS_BEST": 10,
+                "IS_BETTER": 4,
+                "IS_ACCEPTED": 2,
+                "IS_REJECTED": 0.8
             }
 
         # Sets
@@ -505,7 +505,6 @@ class ALNS(multiprocessing.Process):
 
         results = {
             "log": self.log_name,
-            "worker": self.worker_name,
             "best_solution": self.get_best_solution_value(),
             "iterations": self.iteration,
             "destroy_weights": self.destroy_weights,
@@ -633,13 +632,14 @@ class ALNS(multiprocessing.Process):
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is accepted")
 
-                if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                    self.best_solution = shared_solution
-                    logger.error(f"{self.prefix}Shared solution is best solution")
+            if shared_solution.is_feasible() and shared_solution.get_objective_value() > self.best_solution.get_objective_value():
+                self.best_solution = shared_solution
+                self.current_solution = shared_solution
+                logger.error(f"{self.prefix}Shared solution is best solution")
             else:
                 logger.error(f"{self.prefix}Shared solution is rejected")
 
-        self.queue.put(self.best_solution)
+        self.queue.put(self.current_solution)
 
     def update_objective_history(self, candidate_solution, current_time):
 
@@ -665,7 +665,7 @@ class ALNS(multiprocessing.Process):
                                  self.best_solution, self.random_state):
             self.current_solution = candidate_solution
 
-            if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
+            if candidate_solution.get_objective_value() > self.current_solution.get_objective_value():
                 logger.debug("Candidate is better")
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
