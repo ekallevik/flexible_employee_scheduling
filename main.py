@@ -168,7 +168,7 @@ class ProblemRunner:
         for j in range(threads):
             state_copy = deepcopy(state)
 
-            decay = 0.99
+            decay = 0.95
             operator_weights = {
                 "IS_BEST": 10,
                 "IS_BETTER": 4,
