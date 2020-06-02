@@ -8,11 +8,11 @@ from loguru import logger
 files = {
     "problem1": "results/2020-06-01_21:56:38-rproblem1_mode=feasibility_sdp_reduce.json",
     "problem2": "results/2020-06-01_21:56:58-rproblem2_mode=feasibility_sdp_reduce.json",
-    "problem3": "results/2020-06-02_09:51:19-rproblem3_mode=feasibility_sdp_reduce.json",
+    "problem3": "results/2020-06-01_20:12:30-rproblem3_mode=feasibility_sdp_reduce.json",
     "problem4": "results/2020-05-31_16:48:29-rproblem4_mode=feasibility_sdp_reduce.json",
     "problem5": "results/2020-06-01_21:56:50-rproblem5_mode=feasibility_sdp_reduce.json",
-    "problem6": "results/2020-06-02_09:51:23-rproblem6_mode=feasibility_sdp_reduce.json",
-    "problem7": "results/2020-06-02_13:12:41-rproblem7_mode=feasibility_sdp_reduce.json",
+    "problem6": "results/2020-06-01_21:30:29-rproblem6_mode=feasibility_sdp_reduce.json",
+    "problem7": "results/2020-06-01_21:30:32-rproblem7_mode=feasibility_sdp_reduce.json",
     "problem8": "results/2020-06-01_22:28:08-rproblem8_mode=feasibility_sdp_reduce.json",
     "problem9": "results/2020-06-01_21:30:41-rproblem9_mode=feasibility_sdp_reduce.json",
 }
@@ -42,16 +42,21 @@ def plot_best(step=5):
                     if data[worker]["objective_history"]["best"][index-1] > best:
                         best = data[worker]["objective_history"]["best"][index - 1]
                 except KeyError:
-                    logger.info(f"{worker} does not exist")
+                    logger.info(f"{worker} does not exist in {problem}")
 
             best_list.append(best)
 
-        with open(f"results/{problem}-best_list.json", "w") as fp:
-            json.dump(zip(times, best_list), fp, sort_keys=True, indent=4)
+        result = {
+            "times": times,
+            "best_list": best_list
+                  }
 
-        plt.plot(times, best_list, "g-", markersize=6)
-        plt.title(problem)
-        plt.show()
+        with open(f"results/{problem}-best_list.json", "w") as fp:
+            json.dump(result, fp, sort_keys=True, indent=4)
+
+        #plt.plot(times, best_list, "g-", markersize=6)
+        #plt.title(problem)
+        #plt.show()
 
 def plot_history():
 

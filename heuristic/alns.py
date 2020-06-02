@@ -579,7 +579,7 @@ class ALNS(multiprocessing.Process):
         # Add a newline between the output of each iteration
         print()
         current_time = timer()-self.start_time
-        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {current_time}")
+        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {current_time:.2f}")
 
         if self.share_times and current_time > self.share_times[0]:
             self.share_solutions()
