@@ -639,7 +639,7 @@ class ALNS(multiprocessing.Process):
             else:
                 logger.error(f"{self.prefix}Shared solution is rejected")
 
-        self.queue.put(self.best_solution)
+        self.queue.put(self.current_solution)
 
     def update_objective_history(self, candidate_solution, current_time):
 
