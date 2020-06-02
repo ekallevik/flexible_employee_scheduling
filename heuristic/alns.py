@@ -632,13 +632,14 @@ class ALNS(multiprocessing.Process):
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is accepted")
 
-                if shared_solution.get_objective_value() >= self.best_solution.get_objective_value():
-                    self.best_solution = shared_solution
-                    logger.error(f"{self.prefix}Shared solution is best solution")
+            if shared_solution.is_feasible() and shared_solution.get_objective_value() > self.best_solution.get_objective_value():
+                self.best_solution = shared_solution
+                self.current_solution = shared_solution
+                logger.error(f"{self.prefix}Shared solution is best solution")
             else:
                 logger.error(f"{self.prefix}Shared solution is rejected")
 
-        self.queue.put(self.best_solution)
+        self.queue.put(self.current_solution)
 
     def update_objective_history(self, candidate_solution, current_time):
 
@@ -664,7 +665,7 @@ class ALNS(multiprocessing.Process):
                                  self.best_solution, self.random_state):
             self.current_solution = candidate_solution
 
-            if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
+            if candidate_solution.get_objective_value() > self.current_solution.get_objective_value():
                 logger.debug("Candidate is better")
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
