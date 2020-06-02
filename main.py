@@ -147,6 +147,7 @@ class ProblemRunner:
             criterion = GreedyCriterion()    
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
+        logger.warning(f"Using {criterion}")
 
         self.runtime = runtime
         candidate_solution = self.get_candidate_solution()
