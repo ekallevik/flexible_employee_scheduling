@@ -135,8 +135,16 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0):
+    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, accept="g"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
+
+        if accept == "sa":
+            criterion = SimulatedAnnealingCriterion(start_temperature=1700, end_temperature=150,
+                                                     step=30)
+        elif accept == "rrt":
+            criterion = RecordToRecordTravel(start_threshold=1700, end_threshold=150, step=30)
+        else:
+            criterion = GreedyCriterion()    
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
 
@@ -152,45 +160,16 @@ class ProblemRunner:
 
         # the interval for which the PALNS should share data
         share_times = [i for i in range(60, 15*60, 20)]
-        #share_times = None
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
-        variant = "seed"
-        decay_tune = None
-        operator_weights_tune = None
-
-        #decay_tune = [i/8 for i in range(8)]
-        #operator_weights_tune = [
-        #    [0.80, 1.20, 1.40, 1.60],
-        #    [0.85, 1.15, 1.35, 1.50],
-        #    [0.90, 1.10, 1.25, 1.40],
-        #    [0.95, 1.05, 1.15, 1.25],
-        #]
-        operator_weights_tune = [0.8, 2, 4, 10]
-
-        criterions = [
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1000, end_temperature=300, step=30),
-            RecordToRecordTravel(start_threshold=1000, end_threshold=300, step=30),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=500, end_temperature=300, step=30),
-            RecordToRecordTravel(start_threshold=500, end_threshold=300, step=30),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=1000, end_temperature=500, step=30),
-            RecordToRecordTravel(start_threshold=1000, end_threshold=500, step=30),
-            GreedyCriterion(),
-            SimulatedAnnealingCriterion(start_temperature=500, end_temperature=100, step=30),
-            RecordToRecordTravel(start_threshold=500, end_threshold=100, step=30),
-        ]
+        variant = "tuned"
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
-            #criterion = criterions[j % len(criterions)]
-            criterion = GreedyCriterion()
 
             decay = 0.99
             operator_weights = {
