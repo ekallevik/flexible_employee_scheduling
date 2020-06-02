@@ -135,24 +135,25 @@ class ProblemRunner:
 
         return self
 
-    def test_acceptance(self, accept="g"):
+    def test_acceptance(self, accept="g", runtime=15):
 
-        temps = [1000, 1250, 1500, 1750, 2000]
+        temps = [1250, 1500, 1750]
 
         if accept == "sa":
             for temp in temps:
                 criterion = SimulatedAnnealingCriterion(start_temperature=temp, end_temperature=1,
                                                         step=10)
-                self.run_palns(criterion=criterion)
+                self.run_palns(criterion=criterion, variant=f"{accept}-{temp}", runtime=runtime)
         elif accept == "rrt":
             for temp in temps:
                 criterion = RecordToRecordTravel(start_threshold=temp, end_threshold=1, step=10)
-                self.run_palns(criterion=criterion)
+                self.run_palns(criterion=criterion, variant=f"{accept}-{temp}", runtime=runtime)
         else:
             criterion = GreedyCriterion()
-            self.run_palns(criterion=criterion)
+            self.run_palns(criterion=criterion, variant=f"{accept}", runtime=runtime)
 
-    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, criterion=None):
+    def run_palns(self, threads=40, runtime=15, share_times=None, seed_offset=0, criterion=None,
+                  variant=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
@@ -173,7 +174,6 @@ class ProblemRunner:
 
         # Modify this data to change ALNS-instantiation. The number of variants needs to be
         # greater than the number of threads
-        variant = "tuned"
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
@@ -249,7 +249,7 @@ class ProblemRunner:
 
         self.palns_results = shared_results
 
-        with open(f"results/{self.log_name}.json", "w") as fp:
+        with open(f"results/{self.log_name}-{variant}.json", "w") as fp:
             json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
         logger.info(f"Saved PALNS results to results/{self.log_name}.json")
 
