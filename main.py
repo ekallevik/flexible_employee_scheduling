@@ -54,7 +54,8 @@ logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_
 
 class ProblemRunner:
     def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None,
-                 update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+                 update_shifts=True, time_limit=10000, use_predefined_shifts=False,
+                 log_to_file=True):
 
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
@@ -69,6 +70,7 @@ class ProblemRunner:
         self.construction_runtime = None
 
         self.log_name = None
+        self.log_to_file = log_to_file
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
 
         self.data = shift_generation.load_data(problem, use_predefined_shifts)
@@ -114,7 +116,10 @@ class ProblemRunner:
 
         now = datetime.now()
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
-        logger.add(f"logs/{self.log_name}.log", format=formatter.format)
+        if self.log_to_file:
+            logger.add(f"logs/{self.log_name}.log", format=formatter.format)
+        else:
+            logger.critical("Does not log to file!")
 
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
@@ -132,6 +137,15 @@ class ProblemRunner:
 
         logger.warning("Rerunning model")
         esp.run_model()
+
+        return self
+
+    def test_series(self, n_runs):
+
+        logger.warning(f"Running {self.problem} for {n_runs} runs")
+
+        for seed in range(0, n_runs*100, 100):
+            self.run_palns(seed_offset=seed, variant=f"seed={seed}")
 
         return self
 
