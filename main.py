@@ -140,11 +140,11 @@ class ProblemRunner:
 
         return self
 
-    def test_series(self, n_runs):
+    def test_series(self, n_runs, start_seed=0):
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
 
-        for seed in range(0, n_runs*100, 100):
+        for seed in range(start_seed, n_runs*100, 100):
             self.run_palns(seed_offset=seed, variant=f"seed={seed}")
 
         return self
