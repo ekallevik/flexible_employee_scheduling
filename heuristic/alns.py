@@ -501,7 +501,7 @@ class ALNS(multiprocessing.Process):
 
         self.iterate(runtime=self.runtime)
 
-        self.save_solutions()
+        #self.save_solutions()
 
         results = {
             "log": self.log_name,
@@ -688,15 +688,10 @@ class ALNS(multiprocessing.Process):
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
-    def save_solutions(self, custom_name=None):
-
-        if custom_name:
-            filename = custom_name
-        else:
-            filename = self.log_name
+    def save_solutions(self, variant="default"):
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
-        self.best_solution.write(f"solutions/{filename}-ALNS{suffix}_seed={self.seed}")
+        self.best_solution.write(f"solutions/{self.log_name}-ALNS{suffix}_{variant}")
 
     def select_operator(self, operators, weights):
         """
