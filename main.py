@@ -141,7 +141,7 @@ class ProblemRunner:
 
         return self
 
-    def test_series(self, n_runs=1, start_seed=0, threads=48):
+    def test_seeds(self, n_runs=10, start_seed=0, threads=48):
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
 
@@ -212,8 +212,8 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
-        logger.warning("Cooling off for 15s")
-        time.sleep(15)
+        logger.warning("Cooling off for 30s")
+        time.sleep(30)
 
         for process in processes:
             logger.critical(f"Terminating {process.worker_name}")
