@@ -1,0 +1,91 @@
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 18:43:18 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_18:43:09-rproblem6_16_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 17360 rows, 18480 columns and 44800 nonzeros
+Model fingerprint: 0xa89e99b3
+Variable types: 112 continuous, 18368 integer (1120 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [5e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 3e+00]
+Presolve removed 17360 rows and 18480 columns
+Presolve time: 0.01s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 1: 720 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.200000000000e+02, best bound 7.200000000000e+02, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 18:43:23 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_18:43:09-rproblem6_16_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 186636 rows, 137898 columns and 7944026 nonzeros
+Model fingerprint: 0xa88a68be
+Variable types: 10 continuous, 137888 integer (121760 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 6e+02]
+Presolve removed 114426 rows and 64138 columns (presolve time = 5s) ...
+Presolve removed 117066 rows and 64138 columns (presolve time = 10s) ...
+Presolve removed 117066 rows and 64138 columns (presolve time = 15s) ...
+Presolve removed 117066 rows and 64138 columns
+Presolve time: 18.09s
+Presolved: 69570 rows, 73760 columns, 1370896 nonzeros
+Variable types: 0 continuous, 73760 integer (73760 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.0752000e+04   2.134562e+03   5.527602e+09     20s
+    6016    1.0752000e+04   3.529149e+02   3.160406e+09     20s
+    9463    1.0752000e+04   0.000000e+00   0.000000e+00     21s
+Concurrent spin time: 0.25s
+
+Solved with dual simplex
+
+Root relaxation: objective 1.075200e+04, 9049 iterations, 2.03 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+*    0     0               0    10752.000000 10752.0000  0.00%     -   22s
+
+Explored 0 nodes (8687 simplex iterations) in 24.04 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 10752 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.075200000000e+04, best bound 1.075200000000e+04, gap 0.0000%

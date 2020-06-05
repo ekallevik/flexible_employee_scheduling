@@ -1,0 +1,7 @@
+18:45:13  |  run_sdp:414  |  Running SDP with 1120 shifts
+18:45:22  |  run_sdp:432  |  SDP-reduction from 1120 to 672 shifts (-40.00%).
+18:46:06  |  run_palns:165  |  Running rproblem9_16_weeks with runtime 900 in 48 threads
+18:46:06  |  run_palns:166  |  Using GreedyCriterion
+18:46:06  |  run_esp:369    |  Running ESP in mode feasibility with 672
+18:46:10  |  run_model:34   |  Model is 3
+18:46:10  |  run_esp:383    |  Completed construction in 3.71s
