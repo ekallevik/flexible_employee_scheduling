@@ -55,7 +55,7 @@ logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_
 class ProblemRunner:
     def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None,
                  update_shifts=True, time_limit=10000, use_predefined_shifts=False,
-                 log_to_file=True):
+                 log_to_file=True, runtime=900):
 
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
@@ -65,7 +65,7 @@ class ProblemRunner:
         logger.info(f"Setting up runner for {problem}")
         self.problem = problem
         self.mode = mode
-        self.runtime = None
+        self.runtime = runtime
         self.start_time = None
         self.construction_runtime = None
 
@@ -140,16 +140,17 @@ class ProblemRunner:
 
         return self
 
-    def test_series(self, n_runs=1, start_seed=0):
+    def test_series(self, n_runs=1, start_seed=0, threads=48):
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
 
         for seed in range(start_seed, start_seed+n_runs*100, 100):
-            self.run_palns(seed_offset=seed, variant=f"seed={seed}")
+            self.run_palns(threads=threads, seed_offset=seed, variant=f"seed={seed}")
 
         return self
 
-    def run_palns(self, threads=48, runtime=15, share_freq=10, share_start=60, seed_offset=0, accept="g", variant="default"):
+    def run_palns(self, threads=48, share_freq=10, share_start=60, seed_offset=0,
+                  accept="g", variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         if accept == "sa":
@@ -160,10 +161,9 @@ class ProblemRunner:
         else:
             criterion = GreedyCriterion()    
 
-        logger.critical(f"Running {self.problem} with runtime {runtime} in {threads} threads")
+        logger.critical(f"Running {self.problem} with runtime {self.runtime} in {threads} threads")
         logger.warning(f"Using {criterion}")
 
-        self.runtime = runtime
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
         initial_solution = state.get_objective_value()
@@ -191,10 +191,9 @@ class ProblemRunner:
 
             worker_name = f"worker-{j}"
 
-            start_time = timer()-self.construction_runtime
-
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
+                        operator_weights=operator_weights, runtime=self.runtime,
+                        worker_name=worker_name,
                         results=shared_results, queue=queue, share_times=share_times, seed=j+seed_offset)
             processes.append(alns)
 

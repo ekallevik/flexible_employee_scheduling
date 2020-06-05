@@ -526,12 +526,13 @@ class ALNS(multiprocessing.Process):
 
 
     def iterate(self, iterations=None, runtime=None):
+
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
         if not iterations:
-            logger.warning(f"{self.prefix}Running ALNS for {runtime:.2f} seconds")
+            logger.warning(f"{self.prefix}Running ALNS for {self.runtime:.2f} seconds")
 
-            while timer() < self.start_time + runtime:
+            while timer() < self.start_time + self.runtime:
                 try:
                     self.perform_iteration()
                 except KeyboardInterrupt:

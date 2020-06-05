@@ -23,7 +23,7 @@ def plot_best(step=5):
 
     for problem, file in files.items():
 
-        times = [i for i in range(step, 900, step)]
+        times = [i for i in range(step, 901, step)]
         best_list = []
 
         with open(file) as f:
