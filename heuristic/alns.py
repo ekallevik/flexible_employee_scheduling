@@ -24,8 +24,8 @@ from visualisation.barchart_plotter import BarchartPlotter
 
 class ALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
-                 operator_weights=None, runtime=15, worker_name=None, seed=0, results=None,
-                 queue=None, share_times=None, start_time=None):
+                 operator_weights=None, runtime=900, worker_name=None, seed=0, results=None,
+                 queue=None, share_times=None):
 
         super().__init__()
         self.queue = queue
@@ -37,7 +37,7 @@ class ALNS(multiprocessing.Process):
         self.decay = decay
         self.log_name = log_name
         self.runtime = runtime
-        self.start_time = start_time
+        self.start_time = timer()
 
         self.initial_solution = state
         self.current_solution = state
@@ -528,12 +528,10 @@ class ALNS(multiprocessing.Process):
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-        runtime_in_seconds = runtime * 60 if runtime else None
-
         if not iterations:
-            logger.warning(f"{self.prefix}Running ALNS for {runtime} minutes")
+            logger.warning(f"{self.prefix}Running ALNS for {runtime:.2f} seconds")
 
-            while timer() < self.start_time + runtime_in_seconds:
+            while timer() < self.start_time + runtime:
                 try:
                     self.perform_iteration()
                 except KeyboardInterrupt:
@@ -570,7 +568,7 @@ class ALNS(multiprocessing.Process):
         # Add a newline after the output from the last iteration
         print()
         logger.warning(f"{self.prefix}Performed {iterations if iterations else self.iteration} iterations over"
-                       f" {timer() - self.start_time:.2f}s (including construction)")
+                       f" {self.runtime:.2f}s (excluding construction)")
 
         logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")

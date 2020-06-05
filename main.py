@@ -140,7 +140,7 @@ class ProblemRunner:
 
         return self
 
-    def test_series(self, n_runs, start_seed=0):
+    def test_series(self, n_runs=1, start_seed=0):
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
 
@@ -167,7 +167,6 @@ class ProblemRunner:
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
         initial_solution = state.get_objective_value()
-        self.construction_runtime = timer() - self.start_time
 
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
@@ -191,10 +190,12 @@ class ProblemRunner:
             }
 
             worker_name = f"worker-{j}"
+
+            start_time = timer()-self.construction_runtime
+
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         operator_weights=operator_weights, runtime=runtime, worker_name=worker_name,
-                        results=shared_results, queue=queue, start_time=self.start_time,
-                        share_times=share_times, seed=j+seed_offset)
+                        results=shared_results, queue=queue, share_times=share_times, seed=j+seed_offset)
             processes.append(alns)
 
             logger.info(f"Starting {worker_name}")
@@ -362,6 +363,9 @@ class ProblemRunner:
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
+
+        self.construction_runtime = timer() - self.start_time
+        logger.warning(f"Completed construction in {self.construction_runtime:.2f}s")
 
         return self
 
