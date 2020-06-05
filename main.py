@@ -88,6 +88,7 @@ class ProblemRunner:
             self.run_sdp(update_shifts)
 
         self.esp = None
+        self.candidate_solution = None
 
         self.criterion = GreedyCriterion()
         self.alns = None
@@ -191,8 +192,10 @@ class ProblemRunner:
 
             worker_name = f"worker-{j}"
 
+            remaining_runtime = self.runtime-self.construction_runtime
+
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        operator_weights=operator_weights, runtime=self.runtime,
+                        operator_weights=operator_weights, runtime=remaining_runtime,
                         worker_name=worker_name,
                         results=shared_results, queue=queue, share_times=share_times, seed=j+seed_offset)
             processes.append(alns)
@@ -351,10 +354,13 @@ class ProblemRunner:
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
 
-        self.run_esp()
-        converter = Converter(self.esp)
+        if not self.candidate_solution:
 
-        return converter.get_converted_variables()
+            self.run_esp()
+            converter = Converter(self.esp)
+            self.candidate_solution = converter.get_converted_variables()
+
+        return self.candidate_solution
 
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
@@ -372,8 +378,9 @@ class ProblemRunner:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
 
-        self.construction_runtime = timer() - self.start_time
-        logger.warning(f"Completed construction in {self.construction_runtime:.2f}s")
+        if not self.construction_runtime:
+            self.construction_runtime = timer() - self.start_time
+            logger.warning(f"Completed construction in {self.construction_runtime:.2f}s")
 
         return self
 
