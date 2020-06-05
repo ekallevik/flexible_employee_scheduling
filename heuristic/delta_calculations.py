@@ -426,7 +426,7 @@ def regret_objective_function(state, employee, off_shifts, saturdays, days, L_C_
 
 
 def employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, week, L_C_D, preferences, competencies, t_covered_by_shift, competency_score):
-    day = int(shift[0]/24)
+    day = min(83,int((shift[0] + 4)/24))
     week = int(day/7)
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
     weekly_rest_error = regret_weekly_rest(state, shifts_at_week, e, week, shift)
@@ -540,7 +540,7 @@ def regret_consecutive_days(state, e, shift, weeks, shifts_at_day, L_C_D, day):
 
 
 def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_at_week, weeks, shifts_at_day, days, L_C_D, preferences, competencies, t_covered_by_shift, competency_score):
-    day = int(shift[0]/24)
+    day = min(83,int((shift[0] + 4)/24))
     week = int(day/7)
 
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
@@ -573,7 +573,7 @@ def worst_employee_regret_value(state, e, shift, saturdays, sundays, invalid_shi
     )
 
 def f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_at_week, shifts_at_day, weights, preferences, t_covered_by_shift, L_C_D):
-    day = int(shift[0]/24)
+    day = min(83, int((shift[0] + 4)/24))
     week = int(day/7)
 
     daily_rest_error = regret_daily_rest_error(state, day, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest)
