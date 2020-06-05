@@ -150,6 +150,15 @@ class ProblemRunner:
 
         return self
 
+    def test_threads(self):
+
+        thread_list = [32, 16, 8, 4, 1]
+
+        for threads in thread_list:
+            self.run_palns(threads=threads, variant=f"threads={threads}")
+
+        return self
+
     def run_palns(self, threads=48, share_freq=10, share_start=60, seed_offset=0,
                   accept="g", variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
