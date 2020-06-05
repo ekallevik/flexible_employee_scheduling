@@ -1,0 +1,98 @@
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 19:16:42 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_19:16:32-rproblem9_36_employees_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 16776 rows, 17616 columns and 53628 nonzeros
+Model fingerprint: 0x7b3483a4
+Variable types: 312 continuous, 17304 integer (840 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [2e+00, 1e+01]
+Presolve removed 16773 rows and 17611 columns
+Presolve time: 0.02s
+Presolved: 3 rows, 5 columns, 8 nonzeros
+Variable types: 0 continuous, 5 integer (3 binary)
+Found heuristic solution: objective 1344.0000000
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 1344 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.344000000000e+03, best bound 1.344000000000e+03, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 19:16:51 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_19:16:32-rproblem9_36_employees_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 477396 rows, 295596 columns and 12504000 nonzeros
+Model fingerprint: 0x0b4b60d7
+Variable types: 36 continuous, 295560 integer (279936 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 4e+02]
+Presolve removed 213312 rows and 30660 columns (presolve time = 7s) ...
+Presolve removed 372720 rows and 190068 columns (presolve time = 10s) ...
+Presolve removed 380136 rows and 190188 columns (presolve time = 15s) ...
+Presolve removed 380136 rows and 190188 columns (presolve time = 20s) ...
+Presolve removed 380136 rows and 190188 columns (presolve time = 25s) ...
+Presolve removed 380568 rows and 190620 columns (presolve time = 31s) ...
+Presolve removed 380568 rows and 190620 columns (presolve time = 35s) ...
+Presolve removed 380568 rows and 190620 columns (presolve time = 40s) ...
+Presolve removed 380568 rows and 190620 columns
+Presolve time: 41.41s
+Presolved: 96828 rows, 104976 columns, 1345758 nonzeros
+Variable types: 0 continuous, 104976 integer (104976 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    5.6280000e+04   5.143500e+03   9.671812e+09     44s
+   13353    5.6280000e+04   1.852578e+03   1.727431e+10     45s
+Concurrent spin time: 0.35s
+
+Solved with dual simplex
+
+Root relaxation: objective 5.628000e+04, 16629 iterations, 3.06 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+H    0     0                    56280.000000 56280.0000  0.00%     -   48s
+     0     0 56280.0000    0    2 56280.0000 56280.0000  0.00%     -   48s
+
+Explored 0 nodes (31426 simplex iterations) in 48.98 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 56280 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.628000000000e+04, best bound 5.628000000000e+04, gap 0.0000%

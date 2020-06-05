@@ -1,0 +1,89 @@
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 19:16:10 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_19:16:05-rproblem9_9_employees_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 16776 rows, 17616 columns and 53628 nonzeros
+Model fingerprint: 0x380e785f
+Variable types: 312 continuous, 17304 integer (840 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 3e+00]
+Presolve removed 16776 rows and 17616 columns
+Presolve time: 0.02s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 1: 1194 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.194000000000e+03, best bound 1.194000000000e+03, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 19:16:15 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_19:16:05-rproblem9_9_employees_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 131067 rows, 85617 columns and 3149202 nonzeros
+Model fingerprint: 0x43d81faf
+Variable types: 9 continuous, 85608 integer (69984 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 4e+02]
+Presolve removed 106356 rows and 59265 columns (presolve time = 5s) ...
+Presolve removed 106464 rows and 59373 columns
+Presolve time: 8.14s
+Presolved: 24603 rows, 26244 columns, 336609 nonzeros
+Variable types: 0 continuous, 26244 integer (26244 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.4364000e+04   1.392250e+03   2.273406e+09      9s
+    6538    1.4364000e+04   0.000000e+00   0.000000e+00      9s
+Concurrent spin time: 0.05s
+
+Solved with primal simplex
+
+Root relaxation: objective 1.436400e+04, 6538 iterations, 0.53 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+H    0     0                    14364.000000 14364.0000  0.00%     -    9s
+     0     0 14364.0000    0   33 14364.0000 14364.0000  0.00%     -    9s
+
+Explored 0 nodes (8465 simplex iterations) in 9.39 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 14364 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.436400000000e+04, best bound 1.436400000000e+04, gap 0.0000%
