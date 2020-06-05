@@ -686,7 +686,7 @@ class ALNS(multiprocessing.Process):
             self.best_solution = candidate_solution
             self.current_solution = candidate_solution
 
-        self.update_weights(weight_update, destroy_id, repair_id)
+        #self.update_weights(weight_update, destroy_id, repair_id)
 
     def save_solutions(self, variant="default"):
 
