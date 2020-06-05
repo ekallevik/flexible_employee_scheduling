@@ -144,7 +144,7 @@ class ProblemRunner:
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
 
-        for seed in range(start_seed, n_runs*100, 100):
+        for seed in range(start_seed, start_seed+n_runs*100, 100):
             self.run_palns(seed_offset=seed, variant=f"seed={seed}")
 
         return self

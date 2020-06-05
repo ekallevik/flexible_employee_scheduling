@@ -501,7 +501,7 @@ class ALNS(multiprocessing.Process):
 
         self.iterate(runtime=self.runtime)
 
-        # self.save_solutions()
+        self.save_solutions()
 
         results = {
             "log": self.log_name,
@@ -518,10 +518,12 @@ class ALNS(multiprocessing.Process):
         }
 
         self.results[self.worker_name] = results
-        logger.warning(f"{self.prefix}Saved results")
+        logger.warning(f"{self.prefix}Saved results to shared dict")
 
         self.queue.close()
         logger.error(f"{self.prefix}Queue closed")
+
+
 
     def iterate(self, iterations=None, runtime=None):
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
@@ -695,7 +697,7 @@ class ALNS(multiprocessing.Process):
             filename = self.log_name
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
-        self.best_solution.write(f"solutions/{filename}-ALNS{suffix}")
+        self.best_solution.write(f"solutions/{filename}-ALNS{suffix}_seed={self.seed}")
 
     def select_operator(self, operators, weights):
         """
