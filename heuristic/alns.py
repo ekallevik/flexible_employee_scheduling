@@ -19,19 +19,19 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
     mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
-from visualisation.barchart_plotter import BarchartPlotter
 
 
 class ALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
                  operator_weights=None, runtime=900, worker_name=None, seed=0, results=None,
-                 queue=None, share_times=None):
+                 queue=None, share_times=None, variant="default"):
 
         super().__init__()
         self.queue = queue
         self.share_times = share_times
         self.worker_name = worker_name
         self.prefix = f"{self.worker_name}: " if self.worker_name else ""
+        self.variant = variant
 
         self.objective_weights = objective_weights
         self.decay = decay
@@ -507,13 +507,15 @@ class ALNS(multiprocessing.Process):
             "log": self.log_name,
             "best_solution": self.get_best_solution_value(),
             "iterations": self.iteration,
-            "destroy_weights": self.destroy_weights,
-            "repair_weights": self.repair_weights,
+            "criterion": str(self.criterion),
+            "violations": self.best_solution.get_number_of_violations(),
+            "f": self.best_solution.f,
             "decay": self.decay,
-            "criterion:": str(self.criterion),
-            "weight_update": self.WeightUpdate,
             "random_seed": self.seed,
             "random_state": str(self.random_state),
+            "weight_update": self.WeightUpdate,
+            "destroy_weights": self.destroy_weights,
+            "repair_weights": self.repair_weights,
             "objective_history": self.objective_history
         }
 
@@ -553,7 +555,7 @@ class ALNS(multiprocessing.Process):
                                                 "log_name\n")
 
                         custom_filename = custom_filename if len(custom_filename) else None
-                        self.save_solutions(custom_filename)
+                        self.save_solutions()
 
                         continue
 
@@ -691,10 +693,10 @@ class ALNS(multiprocessing.Process):
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
-    def save_solutions(self, variant="default"):
+    def save_solutions(self):
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
-        self.best_solution.write(f"solutions/{self.log_name}-ALNS{suffix}_{variant}")
+        self.best_solution.write(f"solutions/{self.log_name}-ALNS{suffix}_{self.variant}")
 
     def select_operator(self, operators, weights):
         """

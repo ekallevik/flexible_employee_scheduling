@@ -4,8 +4,6 @@ import time
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
-from pprint import pprint
-import skopt
 import neptune
 
 
@@ -41,7 +39,7 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "WARNING",
+    "heuristic.alns": "CRITICAL",
     "heuristic.delta_calculations": "CRITICAL",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
@@ -205,8 +203,8 @@ class ProblemRunner:
 
             alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                         operator_weights=operator_weights, runtime=remaining_runtime,
-                        worker_name=worker_name,
-                        results=shared_results, queue=queue, share_times=share_times, seed=j+seed_offset)
+                        worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
+                        seed=j+seed_offset, variant=variant)
             processes.append(alns)
 
             logger.info(f"Starting {worker_name}")
@@ -253,6 +251,7 @@ class ProblemRunner:
         logger.info(f"Global best solution: {global_best_solution} found by {global_best_worker}")
         logger.info(f"Global iterations: {global_iterations}")
 
+        shared_results["_log_name"] = self.log_name
         shared_results["_problem"] = self.problem
         shared_results["_variant"] = variant
         shared_results["_solution"] = {"initial_solution": initial_solution,

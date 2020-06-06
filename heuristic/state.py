@@ -66,6 +66,32 @@ class State:
             },
             copy(self.objective_function_value), copy(self.f))
 
+    def get_number_of_violations(self):
+
+        violations = {
+            "soft": {
+                "deviation_from_ideal_demand": sum(self.soft_vars["deviation_from_ideal_demand"].values()),
+                "partial_weekends": sum(self.soft_vars["partial_weekends"].values()),
+                "consecutive_days": sum(self.soft_vars["consecutive_days"].values()),
+                "isolated_off_days": sum(self.soft_vars["isolated_off_days"].values()),
+                "isolated_working_days": sum(self.soft_vars["isolated_working_days"].values()),
+                "deviation_contracted_hours": sum(self.soft_vars["deviation_contracted_hours"].values()),
+            },
+            "hard": {
+                "below_minimum_demand": sum(self.soft_vars["below_minimum_demand"].values()),
+                "above_maximum_demand": sum(self.soft_vars["above_maximum_demand"].values()),
+                "more_than_one_shift_per_day": sum(self.soft_vars["more_than_one_shift_per_day"].values()),
+                "cover_multiple_demand_periods": sum(self.soft_vars["cover_multiple_demand_periods"].values()),
+                "weekly_off_shift_error": sum(self.soft_vars["weekly_off_shift_error"].values()),
+                "mapping_shift_to_demand": sum(self.soft_vars["mapping_shift_to_demand"].values()),
+                "delta_positive_contracted_hours": sum(self.soft_vars["delta_positive_contracted_hours"].values()),
+                "daily_rest_error": sum(self.soft_vars["daily_rest_error"].values()),
+            }
+        }
+
+        return violations
+
+
     def get_violations(self, weeks, time_periods_in_week, competencies, employees):
         """ Extracts all violations of hard constraints per week"""
 
