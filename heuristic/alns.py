@@ -503,6 +503,30 @@ class ALNS(multiprocessing.Process):
 
         self.save_solutions()
 
+        possible_preferences = [
+            sum(1
+                for t in self.preferences[e]
+                if self.preferences[e][t] != 0)
+            for e in self.employees
+        ]
+
+        granted_preferences = [
+            sum(
+                (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
+                or
+                (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
+                for c in self.competencies
+                for t in self.preferences[e]
+            ) for e in self.employees
+        ]
+
+        ratio_preferences = [
+            granted / possible for granted, possible in zip(granted_preferences, possible_preferences)
+        ]
+
+        total_w = sum(v for t, v in self.best_solution.w.values())
+        employee_weeks = len(self.weeks)*len(self.employees)
+
         results = {
             "log": self.log_name,
             "best_solution": self.get_best_solution_value(),
@@ -510,7 +534,12 @@ class ALNS(multiprocessing.Process):
             "criterion": str(self.criterion),
             "violations": self.best_solution.get_number_of_violations(),
             "f": self.best_solution.f,
-            "w": sum(self.best_solution.w.values())/(len(self.weeks)*len(self.employees)),
+            "w": total_w/employee_weeks,
+            "preferences": {
+                "granted": granted_preferences,
+                "possible": possible_preferences,
+                "ratio": ratio_preferences,
+            },
             "decay": self.decay,
             "random_seed": self.seed,
             "random_state": str(self.random_state),

@@ -261,6 +261,7 @@ class ProblemRunner:
                                        "best_worker": global_best_worker,
                                        "iterations": global_iterations,
                                        "f": global_best_result["f"],
+                                       "preferences": global_best_result["preferences"],
                                        "w": global_best_result["w"],
                                        "violations": global_best_result["violations"],
                                        }
