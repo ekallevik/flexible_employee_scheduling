@@ -1,0 +1,71 @@
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 18:16:29 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_18:16:28-rproblem3_2_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 2000 rows, 2212 columns and 9810 nonzeros
+Model fingerprint: 0x85158164
+Variable types: 24 continuous, 2188 integer (212 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [2e+00, 3e+01]
+Presolve removed 1967 rows and 2163 columns
+Presolve time: 0.08s
+Presolved: 33 rows, 49 columns, 137 nonzeros
+Variable types: 0 continuous, 49 integer (16 binary)
+Found heuristic solution: objective 131.7500000
+Found heuristic solution: objective 105.0000000
+
+Root relaxation: objective 6.873947e+01, 39 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   68.73947    0    7  105.00000   68.73947  34.5%     -    0s
+H    0     0                      74.0000000   68.73947  7.11%     -    0s
+     0     0   72.02381    0    2   74.00000   72.02381  2.67%     -    0s
+H    0     0                      73.5000000   72.02381  2.01%     -    0s
+     0     0   73.00000    0    2   73.50000   73.00000  0.68%     -    0s
+H    0     0                      73.0000000   73.00000  0.00%     -    0s
+
+Cutting planes:
+  Gomory: 5
+  Implied bound: 2
+  Clique: 1
+  MIR: 2
+  StrongCG: 1
+  Flow cover: 3
+  Zero half: 1
+  Relax-and-lift: 1
+
+Explored 1 nodes (55 simplex iterations) in 0.09 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 5: 73 73.5 74 ... 131.75
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.300000000000e+01, best bound 7.300000000000e+01, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 18:16:29 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_18:16:28-rproblem3_2_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf

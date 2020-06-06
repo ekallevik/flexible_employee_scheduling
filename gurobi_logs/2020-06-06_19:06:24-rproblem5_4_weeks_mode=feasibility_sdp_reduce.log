@@ -1,0 +1,104 @@
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 19:06:25 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_19:06:24-rproblem5_4_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 2644 rows, 2824 columns and 6996 nonzeros
+Model fingerprint: 0xa19f94c7
+Variable types: 28 continuous, 2796 integer (180 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [5e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [2e+00, 7e+00]
+Presolve removed 2644 rows and 2824 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 1: 340 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 3.400000000000e+02, best bound 3.400000000000e+02, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 19:06:25 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_19:06:24-rproblem5_4_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 45186 rows, 35211 columns and 1336015 nonzeros
+Model fingerprint: 0x29f55068
+Variable types: 15 continuous, 35196 integer (32760 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 1e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+02]
+Presolve removed 22703 rows and 10791 columns
+Presolve time: 2.56s
+Presolved: 22483 rows, 24420 columns, 478125 nonzeros
+Variable types: 0 continuous, 24420 integer (24300 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+Concurrent spin time: 0.00s
+
+Solved with dual simplex
+
+Root relaxation: objective 3.412000e+03, 5905 iterations, 1.13 seconds
+Total elapsed time = 5.06s
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 3412.00000    0   70          - 3412.00000      -     -    5s
+     0     0 3412.00000    0  128          - 3412.00000      -     -    6s
+     0     0 3412.00000    0  148          - 3412.00000      -     -    7s
+     0     0 3412.00000    0   52          - 3412.00000      -     -   11s
+     0     0 3412.00000    0   87          - 3412.00000      -     -   11s
+     0     0 3412.00000    0   61          - 3412.00000      -     -   14s
+     0     0 3412.00000    0  107          - 3412.00000      -     -   14s
+     0     0 3412.00000    0   37          - 3412.00000      -     -   15s
+     0     0 3412.00000    0   58          - 3412.00000      -     -   16s
+     0     0 3412.00000    0   71          - 3412.00000      -     -   17s
+     0     0 3412.00000    0   39          - 3412.00000      -     -   18s
+H    0     0                    3412.0000000 3412.00000  0.00%     -   20s
+     0     0 3412.00000    0   39 3412.00000 3412.00000  0.00%     -   20s
+
+Cutting planes:
+  Gomory: 8
+  Cover: 70
+  Clique: 318
+  MIR: 134
+  StrongCG: 88
+  GUB cover: 3
+  Zero half: 1
+  Relax-and-lift: 3
+
+Explored 1 nodes (34143 simplex iterations) in 20.06 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 3412 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 3.412000000000e+03, best bound 3.412000000000e+03, gap 0.0000%
