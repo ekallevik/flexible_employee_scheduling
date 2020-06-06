@@ -1,0 +1,123 @@
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 18:17:37 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_18:17:36-rproblem3_2_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 2000 rows, 2212 columns and 9810 nonzeros
+Model fingerprint: 0x85158164
+Variable types: 24 continuous, 2188 integer (212 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [2e+00, 3e+01]
+Presolve removed 1967 rows and 2163 columns
+Presolve time: 0.08s
+Presolved: 33 rows, 49 columns, 137 nonzeros
+Variable types: 0 continuous, 49 integer (16 binary)
+Found heuristic solution: objective 131.7500000
+Found heuristic solution: objective 105.0000000
+
+Root relaxation: objective 6.873947e+01, 39 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   68.73947    0    7  105.00000   68.73947  34.5%     -    0s
+H    0     0                      74.0000000   68.73947  7.11%     -    0s
+     0     0   72.02381    0    2   74.00000   72.02381  2.67%     -    0s
+H    0     0                      73.5000000   72.02381  2.01%     -    0s
+     0     0   73.00000    0    2   73.50000   73.00000  0.68%     -    0s
+H    0     0                      73.0000000   73.00000  0.00%     -    0s
+
+Cutting planes:
+  Gomory: 5
+  Implied bound: 2
+  Clique: 1
+  MIR: 2
+  StrongCG: 1
+  Flow cover: 3
+  Zero half: 1
+  Relax-and-lift: 1
+
+Explored 1 nodes (55 simplex iterations) in 0.09 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 5: 73 73.5 74 ... 131.75
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.300000000000e+01, best bound 7.300000000000e+01, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Sat Jun  6 18:17:37 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-06_18:17:36-rproblem3_2_weeks_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 67329 rows, 43254 columns and 1295205 nonzeros
+Model fingerprint: 0x503d5aa0
+Variable types: 45 continuous, 43209 integer (41445 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+02]
+Presolve removed 51631 rows and 25089 columns
+Presolve time: 2.21s
+Presolved: 15698 rows, 18165 columns, 195950 nonzeros
+Variable types: 0 continuous, 18165 integer (18090 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+Concurrent spin time: 0.10s
+
+Solved with dual simplex
+
+Root relaxation: objective 1.140600e+04, 4070 iterations, 0.45 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 11406.0000    0   92          - 11406.0000      -     -    3s
+     0     0 11406.0000    0  109          - 11406.0000      -     -    3s
+     0     0 11406.0000    0   97          - 11406.0000      -     -    4s
+H    0     0                    11431.000000 11406.0000  0.22%     -    4s
+H    0     0                    11406.000000 11406.0000  0.00%     -    4s
+     0     0 11406.0000    0    6 11406.0000 11406.0000  0.00%     -    4s
+
+Cutting planes:
+  Gomory: 20
+  Cover: 21
+  Implied bound: 3
+  Clique: 42
+  MIR: 34
+  StrongCG: 24
+  GUB cover: 9
+  Zero half: 3
+  RLT: 9
+  Relax-and-lift: 1
+
+Explored 1 nodes (12466 simplex iterations) in 4.49 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 2: 11406 11431 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.140600000000e+04, best bound 1.140600000000e+04, gap 0.0000%
