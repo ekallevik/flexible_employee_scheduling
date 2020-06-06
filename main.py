@@ -253,12 +253,6 @@ class ProblemRunner:
         logger.info(f"Global best solution: {global_best_solution} found by {global_best_worker}")
         logger.info(f"Global iterations: {global_iterations}")
 
-        for process in processes:
-            if process.worker_name == global_best_worker:
-                process.save_solutions(variant=variant)
-                logger.info(f"PALNS solution saved")
-                break
-
         shared_results["_problem"] = self.problem
         shared_results["_variant"] = variant
         shared_results["_solution"] = {"initial_solution": initial_solution,
