@@ -1,0 +1,76 @@
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 23:46:31 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_23:46:30-rproblem4_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 9343 rows, 9514 columns and 20927 nonzeros
+Model fingerprint: 0x63baea80
+Variable types: 4 continuous, 9510 integer (171 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [2e-01, 5e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 5e+00]
+Found heuristic solution: objective 168.7500000
+Presolve removed 9343 rows and 9514 columns
+Presolve time: 0.01s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 2: 156.75 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.567500000000e+02, best bound 1.567500000000e+02, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 23:46:33 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_23:46:30-rproblem4_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 60584 rows, 36064 columns and 269288 nonzeros
+Model fingerprint: 0xce4bad5a
+Variable types: 8 continuous, 36056 integer (26888 binary)
+Coefficient statistics:
+  Matrix range     [2e-01, 1e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 4e+02]
+Presolve removed 58816 rows and 33830 columns
+Presolve time: 0.10s
+Presolved: 1768 rows, 2234 columns, 8906 nonzeros
+Variable types: 0 continuous, 2234 integer (2234 binary)
+Found heuristic solution: objective 9232.0000000
+
+Root relaxation: cutoff, 466 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0     cutoff    0      9232.00000 9232.00000  0.00%     -    0s
+
+Explored 0 nodes (466 simplex iterations) in 0.15 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 9232 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 9.232000000000e+03, best bound 9.232000000000e+03, gap 0.0000%

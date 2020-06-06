@@ -1,0 +1,68 @@
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 23:43:15 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_23:43:13-rproblem2_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 3870 rows, 4230 columns and 12115 nonzeros
+Model fingerprint: 0x212ea413
+Variable types: 0 continuous, 4230 integer (360 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [5e-01, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 4e+00]
+Presolve removed 3870 rows and 4230 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds
+Thread count was 1 (of 48 available processors)
+
+Solution count 1: 185 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.850000000000e+02, best bound 1.850000000000e+02, gap 0.0000%
+
+Gurobi 9.0.2 (linux64) logging started Fri Jun  5 23:43:16 2020
+
+Changed value of parameter LogFile to gurobi_logs/2020-06-05_23:43:13-rproblem2_mode=feasibility_sdp_reduce.log
+   Prev:   Default: 
+Parameter MIPFocus unchanged
+   Value: 0  Min: 0  Max: 3  Default: 0
+Parameter SolutionLimit unchanged
+   Value: 2000000000  Min: 1  Max: 2000000000  Default: 2000000000
+Parameter LogToConsole unchanged
+   Value: 1  Min: 0  Max: 1  Default: 1
+Changed value of parameter TimeLimit to 10000.0
+   Prev: inf  Min: 0.0  Max: inf  Default: inf
+Gurobi Optimizer version 9.0.2 build v9.0.2rc0 (linux64)
+Optimize a model with 22602 rows, 16206 columns and 217416 nonzeros
+Model fingerprint: 0x6ddabe0d
+Variable types: 6 continuous, 16200 integer (12690 binary)
+Coefficient statistics:
+  Matrix range     [5e-01, 5e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 4e+02]
+Presolve removed 16636 rows and 9726 columns
+Presolve time: 0.22s
+Presolved: 5966 rows, 6480 columns, 49164 nonzeros
+Variable types: 0 continuous, 6480 integer (6480 binary)
+Found heuristic solution: objective 3555.0000000
+
+Explored 0 nodes (0 simplex iterations) in 0.27 seconds
+Thread count was 24 (of 48 available processors)
+
+Solution count 1: 3555 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 3.555000000000e+03, best bound 3.555000000000e+03, gap 0.0000%
