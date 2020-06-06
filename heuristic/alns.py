@@ -499,30 +499,41 @@ class ALNS(multiprocessing.Process):
     def run(self):
         """ Automatically called when multiprocess.start() is run """
 
+        logger.error(f"{self.prefix}Starting")
+
         self.iterate(runtime=self.runtime)
 
+        logger.error(f"{self.prefix}Saving solutions")
         self.save_solutions()
+        logger.error(f"{self.prefix}Solution saved. Calculating result")
 
-        possible_preferences = [
-            sum(1
-                for t in self.preferences[e]
-                if self.preferences[e][t] != 0)
-            for e in self.employees
-        ]
+        try:
+            possible_preferences = [
+                sum(1
+                    for t in self.preferences[e]
+                    if self.preferences[e][t] != 0)
+                for e in self.employees
+            ]
 
-        granted_preferences = [
-            sum(
-                (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
-                or
-                (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
-                for c in self.competencies
-                for t in self.preferences[e]
-            ) for e in self.employees
-        ]
+            granted_preferences = [
+                sum(
+                    (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
+                    or
+                    (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
+                    for c in self.competencies
+                    for t in self.preferences[e]
+                ) for e in self.employees
+            ]
 
-        ratio_preferences = [
-            granted / possible for granted, possible in zip(granted_preferences, possible_preferences)
-        ]
+            ratio_preferences = [
+                granted / possible for granted, possible in zip(granted_preferences, possible_preferences)
+            ]
+
+        except Exception as e:
+            logger.error(f"Exception: {e}")
+            granted_preferences = None
+            possible_preferences = None
+            ratio_preferences = None
 
         total_w = sum(v for t, v in self.best_solution.w.values())
         employee_weeks = len(self.weeks)*len(self.employees)
@@ -550,9 +561,9 @@ class ALNS(multiprocessing.Process):
         }
 
         self.results[self.worker_name] = results
-        logger.warning(f"{self.prefix}Saved results to shared dict")
+        logger.error(f"{self.prefix}Saved results to shared dict")
 
-        logger.info(f"{self.prefix}Cooling of for 30 seconds")
+        logger.error(f"{self.prefix}Cooling of for 30 seconds")
         time.sleep(30)
 
         self.queue.close()

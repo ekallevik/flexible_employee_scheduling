@@ -39,7 +39,7 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "CRITICAL",
+    "heuristic.alns": "ERROR",
     "heuristic.delta_calculations": "CRITICAL",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
