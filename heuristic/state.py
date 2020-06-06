@@ -78,14 +78,14 @@ class State:
                 "deviation_contracted_hours": sum(self.soft_vars["deviation_contracted_hours"].values()),
             },
             "hard": {
-                "below_minimum_demand": sum(self.soft_vars["below_minimum_demand"].values()),
-                "above_maximum_demand": sum(self.soft_vars["above_maximum_demand"].values()),
-                "more_than_one_shift_per_day": sum(self.soft_vars["more_than_one_shift_per_day"].values()),
-                "cover_multiple_demand_periods": sum(self.soft_vars["cover_multiple_demand_periods"].values()),
-                "weekly_off_shift_error": sum(self.soft_vars["weekly_off_shift_error"].values()),
-                "mapping_shift_to_demand": sum(self.soft_vars["mapping_shift_to_demand"].values()),
-                "delta_positive_contracted_hours": sum(self.soft_vars["delta_positive_contracted_hours"].values()),
-                "daily_rest_error": sum(self.soft_vars["daily_rest_error"].values()),
+                "below_minimum_demand": sum(self.hard_vars["below_minimum_demand"].values()),
+                "above_maximum_demand": sum(self.hard_vars["above_maximum_demand"].values()),
+                "more_than_one_shift_per_day": sum(self.hard_vars["more_than_one_shift_per_day"].values()),
+                "cover_multiple_demand_periods": sum(self.hard_vars["cover_multiple_demand_periods"].values()),
+                "weekly_off_shift_error": sum(self.hard_vars["weekly_off_shift_error"].values()),
+                "mapping_shift_to_demand": sum(self.hard_vars["mapping_shift_to_demand"].values()),
+                "delta_positive_contracted_hours": sum(self.hard_vars["delta_positive_contracted_hours"].values()),
+                "daily_rest_error": sum(self.hard_vars["daily_rest_error"].values()),
             }
         }
 

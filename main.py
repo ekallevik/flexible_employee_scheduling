@@ -244,9 +244,11 @@ class ProblemRunner:
         print()
         logger.warning("Saving multiprocessing results")
 
-        best_solution = max((result["best_solution"], worker) for worker, result in shared_results.items())
+        best_solution = max((result["best_solution"], worker) for worker, result in
+                            shared_results.items())
         global_best_solution = best_solution[0]
         global_best_worker = best_solution[1]
+        global_best_result = shared_results[global_best_worker]
         global_iterations = sum(result["iterations"] for result in shared_results.values())
         logger.info(f"Global best solution: {global_best_solution} found by {global_best_worker}")
         logger.info(f"Global iterations: {global_iterations}")
@@ -255,9 +257,13 @@ class ProblemRunner:
         shared_results["_problem"] = self.problem
         shared_results["_variant"] = variant
         shared_results["_solution"] = {"initial_solution": initial_solution,
-                                       "global_best_solution": global_best_solution,
-                                       "global_best_worker": global_best_worker,
-                                       "global_iterations": global_iterations}
+                                       "best_solution": global_best_solution,
+                                       "best_worker": global_best_worker,
+                                       "iterations": global_iterations,
+                                       "f": global_best_result["f"],
+                                       "w": global_best_result["w"],
+                                       "violations": global_best_result["violations"],
+                                       }
         shared_results["_threads"] = threads
         shared_results["_time"] = {"runtime_total": self.runtime,
                                    "time_start": self.start_time,

@@ -510,6 +510,7 @@ class ALNS(multiprocessing.Process):
             "criterion": str(self.criterion),
             "violations": self.best_solution.get_number_of_violations(),
             "f": self.best_solution.f,
+            "w": sum(self.best_solution.w.values())/(len(self.weeks)*len(self.employees)),
             "decay": self.decay,
             "random_seed": self.seed,
             "random_state": str(self.random_state),
@@ -527,8 +528,6 @@ class ALNS(multiprocessing.Process):
 
         self.queue.close()
         logger.error(f"{self.prefix}Queue closed")
-
-
 
     def iterate(self, iterations=None, runtime=None):
 
@@ -695,8 +694,29 @@ class ALNS(multiprocessing.Process):
 
     def save_solutions(self):
 
+        if "rproblem1" in self.log_name:
+            folder = "solutions/rproblem1"
+        elif "rproblem2" in self.log_name:
+            folder = "solutions/rproblem2"
+        elif "rproblem3" in self.log_name:
+            folder = "solutions/rproblem3"
+        elif "rproblem4" in self.log_name:
+            folder = "solutions/rproblem4"
+        elif "rproblem5" in self.log_name:
+            folder = "solutions/rproblem5"
+        elif "rproblem6" in self.log_name:
+            folder = "solutions/rproblem6"
+        elif "rproblem7" in self.log_name:
+            folder = "solutions/rproblem7"
+        elif "rproblem8" in self.log_name:
+            folder = "solutions/rproblem8"
+        elif "rproblem9" in self.log_name:
+            folder = "solutions/rproblem9"
+        else:
+            folder = "solutions"
+
         suffix = f"-{self.worker_name}" if self.worker_name else ""
-        self.best_solution.write(f"solutions/{self.log_name}-ALNS{suffix}_{self.variant}")
+        self.best_solution.write(f"{folder}/{self.log_name}-ALNS{suffix}_{self.variant}")
 
     def select_operator(self, operators, weights):
         """
