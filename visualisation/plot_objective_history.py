@@ -81,6 +81,10 @@ def plot_best(step=1, mode="gap"):
             json.dump(result, fp, sort_keys=True, indent=4)
 
         y_values = gap_list if mode == "gap" else best_list
+
+        if mode == "gap":
+            plt.ylim(0, 100)
+
         plt.plot(times, y_values, markersize=6)
         plt.title(problem)
         plt.savefig(filename)
