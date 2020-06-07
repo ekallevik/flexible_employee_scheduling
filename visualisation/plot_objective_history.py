@@ -85,9 +85,10 @@ def plot_best(step=1, mode="gap"):
         if mode == "gap":
             plt.ylim(0, 25)
 
-        plt.plot(times, y_values, markersize=6)
-        plt.title(problem)
-        plt.savefig(filename)
+        plt.plot(times, y_values, markersize=6, label=problem)
+    plt.legend()
+    plt.title("Gap as a function of runtime")
+    plt.savefig("palns_gap")
 
 def plot_history():
 
