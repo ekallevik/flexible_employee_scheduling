@@ -83,7 +83,7 @@ def plot_best(step=1, mode="gap"):
         y_values = gap_list if mode == "gap" else best_list
 
         if mode == "gap":
-            plt.ylim(0, 100)
+            plt.ylim(0, 25)
 
         plt.plot(times, y_values, markersize=6)
         plt.title(problem)
