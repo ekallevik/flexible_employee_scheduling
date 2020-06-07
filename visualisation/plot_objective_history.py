@@ -41,7 +41,7 @@ def plot_best(step=1, mode="gap"):
         construction_runtime = int(data["_time"]["runtime_construction"]) + 1
 
         worker_times = [i for i in range(step, 900-construction_runtime, step)]
-        times = [i for i in range(900)]
+        times = [i for i in range(901)]
         best_list = [-inf for _ in range(step, construction_runtime, step)]
         gap_list = [-inf for _ in range(step, construction_runtime, step)]
         opt_value = optimal_value[problem]
@@ -62,24 +62,25 @@ def plot_best(step=1, mode="gap"):
                     logger.info(f"{worker} does not exist in {problem}")
 
             best_list.append(best)
-            gap = abs(opt_value-best)/abs(gap)
+            gap = 100*abs(opt_value-best)/abs(best)
             gap_list.append(gap)
 
         diff = len(times) - len(best_list)
         for _ in range(diff):
             best_list.append(best_list[-1])
+            gap_list.append(gap_list[-1])
 
         result = {
             "times": times,
             "best_list": best_list,
-            "gap_list": gap_list
+            "gap_li"
+            "st": gap_list
                   }
 
         with open(f"{filename}-best.json", "w") as fp:
             json.dump(result, fp, sort_keys=True, indent=4)
 
-        y_values = gap_list if mode=="gap" else best_list
-
+        y_values = gap_list if mode == "gap" else best_list
         plt.plot(times, y_values, markersize=6)
         plt.title(problem)
         plt.savefig(filename)
