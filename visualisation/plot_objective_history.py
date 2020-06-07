@@ -17,9 +17,21 @@ files = {
     "problem9": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
 }
 
+optimal_value = {
+    "problem1": 2588.96,
+    "problem2": 1990.05,
+    "problem3": 6517.02,
+    "problem4": 2158.56,
+    "problem5": 3514.83,
+    "problem6": 3889.74,
+    "problem7": 6502.45,
+    "problem8": 1000.95,
+    "problem9": 6764.54,
+}
+
 workers = [f"worker-{j}" for j in range(48)]
 
-def plot_best(step=1):
+def plot_best(step=1, mode="gap"):
 
     for problem, filename in files.items():
 
@@ -31,6 +43,8 @@ def plot_best(step=1):
         worker_times = [i for i in range(step, 900-construction_runtime, step)]
         times = [i for i in range(900)]
         best_list = [-inf for _ in range(step, construction_runtime, step)]
+        gap_list = [-inf for _ in range(step, construction_runtime, step)]
+        opt_value = optimal_value[problem]
 
         for time in worker_times:
             best = -inf
@@ -48,6 +62,8 @@ def plot_best(step=1):
                     logger.info(f"{worker} does not exist in {problem}")
 
             best_list.append(best)
+            gap = abs(opt_value-best)/abs(gap)
+            gap_list.append(gap)
 
         diff = len(times) - len(best_list)
         for _ in range(diff):
@@ -55,13 +71,16 @@ def plot_best(step=1):
 
         result = {
             "times": times,
-            "best_list": best_list
+            "best_list": best_list,
+            "gap_list": gap_list
                   }
 
         with open(f"{filename}-best.json", "w") as fp:
             json.dump(result, fp, sort_keys=True, indent=4)
 
-        plt.plot(times, best_list, "g-", markersize=6)
+        y_values = gap_list if mode=="gap" else best_list
+
+        plt.plot(times, y_values, markersize=6)
         plt.title(problem)
         plt.savefig(filename)
 
