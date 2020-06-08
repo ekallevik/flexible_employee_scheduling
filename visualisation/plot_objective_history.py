@@ -17,6 +17,20 @@ files = {
     "problem9": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
 }
 
+files_plns = {
+    "problem1": "results/plns/2020-06-05_19:49:46-rproblem1_mode=feasibility_sdp_reduce-plns",
+    "problem2": "results/plns/2020-06-05_19:49:53-rproblem2_mode=feasibility_sdp_reduce-plns",
+    "problem3": "results/plns/2020-06-05_19:50:09-rproblem3_mode=feasibility_sdp_reduce-plns",
+    #"problem4": "",
+    "problem5": "results/plns/2020-06-05_19:50:23-rproblem5_mode=feasibility_sdp_reduce-plns",
+    "problem6": "results/plns/2020-06-05_19:50:30-rproblem6_mode=feasibility_sdp_reduce-plns",
+    "problem7": "results/plns/2020-06-05_19:50:50-rproblem7_mode=feasibility_sdp_reduce-plns",
+    "problem8": "results/plns/2020-06-05_19:50:59-rproblem8_mode=feasibility_sdp_reduce-plns",
+    "problem9": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
+}
+
+
+
 optimal_value = {
     "problem1": 2588.96,
     "problem2": 1990.05,
@@ -31,9 +45,14 @@ optimal_value = {
 
 workers = [f"worker-{j}" for j in range(48)]
 
-def plot_best(step=1, mode="gap"):
+def plot_best(step=1, mode="gap", foldername="variance"):
 
-    for problem, filename in files.items():
+    if foldername=="plns":
+        folder = files_plns
+    else:
+        folder = files
+
+    for problem, filename in folder.items():
 
         with open(f"{filename}.json") as f:
             data = json.load(f)
