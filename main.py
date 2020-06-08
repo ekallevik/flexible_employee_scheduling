@@ -154,8 +154,9 @@ class ProblemRunner:
         thread_list = [32, 16, 8, 4, 1]
         share_times = [i for i in range(60, 15 * 60, 10)]
 
-        for seed in range(0, 500, 100):
-            for threads in thread_list:
+        for threads in thread_list:
+            seeds = [300, 400] if threads < 16 else [400]
+            for seed in seeds:
                 self.run_palns(threads=threads, seed_offset=seed, share_times=share_times,
                                variant=f"threads={threads}_seed={seed}")
         return self
