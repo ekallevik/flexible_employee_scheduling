@@ -142,19 +142,21 @@ class ProblemRunner:
     def test_seeds(self, n_runs=10, start_seed=0, threads=48):
 
         logger.warning(f"Running {self.problem} for {n_runs} runs")
+        share_times = [i for i in range(60, 15 * 60, 10)]
 
         for seed in range(start_seed, start_seed+n_runs*100, 100):
-            self.run_palns(threads=threads, seed_offset=seed, variant=f"seed={seed}")
+            self.run_palns(threads=threads, seed_offset=seed, share_times=share_times, variant=f"seed={seed}")
 
         return self
 
     def test_threads(self):
 
         thread_list = [32, 16, 8, 4, 1]
+        share_times = [i for i in range(60, 15 * 60, 10)]
 
         for seed in range(0, 500, 100):
             for threads in thread_list:
-                self.run_palns(threads=threads, seed_offset=seed,
+                self.run_palns(threads=threads, seed_offset=seed, share_times=share_times,
                                variant=f"threads={threads}_seed={seed}")
         return self
 
@@ -162,8 +164,8 @@ class ProblemRunner:
 
         share_time_list = [
             (None, "None"),
-            ([i for i in range(60, 15 * 60, 5)], "5s"),
-            ([i for i in range(60, 15 * 60, 20)], "20s"),
+            #([i for i in range(60, 15 * 60, 5)], "5s"),
+            #([i for i in range(60, 15 * 60, 20)], "20s"),
         ]
 
         for seed in range(0, 500, 100):
@@ -173,13 +175,12 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=48, share_freq=10, share_start=60, seed_offset=0,
-                  accept="g", variant="default", share_times=None):
+    def run_palns(self, threads=48, seed_offset=0, accept="g", variant="default", share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         if accept == "sa":
             criterion = SimulatedAnnealingCriterion(start_temperature=1700, end_temperature=150,
-                                                     step=30)
+                                                    step=30)
         elif accept == "rrt":
             criterion = RecordToRecordTravel(start_threshold=1700, end_threshold=150, step=30)
         else:
@@ -195,10 +196,6 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
-
-        # the interval for which the PALNS should share data
-        if not share_times:
-            share_times = [i for i in range(share_start, 15*60, share_freq)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
