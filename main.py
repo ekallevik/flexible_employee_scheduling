@@ -152,13 +152,29 @@ class ProblemRunner:
 
         thread_list = [32, 16, 8, 4, 1]
 
-        for threads in thread_list:
-            self.run_palns(threads=threads, variant=f"threads={threads}")
+        for seed in range(0, 500, 100):
+            for threads in thread_list:
+                self.run_palns(threads=threads, seed_offset=seed,
+                               variant=f"threads={threads}_seed={seed}")
+        return self
+
+    def test_share_times(self):
+
+        share_time_list = [
+            (None, "None"),
+            ([i for i in range(60, 15 * 60, 5)], "5s"),
+            ([i for i in range(60, 15 * 60, 20)], "20s"),
+        ]
+
+        for seed in range(0, 500, 100):
+            for share_times in share_time_list:
+                self.run_palns(share_times=share_times[0], seed_offset=seed,
+                               variant=f"share={share_times[1]}_seed={seed}")
 
         return self
 
     def run_palns(self, threads=48, share_freq=10, share_start=60, seed_offset=0,
-                  accept="g", variant="default"):
+                  accept="g", variant="default", share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         if accept == "sa":
@@ -181,7 +197,8 @@ class ProblemRunner:
         queue = Queue()
 
         # the interval for which the PALNS should share data
-        share_times = [i for i in range(share_start, 15*60, share_freq)]
+        if not share_times:
+            share_times = [i for i in range(share_start, 15*60, share_freq)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
