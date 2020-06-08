@@ -149,27 +149,26 @@ class ProblemRunner:
 
         return self
 
-    def test_threads(self):
+    def test_threads(self, n_runs=5):
 
         thread_list = [32, 16, 8, 4, 1]
         share_times = [i for i in range(60, 15 * 60, 10)]
 
         for threads in thread_list:
-            seeds = [300, 400] if threads < 16 else [400]
-            for seed in seeds:
+            for seed in range(0, n_runs * 100, 100):
                 self.run_palns(threads=threads, seed_offset=seed, share_times=share_times,
                                variant=f"threads={threads}_seed={seed}")
         return self
 
-    def test_share_times(self):
+    def test_share_times(self, n_runs=5):
 
         share_time_list = [
             (None, "None"),
-            #([i for i in range(60, 15 * 60, 5)], "5s"),
-            #([i for i in range(60, 15 * 60, 20)], "20s"),
+            ([i for i in range(60, 15 * 60, 5)], "5s"),
+            ([i for i in range(60, 15 * 60, 20)], "20s"),
         ]
 
-        for seed in range(0, 500, 100):
+        for seed in range(0, n_runs * 100, 100):
             for share_times in share_time_list:
                 self.run_palns(share_times=share_times[0], seed_offset=seed,
                                variant=f"share={share_times[1]}_seed={seed}")
