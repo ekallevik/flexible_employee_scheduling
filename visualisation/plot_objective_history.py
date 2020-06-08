@@ -109,8 +109,9 @@ def plot_best(step=1, mode="gap", foldername="variance"):
     plt.yticks([i for i in range(0, 26, 5)], [f"{i}%" for i in range(0, 26, 5)])
     plt.grid(b=True, which='major', axis='both', color='gainsboro', linestyle='-', linewidth=0.5)
     plt.legend()
-    plt.title("Gap as a function of runtime")
-    plt.savefig("palns_gap")
+    plt.suptitle("Gap as a function of runtime")
+    plt.title(foldername)
+    plt.savefig(f"{foldername}_gap")
 
 def plot_history():
 
@@ -131,4 +132,4 @@ def plot_history():
         plt.show()
 
 
-plot_best(1)
+plot_best(1, foldername="plns")
