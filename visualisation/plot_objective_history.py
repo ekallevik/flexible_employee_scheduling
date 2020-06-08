@@ -86,6 +86,9 @@ def plot_best(step=1, mode="gap"):
             plt.ylim(0, 25)
 
         plt.plot(times, y_values, markersize=6, label=problem)
+    plt.xticks([i for i in range(0, 901, 100)])
+    plt.yticks([i for i in range(0, 26, 5)], [f"{i}%" for i in range(0, 26, 5)])
+    plt.grid(b=True, which='major', axis='both', color='gainsboro', linestyle='-', linewidth=0.5)
     plt.legend()
     plt.title("Gap as a function of runtime")
     plt.savefig("palns_gap")
