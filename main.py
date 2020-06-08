@@ -149,9 +149,15 @@ class ProblemRunner:
 
         return self
 
+    def test_all(self, n_runs=5):
+
+        self.test_share_times(n_runs)
+        self.test_threads(n_runs)
+        self.test_seeds(n_runs)
+
     def test_threads(self, n_runs=5):
 
-        thread_list = [32, 16, 8, 4, 1]
+        thread_list = [24, 12, 1]
         share_times = [i for i in range(60, 15 * 60, 10)]
 
         for threads in thread_list:
