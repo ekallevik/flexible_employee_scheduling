@@ -29,6 +29,18 @@ files_plns = {
     "problem9": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
 }
 
+colors = {
+    "problem1": "b",
+    "problem2": "y",
+    "problem3": "g",
+    "problem4": "r",
+    "problem5": "m",
+    "problem6": "saddlebrown",
+    "problem7": "c",
+    "problem8": "hotpink",
+    "problem9": "navy",
+}
+
 
 
 optimal_value = {
@@ -52,59 +64,62 @@ def plot_best(step=1, mode="gap", foldername="variance"):
     else:
         folder = files
 
-    for problem, filename in folder.items():
+    for folder in [files, files_plns]:
+        for problem, filename in folder.items():
 
-        with open(f"{filename}.json") as f:
-            data = json.load(f)
+            with open(f"{filename}.json") as f:
+                data = json.load(f)
 
-        construction_runtime = int(data["_time"]["runtime_construction"]) + 1
+            construction_runtime = int(data["_time"]["runtime_construction"]) + 1
 
-        worker_times = [i for i in range(step, 900-construction_runtime, step)]
-        times = [i for i in range(901)]
-        best_list = [-inf for _ in range(step, construction_runtime, step)]
-        gap_list = [-inf for _ in range(step, construction_runtime, step)]
-        opt_value = optimal_value[problem]
+            worker_times = [i for i in range(step, 900-construction_runtime, step)]
+            times = [i for i in range(901)]
+            best_list = [-inf for _ in range(step, construction_runtime, step)]
+            gap_list = [-inf for _ in range(step, construction_runtime, step)]
+            opt_value = optimal_value[problem]
 
-        for time in worker_times:
-            best = -inf
+            for time in worker_times:
+                best = -inf
 
-            for worker in workers:
-                try:
-                    index = bisect_left(data[worker]["objective_history"]["time"], time)
+                for worker in workers:
+                    try:
+                        index = bisect_left(data[worker]["objective_history"]["time"], time)
 
-                    if index == 0:
-                        continue
+                        if index == 0:
+                            continue
 
-                    if data[worker]["objective_history"]["best"][index-1] > best:
-                        best = data[worker]["objective_history"]["best"][index - 1]
-                except KeyError:
-                    logger.info(f"{worker} does not exist in {problem}")
+                        if data[worker]["objective_history"]["best"][index-1] > best:
+                            best = data[worker]["objective_history"]["best"][index - 1]
+                    except KeyError:
+                        logger.info(f"{worker} does not exist in {problem}")
 
-            best_list.append(best)
-            gap = 100*abs(opt_value-best)/abs(best)
-            gap_list.append(gap)
+                best_list.append(best)
+                gap = 100*abs(opt_value-best)/abs(best)
+                gap_list.append(gap)
 
-        diff = len(times) - len(best_list)
-        for _ in range(diff):
-            best_list.append(best_list[-1])
-            gap_list.append(gap_list[-1])
+            diff = len(times) - len(best_list)
+            for _ in range(diff):
+                best_list.append(best_list[-1])
+                gap_list.append(gap_list[-1])
 
-        result = {
-            "times": times,
-            "best_list": best_list,
-            "gap_li"
-            "st": gap_list
-                  }
+            result = {
+                "times": times,
+                "best_list": best_list,
+                "gap_li"
+                "st": gap_list
+                      }
 
-        with open(f"{filename}-best.json", "w") as fp:
-            json.dump(result, fp, sort_keys=True, indent=4)
+            with open(f"{filename}-best.json", "w") as fp:
+                json.dump(result, fp, sort_keys=True, indent=4)
 
-        y_values = gap_list if mode == "gap" else best_list
+            y_values = gap_list if mode == "gap" else best_list
 
-        if mode == "gap":
-            plt.ylim(0, 25)
+            if mode == "gap":
+                plt.ylim(0, 25)
 
-        plt.plot(times, y_values, markersize=6, label=problem)
+            linestyle = "-" if folder == files else "--"
+            plt.plot(times, y_values, markersize=6, label=problem, color=colors[problem], linestyle=linestyle)
+
     plt.xticks([i for i in range(0, 901, 100)])
     plt.yticks([i for i in range(0, 26, 5)], [f"{i}%" for i in range(0, 26, 5)])
     plt.grid(b=True, which='major', axis='both', color='gainsboro', linestyle='-', linewidth=0.5)
@@ -112,6 +127,7 @@ def plot_best(step=1, mode="gap", foldername="variance"):
     plt.suptitle("Gap as a function of runtime")
     plt.title(foldername)
     plt.savefig(f"{foldername}_gap")
+    plt.show()
 
 def plot_history():
 
