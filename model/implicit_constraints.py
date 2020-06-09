@@ -32,7 +32,7 @@ class ImplicitConstraints:
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
 
         # Adding constraints
-        self.add_no_shift_while_no_demand(var.x)
+        #self.add_no_shift_while_no_demand(var.x)
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
