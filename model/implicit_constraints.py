@@ -65,21 +65,6 @@ class ImplicitConstraints:
             name="no_work_shift_ending_in_no_demand_allowed"
         )
 
-        """
-        self.model.addConstrs(
-            (
-                quicksum(
-                    quicksum(
-                        x[e, t, v] for t in self.time_periods_with_no_demand
-                    )
-                    for v in self.shift_durations["work"]
-                ) == 0
-                for e in self.employees
-            ),
-            name="no_work_shift_starting_while_no_demand"
-        )
-        """
-
     def add_minimum_demand_coverage(self, y, mu):
 
         self.model.addConstrs(
@@ -122,7 +107,7 @@ class ImplicitConstraints:
                 quicksum(
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t - v + 1 <= t_marked <= t
+                        if t - v <= t_marked <= t
                     )
                     for v in self.shift_durations["work"]
                 )
