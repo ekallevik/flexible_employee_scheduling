@@ -107,7 +107,7 @@ class ImplicitConstraints:
                 quicksum(
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t - v <= t_marked <= t
+                        if t - v + self.time_step <= t_marked <= t
                     )
                     for v in self.shift_durations["work"]
                 )
