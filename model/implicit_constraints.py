@@ -56,7 +56,7 @@ class ImplicitConstraints:
                 quicksum(
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t_marked + v in self.time_periods_with_no_demand
+                        if t_marked + v + self.time_step in self.time_periods_with_no_demand
                     )
                     for v in self.shift_durations["work"]
                 ) == 0
@@ -137,12 +137,11 @@ class ImplicitConstraints:
             (
                 quicksum(
                     quicksum(
-                        x[e, t, v] for t in self.combined_time_periods
-                        if (n * 24) <= t <= ((n + 1) * 24)
+                        x[e, t, v] for t in self.combined_time_periods_in_day[day]
                         )
                     for v in self.shift_durations["work"]
                 ) <= 1
-                for n in self.days
+                for day in self.days
                 for e in self.employees
             ),
             name="maximum_one_daily_shift"
