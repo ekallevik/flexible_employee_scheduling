@@ -19,6 +19,7 @@ class ImplicitConstraints:
         self.time_periods = data["time"]["periods"][0]
         self.combined_time_periods = data["time"]["combined_time_periods"][0]
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][2]
+        self.time_periods_with_no_demand = data["time"]["time_periods_with_no_demand"]
         self.every_time_period = data["time"]["every_time_period"]
         self.shift_durations = data["shift_durations"]
         self.days = data["time"]["days"]
@@ -31,6 +32,7 @@ class ImplicitConstraints:
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
 
         # Adding constraints
+        self.add_no_shift_while_no_demand(var.x)
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
@@ -46,6 +48,35 @@ class ImplicitConstraints:
         self.add_isolated_working_days(var.gamma, var.q)
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
+
+    def add_no_shift_while_no_demand(self, x):
+
+        self.model.addConstrs(
+            (
+                quicksum(
+                    quicksum(
+                        x[e, t_marked, v] for t_marked in self.combined_time_periods
+                        if t_marked + v in self.time_periods_with_no_demand
+                    )
+                    for v in self.shift_durations["work"]
+                ) == 0
+                for e in self.employees
+            ),
+            name="no_work_shift_ending_in_no_demand_allowed"
+        )
+
+        self.model.addConstrs(
+            (
+                quicksum(
+                    quicksum(
+                        x[e, t, v] for t in self.time_periods_with_no_demand
+                    )
+                    for v in self.shift_durations["work"]
+                ) == 0
+                for e in self.employees
+            ),
+            name="no_work_shift_starting_while_no_demand"
+        )
 
     def add_minimum_demand_coverage(self, y, mu):
 
