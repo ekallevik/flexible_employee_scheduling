@@ -29,6 +29,13 @@ files_plns = {
     "problem9": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
 }
 
+files_share_9 = {
+    "none": "results/share_times/2020-06-08_22:46:00-rproblem9_mode=feasibility_sdp_reduce-share=None_seed=0",
+    "5s": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=5s_seed=0",
+    "10s": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
+    "20s": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=20s_seed=100",
+}
+
 colors = {
     "problem1": "b",
     "problem2": "y",
@@ -60,11 +67,13 @@ workers = [f"worker-{j}" for j in range(48)]
 def plot_best(step=1, mode="gap", foldername="variance"):
 
     if foldername=="plns":
-        folder = files_plns
+        folder_list = [files, files_plns]
+    elif foldername =="share":
+        folder_list = [files_share_9]
     else:
-        folder = files
+        folder_list = files
 
-    for folder in [files, files_plns]:
+    for folder in folder_list:
         for problem, filename in folder.items():
 
             with open(f"{filename}.json") as f:
@@ -148,4 +157,4 @@ def plot_history():
         plt.show()
 
 
-plot_best(1, foldername="plns")
+plot_best(1, foldername="share")
