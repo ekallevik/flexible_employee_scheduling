@@ -85,8 +85,11 @@ def get_shift_sets(root, staff, time_sets, shifts, shifts_per_day, shifts_per_we
 
     long_shifts, short_shifts = get_short_and_long_shifts(shifts)
 
+    shifts_while_no_demand = get_shifts_while_no_demand(shifts, time_sets)
+
     shifts_violating_daily_rest = get_shifts_violating_daily_rest(root, staff, shifts_per_day)
-    invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day)
+    shifts_overlapping_t = get_shifts_overlapping_t(shifts, time_sets, competencies)
+    invalid_shifts = get_invalid_shifts(root, staff, shifts_per_day, shifts_while_no_demand)
 
     return {
         "shifts": shifts,
@@ -94,7 +97,7 @@ def get_shift_sets(root, staff, time_sets, shifts, shifts_per_day, shifts_per_we
         "shifts_per_week": shifts_per_week,
         "short_shifts": short_shifts,
         "long_shifts": long_shifts,
-        "shifts_overlapping_t": get_shifts_overlapping_t(shifts, time_sets, competencies),
+        "shifts_overlapping_t": shifts_overlapping_t,
         "shifts_covered_by_off_shift": get_shifts_covered_by_off_shifts(shifts, off_shifts),
         "shift_sequences_violating_daily_rest": shifts_violating_daily_rest[0],
         "shift_combinations_violating_daily_rest": shifts_violating_daily_rest[1],
@@ -266,7 +269,27 @@ def get_shifts_overlapping_t(shifts, time_sets, competencies):
                     except:
                         shifts_overlapping_t[time] = [shift]
     return shifts_overlapping_t
-  
+
+
+def get_shifts_while_no_demand(shifts, time_sets):
+
+    time_step = time_sets["step"]
+    time_periods = time_sets["combined_time_periods"][0]
+    shifts_while_no_demand = []
+
+    #print(time_periods)
+
+    for shift in shifts:
+        s_start = shift[0]
+        s_end = s_start + shift[1] - time_step
+
+        if s_start in time_periods and s_end in time_periods:
+            pass
+        else:
+            shifts_while_no_demand.append(shift)
+
+    return shifts_while_no_demand
+
 
 def get_shifts_covered_by_off_shifts(shifts, off_shifts):
 
@@ -363,7 +386,7 @@ def get_shifts_violating_daily_rest(root, staff, shifts_per_day):
     return [violating_shift_sequences, violating_shift_combinations]
 
 
-def get_invalid_shifts(root, staff, shifts_per_day):
+def get_invalid_shifts(root, staff, shifts_per_day, shifts_while_no_demand):
     """
     Returns a dict with employee as key, and all shifts that are invalid either due to blocked
     hours or daily rest as value.
@@ -382,21 +405,26 @@ def get_invalid_shifts(root, staff, shifts_per_day):
             for shift in shifts_per_day[day]:
                 shift_used = False
 
-                # BLOCKED HOURS
-                for time in blocked_hours[e]:
-                    if shift[0] <= time < shift[0] + shift[1]:
-                        invalid_shifts[e].append(shift)
-                        shift_used = True
+                if shift in shifts_while_no_demand:
+                    invalid_shifts[e].append(shift)
 
-                # INVALID SHIFTS DUE TO DAILY REST
-                if not natural_rest:
-                    if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
-                        if (
-                            24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
-                            < daily_rest[e]
-                        ):
-                            if not shift_used:
-                                invalid_shifts[e].append(shift)
+                else:
+
+                    # BLOCKED HOURS
+                    for time in blocked_hours[e]:
+                        if shift[0] <= time < shift[0] + shift[1]:
+                            invalid_shifts[e].append(shift)
+                            shift_used = True
+
+                    # INVALID SHIFTS DUE TO DAILY REST
+                    if not natural_rest:
+                        if shift[0] - (24 * int(day)) - daily_offset[e] < daily_rest[e]:
+                            if (
+                                24 * (int(day) + 1) + daily_offset[e] - (shift[0] + shift[1])
+                                < daily_rest[e]
+                            ):
+                                if not shift_used:
+                                    invalid_shifts[e].append(shift)
 
     return invalid_shifts
 
