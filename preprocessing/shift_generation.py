@@ -540,8 +540,6 @@ def get_updated_off_shift_sets(data, shifts):
 
 def get_durations(time_step, employee_daily_rest):
 
-    print(employee_daily_rest)
-
     work = []
     daily_off = []
     weekly_off = []
