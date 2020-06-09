@@ -32,6 +32,23 @@ def load_data(problem_name, use_predefined_shifts):
     if use_predefined_shifts:
         shifts, shifts_per_day, shifts_per_week = get_predefined_shift_set(root, time_sets["days"],
                                                                            time_sets["weeks"], competencies)
+        if problem_name == "rproblem4":
+            shifts.append((2013.75, 2.25))
+            shifts_per_day[time_sets["days"][-1]].append((2013.75, 2.25))
+            shifts_per_week[time_sets["weeks"][-1]].append((2013.75, 2.25))
+
+        if problem_name == "rproblem6":
+            shifts.append((2013.0, 3))
+            shifts_per_day[time_sets["days"][-1]].append((2013.0, 3))
+            shifts_per_week[time_sets["weeks"][-1]].append((2013.0, 3))
+
+        if problem_name == "rproblem8":
+            shifts.append((334.0, 2.0))
+            shifts_per_day[time_sets["days"][-1]].append((334.0, 2.0))
+            shifts_per_week[time_sets["weeks"][-1]].append((334.0, 2.0))
+
+        print(shifts)
+
     else:
         shifts = get_shifts(root)
         shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
