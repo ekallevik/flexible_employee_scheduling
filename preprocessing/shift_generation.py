@@ -5,6 +5,7 @@ from preprocessing.demand_processing import (
     get_demand,
     get_time_periods,
     get_time_steps,
+    get_time_periods_with_no_demand,
 )
 from collections import defaultdict
 from preprocessing.preferences import generate_preferences
@@ -73,6 +74,7 @@ def get_time_sets(root, competencies):
         "periods": periods["periods"],
         "combined_time_periods": periods["combined_time_periods"],
         "every_time_period": periods["every_time_period"],
+        "time_periods_with_no_demand": get_time_periods_with_no_demand(periods["every_time_period"], periods["combined_time_periods"]),
         "days": days,
         "number_of_days": len(days),
         "weeks": [i for i in range(number_of_weeks)],

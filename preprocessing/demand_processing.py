@@ -98,6 +98,16 @@ def get_time_periods(root, competencies):
             "every_time_period": every_time_period
             }
 
+def get_time_periods_with_no_demand(all_time_periods, time_periods_with_demand):
+
+    time_periods_with_no_demand = tuplelist()
+
+    for time in all_time_periods:
+        if time not in time_periods_with_demand:
+            time_periods_with_no_demand.append(time)
+
+    return time_periods_with_no_demand
+
 
 def get_demand(root, competencies):
     demand = {"min": tupledict(), "ideal": tupledict(), "max": tupledict()}
