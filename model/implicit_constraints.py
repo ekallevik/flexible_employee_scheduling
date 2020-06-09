@@ -56,7 +56,7 @@ class ImplicitConstraints:
                 quicksum(
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t_marked + v + self.time_step in self.time_periods_with_no_demand
+                        if t_marked + v - self.time_step in self.time_periods_with_no_demand
                     )
                     for v in self.shift_durations["work"]
                 ) == 0
