@@ -47,8 +47,6 @@ def load_data(problem_name, use_predefined_shifts):
             shifts_per_day[time_sets["days"][-1]].append((334.0, 2.0))
             shifts_per_week[time_sets["weeks"][-1]].append((334.0, 2.0))
 
-        print(shifts)
-
     else:
         shifts = get_shifts(root)
         shifts_per_day = get_shifts_per_day(shifts, time_sets["days"])
