@@ -55,7 +55,7 @@ files_plns = {
     "problem9": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
 }
 
-linestyles = ["solid", "dashdot", "dashed", "dotted"]
+linestyles = ["solid", "dashdot", "dashed", "dotted", (0, (5, 10)), (0, (1, 10))]
 
 def load_data(filename):
     with open(f"{filename}.json") as f:
@@ -261,7 +261,7 @@ files_share_5 = {
 files_share_6 = {
     "na": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=None_seed=400",
     "5s": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=5s_seed=0",
-    "10s": "results/plns/2020-06-05_19:50:30-rproblem6_mode=feasibility_sdp_reduce-plns",
+    "10s": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
     "20s": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=20s_seed=100"
 
 }
@@ -280,8 +280,47 @@ files_share_9 = {
     "20s": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=20s_seed=100",
 }
 
-def main():
+files_threads_3 = {
+    1: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=1_seed=0",
+    4: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=4_seed=300",
+    8: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=8_seed=400",
+    16: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=16_seed=0",
+    32: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=32_seed=300",
+    48: "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+}
 
+files_threads_5 = {
+    1: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    4: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=4_seed=400",
+    8: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=8_seed=200",
+    16: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=16_seed=200",
+    32: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=32_seed=0",
+    48: "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+}
+
+files_threads_6 = {
+    48: "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+}
+
+files_threads_7 = {
+    1: "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    4: "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=4_seed=400",
+    8: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=8_seed=100",
+    16: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=16_seed=200",
+    32: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=32_seed=100",
+    48: "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+}
+
+files_threads_9 = {
+    1: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    4: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=4_seed=100",
+    8: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=8_seed=300",
+    16: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=16_seed=300",
+    32: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=32_seed=200",
+    48: "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+}
+
+def plot_sharing():
     plot = plt
 
     #p3 = ProblemPlotter(problem="problem3", variants=files_share_3, title="Sharing", plot=plot)
@@ -290,6 +329,28 @@ def main():
     p7 = ProblemPlotter(problem="problem7", variants=files_share_7, title="Sharing", plot=plot)
     #p9 = ProblemPlotter(problem="problem9", variants=files_share_9, title="Sharing", plot=plot)
     plt.show()
+
+def plot_threads():
+
+    plot = plt
+    p3 = ProblemPlotter(problem="problem3", variants=files_threads_3, title="Sharing", plot=plot)
+    plt.show()
+
+    p5 = ProblemPlotter(problem="problem5", variants=files_threads_5, title="Sharing", plot=plot)
+    plt.show()
+
+    p6 = ProblemPlotter(problem="problem6", variants=files_threads_6, title="Sharing", plot=plot)
+    plt.show()
+
+    p7 = ProblemPlotter(problem="problem7", variants=files_threads_7, title="Sharing", plot=plot)
+    plt.show()
+
+    p9 = ProblemPlotter(problem="problem9", variants=files_threads_9, title="Sharing", plot=plot)
+    plt.show()
+
+
+def main():
+    plot_threads()
 
 
 if __name__ == "__main__":
