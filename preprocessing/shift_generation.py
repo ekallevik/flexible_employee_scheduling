@@ -54,7 +54,7 @@ def load_data(problem_name, use_predefined_shifts):
         "shifts": shift_sets,
         "off_shifts": off_shift_sets,
         "time": time_sets,
-        "shift_durations": get_durations(time_sets["step"]),
+        "shift_durations": get_durations(time_sets["step"], staff["employee_daily_rest"]),
         "heuristic": {
             "t_covered_by_shift": get_t_covered_by_shift(shift_sets["shifts"], time_sets),
             "shift_lookup": get_shift_lookup(shift_sets["shifts_per_day"]),
@@ -538,10 +538,12 @@ def get_updated_off_shift_sets(data, shifts):
     )
 
 
-def get_durations(time_step):
+def get_durations(time_step, employee_daily_rest):
+
+    print(employee_daily_rest)
 
     work = []
-    daily_off = [DEFAULT_DAILY_REST_HOURS]
+    daily_off = []
     weekly_off = []
 
     t_work = ALLOWED_SHIFT_DURATION[0]
@@ -555,6 +557,12 @@ def get_durations(time_step):
     while t_weekly_off <= min(WEEKLY_REST_DURATION[1], MAX_REWARDED_WEEKLY_REST):
         weekly_off.append(t_weekly_off)
         t_weekly_off += time_step
+
+    for e in employee_daily_rest.keys():
+        if employee_daily_rest[e] not in daily_off:
+            daily_off.append(employee_daily_rest[e])
+
+    daily_off.sort()
 
     return{
         "work": work,

@@ -155,16 +155,16 @@ class ImplicitConstraints:
                 quicksum(
                     (1 - quicksum(y[c, e, t_marked] for c in self.competencies if y.get((c, e, t_marked))))
                     for t_marked in self.combined_time_periods
-                    if t <= t_marked <= t + (v - 1)
+                    if t <= t_marked <= t + v - self.time_step
                     )
                 >= quicksum(
                     self.time_step for t_marked_2 in self.combined_time_periods
-                    if t <= t_marked_2 <= t + (v - 1)
+                    if t <= t_marked_2 <= t + v - self.time_step
                 )
                 * w_day[e, t, v]
                 for e in self.employees
                 for v in self.shift_durations["daily_off"]
-                for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
+                for t in self.combined_time_periods if t + v - self.time_step <= max(self.combined_time_periods)
             ),
             name="cover_no_demand_while_daily_off_shift"
         )
@@ -175,16 +175,16 @@ class ImplicitConstraints:
                 quicksum(
                     (1 - quicksum(y[c, e, t_marked] for c in self.competencies if y.get((c, e, t_marked))))
                     for t_marked in self.combined_time_periods
-                    if t <= t_marked <= t + (v - 1)
+                    if t <= t_marked <= t + v - self.time_step
                 )
                 >= quicksum(
                     self.time_step for t_marked_2 in self.combined_time_periods
-                    if t <= t_marked_2 <= t + (v - 1)
+                    if t <= t_marked_2 <= t + v - self.time_step
                 )
                 * w_week[e, t, v]
                 for e in self.employees
                 for v in self.shift_durations["weekly_off"]
-                for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
+                for t in self.combined_time_periods if t + v - self.time_step <= max(self.combined_time_periods)
             ),
             name="cover_no_demand_while_weekly_off_shift"
         )

@@ -16,6 +16,7 @@ class ImplicitModel:
 
         # Retrieve relevant data from "data"
         self.employees = data["staff"]["employees"]
+        self.time_step = data["time"]["step"]
         self.combined_time_periods = data["time"]["combined_time_periods"][0]
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][1]
         self.time_periods = data["time"]["periods"][0]
@@ -29,6 +30,7 @@ class ImplicitModel:
         self.var = ImplicitVariables(
             model=self.model,
             employees=self.employees,
+            time_step=self.time_step,
             combined_time_periods=self.combined_time_periods,
             time_periods=self.time_periods,
             every_time_period=self.every_time_period,

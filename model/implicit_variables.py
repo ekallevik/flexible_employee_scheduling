@@ -3,11 +3,12 @@ from gurobipy import *
 
 class ImplicitVariables:
 
-    def __init__(self, model, employees, combined_time_periods, time_periods, every_time_period, time_periods_with_no_demand, shift_durations, competencies, days):
+    def __init__(self, model, employees, time_step, combined_time_periods, time_periods, every_time_period, time_periods_with_no_demand, shift_durations, competencies, days):
 
         self.model = model
 
         self.employees = employees
+        self.time_step = time_step
         self.combined_time_periods = combined_time_periods
         self.time_periods = time_periods
         self.every_time_period = every_time_period
@@ -33,8 +34,8 @@ class ImplicitVariables:
     def add_x(self):
         x = {(e, t, v): 0
              for e in self.employees
-             for t in self.combined_time_periods
              for v in self.shift_durations["work"]
+             for t in self.combined_time_periods if t + v - self.time_step not in self.time_periods_with_no_demand
             }
         return self.model.addVars(x, vtype=GRB.BINARY, name="x")
 
