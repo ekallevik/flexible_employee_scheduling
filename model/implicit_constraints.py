@@ -51,6 +51,7 @@ class ImplicitConstraints:
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
 
+    """
     def add_no_shift_while_no_demand(self, x):
 
         self.model.addConstrs(
@@ -66,6 +67,7 @@ class ImplicitConstraints:
             ),
             name="no_work_shift_ending_in_no_demand_allowed"
         )
+    """
 
     def add_minimum_demand_coverage(self, y, mu):
 
