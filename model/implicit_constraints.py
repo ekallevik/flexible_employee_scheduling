@@ -33,6 +33,8 @@ class ImplicitConstraints:
         self.weekly_rest = data["staff"]["employee_with_weekly_rest"]
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
 
+        print("TEST", self.every_time_period[-1])
+
         # Adding constraints
         #self.add_no_shift_while_no_demand(var.x)
         self.add_minimum_demand_coverage(var.y, var.mu)
@@ -120,12 +122,12 @@ class ImplicitConstraints:
                     for v in self.shift_durations["work"]
                 ) == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
                 for e in self.employees
-                #for t in self.combined_time_periods
-                for t in self.combined_time_periods if t < 165.75
+                for t in self.combined_time_periods
+                #for t in self.combined_time_periods if t < 165.75
             ),
             name="mapping_shift_to_demand"
         )
-
+        """
         self.model.addConstrs(
             (
                 x[e, 165.75, 2.25]
@@ -135,6 +137,7 @@ class ImplicitConstraints:
             ),
             name="mapping_shift_to_demand_special_case"
         )
+        """
 
     def add_max_one_demand_cover_each_time(self, y):
 
