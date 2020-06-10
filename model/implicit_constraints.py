@@ -112,8 +112,10 @@ class ImplicitConstraints:
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
                         if t - v <= t_marked <= t
-                        and
-                        t_marked + v - self.time_step in self.combined_time_periods
+                        if (e,t_marked,v) in x
+                        # 
+                        # and
+                        # t_marked + v - self.time_step in self.combined_time_periods
                     )
                     for v in self.shift_durations["work"]
                 ) == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
