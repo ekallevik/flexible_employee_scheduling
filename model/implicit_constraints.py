@@ -203,8 +203,9 @@ class ImplicitConstraints:
                 )
                 * w_week[e, t, v]
                 for e in self.employees
+                for t in self.every_time_period
                 for v in self.shift_durations["weekly_off"]
-                for t in self.combined_time_periods if t + v - self.time_step <= max(self.combined_time_periods)
+                if t + v in self.every_time_period
             ),
             name="cover_no_demand_while_weekly_off_shift"
         )

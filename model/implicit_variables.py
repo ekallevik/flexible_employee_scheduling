@@ -63,6 +63,7 @@ class ImplicitVariables:
                   for e in self.employees
                   for v in self.shift_durations["weekly_off"]
                   for t in self.every_time_period
+                  if t + v in self.every_time_period
                   }
         return self.model.addVars(w_week, vtype=GRB.BINARY, name="w_week")
 
