@@ -274,6 +274,7 @@ class ImplicitConstraints:
                         w_week[e, t, v] for t in self.every_time_period
                         if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
                         >= t >= self.weekly_offset[e] + j * HOURS_IN_A_WEEK
+                        if t + v in self.every_time_period
                     )
                     for v in self.shift_durations["weekly_off"]
                     if v >= self.weekly_rest[e]
@@ -292,6 +293,7 @@ class ImplicitConstraints:
                         w_week[e, t, v] for t in self.every_time_period
                         if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK
                         >= t > self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
+                        if t + v in self.every_time_period
                     )
                     for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
                 )
