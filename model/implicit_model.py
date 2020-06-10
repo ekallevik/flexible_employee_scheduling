@@ -60,7 +60,7 @@ class ImplicitModel:
         )
 
     def run_model(self):
-        self.model.write("out.lp")
+        #self.model.write("out.lp")
         self.model.optimize()
         logger.error(f"Model is {self.model.status}")
 
