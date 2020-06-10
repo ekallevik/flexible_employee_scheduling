@@ -33,8 +33,6 @@ class ImplicitConstraints:
         self.weekly_rest = data["staff"]["employee_with_weekly_rest"]
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
 
-        print("TEST", self.every_time_period[-1])
-
         # Adding constraints
         #self.add_no_shift_while_no_demand(var.x)
         self.add_minimum_demand_coverage(var.y, var.mu)
