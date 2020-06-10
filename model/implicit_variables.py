@@ -35,7 +35,7 @@ class ImplicitVariables:
         x = {(e, t, v): 0
              for e in self.employees
              for v in self.shift_durations["work"]
-             for t in self.combined_time_periods if t + v - self.time_step not in self.time_periods_with_no_demand
+             for t in self.combined_time_periods if t + v - self.time_step in self.combined_time_periods
             }
         return self.model.addVars(x, vtype=GRB.BINARY, name="x")
 
