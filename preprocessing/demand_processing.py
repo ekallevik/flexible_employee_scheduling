@@ -93,10 +93,32 @@ def get_time_periods(root, competencies):
         every_time_period.append(t)
         t += time_step
 
-    return {"periods": [time_periods, time_periods_in_week, time_periods_in_day],
-            "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day],
-            "every_time_period": every_time_period
-            }
+    every_time_period_in_week = tupledict()
+    every_time_period_in_day = tupledict()
+    day = 0
+    week = 0
+    every_time_period_in_day[day] = tuplelist()
+    every_time_period_in_week[week] = tuplelist()
+
+    for t in every_time_period:
+        if t == 24 * (day + 1):
+            day += 1
+            every_time_period_in_day[day] = tuplelist()
+        if day % 7 == 0 and day != 0:
+            week += 1
+            every_time_period_in_week[week] = tuplelist()
+
+        every_time_period_in_day[day].append(t)
+        every_time_period_in_week[week].append(t)
+
+
+    return {
+        "periods": [time_periods, time_periods_in_week, time_periods_in_day],
+        "combined_time_periods": [combined_time_periods, combined_time_periods_in_week, combined_time_periods_in_day],
+        "every_time_period": every_time_period,
+        "every_time_period_in_day": every_time_period_in_day,
+        "every_time_period_in_week": every_time_period_in_week
+        }
 
 
 def get_time_periods_with_no_demand(all_time_periods, time_periods_with_demand):

@@ -21,6 +21,8 @@ class ImplicitModel:
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][1]
         self.time_periods = data["time"]["periods"][0]
         self.every_time_period = data["time"]["every_time_period"]
+        self.every_time_period_in_day = data["time"]["every_time_period_in_day"]
+        self.every_time_period_in_week = data["time"]["every_time_period_in_week"]
         self.time_periods_with_no_demand = data["time"]["time_periods_with_no_demand"]
         self.competencies = data["competencies"]
         self.days = data["time"]["days"]

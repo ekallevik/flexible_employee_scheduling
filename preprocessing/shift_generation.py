@@ -74,6 +74,8 @@ def get_time_sets(root, competencies):
         "periods": periods["periods"],
         "combined_time_periods": periods["combined_time_periods"],
         "every_time_period": periods["every_time_period"],
+        "every_time_period_in_day": periods["every_time_period_in_day"],
+        "every_time_period_in_week": periods["every_time_period_in_week"],
         "time_periods_with_no_demand": get_time_periods_with_no_demand(periods["every_time_period"], periods["combined_time_periods"][0]),
         "days": days,
         "number_of_days": len(days),

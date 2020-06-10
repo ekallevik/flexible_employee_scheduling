@@ -21,6 +21,8 @@ class ImplicitConstraints:
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][2]
         self.time_periods_with_no_demand = data["time"]["time_periods_with_no_demand"]
         self.every_time_period = data["time"]["every_time_period"]
+        self.every_time_period_in_day = data["time"]["every_time_period_in_day"]
+        self.every_time_period_in_week = data["time"]["every_time_period_in_week"]
         self.shift_durations = data["shift_durations"]
         self.days = data["time"]["days"]
         self.weeks = data["time"]["weeks"]
