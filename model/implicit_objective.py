@@ -31,7 +31,7 @@ class ImplicitObjective:
                 f["plus"][e] - f["minus"][e]
                 == weights["rest"] * quicksum(
                     quicksum(
-                        v * w_week[e, t, v] for t in self.every_time_period
+                        v * w_week[e, t, v] for t in self.every_time_period if t + v in self.every_time_period
                     ) for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
                 )
                 - weights["contracted hours"][e] * lam[e]
