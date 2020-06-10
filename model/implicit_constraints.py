@@ -157,6 +157,7 @@ class ImplicitConstraints:
                     quicksum(
                         x[e, t, v] for t in self.combined_time_periods_in_day[day]
                         if t + v - self.time_step in self.combined_time_periods
+                        if (e, t, v) in x
                         )
                     for v in self.shift_durations["work"]
                 ) <= 1
