@@ -116,12 +116,20 @@ class ImplicitConstraints:
                         t_marked + v - self.time_step in self.combined_time_periods
                     )
                     for v in self.shift_durations["work"]
-                )
-                == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
+                ) == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
                 for e in self.employees
-                for t in self.combined_time_periods
+                for t in self.combined_time_periods if t < 165.75
             ),
             name="mapping_shift_to_demand"
+        )
+
+        self.model.addConstrs(
+            (
+                x[e, 165.75, 2.25]
+                == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
+                for e in self.employees
+                for t in self.combined_time_periods if t >= 165.75
+            )
         )
 
     def add_max_one_demand_cover_each_time(self, y):
