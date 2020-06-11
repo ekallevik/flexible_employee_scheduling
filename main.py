@@ -194,11 +194,11 @@ class ProblemRunner:
     def get_criterion_list(self, mix, threads, threshold, percentage):
 
         wanted_iterations = {
-            "problem3": 362*percentage,
-            "problem5": 816*percentage,
-            "problem6": 400*percentage,
-            "problem7": 216*percentage,
-            "problem9": 206*percentage,
+            "rproblem3": 362*percentage,
+            "rproblem5": 816*percentage,
+            "rproblem6": 400*percentage,
+            "rproblem7": 216*percentage,
+            "rproblem9": 206*percentage,
         }
 
         step = int(threshold / wanted_iterations[self.problem])
