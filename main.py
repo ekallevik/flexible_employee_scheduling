@@ -179,19 +179,46 @@ class ProblemRunner:
 
         return self
 
-    def run_palns(self, threads=48, seed_offset=0, accept="g", variant="default", share_times=None):
+    def test_rrt(self, n_runs=5, mix="pure", threads=48, percentage=0.75):
+
+        share_times = [i for i in range(60, 15 * 60, 10)]
+        thresholds = [0.01, 0.025, 0.050, 0.075, 0.100]
+
+        for seed in range(0, n_runs * 100, 100):
+            for threshold in thresholds:
+                criterion_list = self.get_criterion_list(mix, threads, threshold, percentage)
+                self.run_palns(share_times=share_times, seed_offset=seed,
+                               criterion_list=criterion_list,
+                               variant=f"rrt_{threshold}-{mix}", threads=threads)
+
+    def get_criterion_list(self, mix, threads, threshold, percentage):
+
+        wanted_iterations = {
+            "problem3": 362*percentage,
+            "problem5": 816*percentage,
+            "problem6": 400*percentage,
+            "problem7": 216*percentage,
+            "problem9": 206*percentage,
+        }
+
+        step = int(threshold / wanted_iterations[self.problem])
+
+        if mix == "pure":
+            criterion_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
+                                                   step=step) for i in range(threads)]
+        else:
+            rrt_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
+                                             step=step) for i in range(int(threads / 2))]
+            hc_list = [GreedyCriterion() for i in range(int(threads / 2))]
+            criterion_list = rrt_list + hc_list
+
+        return criterion_list
+
+    def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default",
+                  share_times=None):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
-        if accept == "sa":
-            criterion = SimulatedAnnealingCriterion(start_temperature=1700, end_temperature=150,
-                                                    step=30)
-        elif accept == "rrt":
-            criterion = RecordToRecordTravel(start_threshold=1700, end_threshold=150, step=30)
-        else:
-            criterion = GreedyCriterion()    
-
         logger.critical(f"Running {self.problem} with runtime {self.runtime} in {threads} threads")
-        logger.warning(f"Using {criterion}")
 
         candidate_solution = self.get_candidate_solution()
         state = self.get_state(candidate_solution)
@@ -206,6 +233,8 @@ class ProblemRunner:
         processes = []
         for j in range(threads):
             state_copy = deepcopy(state)
+
+            criterion = GreedyCriterion() if not criterion_list else criterion_list[j]
 
             decay = 0.9
             operator_weights = {
@@ -228,8 +257,12 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
-        logger.warning("Cooling off for 30s")
-        time.sleep(30)
+        cool_off = 30
+
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.warning(f"Cooled off for {t}s")
+            time.sleep(5)
 
         for process in processes:
             logger.critical(f"Terminating {process.worker_name}")

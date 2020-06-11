@@ -22,8 +22,13 @@ class RecordToRecordTravel(AbstractCriterion):
 
     def accept(self, candidate, current, best, random_state):
 
-        is_accepted = (best.get_objective_value() - candidate.get_objective_value()) <= \
-                      self.current_threshold
+        diff = best.get_objective_value() - candidate.get_objective_value()
+
+        if diff > 0:
+            is_accepted = True
+        else:
+            gap = abs(diff)/abs(candidate.get_objective_value())
+            is_accepted = gap <= self.current_threshold
 
         self.update_threshold()
         logger.info(f"Accept candidate: {is_accepted}. t={self.current_threshold})")
@@ -51,8 +56,8 @@ class RecordToRecordTravel(AbstractCriterion):
         if self.method not in ["linear", "exponential"]:
             raise ValueError(f"Method: {self.method} is not a valid choice")
 
-        if self.start_threshold <= 0 or self.end_threshold <= 0:
-            raise ValueError("Thresholds must be strictly positive")
+        if self.start_threshold <= 0 or self.end_threshold < 0:
+            raise ValueError("Thresholds must be positive")
 
         if self.start_threshold < self.end_threshold:
             raise ValueError("The start threshold must be greater than the end threshold")
