@@ -383,20 +383,59 @@ files_plns_3 = {
     }
 }
 
+files_palns_1 = {
+    "problem1": {"p1": "results/variance_3_representative/2020-06-06_20:01:09-rproblem1_mode"
+                 "=feasibility_sdp_reduce-seed=200"},
+    "problem2": {"p2": "results/variance_3_representative/2020-06-06_20:01:20-rproblem2_mode"
+                 "=feasibility_sdp_reduce-seed=500"},
+    "problem3": {"p3": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode"
+                 "=feasibility_sdp_reduce-seed=900"},
+}
+
+files_palns_2 = {
+    "problem4": {"p4": "results/variance_3_representative/2020-06-06_20:04:24-rproblem4_mode"
+                 "=feasibility_sdp_reduce-seed=300"},
+    "problem5": {"p5": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode"
+                 "=feasibility_sdp_reduce-seed=100"},
+    "problem6": {"p6": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode"
+                 "=feasibility_sdp_reduce-seed=0"},
+}
+
+files_palns_3 = {
+    "problem7": {"p7": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode"
+                 "=feasibility_sdp_reduce-seed=200"},
+    #"problem8": "results/2020-06-01_22:28:08-rproblem8_mode=feasibility_sdp_reduce.json",
+    "problem9": {"p9": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode"
+                 "=feasibility_sdp_reduce-seed=300"},
+}
+
 def plot_plns():
 
     plot = plt
-    plot_plns_cluster(plot, files_plns_1, "Adaptiveness p1-3")
-    plot_plns_cluster(plot, files_plns_2, "Adaptiveness p4-6")
-    plot_plns_cluster(plot, files_plns_3, "Adaptiveness p7-9")
-
-def plot_plns_cluster(plot, files, title):
-
     colors = ["navy", "g", "r", "saddlebrown", "m"]
 
+    plot_multiple_problems(plot, files_plns_1, "Adaptiveness p1-3", colors=colors)
+    plot_multiple_problems(plot, files_plns_2, "Adaptiveness p4-6", colors=colors)
+    plot_multiple_problems(plot, files_plns_3, "Adaptiveness p7-9", colors=colors)
+
+
+def plot_palns():
+
+    plot = plt
+
+    plot_multiple_problems(plot, files_palns_1, "PALNS p1-3")
+    plot_multiple_problems(plot, files_palns_2, "PALNS p4-6")
+    plot_multiple_problems(plot, files_palns_3, "PALNS p7-9")
+    plot_multiple_problems(plot, files_palns_1, "PALNS p1-3")
+
+
+def plot_multiple_problems(plot, files, title, colors=None):
+
     for counter, (problem, variants) in enumerate(files.items()):
+        color = None if not colors else colors[counter]
+
         ProblemPlotter(problem=problem, variants=variants, plot=plot,
-                       color=colors[counter], suptitle=title)
+                       color=color, suptitle=title)
     plot.title(title)
     plot.show()
 
@@ -441,7 +480,7 @@ def plot_threads():
 
 
 def main():
-    plot_plns()
+    plot_palns()
 
 
 if __name__ == "__main__":
