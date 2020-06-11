@@ -201,7 +201,7 @@ class ProblemRunner:
             "rproblem9": 206*percentage,
         }
 
-        step = int(threshold / wanted_iterations[self.problem])
+        step = threshold / wanted_iterations[self.problem]
 
         if mix == "pure":
             criterion_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
