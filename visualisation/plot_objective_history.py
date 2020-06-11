@@ -3,6 +3,7 @@ from bisect import bisect_left
 from math import inf
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from loguru import logger
 
 colors = {
@@ -65,12 +66,12 @@ def load_data(filename):
 
 class ProblemPlotter:
 
-    def __init__(self, problem, variants, title, plot, step=1):
+    def __init__(self, problem, variants, suptitle, plot, step=1, color=None):
         self.problem = problem
-        self.title = title
+        self.suptitle = suptitle
         self.variants = variants
         self.step = step
-        self.color = colors[problem]
+        self.color = color
 
         self.construction_runtime = None
         self.worker_times = None
@@ -84,20 +85,26 @@ class ProblemPlotter:
         self.setup_matplotlib()
 
     def setup_matplotlib(self):
+        self.plot.style.use('seaborn-deep')
+
         self.plot.ylim(0, 25)
         self.plot.xticks([i for i in range(0, 901, 100)])
         self.plot.yticks([i for i in range(0, 26, 5)], [f"{i}%" for i in range(0, 26, 5)])
+
+        self.plot.xlabel("Runtime (s)")
+        self.plot.ylabel("Gap")
+
         self.plot.grid(b=True, which='major', axis='both', color='gainsboro', linestyle='-',
                        linewidth=0.5)
         self.plot.legend()
         self.plot.suptitle("Gap as a function of runtime")
-        self.plot.title(self.title)
+        self.plot.title(self.problem)
 
     def show(self):
         self.plot.show()
 
     def save(self):
-        self.plot.savefig(f"{self.title}_gap")
+        self.plot.savefig(f"{self.suptitle}_gap")
 
     def get_shared_stats(self):
         filename = files[self.problem]
@@ -117,8 +124,12 @@ class ProblemPlotter:
             best_list, gap_list = self.get_variant_data_as_list(filename)
             self.pad_data_lists(best_list, gap_list)
 
-            plt.plot(self.times, gap_list, markersize=6, label=f"{self.problem}-{name}",
-                     color=self.color, linestyle=linestyles[counter])
+            if self.color:
+                plt.plot(self.times, gap_list, markersize=6, label=f"{name}",
+                         linestyle=linestyles[counter], color=self.color)
+            else:
+                plt.plot(self.times, gap_list, markersize=6, label=f"{name}",
+                         linestyle=linestyles[counter])
 
     def pad_data_lists(self, best_list, gap_list):
         diff = len(self.times) - len(best_list)
@@ -245,124 +256,192 @@ def plot_history():
 
 
 files_share_3 = {
-    "na": "results/share_times/2020-06-08_22:43:43-rproblem3_mode=feasibility_sdp_reduce-share=None_seed=400",
-    "5s": "results/share_times/2020-06-08_17:31:06-rproblem3_mode=feasibility_sdp_reduce-share=5s_seed=100",
-    "10s": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
-    "20s": "results/share_times/2020-06-08_17:31:06-rproblem3_mode=feasibility_sdp_reduce-share=20s_seed=0",
+    "no sharing": "results/share_times/2020-06-08_22:43:43-rproblem3_mode=feasibility_sdp_reduce-share=None_seed=400",
+    "5s intervals": "results/share_times/2020-06-08_17:31:06-rproblem3_mode=feasibility_sdp_reduce-share=5s_seed=100",
+    "10s intervals": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+    "20s intervals": "results/share_times/2020-06-08_17:31:06-rproblem3_mode=feasibility_sdp_reduce-share=20s_seed=0",
 }
 
 files_share_5 = {
-    "na": "results/share_times/2020-06-08_22:45:17-rproblem5_mode=feasibility_sdp_reduce-share=None_seed=100",
-    "5s": "results/share_times/2020-06-08_17:31:11-rproblem5_mode=feasibility_sdp_reduce-share=5s_seed=100",
-    "10s": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
-    "20s": "results/share_times/2020-06-08_17:31:11-rproblem5_mode=feasibility_sdp_reduce-share=20s_seed=400",
+    "no sharing": "results/share_times/2020-06-08_22:45:17-rproblem5_mode=feasibility_sdp_reduce-share=None_seed=100",
+    "5s intervals": "results/share_times/2020-06-08_17:31:11-rproblem5_mode=feasibility_sdp_reduce-share=5s_seed=100",
+    "10s intervals": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+    "20s intervals": "results/share_times/2020-06-08_17:31:11-rproblem5_mode=feasibility_sdp_reduce-share=20s_seed=400",
 }
 
 files_share_6 = {
-    "na": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=None_seed=400",
-    "5s": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=5s_seed=0",
-    "10s": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
-    "20s": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=20s_seed=100"
+    "no sharing": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=None_seed=400",
+    "5s intervals": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=5s_seed=0",
+    "10s intervals": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+    "20s intervals": "results/share_times/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-share=20s_seed=100"
 
 }
 
 files_share_7 = {
-    "na": "results/share_times/2020-06-08_22:45:52-rproblem7_mode=feasibility_sdp_reduce-share=None_seed=300",
-    "5s": "results/share_times/2020-06-08_17:31:22-rproblem7_mode=feasibility_sdp_reduce-share=5s_seed=400",
-    "10s": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
-    "20s": "results/share_times/2020-06-08_17:31:22-rproblem7_mode=feasibility_sdp_reduce-share=20s_seed=200",
+    "no sharing": "results/share_times/2020-06-08_22:45:52-rproblem7_mode=feasibility_sdp_reduce-share=None_seed=300",
+    "5s intervals": "results/share_times/2020-06-08_17:31:22-rproblem7_mode=feasibility_sdp_reduce-share=5s_seed=400",
+    "10s intervals": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+    "20s intervals": "results/share_times/2020-06-08_17:31:22-rproblem7_mode=feasibility_sdp_reduce-share=20s_seed=200",
 }
 
 files_share_9 = {
-    "na": "results/share_times/2020-06-08_22:46:00-rproblem9_mode=feasibility_sdp_reduce-share=None_seed=0",
-    "5s": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=5s_seed=0",
-    "10s": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
-    "20s": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=20s_seed=100",
+    "no sharing": "results/share_times/2020-06-08_22:46:00-rproblem9_mode=feasibility_sdp_reduce-share=None_seed=0",
+    "5s intervals": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=5s_seed=0",
+    "10s intervals": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+    "20s intervals": "results/share_times/2020-06-08_17:31:27-rproblem9_mode=feasibility_sdp_reduce-share=20s_seed=100",
 }
 
 files_threads_3 = {
-    1: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=1_seed=0",
-    4: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=4_seed=300",
-    8: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=8_seed=400",
-    16: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=16_seed=0",
-    32: "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=32_seed=300",
-    48: "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+    "1 subprocess": "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=1_seed=0",
+    "4 subprocesses": "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=4_seed=300",
+    "8 subprocesses": "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=8_seed=400",
+    "16 subprocesses": "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=16_seed=0",
+    "32 subprocesses": "results/threads/2020-06-08_17:31:47-rproblem3_mode=feasibility_sdp_reduce-threads=32_seed=300",
+    "48 subprocesses": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
 }
 
 files_threads_5 = {
-    1: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=1_seed=300",
-    4: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=4_seed=400",
-    8: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=8_seed=200",
-    16: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=16_seed=200",
-    32: "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=32_seed=0",
-    48: "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+    "1 subprocess": "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    "4 subprocesses": "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=4_seed=400",
+    "8 subprocesses": "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=8_seed=200",
+    "16 subprocesses": "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=16_seed=200",
+    "32 subprocesses": "results/threads/2020-06-08_17:31:51-rproblem5_mode=feasibility_sdp_reduce-threads=32_seed=0",
+    "48 subprocesses": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
 }
 
 files_threads_6 = {
-    48: "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+    "1 subprocess": "results/threads/2020-06-08_23:50:17-rproblem6_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    "4 subprocesses": "results/threads/2020-06-10_09:16:34-rproblem6_mode=feasibility_sdp_reduce-threads=4_seed=400",
+    "8 subprocesses": "results/threads/2020-06-10_09:16:17-rproblem6_mode=feasibility_sdp_reduce-threads=8_seed=0",
+    "16 subprocesses": "results/threads/2020-06-10_09:16:11-rproblem6_mode=feasibility_sdp_reduce-threads=16_seed=0",
+    "32 subprocesses": "results/threads/2020-06-10_09:15:58-rproblem6_mode=feasibility_sdp_reduce-threads=32_seed=200",
+    "48 subprocesses": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
 }
 
 files_threads_7 = {
-    1: "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=1_seed=300",
-    4: "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=4_seed=400",
-    8: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=8_seed=100",
-    16: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=16_seed=200",
-    32: "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=32_seed=100",
-    48: "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+    "1 subprocess": "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    "4 subprocesses": "results/threads/2020-06-08_22:46:40-rproblem7_mode=feasibility_sdp_reduce-threads=4_seed=400",
+    "8 subprocesses": "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=8_seed=100",
+    "16 subprocesses": "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=16_seed=200",
+    "32 subprocesses": "results/threads/2020-06-08_17:32:01-rproblem7_mode=feasibility_sdp_reduce-threads=32_seed=100",
+    "48 subprocesses": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
 }
 
 files_threads_9 = {
-    1: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=1_seed=300",
-    4: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=4_seed=100",
-    8: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=8_seed=300",
-    16: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=16_seed=300",
-    32: "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=32_seed=200",
-    48: "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+    "1 subprocess": "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=1_seed=300",
+    "4 subprocesses": "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=4_seed=100",
+    "8 subprocesses": "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=8_seed=300",
+    "16 subprocesses": "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=16_seed=300",
+    "32 subprocesses": "results/threads/2020-06-08_17:32:05-rproblem9_mode=feasibility_sdp_reduce-threads=32_seed=200",
+    "48 subprocesses": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
 }
+
+files_plns_1 = {
+    "problem1": {
+        "p1-palns": "results/variance_3_representative/2020-06-06_20:01:09-rproblem1_mode=feasibility_sdp_reduce-seed=200",
+        "p1-plns": "results/plns/2020-06-05_19:49:46-rproblem1_mode=feasibility_sdp_reduce-plns",
+    },
+    "problem2": {
+        "p2-palns": "results/variance_3_representative/2020-06-06_20:01:20-rproblem2_mode=feasibility_sdp_reduce-seed=500",
+        "p2-plns": "results/plns/2020-06-05_19:49:53-rproblem2_mode=feasibility_sdp_reduce-plns",
+    },
+    "problem3": {
+        "p3-palns": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+        "p3-plns": "results/plns/2020-06-05_19:50:09-rproblem3_mode=feasibility_sdp_reduce-plns",
+    },
+
+}
+
+files_plns_2 = {
+    # "problem4": {
+    # "p4-plns": "",
+    # "problem4": "results/variance_3_representative/2020-06-06_20:04:24-rproblem4_mode
+    # =feasibility_sdp_reduce-seed=300",
+    # },
+    "problem5": {
+        "p5-palns": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+        "p5-plns": "results/plns/2020-06-05_19:50:23-rproblem5_mode=feasibility_sdp_reduce-plns",
+    },
+    "problem6": {
+        "p6-palns": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+        "p6-plns": "results/plns/2020-06-05_19:50:30-rproblem6_mode=feasibility_sdp_reduce-plns",
+    },
+}
+
+files_plns_3 = {
+    "problem7": {
+        "p7-palns": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+        "p7-plns": "results/plns/2020-06-05_19:50:50-rproblem7_mode=feasibility_sdp_reduce-plns",
+    },
+    # "problem8": {
+    # "p8-palns": "",
+    #   "p8-plns": "results/plns/2020-06-05_19:50:59-rproblem8_mode=feasibility_sdp_reduce-plns",
+    # },
+    "problem9": {
+        "p9-plns": "results/plns/2020-06-05_19:55:58-rproblem9_mode=feasibility_sdp_reduce-plns",
+        "p9-palns": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+    }
+}
+
+def plot_plns():
+
+    plot = plt
+    plot_plns_cluster(plot, files_plns_1, "Adaptiveness p1-3")
+    plot_plns_cluster(plot, files_plns_2, "Adaptiveness p4-6")
+    plot_plns_cluster(plot, files_plns_3, "Adaptiveness p7-9")
+
+def plot_plns_cluster(plot, files, title):
+
+    colors = ["navy", "g", "r", "saddlebrown", "m"]
+
+    for counter, (problem, variants) in enumerate(files.items()):
+        ProblemPlotter(problem=problem, variants=variants, plot=plot,
+                       color=colors[counter], suptitle=title)
+    plot.title(title)
+    plot.show()
 
 
 def plot_sharing():
 
     plot = plt
-    p3 = ProblemPlotter(problem="problem3", variants=files_share_3, title="Sharing", plot=plot)
+    p3 = ProblemPlotter(problem="problem3", variants=files_share_3, suptitle="Sharing", plot=plot)
     plot.show()
 
-    p5 = ProblemPlotter(problem="problem5", variants=files_share_5, title="Sharing", plot=plot)
+    p5 = ProblemPlotter(problem="problem5", variants=files_share_5, suptitle="Sharing", plot=plot)
     plt.show()
 
-    p6 = ProblemPlotter(problem="problem6", variants=files_share_6, title="Sharing", plot=plot)
+    p6 = ProblemPlotter(problem="problem6", variants=files_share_6, suptitle="Sharing", plot=plot)
     plot.show()
 
-    p7 = ProblemPlotter(problem="problem7", variants=files_share_7, title="Sharing", plot=plot)
+    p7 = ProblemPlotter(problem="problem7", variants=files_share_7, suptitle="Sharing", plot=plot)
     plot.show()
 
-    p9 = ProblemPlotter(problem="problem9", variants=files_share_9, title="Sharing", plot=plot)
+    p9 = ProblemPlotter(problem="problem9", variants=files_share_9, suptitle="Sharing", plot=plot)
     plt.show()
 
 
 def plot_threads():
 
     plot = plt
-    p3 = ProblemPlotter(problem="problem3", variants=files_threads_3, title="Number of threads",
+    p3 = ProblemPlotter(problem="problem3", variants=files_threads_3, suptitle="Number of threads",
                         plot=plot)
     plt.show()
 
-    p5 = ProblemPlotter(problem="problem5", variants=files_threads_5, title="Number of threads", plot=plot)
+    p5 = ProblemPlotter(problem="problem5", variants=files_threads_5, suptitle="Number of threads", plot=plot)
     plt.show()
 
-    #p6 = ProblemPlotter(problem="problem6", variants=files_threads_6, title="Number of threads",
-    # plot=plot)
-    #plt.show()
-
-    p7 = ProblemPlotter(problem="problem7", variants=files_threads_7, title="Number of threads", plot=plot)
+    p6 = ProblemPlotter(problem="problem6", variants=files_threads_6, suptitle="Number of threads", plot=plot)
     plt.show()
 
-    p9 = ProblemPlotter(problem="problem9", variants=files_threads_9, title="Number of threads", plot=plot)
+    p7 = ProblemPlotter(problem="problem7", variants=files_threads_7, suptitle="Number of threads", plot=plot)
+    plt.show()
+
+    p9 = ProblemPlotter(problem="problem9", variants=files_threads_9, suptitle="Number of threads", plot=plot)
     plt.show()
 
 
 def main():
-    plot_sharing()
+    plot_plns()
 
 
 if __name__ == "__main__":
