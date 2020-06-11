@@ -320,37 +320,49 @@ files_threads_9 = {
     48: "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
 }
 
-def plot_sharing():
-    plot = plt
 
-    #p3 = ProblemPlotter(problem="problem3", variants=files_share_3, title="Sharing", plot=plot)
-    #p5 = ProblemPlotter(problem="problem5", variants=files_share_5, title="Sharing", plot=plot)
-    #p6 = ProblemPlotter(problem="problem6", variants=files_share_6, title="Sharing", plot=plot)
-    p7 = ProblemPlotter(problem="problem7", variants=files_share_7, title="Sharing", plot=plot)
-    #p9 = ProblemPlotter(problem="problem9", variants=files_share_9, title="Sharing", plot=plot)
+def plot_sharing():
+
+    plot = plt
+    p3 = ProblemPlotter(problem="problem3", variants=files_share_3, title="Sharing", plot=plot)
+    plot.show()
+
+    p5 = ProblemPlotter(problem="problem5", variants=files_share_5, title="Sharing", plot=plot)
     plt.show()
+
+    p6 = ProblemPlotter(problem="problem6", variants=files_share_6, title="Sharing", plot=plot)
+    plot.show()
+
+    p7 = ProblemPlotter(problem="problem7", variants=files_share_7, title="Sharing", plot=plot)
+    plot.show()
+
+    p9 = ProblemPlotter(problem="problem9", variants=files_share_9, title="Sharing", plot=plot)
+    plt.show()
+
 
 def plot_threads():
 
     plot = plt
-    p3 = ProblemPlotter(problem="problem3", variants=files_threads_3, title="Sharing", plot=plot)
+    p3 = ProblemPlotter(problem="problem3", variants=files_threads_3, title="Number of threads",
+                        plot=plot)
     plt.show()
 
-    p5 = ProblemPlotter(problem="problem5", variants=files_threads_5, title="Sharing", plot=plot)
+    p5 = ProblemPlotter(problem="problem5", variants=files_threads_5, title="Number of threads", plot=plot)
     plt.show()
 
-    p6 = ProblemPlotter(problem="problem6", variants=files_threads_6, title="Sharing", plot=plot)
+    #p6 = ProblemPlotter(problem="problem6", variants=files_threads_6, title="Number of threads",
+    # plot=plot)
+    #plt.show()
+
+    p7 = ProblemPlotter(problem="problem7", variants=files_threads_7, title="Number of threads", plot=plot)
     plt.show()
 
-    p7 = ProblemPlotter(problem="problem7", variants=files_threads_7, title="Sharing", plot=plot)
-    plt.show()
-
-    p9 = ProblemPlotter(problem="problem9", variants=files_threads_9, title="Sharing", plot=plot)
+    p9 = ProblemPlotter(problem="problem9", variants=files_threads_9, title="Number of threads", plot=plot)
     plt.show()
 
 
 def main():
-    plot_threads()
+    plot_sharing()
 
 
 if __name__ == "__main__":
