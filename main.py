@@ -182,7 +182,7 @@ class ProblemRunner:
     def test_rrt(self, n_runs=5, mix="pure", threads=48, percentage=0.75):
 
         share_times = [i for i in range(60, 15 * 60, 10)]
-        thresholds = [0.01, 0.025, 0.050, 0.075, 0.100]
+        thresholds = [0.01, 0.02, 0.04, 0.08, 0.16]
 
         for seed in range(0, n_runs * 100, 100):
             for threshold in thresholds:

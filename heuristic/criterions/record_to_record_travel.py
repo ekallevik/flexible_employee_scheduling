@@ -31,7 +31,7 @@ class RecordToRecordTravel(AbstractCriterion):
             is_accepted = gap <= self.current_threshold
 
         self.update_threshold()
-        logger.info(f"Accept candidate: {is_accepted}. t={self.current_threshold})")
+        logger.info(f"Accept candidate: {is_accepted}. (t={self.current_threshold})")
 
         return is_accepted
 
