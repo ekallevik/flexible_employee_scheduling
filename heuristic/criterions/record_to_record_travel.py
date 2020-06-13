@@ -24,7 +24,7 @@ class RecordToRecordTravel(AbstractCriterion):
 
         diff = best.get_objective_value() - candidate.get_objective_value()
 
-        if diff > 0:
+        if diff < 0:
             is_accepted = True
         else:
             gap = abs(diff)/abs(candidate.get_objective_value())
