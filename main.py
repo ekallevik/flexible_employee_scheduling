@@ -189,7 +189,7 @@ class ProblemRunner:
                 criterion_list = self.get_criterion_list(mix, threads, threshold, percentage)
                 self.run_palns(share_times=share_times, seed_offset=seed,
                                criterion_list=criterion_list,
-                               variant=f"rrt_{threshold}-{mix}", threads=threads)
+                               variant=f"rrt_{threshold}-{mix}-seed={seed}", threads=threads)
 
     def get_criterion_list(self, mix, threads, threshold, percentage):
 
