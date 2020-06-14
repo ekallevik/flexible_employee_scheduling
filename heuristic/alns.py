@@ -569,8 +569,8 @@ class ALNS(multiprocessing.Process):
         #logger.error(f"{self.prefix}Cooling of for 30 seconds")
         #time.sleep(30)
 
-        #self.queue.close()
-        #logger.error(f"{self.prefix}Queue closed")
+        self.queue.close()
+        logger.error(f"{self.prefix}Queue closed")
 
     def iterate(self, iterations=None, runtime=None):
 
