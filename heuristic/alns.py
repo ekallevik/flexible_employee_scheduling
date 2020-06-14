@@ -566,8 +566,8 @@ class ALNS(multiprocessing.Process):
         self.results[self.worker_name] = results
         logger.error(f"{self.prefix}Saved results to shared dict")
 
-        #logger.error(f"{self.prefix}Cooling of for 30 seconds")
-        #time.sleep(30)
+        logger.error(f"{self.prefix}Cooling of for 300 seconds")
+        time.sleep(300)
 
         self.queue.close()
         logger.error(f"{self.prefix}Queue closed")
