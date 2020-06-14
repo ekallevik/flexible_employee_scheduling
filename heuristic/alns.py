@@ -569,7 +569,7 @@ class ALNS(multiprocessing.Process):
         cool_off = 60
         logger.warning(f"Cooling off for {cool_off}s")
         for t in range(0, cool_off, 5):
-            logger.warning(f"Cooled off for {t}s")
+            logger.error(f"Cooled off for {t}s")
             time.sleep(5)
 
         self.queue.close()
