@@ -4,6 +4,9 @@ import time
 import numpy as np
 from functools import partial
 from timeit import default_timer as timer
+
+from gurobipy.gurobipy import GurobiError
+
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -579,6 +582,8 @@ class ALNS(multiprocessing.Process):
             while timer() < self.start_time + self.runtime:
                 try:
                     self.perform_iteration()
+                except GurobiError as e:
+                    logger.critical(f"{self.prefix}GurobiError: {e}")
                 except KeyboardInterrupt:
                     command = input("\n\nAvailable commands: \n"
                                     "1 - Continue running \n"

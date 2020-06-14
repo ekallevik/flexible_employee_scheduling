@@ -409,6 +409,77 @@ files_palns_3 = {
                  "=feasibility_sdp_reduce-seed=300"},
 }
 
+
+files_rrt_3 = {
+    "0.01": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.01-pure",
+    "0.02": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.02-pure",
+    "0.04": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.04-pure",
+    "0.08": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.08-pure",
+    "0.16": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.16-pure",
+    "HC": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+}
+
+files_rrt_5 = {
+    "0.01": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.01-pure",
+    "0.02": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.02-pure",
+    "0.04": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.04-pure",
+    "0.08": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.08-pure",
+    "0.16": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.16-pure",
+    "HC": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+}
+
+files_rrt_6 = {
+    "0.01": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.01-pure",
+    "0.02": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.02-pure",
+    "0.04": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.04-pure",
+    "0.08": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.08-pure",
+    "0.16": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.16-pure",
+    "HC": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+}
+
+files_rrt_7 = {
+    "0.01": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.01-pure",
+    "0.02": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.02-pure",
+    "0.04": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.04-pure",
+    "0.08": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.08-pure",
+    "0.16": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.16-pure",
+    "HC": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+}
+
+files_rrt_9 = {
+    "0.01": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.01-pure",
+    "0.02": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.02-pure",
+    "0.04": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.04-pure",
+    "0.08": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.08-pure",
+    "0.16": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.16-pure",
+    "HC": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+}
+
+
+
+def plot_rrt():
+
+    plot = plt
+    p3 = ProblemPlotter(problem="problem3", variants=files_rrt_3, suptitle="RRT", plot=plot)
+    plot.show()
+
+    p5 = ProblemPlotter(problem="problem5", variants=files_rrt_5, suptitle="RRT", plot=plot)
+    plt.show()
+
+    p6 = ProblemPlotter(problem="problem6", variants=files_rrt_6, suptitle="RRT", plot=plot)
+    plot.show()
+
+    p7 = ProblemPlotter(problem="problem7", variants=files_rrt_7, suptitle="RRT", plot=plot)
+    plot.show()
+
+    p9 = ProblemPlotter(problem="problem9", variants=files_rrt_9, suptitle="RRT", plot=plot)
+    plt.show()
+
+    p3 = ProblemPlotter(problem="problem3", variants=files_rrt_3, suptitle="RRT", plot=plot)
+    plot.show()
+
+
+
 def plot_plns():
 
     plot = plt
@@ -480,7 +551,7 @@ def plot_threads():
 
 
 def main():
-    plot_palns()
+    plot_rrt()
 
 
 if __name__ == "__main__":
