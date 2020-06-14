@@ -258,11 +258,11 @@ class ProblemRunner:
             alns.start()
 
 
-        #cool_off = 30
-        #logger.warning(f"Cooling off for {cool_off}s")
-        #for t in range(0, cool_off, 5):
-        #    logger.warning(f"Cooled off for {t}s")
-        #    time.sleep(5)
+        cool_off = 150
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.warning(f"Cooled off for {t}s")
+            time.sleep(5)
 
         no_uncompleted_workers = 48
         iterations = 0
