@@ -257,11 +257,27 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
-        cool_off = 30
 
-        logger.warning(f"Cooling off for {cool_off}s")
-        for t in range(0, cool_off, 5):
-            logger.warning(f"Cooled off for {t}s")
+        #cool_off = 30
+        #logger.warning(f"Cooling off for {cool_off}s")
+        #for t in range(0, cool_off, 5):
+        #    logger.warning(f"Cooled off for {t}s")
+        #    time.sleep(5)
+
+        no_uncompleted_workers = 48
+        iterations = 0
+        while no_uncompleted_workers and iterations < 25:
+            no_uncompleted_workers = 0
+            uncompleted_workers = []
+            for process in processes:
+                process.join(timeout=0)
+                if process.is_alive():
+                    no_uncompleted_workers += 1
+                    uncompleted_workers.append(process.worker_name)
+
+            iterations += 1
+            logger.critical(f"{no_uncompleted_workers} workers has not yet completed")
+            logger.warning(f"{uncompleted_workers}")
             time.sleep(5)
 
         for process in processes:
