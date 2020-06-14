@@ -538,7 +538,7 @@ class ALNS(multiprocessing.Process):
             possible_preferences = None
             ratio_preferences = None
 
-        total_w = sum(v for t, v in self.best_solution.w.values())
+        total_w = sum(min(v, 72) for t, v in self.best_solution.w.values())
         employee_weeks = len(self.weeks)*len(self.employees)
 
         results = {
@@ -566,8 +566,11 @@ class ALNS(multiprocessing.Process):
         self.results[self.worker_name] = results
         logger.error(f"{self.prefix}Saved results to shared dict")
 
-        logger.error(f"{self.prefix}Cooling of for 300 seconds")
-        time.sleep(300)
+        cool_off = 60
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.warning(f"Cooled off for {t}s")
+            time.sleep(5)
 
         self.queue.close()
         logger.error(f"{self.prefix}Queue closed")
