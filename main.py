@@ -1,13 +1,17 @@
 import json
+import multiprocessing
+import time
+from copy import deepcopy
 from datetime import datetime
-from pprint import pprint
-import skopt
+from multiprocessing import Queue
 import neptune
 
 
 import fire
 from gurobipy import *
 from loguru import logger
+from timeit import default_timer as timer
+
 
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
@@ -35,10 +39,11 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "TRACE",
-    "heuristic.destroy_operators": "INFO",
-    "heuristic.repair_operators": "INFO",
-    "heuristic.criterions.simulated_annealing_criterion": "WARNING",
+    "heuristic.alns": "ERROR",
+    "heuristic.delta_calculations": "CRITICAL",
+    "heuristic.destroy_operators": "CRITICAL",
+    "heuristic.repair_operators": "CRITICAL",
+    "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
 }
 
 logger.remove()
@@ -46,7 +51,9 @@ logger.add(sys.stderr, level="TRACE", format=formatter.format, filter=level_per_
 
 
 class ProblemRunner:
-    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None, update_shifts=True, time_limit=10000, use_predefined_shifts=False):
+    def __init__(self, problem="rproblem3", mode="feasibility", with_sdp=True, log_name=None,
+                 update_shifts=True, time_limit=10000, use_predefined_shifts=False,
+                 log_to_file=True, runtime=900):
 
         """
         Holds common data across all problems. Use --arg_name=arg_value from the terminal to
@@ -54,11 +61,14 @@ class ProblemRunner:
         """
 
         logger.info(f"Setting up runner for {problem}")
-
         self.problem = problem
         self.mode = mode
+        self.runtime = runtime
+        self.start_time = None
+        self.construction_runtime = None
 
         self.log_name = None
+        self.log_to_file = log_to_file
         self.set_log_name(log_name, with_sdp, use_predefined_shifts, update_shifts)
 
         self.data = shift_generation.load_data(problem, use_predefined_shifts)
@@ -76,9 +86,11 @@ class ProblemRunner:
             self.run_sdp(update_shifts)
 
         self.esp = None
+        self.candidate_solution = None
 
         self.criterion = GreedyCriterion()
         self.alns = None
+        self.palns_results = None
 
         self.set_esp()
 
@@ -103,7 +115,10 @@ class ProblemRunner:
 
         now = datetime.now()
         self.log_name = f"{now.strftime('%Y-%m-%d_%H:%M:%S')}-{actual_name}"
-        logger.add(f"logs/{self.log_name}.log", format=formatter.format)
+        if self.log_to_file:
+            logger.add(f"logs/{self.log_name}.log", format=formatter.format)
+        else:
+            logger.critical("Does not log to file!")
 
     def rerun_esp(self):
         """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
@@ -124,11 +139,215 @@ class ProblemRunner:
 
         return self
 
+    def test_seeds(self, n_runs=10, start_seed=0, threads=48):
+
+        logger.warning(f"Running {self.problem} for {n_runs} runs")
+        share_times = [i for i in range(60, 15 * 60, 10)]
+
+        for seed in range(start_seed, start_seed+n_runs*100, 100):
+            self.run_palns(threads=threads, seed_offset=seed, share_times=share_times, variant=f"seed={seed}")
+
+        return self
+
+    def test_all(self, n_runs=5):
+
+        self.test_share_times(n_runs)
+        self.test_threads(n_runs)
+        self.test_seeds(n_runs)
+
+    def test_threads(self, n_runs=5, threads=32):
+
+        share_times = [i for i in range(60, 15 * 60, 10)]
+
+        for seed in range(0, n_runs * 100, 100):
+            self.run_palns(threads=threads, seed_offset=seed, share_times=share_times,
+                           variant=f"threads={threads}_seed={seed}")
+        return self
+
+    def test_share_times(self, n_runs=5):
+
+        share_time_list = [
+            (None, "None"),
+            ([i for i in range(60, 15 * 60, 5)], "5s"),
+            ([i for i in range(60, 15 * 60, 20)], "20s"),
+        ]
+
+        for seed in range(0, n_runs * 100, 100):
+            for share_times in share_time_list:
+                self.run_palns(share_times=share_times[0], seed_offset=seed,
+                               variant=f"share={share_times[1]}_seed={seed}")
+
+        return self
+
+    def test_rrt(self, n_runs=5, mix="pure", threads=48, percentage=0.75):
+
+        share_times = [i for i in range(60, 15 * 60, 10)]
+        thresholds = [0.01, 0.02, 0.04, 0.08, 0.16]
+
+        for seed in range(0, n_runs * 100, 100):
+            for threshold in thresholds:
+                criterion_list = self.get_criterion_list(mix, threads, threshold, percentage)
+                self.run_palns(share_times=share_times, seed_offset=seed,
+                               criterion_list=criterion_list,
+                               variant=f"rrt_{threshold}-{mix}-seed={seed}", threads=threads)
+
+    def get_criterion_list(self, mix, threads, threshold, percentage):
+
+        wanted_iterations = {
+            "rproblem3": 362*percentage,
+            "rproblem5": 816*percentage,
+            "rproblem6": 400*percentage,
+            "rproblem7": 216*percentage,
+            "rproblem9": 206*percentage,
+        }
+
+        step = threshold / wanted_iterations[self.problem]
+
+        if mix == "pure":
+            criterion_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
+                                                   step=step) for i in range(threads)]
+        else:
+            rrt_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
+                                             step=step) for i in range(int(threads / 2))]
+            hc_list = [GreedyCriterion() for i in range(int(threads / 2))]
+            criterion_list = rrt_list + hc_list
+
+        return criterion_list
+
+    def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default",
+                  share_times=None):
+        """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
+
+        logger.critical(f"Running {self.problem} with runtime {self.runtime} in {threads} threads")
+
+        candidate_solution = self.get_candidate_solution()
+        state = self.get_state(candidate_solution)
+        initial_solution = state.get_objective_value()
+
+        manager = multiprocessing.Manager()
+        shared_results = manager.dict()
+        queue = Queue()
+
+        logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
+
+        processes = []
+        for j in range(threads):
+            state_copy = deepcopy(state)
+
+            criterion = GreedyCriterion() if not criterion_list else criterion_list[j]
+
+            decay = 0.9
+            operator_weights = {
+                "IS_BEST": 10,
+                "IS_BETTER": 4,
+                "IS_ACCEPTED": 2,
+                "IS_REJECTED": 0.7
+            }
+
+            worker_name = f"worker-{j}"
+
+            remaining_runtime = self.runtime-self.construction_runtime
+
+            alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
+                        operator_weights=operator_weights, runtime=remaining_runtime,
+                        worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
+                        seed=j+seed_offset, variant=variant)
+            processes.append(alns)
+
+            logger.info(f"Starting {worker_name}")
+            alns.start()
+
+        cool_off = 60
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.warning(f"Cooled off for {t}s")
+            time.sleep(5)
+
+        no_uncompleted_workers = 48
+        iterations = 0
+        while no_uncompleted_workers and iterations < 25:
+            no_uncompleted_workers = 0
+            uncompleted_workers = []
+            for process in processes:
+                process.join(timeout=0)
+                if process.is_alive():
+                    no_uncompleted_workers += 1
+                    uncompleted_workers.append(process.worker_name)
+
+            iterations += 1
+            logger.critical(f"{no_uncompleted_workers} workers has not yet completed")
+            logger.warning(f"{uncompleted_workers}")
+            time.sleep(5)
+
+        for process in processes:
+            logger.critical(f"Terminating {process.worker_name}")
+            try:
+                process.queue.close()
+                logger.info(f"{process.worker_name}: Queue closed")
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Queue not closed", e)
+            try:
+                process.queue.join_thread()
+                logger.info(f"{process.worker_name}: Queue joined")
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Queue not joined", e)
+                pass
+            try:
+                process.join()
+                logger.info(f"{process.worker_name}: Process joined")
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Could not join thread", e)
+                pass
+
+        self.save_shared_results(shared_results, initial_solution=initial_solution,
+                                 share_times=share_times, threads=threads, variant=variant, processes=processes)
+
+        return self
+
+    def save_shared_results(self, shared_results, initial_solution, share_times,
+                            threads, variant, processes=None):
+
+        print()
+        logger.warning("Saving multiprocessing results")
+
+        best_solution = max((result["best_solution"], worker) for worker, result in
+                            shared_results.items())
+        global_best_solution = best_solution[0]
+        global_best_worker = best_solution[1]
+        global_best_result = shared_results[global_best_worker]
+        global_iterations = sum(result["iterations"] for result in shared_results.values())
+        logger.info(f"Global best solution: {global_best_solution} found by {global_best_worker}")
+        logger.info(f"Global iterations: {global_iterations}")
+
+        shared_results["_log_name"] = self.log_name
+        shared_results["_problem"] = self.problem
+        shared_results["_variant"] = variant
+        shared_results["_solution"] = {"initial_solution": initial_solution,
+                                       "best_solution": global_best_solution,
+                                       "best_worker": global_best_worker,
+                                       "iterations": global_iterations,
+                                       "f": global_best_result["f"],
+                                       "preferences": global_best_result["preferences"],
+                                       "w": global_best_result["w"],
+                                       "violations": global_best_result["violations"],
+                                       }
+        shared_results["_threads"] = threads
+        shared_results["_time"] = {"runtime_total": self.runtime,
+                                   "time_start": self.start_time,
+                                   "runtime_construction": self.construction_runtime,
+                                   "time_share": share_times}
+
+        self.palns_results = shared_results
+
+        with open(f"results/{self.log_name}-{variant}.json", "w") as fp:
+            json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
+        logger.info(f"Saved PALNS results to results/{self.log_name}-{variant}.json")
+
     def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
                  plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
         """ Runs ALNS on the generated candidate solution """
 
-        self.set_alns(decay)
+        self.set_alns(decay=decay)
 
         if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
             raise ValueError("Cannot use more than one plot")
@@ -150,11 +369,10 @@ class ProblemRunner:
             self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
                                                           log_name=self.log_name)
         try:
-            self.alns.iterate(iterations, runtime)
+            self.alns.iterate()
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
-                             
 
         return self
 
@@ -171,7 +389,17 @@ class ProblemRunner:
         """ Sets ALNS based on the given config """
 
         candidate_solution = self.get_candidate_solution()
+        state = self.get_state(candidate_solution)
 
+        logger.info(f"ALNS with {decay} and {self.criterion}")
+        remaining_runtime = self.runtime - self.construction_runtime
+        criterion = GreedyCriterion()
+
+        self.alns = ALNS(state, criterion, self.data, self.weights, self.log_name, decay=decay,
+                    operator_weights=operator_weights, runtime=remaining_runtime,
+                    results=None, queue=None, share_times=None, seed=0, variant="alns")
+
+    def get_state(self, candidate_solution):
         soft_variables = {
             "deviation_from_ideal_demand": calculate_deviation_from_demand(
                 self.data, candidate_solution["y"]
@@ -186,7 +414,6 @@ class ProblemRunner:
                 self.data, candidate_solution["y"]
             ),
         }
-
         hard_variables = {
             "below_minimum_demand": {},
             "above_maximum_demand": {},
@@ -197,23 +424,22 @@ class ProblemRunner:
             "daily_rest_error": {},
             "delta_positive_contracted_hours": {},
         }
-
         objective_function, f = calculate_objective_function(self.data, soft_variables,
-                                                             self.weights, candidate_solution["w"], candidate_solution["y"])
-
+                                                             self.weights, candidate_solution["w"],
+                                                             candidate_solution["y"])
         state = State(candidate_solution, soft_variables, hard_variables, objective_function, f)
-
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
-                         operator_weights=operator_weights)
-        logger.info(f"ALNS with {decay} and {self.criterion}")
+        return state
 
     def get_candidate_solution(self):
         """ Generates a candidate solution for ALNS """
 
-        self.run_esp()
-        converter = Converter(self.esp)
+        if not self.candidate_solution:
 
-        return converter.get_converted_variables()
+            self.run_esp()
+            converter = Converter(self.esp)
+            self.candidate_solution = converter.get_converted_variables()
+
+        return self.candidate_solution
 
     def run_esp(self):
         """ Runs ESP, with an optional presolve with SDP """
@@ -224,10 +450,16 @@ class ProblemRunner:
             logger.info(f"Running ESP in mode {self.mode} with implicitly generated shifts")
 
         try:
+            self.start_time = timer()
+            logger.trace(f"Model run started at: {self.start_time}")
             self.esp.run_model()
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
+
+        if not self.construction_runtime:
+            self.construction_runtime = timer() - self.start_time
+            logger.warning(f"Completed construction in {self.construction_runtime:.2f}s")
 
         return self
 
@@ -244,7 +476,6 @@ class ProblemRunner:
 
         elif self.mode == 1 or self.mode == "feasibility":
             self.esp = FeasibilityModel(model, data=self.data)
-            # todo: add same config as ConstructionModel?
 
         elif self.mode == 2 or self.mode == "optimality":
             self.esp = OptimalityModel(model, data=self.data)
@@ -331,17 +562,15 @@ class ProblemRunner:
         Necessary for playing nicely with terminal usage. This function is called
         automagically after completion of the terminal command.
         """
+        print()
+        logger.info(f"Completed run for {self.log_name}")
 
         # Saves the results from the run
         self.save_results()
 
-        print()
-        logger.info(f"Completed run for {self.log_name}")
-
         return self.log_name
 
-
-    def run_neptune(self, tags, description=None):
+    def run_neptune(self, tags, description=None, project="ALNS"):
         """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
 
         self.save_results()
@@ -356,17 +585,18 @@ class ProblemRunner:
         }
 
         # NEPTUNE_API_TOKEN environment variable needs to be defined.
-        neptune_project = "ekallevik/ALNS" if self.alns else "ekallevik/esp"
+        neptune_project = f"ekallevik/{project}"
         logger.info(f"Logging to Neptune project: {neptune_project}")
         neptune.init(neptune_project)
 
-        if self.alns:
-            params["critertion"] = self.alns.criterion
-            params["operator_weights"] = self.alns.WeightUpdate
-            params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
-            params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
-            params["iterations"] = self.alns.iteration
-            params["random_state"] = self.alns.random_state
+        if project == "ALNS":
+            #params["critertion"] = self.alns.criterion
+            #params["operator_weights"] = self.alns.WeightUpdate
+            #params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
+            #params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
+            #params["iterations"] = self.alns.iteration
+            #params["random_state"] = self.alns.random_state
+            params["palns_results"] = self.palns_results
 
         neptune.create_experiment(name=self.log_name, params=params, description=description,
                                   tags=tags)
@@ -375,6 +605,13 @@ class ProblemRunner:
         neptune.log_artifact(f"logs/{self.log_name}.log")
         neptune.log_artifact(f"solutions/{self.log_name}-SDP.sol")
         neptune.log_artifact(f"solutions/{self.log_name}-ESP.sol")
+
+        try:
+            logger.info("Uploading JSON results")
+            neptune.log_artifact(f"{self.log_name}.json")
+        except:
+            logger.info("No JSON results found")
+            pass
 
         return self
 
@@ -423,3 +660,5 @@ if __name__ == "__main__":
     """
 
     fire.Fire(ProblemRunner)
+
+
