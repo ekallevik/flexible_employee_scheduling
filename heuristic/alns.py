@@ -462,7 +462,7 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                #repair_worst_week_f_value,
+                repair_worst_week_f_value,
                 mip_operator_week_repair_3
             ],
 
@@ -474,7 +474,7 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                #repair_worst_week_f_value,
+                repair_worst_week_f_value,
                 mip_operator_week_repair_3
             ],
 
@@ -486,7 +486,7 @@ class ALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_random,
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
-                #repair_worst_week_f_value,
+                repair_worst_week_f_value,
                 mip_operator_week_repair_3
             ],
 
