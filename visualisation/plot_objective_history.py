@@ -411,48 +411,48 @@ files_palns_3 = {
 
 
 files_rrt_3 = {
-    "0.01": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.01-pure",
-    "0.02": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.02-pure",
-    "0.04": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.04-pure",
-    "0.08": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.08-pure",
-    "0.16": "results/rrt/2020-06-13_19:23:43-rproblem3_mode=feasibility_sdp_reduce-rrt_0.16-pure",
     "HC": "results/variance_3_representative/2020-06-06_20:01:26-rproblem3_mode=feasibility_sdp_reduce-seed=900",
+    "0.01": "results/record_to_record/2020-06-13_23:00:16-rproblem3_mode=feasibility_sdp_reduce-rrt_0.01-pure-seed=100",
+    "0.02": "results/record_to_record/2020-06-13_23:00:16-rproblem3_mode=feasibility_sdp_reduce-rrt_0.02-pure-seed=0",
+    "0.04": "results/record_to_record/2020-06-13_23:00:16-rproblem3_mode=feasibility_sdp_reduce-rrt_0.04-pure-seed=300",
+    "0.08": "results/record_to_record/2020-06-13_23:00:16-rproblem3_mode=feasibility_sdp_reduce-rrt_0.08-pure-seed=200",
+    "0.16": "results/record_to_record/2020-06-13_23:00:16-rproblem3_mode=feasibility_sdp_reduce-rrt_0.16-pure-seed=100",
 }
 
 files_rrt_5 = {
-    "0.01": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.01-pure",
-    "0.02": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.02-pure",
-    "0.04": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.04-pure",
-    "0.08": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.08-pure",
-    "0.16": "results/rrt/2020-06-13_19:23:51-rproblem5_mode=feasibility_sdp_reduce-rrt_0.16-pure",
     "HC": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
+    "0.01": "results/record_to_record/2020-06-13_23:00:22-rproblem5_mode=feasibility_sdp_reduce-rrt_0.01-pure-seed=200",
+    "0.02": "results/record_to_record/2020-06-13_23:00:22-rproblem5_mode=feasibility_sdp_reduce-rrt_0.02-pure-seed=0",
+    "0.04": "results/record_to_record/2020-06-13_23:00:22-rproblem5_mode=feasibility_sdp_reduce-rrt_0.04-pure-seed=400",
+    "0.08": "results/record_to_record/2020-06-13_23:00:22-rproblem5_mode=feasibility_sdp_reduce-rrt_0.08-pure-seed=300",
+    "0.16": "results/record_to_record/2020-06-13_23:00:22-rproblem5_mode=feasibility_sdp_reduce-rrt_0.16-pure-seed=0",
 }
 
 files_rrt_6 = {
-    "0.01": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.01-pure",
-    "0.02": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.02-pure",
-    "0.04": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.04-pure",
-    "0.08": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.08-pure",
-    "0.16": "results/rrt/2020-06-13_19:23:55-rproblem6_mode=feasibility_sdp_reduce-rrt_0.16-pure",
     "HC": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
+    "0.01": "results/record_to_record/2020-06-13_23:01:17-rproblem6_mode=feasibility_sdp_reduce-rrt_0.01-pure-seed=300",
+    "0.02": "results/record_to_record/2020-06-13_23:01:17-rproblem6_mode=feasibility_sdp_reduce-rrt_0.02-pure-seed=200",
+    "0.04": "results/record_to_record/2020-06-13_23:01:17-rproblem6_mode=feasibility_sdp_reduce-rrt_0.04-pure-seed=300",
+    "0.08": "results/record_to_record/2020-06-13_23:01:17-rproblem6_mode=feasibility_sdp_reduce-rrt_0.08-pure-seed=300",
+    "0.16": "results/record_to_record/2020-06-13_23:01:17-rproblem6_mode=feasibility_sdp_reduce-rrt_0.16-pure-seed=300",
 }
 
 files_rrt_7 = {
-    "0.01": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.01-pure",
-    "0.02": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.02-pure",
-    "0.04": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.04-pure",
-    "0.08": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.08-pure",
-    "0.16": "results/rrt/2020-06-13_19:24:00-rproblem7_mode=feasibility_sdp_reduce-rrt_0.16-pure",
     "HC": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
+    "0.01": "results/record_to_record/2020-06-13_23:01:47-rproblem7_mode=feasibility_sdp_reduce-rrt_0.01-pure-seed=400",
+    "0.02": "results/record_to_record/2020-06-13_23:01:47-rproblem7_mode=feasibility_sdp_reduce-rrt_0.02-pure-seed=400",
+    "0.04": "results/record_to_record/2020-06-13_23:01:47-rproblem7_mode=feasibility_sdp_reduce-rrt_0.04-pure-seed=0",
+    "0.08": "results/record_to_record/2020-06-13_23:01:47-rproblem7_mode=feasibility_sdp_reduce-rrt_0.08-pure-seed=300",
+    "0.16": "results/record_to_record/2020-06-13_23:01:47-rproblem7_mode=feasibility_sdp_reduce-rrt_0.16-pure-seed=200",
 }
 
 files_rrt_9 = {
-    "0.01": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.01-pure",
-    "0.02": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.02-pure",
-    "0.04": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.04-pure",
-    "0.08": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.08-pure",
-    "0.16": "results/rrt/2020-06-13_19:24:04-rproblem9_mode=feasibility_sdp_reduce-rrt_0.16-pure",
     "HC": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
+    "0.01": "results/record_to_record/2020-06-13_23:01:43-rproblem9_mode=feasibility_sdp_reduce-rrt_0.01-pure-seed=300",
+    "0.02": "results/record_to_record/2020-06-13_23:01:43-rproblem9_mode=feasibility_sdp_reduce-rrt_0.02-pure-seed=200",
+    "0.04": "results/record_to_record/2020-06-13_23:01:43-rproblem9_mode=feasibility_sdp_reduce-rrt_0.04-pure-seed=0",
+    "0.08": "results/record_to_record/2020-06-13_23:01:43-rproblem9_mode=feasibility_sdp_reduce-rrt_0.08-pure-seed=300",
+    "0.16": "results/record_to_record/2020-06-13_23:01:43-rproblem9_mode=feasibility_sdp_reduce-rrt_0.16-pure-seed=0",
 }
 
 
