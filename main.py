@@ -264,17 +264,19 @@ class ProblemRunner:
             #except Exception as e:
             #    logger.exception(f"{process.worker_name}: Queue not closed", e)
             try:
-                process.queue.join_thread()
-                logger.info(f"{process.worker_name}: Queue joined")
-            except Exception as e:
-                logger.exception(f"{process.worker_name}: Queue not joined", e)
-                pass
-            try:
                 process.join()
                 logger.info(f"{process.worker_name}: Process joined")
             except Exception as e:
                 logger.exception(f"{process.worker_name}: Could not join thread", e)
                 pass
+
+            try:
+                process.queue.join_thread()
+                logger.info(f"{process.worker_name}: Queue joined")
+            except Exception as e:
+                logger.exception(f"{process.worker_name}: Queue not joined", e)
+                pass
+
 
         self.save_shared_results(shared_results, initial_solution=initial_solution,
                                  share_times=share_times, threads=threads, variant=variant, processes=processes)
