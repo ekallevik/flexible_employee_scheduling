@@ -610,6 +610,8 @@ class ALNS(multiprocessing.Process):
                         breakpoint()
                     elif command == "4":
                         break
+                except Exception as e:
+                    logger.exception(f"{self.prefix} caused an exception", e)
 
         else:
 
