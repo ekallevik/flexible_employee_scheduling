@@ -257,7 +257,6 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
-
         cool_off = 60
         logger.warning(f"Cooling off for {cool_off}s")
         for t in range(0, cool_off, 5):
@@ -370,7 +369,7 @@ class ProblemRunner:
             self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
                                                           log_name=self.log_name)
         try:
-            self.alns.iterate(iterations, runtime)
+            self.alns.iterate()
         except Exception as e:
             logger.exception(f"An exception occured in {self.log_name}", exception=e,
                              diagnose=True, backtrace=True)
@@ -393,8 +392,12 @@ class ProblemRunner:
         state = self.get_state(candidate_solution)
 
         logger.info(f"ALNS with {decay} and {self.criterion}")
-        self.alns = ALNS(state, self.criterion, self.data, self.weights, self.log_name, decay,
-                         start_time=self.start_time)
+        remaining_runtime = self.runtime - self.construction_runtime
+        criterion = GreedyCriterion()
+
+        self.alns = ALNS(state, criterion, self.data, self.weights, self.log_name, decay=decay,
+                    operator_weights=operator_weights, runtime=remaining_runtime,
+                    results=None, queue=None, share_times=None, seed=0, variant="alns")
 
     def get_state(self, candidate_solution):
         soft_variables = {
