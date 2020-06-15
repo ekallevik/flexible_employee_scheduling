@@ -258,17 +258,11 @@ class ProblemRunner:
             alns.start()
 
         for process in processes:
-            logger.critical(f"Terminating {process.worker_name}")
-            cool_off = 10
-            logger.warning(f"Cooling off for {cool_off}s")
-            for t in range(0, cool_off, 5):
-                logger.warning(f"Cooled off for {t}s")
-                time.sleep(5)
-            try:
-                process.queue.close()
-                logger.info(f"{process.worker_name}: Queue closed")
-            except Exception as e:
-                logger.exception(f"{process.worker_name}: Queue not closed", e)
+            #try:
+            #    process.queue.close()
+            #    logger.info(f"{process.worker_name}: Queue closed")
+            #except Exception as e:
+            #    logger.exception(f"{process.worker_name}: Queue not closed", e)
             try:
                 process.queue.join_thread()
                 logger.info(f"{process.worker_name}: Queue joined")
