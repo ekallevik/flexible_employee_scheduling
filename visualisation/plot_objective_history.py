@@ -2,6 +2,7 @@ import json
 from bisect import bisect_left
 from math import inf
 
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
@@ -40,7 +41,7 @@ files = {
     "problem5": "results/variance_3_representative/2020-06-06_20:01:36-rproblem5_mode=feasibility_sdp_reduce-seed=100",
     "problem6": "results/variance_3_representative/2020-06-06_20:01:41-rproblem6_mode=feasibility_sdp_reduce-seed=0",
     "problem7": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode=feasibility_sdp_reduce-seed=200",
-    #"problem8": "results/2020-06-01_22:28:08-rproblem8_mode=feasibility_sdp_reduce.json",
+    "problem8": "results/p8/2020-06-15_14:10:57-rproblem8_mode=feasibility_sdp_reduce-seed=0",
     "problem9": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode=feasibility_sdp_reduce-seed=300",
 }
 
@@ -73,16 +74,30 @@ class ProblemPlotter:
         self.step = step
         self.color = color
 
+        self.results = {}
+
         self.construction_runtime = None
         self.worker_times = None
         self.times = None
         self.opt_value = optimal_value[problem]
 
         self.get_shared_stats()
-        self.plot_variants()
+        self.save_data_to_excel()
+        #self.plot_variants()
 
         self.plot = plot
-        self.setup_matplotlib()
+        #self.setup_matplotlib()
+
+    def save_data_to_excel(self):
+
+        for counter, (name, filename) in enumerate(self.variants.items()):
+            best_list, gap_list = self.get_variant_data_as_list(filename)
+            self.pad_data_lists(best_list, gap_list)
+
+            self.results[name] = gap_list
+
+        df = pd.DataFrame(self.results)
+        df.to_excel(f"{self.suptitle} - {self.problem}.xlsx")
 
     def setup_matplotlib(self):
         self.plot.style.use('seaborn-deep')
@@ -123,6 +138,8 @@ class ProblemPlotter:
 
             best_list, gap_list = self.get_variant_data_as_list(filename)
             self.pad_data_lists(best_list, gap_list)
+
+            self.results[name] = gap_list
 
             if self.color:
                 plt.plot(self.times, gap_list, markersize=6, label=f"{name}",
@@ -404,7 +421,7 @@ files_palns_2 = {
 files_palns_3 = {
     "problem7": {"p7": "results/variance_3_representative/2020-06-06_20:01:50-rproblem7_mode"
                  "=feasibility_sdp_reduce-seed=200"},
-    #"problem8": "results/2020-06-01_22:28:08-rproblem8_mode=feasibility_sdp_reduce.json",
+    "problem8": {"p8": "results/p8/2020-06-15_14:10:57-rproblem8_mode=feasibility_sdp_reduce-seed=0"},
     "problem9": {"p9": "results/variance_3_representative/2020-06-06_20:02:10-rproblem9_mode"
                  "=feasibility_sdp_reduce-seed=300"},
 }
@@ -497,7 +514,6 @@ def plot_palns():
     plot_multiple_problems(plot, files_palns_1, "PALNS p1-3")
     plot_multiple_problems(plot, files_palns_2, "PALNS p4-6")
     plot_multiple_problems(plot, files_palns_3, "PALNS p7-9")
-    plot_multiple_problems(plot, files_palns_1, "PALNS p1-3")
 
 
 def plot_multiple_problems(plot, files, title, colors=None):
@@ -507,8 +523,8 @@ def plot_multiple_problems(plot, files, title, colors=None):
 
         ProblemPlotter(problem=problem, variants=variants, plot=plot,
                        color=color, suptitle=title)
-    plot.title(title)
-    plot.show()
+    #plot.title(title)
+    #plot.show()
 
 
 def plot_sharing():
@@ -551,7 +567,7 @@ def plot_threads():
 
 
 def main():
-    plot_rrt()
+    plot_palns()
 
 
 if __name__ == "__main__":
