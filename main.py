@@ -257,6 +257,21 @@ class ProblemRunner:
             logger.info(f"Starting {worker_name}")
             alns.start()
 
+        TIMEOUT = 950
+        start = time.time()
+        while time.time() - start <= TIMEOUT:
+            if not any(p.is_alive() for p in processes):
+                # All the processes are done, break now.
+                break
+
+            time.sleep(105)  # Just to avoid hogging the CPU
+        else:
+            # We only enter this if we didn't 'break' above.
+            logger.critical("Timed out, killing all processes")
+            for p in processes:
+                p.terminate()
+                p.join()
+
         for process in processes:
             logger.info(f"Trying to join: {process.worker_name}")
             #try:
