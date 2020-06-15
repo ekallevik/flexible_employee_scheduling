@@ -258,6 +258,7 @@ class ProblemRunner:
             alns.start()
 
         for process in processes:
+            logger.info(f"Trying to join: {process.worker_name}")
             #try:
             #    process.queue.close()
             #    logger.info(f"{process.worker_name}: Queue closed")
@@ -265,16 +266,16 @@ class ProblemRunner:
             #    logger.exception(f"{process.worker_name}: Queue not closed", e)
             try:
                 process.join()
-                logger.info(f"{process.worker_name}: Process joined")
+                logger.info(f"Process joined: {process.worker_name}")
             except Exception as e:
-                logger.exception(f"{process.worker_name}: Could not join thread", e)
+                logger.exception(f"Could not join thread: {process.worker_name}", e)
                 pass
 
             try:
                 process.queue.join_thread()
-                logger.info(f"{process.worker_name}: Queue joined")
+                logger.info(f"Queue joined: {process.worker_name}")
             except Exception as e:
-                logger.exception(f"{process.worker_name}: Queue not joined", e)
+                logger.exception(f"Queue not joined: {process.worker_name}", e)
                 pass
 
 
