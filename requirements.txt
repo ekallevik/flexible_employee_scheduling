@@ -7,9 +7,9 @@ pygments==2.6.1
 fire==0.3.1
 pdbpp==0.10.2
 loguru==0.5.1
-numpy==1.18.4
+numpy==1.19.0
 scikit-optimize
-neptune-client==0.4.114
+neptune-client==0.4.117
 psutil==5.7.0
 
 
