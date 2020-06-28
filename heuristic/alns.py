@@ -1,7 +1,12 @@
+import multiprocessing
+import time
+
 import numpy as np
 from functools import partial
 from timeit import default_timer as timer
-from math import copysign
+
+from gurobipy.gurobipy import GurobiError
+
 from heuristic.delta_calculations import *
 from heuristic.destroy_operators import (
     worst_employee_removal,
@@ -17,22 +22,34 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
     worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
     week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
     mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
-from visualisation.barchart_plotter import BarchartPlotter
 
 
-class ALNS:
-    def __init__(self, state, criterion, data, objective_weights, log_name, decay, operator_weights):
+class ALNS(multiprocessing.Process):
+    def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
+                 operator_weights=None, runtime=900, worker_name=None, seed=0, results=None,
+                 queue=None, share_times=None, variant="default"):
+
+        super().__init__()
+        self.queue = queue
+        self.share_times = share_times
+        self.worker_name = worker_name
+        self.prefix = f"{self.worker_name}: " if self.worker_name else ""
+        self.variant = variant
 
         self.objective_weights = objective_weights
         self.decay = decay
         self.log_name = log_name
+        self.runtime = runtime
+        self.start_time = timer()
+
         self.initial_solution = state
         self.current_solution = state
         # current global best and feasible solution
         self.best_solution = state
 
         self.criterion = criterion
-        self.random_state = self.initialize_random_state()
+        self.seed = seed
+        self.random_state = self.initialize_random_state(self.seed)
 
         self.destroy_operators = {}
         self.destroy_weights = {}
@@ -43,10 +60,10 @@ class ALNS:
             self.WeightUpdate = operator_weights
         else:
             self.WeightUpdate = {
-                "IS_BEST": 1.50,
-                "IS_BETTER": 1.06,
-                "IS_ACCEPTED": 1.03,
-                "IS_REJECTED": 0.97
+                "IS_BEST": 10,
+                "IS_BETTER": 4,
+                "IS_ACCEPTED": 2,
+                "IS_REJECTED": 0.8
             }
 
         # Sets
@@ -89,10 +106,11 @@ class ALNS:
         self.shift_sequences_violating_daily_rest = data["shifts"]["shift_sequences_violating_daily_rest"]
 
         # Plotting and statistics
+        self.results = results
         self.violation_plotter = None
         self.objective_plotter = None
         self.weight_plotter = None
-        self.objective_history = {"candidate": [], "current": [], "best": [], "best_legal": []}
+        self.objective_history = {"candidate": [], "current": [], "best": [], "time": []}
         self.weight_history = defaultdict(list)
         self.iteration = 0
 
@@ -481,19 +499,94 @@ class ALNS:
         self.add_destroy_and_repair_operators(operators)
         self.initialize_destroy_and_repair_weights()
 
+    def run(self):
+        """ Automatically called when multiprocess.start() is run """
+
+        logger.error(f"{self.prefix}Starting")
+
+        self.iterate(runtime=self.runtime)
+
+        logger.error(f"{self.prefix}Saving solutions")
+        self.save_solutions()
+        logger.error(f"{self.prefix}Solution saved. Calculating result")
+
+        try:
+            possible_preferences = [
+                sum(1
+                    for t in self.preferences[e]
+                    if self.preferences[e][t] != 0)
+                for e in self.employees
+            ]
+
+            granted_preferences = [
+                sum(
+                    (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
+                    or
+                    (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
+                    for c in self.competencies
+                    for t in self.preferences[e]
+                ) for e in self.employees
+            ]
+
+            ratio_preferences = [
+                granted / possible for granted, possible in zip(granted_preferences, possible_preferences)
+            ]
+
+        except Exception as e:
+            logger.error(f"Exception: {e}")
+            granted_preferences = None
+            possible_preferences = None
+            ratio_preferences = None
+
+        total_w = sum(min(v, 72) for t, v in self.best_solution.w.values())
+        employee_weeks = len(self.weeks)*len(self.employees)
+
+        results = {
+            "log": self.log_name,
+            "best_solution": self.get_best_solution_value(),
+            "iterations": self.iteration,
+            "criterion": str(self.criterion),
+            "violations": self.best_solution.get_number_of_violations(),
+            "f": self.best_solution.f,
+            "w": total_w/employee_weeks,
+            "preferences": {
+                "granted": granted_preferences,
+                "possible": possible_preferences,
+                "ratio": ratio_preferences,
+            },
+            "decay": self.decay,
+            "random_seed": self.seed,
+            "random_state": str(self.random_state),
+            "weight_update": self.WeightUpdate,
+            "destroy_weights": self.destroy_weights,
+            "repair_weights": self.repair_weights,
+            "objective_history": self.objective_history
+        }
+
+        self.results[self.worker_name] = results
+        logger.error(f"{self.prefix}Saved results to shared dict")
+
+        cool_off = 60
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.error(f"Cooled off for {t}s")
+            time.sleep(5)
+
+        self.queue.close()
+        logger.error(f"{self.prefix}Queue closed")
+
     def iterate(self, iterations=None, runtime=None):
+
         """ Performs iterations until runtime is reached or the number of iterations is exceeded """
 
-        runtime_in_seconds = runtime * 60 if runtime else None
-        start = timer()
-
         if not iterations:
+            logger.warning(f"{self.prefix}Running ALNS for {self.runtime:.2f} seconds")
 
-            logger.warning(f"Running ALNS for {runtime} minutes")
-
-            while timer() < start + runtime_in_seconds:
+            while timer() < self.start_time + self.runtime:
                 try:
                     self.perform_iteration()
+                except GurobiError as e:
+                    logger.critical(f"{self.prefix}GurobiError: {e}")
                 except KeyboardInterrupt:
                     command = input("\n\nAvailable commands: \n"
                                     "1 - Continue running \n"
@@ -509,7 +602,7 @@ class ALNS:
                                                 "log_name\n")
 
                         custom_filename = custom_filename if len(custom_filename) else None
-                        self.save_solutions(custom_filename)
+                        self.save_solutions()
 
                         continue
 
@@ -517,27 +610,34 @@ class ALNS:
                         breakpoint()
                     elif command == "4":
                         break
+                except Exception as e:
+                    logger.exception(f"{self.prefix} caused an exception", e)
 
         else:
 
             logger.warning(f"Running ALNS for {iterations} iterations")
 
             for iteration in range(iterations):
-                candidate_solution = self.perform_iteration()
+                self.perform_iteration()
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"Performed {iterations if iterations else self.iteration} iterations over"
-                       f" {timer() - start:.2f}s ")
-        logger.error(f"Initial solution: {self.initial_solution.get_objective_value(): .2f}")
-        logger.error(f"Best solution: {self.best_solution.get_objective_value(): .2f}")
+        logger.warning(f"{self.prefix}Performed {iterations if iterations else self.iteration} iterations over"
+                       f" {self.runtime:.2f}s (excluding construction)")
+
+        logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
+        logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
 
     def perform_iteration(self):
 
         # Add a newline between the output of each iteration
         print()
-        logger.trace(f"Iteration: {self.iteration}")
+        current_time = timer()-self.start_time
+        logger.warning(f"{self.prefix}Iteration: {self.iteration} at {current_time:.2f}")
+
+        if self.share_times and current_time > self.share_times[0]:
+            self.share_solutions()
 
         candidate_solution = self.current_solution.copy()
         destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
@@ -556,8 +656,9 @@ class ALNS:
 
             self.violation_plotter.plot_data(violations)
 
+        self.update_objective_history(candidate_solution, current_time)
+
         if self.objective_plotter:
-            self.update_objective_history(candidate_solution)
             self.objective_plotter.plot_data(self.objective_history)
 
         if self.weight_plotter:
@@ -570,11 +671,37 @@ class ALNS:
 
         return candidate_solution
 
-    def update_objective_history(self, candidate_solution):
+    def share_solutions(self):
+
+        logger.error(f"{self.prefix}Sharing at {self.share_times[0]}s."
+                     f" {len(self.share_times) - 1} shares remaining")
+        del self.share_times[0]
+
+        if not self.queue.empty():
+            shared_solution = self.queue.get()
+            logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
+                         f"best={self.get_best_solution_value(): 7.2f}")
+
+            if self.criterion.accept(shared_solution, self.current_solution,
+                                     self.best_solution, self.random_state):
+                self.current_solution = shared_solution
+                logger.error(f"{self.prefix}Shared solution is accepted")
+
+            if shared_solution.is_feasible() and shared_solution.get_objective_value() > self.best_solution.get_objective_value():
+                self.best_solution = shared_solution
+                self.current_solution = shared_solution
+                logger.error(f"{self.prefix}Shared solution is best solution")
+            else:
+                logger.error(f"{self.prefix}Shared solution is rejected")
+
+        self.queue.put(self.current_solution)
+
+    def update_objective_history(self, candidate_solution, current_time):
 
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
         self.objective_history["best"].append(self.best_solution.get_objective_value())
+        self.objective_history["time"].append(current_time)
 
     def consider_candidate_and_update_weights(self, candidate_solution, destroy_id, repair_id):
         """
@@ -593,7 +720,7 @@ class ALNS:
                                  self.best_solution, self.random_state):
             self.current_solution = candidate_solution
 
-            if candidate_solution.get_objective_value() >= self.current_solution.get_objective_value():
+            if candidate_solution.get_objective_value() > self.current_solution.get_objective_value():
                 logger.debug("Candidate is better")
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
@@ -606,7 +733,7 @@ class ALNS:
 
         # only feasible solution can be considered for best solution
         if (candidate_solution.is_feasible()
-                and candidate_solution.get_objective_value() >=
+                and candidate_solution.get_objective_value() >
                 self.best_solution.get_objective_value()):
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
@@ -615,17 +742,31 @@ class ALNS:
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
-    def save_solutions(self, custom_name=None):
+    def save_solutions(self):
 
-        if custom_name:
-            filename = custom_name
+        if "rproblem1" in self.log_name:
+            folder = "solutions/rproblem1"
+        elif "rproblem2" in self.log_name:
+            folder = "solutions/rproblem2"
+        elif "rproblem3" in self.log_name:
+            folder = "solutions/rproblem3"
+        elif "rproblem4" in self.log_name:
+            folder = "solutions/rproblem4"
+        elif "rproblem5" in self.log_name:
+            folder = "solutions/rproblem5"
+        elif "rproblem6" in self.log_name:
+            folder = "solutions/rproblem6"
+        elif "rproblem7" in self.log_name:
+            folder = "solutions/rproblem7"
+        elif "rproblem8" in self.log_name:
+            folder = "solutions/rproblem8"
+        elif "rproblem9" in self.log_name:
+            folder = "solutions/rproblem9"
         else:
-            filename = self.log_name
+            folder = "solutions"
 
-        self.best_solution.write(f"solutions/{filename}-ALNS")
-
-    def update_best_solutions(self, candidate_solution):
-        self.current_solution = candidate_solution
+        suffix = f"-{self.worker_name}" if self.worker_name else ""
+        self.best_solution.write(f"{folder}/{self.log_name}-ALNS{suffix}_{self.variant}")
 
     def select_operator(self, operators, weights):
         """
@@ -678,9 +819,9 @@ class ALNS:
         return {operator: 1.0 for operator in operators}
 
     @staticmethod
-    def initialize_random_state():
+    def initialize_random_state(seed):
         """ Provides a seeded random state to ensure a deterministic output over different runs """
-        return np.random.RandomState(seed=0)
+        return np.random.RandomState(seed)
 
     def add_destroy_and_repair_operators(self, operators):
 

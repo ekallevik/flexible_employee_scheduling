@@ -198,7 +198,7 @@ def get_daily_rest_rules(root):
 
 def set_daily_offset_for_employee(employee, problem):
     # TODO: Implement try-block, trying to collect daily offset from file.
-    if problem == "rproblem9":
+    if "rproblem9" in problem:
         default_offset_for_rproblem9 = 10
         employee.set_daily_offset(default_offset_for_rproblem9)
     else:
