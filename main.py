@@ -4,7 +4,6 @@ import time
 from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
-import neptune
 
 
 import fire
@@ -569,51 +568,6 @@ class ProblemRunner:
         self.save_results()
 
         return self.log_name
-
-    def run_neptune(self, tags, description=None, project="ALNS"):
-        """ Uploads parameters, results and logs to neptune.ai. Tags can be passed in as a list """
-
-        self.save_results()
-
-        logger.info("Logging to Neptune")
-
-        params = {
-            "problem": self.problem,
-            "with_sdp": True if self.sdp else False,
-            "esp_mode": self.mode,
-            "weights": self.weights,
-        }
-
-        # NEPTUNE_API_TOKEN environment variable needs to be defined.
-        neptune_project = f"ekallevik/{project}"
-        logger.info(f"Logging to Neptune project: {neptune_project}")
-        neptune.init(neptune_project)
-
-        if project == "ALNS":
-            #params["critertion"] = self.alns.criterion
-            #params["operator_weights"] = self.alns.WeightUpdate
-            #params["alns_initial_solution"] = self.alns.initial_solution.get_objective_value()
-            #params["alns_best_solution"] = self.alns.best_solution.get_objective_value()
-            #params["iterations"] = self.alns.iteration
-            #params["random_state"] = self.alns.random_state
-            params["palns_results"] = self.palns_results
-
-        neptune.create_experiment(name=self.log_name, params=params, description=description,
-                                  tags=tags)
-
-        neptune.log_artifact(f"gurobi_logs/{self.log_name}.log")
-        neptune.log_artifact(f"logs/{self.log_name}.log")
-        neptune.log_artifact(f"solutions/{self.log_name}-SDP.sol")
-        neptune.log_artifact(f"solutions/{self.log_name}-ESP.sol")
-
-        try:
-            logger.info("Uploading JSON results")
-            neptune.log_artifact(f"{self.log_name}.json")
-        except:
-            logger.info("No JSON results found")
-            pass
-
-        return self
 
 
 if __name__ == "__main__":
