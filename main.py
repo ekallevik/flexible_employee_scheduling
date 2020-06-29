@@ -38,8 +38,8 @@ formatter = LogFormatter()
 level_per_module = {
     "__main__": "INFO",
     "preprocessing.xml_loader": "WARNING",
-    "heuristic.alns": "ERROR",
-    "heuristic.delta_calculations": "CRITICAL",
+    "heuristic.alns": "INFO",
+    "heuristic.delta_calculations": "INFO",
     "heuristic.destroy_operators": "CRITICAL",
     "heuristic.repair_operators": "CRITICAL",
     "heuristic.criterions.simulated_annealing_criterion": "CRITICAL",
@@ -119,102 +119,8 @@ class ProblemRunner:
         else:
             logger.critical("Does not log to file!")
 
-    def rerun_esp(self):
-        """ Extracts the best legal solution from ALNS and uses it as a start for MIP """
 
-        solution = self.alns.best_solution
-
-        model = self.create_model("rerun_esp")
-        esp = OptimalityModel(model, data=self.data)
-
-        for key, value in solution.x.items():
-            esp.var.x[key].start = value
-
-        for key, value in solution.y.items():
-            esp.var.y[key].start = value
-
-        logger.warning("Rerunning model")
-        esp.run_model()
-
-        return self
-
-    def test_seeds(self, n_runs=10, start_seed=0, threads=48):
-
-        logger.warning(f"Running {self.problem} for {n_runs} runs")
-        share_times = [i for i in range(60, 15 * 60, 10)]
-
-        for seed in range(start_seed, start_seed+n_runs*100, 100):
-            self.run_palns(threads=threads, seed_offset=seed, share_times=share_times, variant=f"seed={seed}")
-
-        return self
-
-    def test_all(self, n_runs=5):
-
-        self.test_share_times(n_runs)
-        self.test_threads(n_runs)
-        self.test_seeds(n_runs)
-
-    def test_threads(self, n_runs=5, threads=32):
-
-        share_times = [i for i in range(60, 15 * 60, 10)]
-
-        for seed in range(0, n_runs * 100, 100):
-            self.run_palns(threads=threads, seed_offset=seed, share_times=share_times,
-                           variant=f"threads={threads}_seed={seed}")
-        return self
-
-    def test_share_times(self, n_runs=5):
-
-        share_time_list = [
-            (None, "None"),
-            ([i for i in range(60, 15 * 60, 5)], "5s"),
-            ([i for i in range(60, 15 * 60, 20)], "20s"),
-        ]
-
-        for seed in range(0, n_runs * 100, 100):
-            for share_times in share_time_list:
-                self.run_palns(share_times=share_times[0], seed_offset=seed,
-                               variant=f"share={share_times[1]}_seed={seed}")
-
-        return self
-
-    def test_rrt(self, n_runs=5, mix="pure", threads=48, percentage=0.75):
-
-        share_times = [i for i in range(60, 15 * 60, 10)]
-        thresholds = [0.01, 0.02, 0.04, 0.08, 0.16]
-
-        for seed in range(0, n_runs * 100, 100):
-            for threshold in thresholds:
-                criterion_list = self.get_criterion_list(mix, threads, threshold, percentage)
-                self.run_palns(share_times=share_times, seed_offset=seed,
-                               criterion_list=criterion_list,
-                               variant=f"rrt_{threshold}-{mix}-seed={seed}", threads=threads)
-
-    def get_criterion_list(self, mix, threads, threshold, percentage):
-
-        wanted_iterations = {
-            "rproblem3": 362*percentage,
-            "rproblem5": 816*percentage,
-            "rproblem6": 400*percentage,
-            "rproblem7": 216*percentage,
-            "rproblem9": 206*percentage,
-        }
-
-        step = threshold / wanted_iterations[self.problem]
-
-        if mix == "pure":
-            criterion_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
-                                                   step=step) for i in range(threads)]
-        else:
-            rrt_list = [RecordToRecordTravel(start_threshold=threshold, end_threshold=0,
-                                             step=step) for i in range(int(threads / 2))]
-            hc_list = [GreedyCriterion() for i in range(int(threads / 2))]
-            criterion_list = rrt_list + hc_list
-
-        return criterion_list
-
-    def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default",
-                  share_times=None):
+    def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
         logger.critical(f"Running {self.problem} with runtime {self.runtime} in {threads} threads")
@@ -226,6 +132,7 @@ class ProblemRunner:
         manager = multiprocessing.Manager()
         shared_results = manager.dict()
         queue = Queue()
+        share_times = [i for i in range(60, 15 * 60, 10)]
 
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
@@ -299,12 +206,12 @@ class ProblemRunner:
                 pass
 
         self.save_shared_results(shared_results, initial_solution=initial_solution,
-                                 share_times=share_times, threads=threads, variant=variant, processes=processes)
+                                 share_times=share_times, threads=threads, variant=variant)
 
         return self
 
     def save_shared_results(self, shared_results, initial_solution, share_times,
-                            threads, variant, processes=None):
+                            threads, variant):
 
         print()
         logger.warning("Saving multiprocessing results")
@@ -341,62 +248,6 @@ class ProblemRunner:
         with open(f"results/{self.log_name}-{variant}.json", "w") as fp:
             json.dump(shared_results.copy(), fp, sort_keys=True, indent=4)
         logger.info(f"Saved PALNS results to results/{self.log_name}-{variant}.json")
-
-    def run_alns(self, decay=0.5, iterations=None, runtime=15, plot_objective=False,
-                 plot_violations_map=False, plot_violations_bar=False, plot_weights=False):
-        """ Runs ALNS on the generated candidate solution """
-
-        self.set_alns(decay=decay)
-
-        if plot_objective + plot_violations_map + plot_violations_bar + plot_weights > 1:
-            raise ValueError("Cannot use more than one plot")
-
-        if plot_objective:
-            self.alns.objective_plotter = ObjectivePlotter(title="Objective value per iteration",
-                                                           log_name=self.log_name)
-            self.alns.objective_plotter.set_scale("symlog")
-
-        if plot_weights:
-            self.alns.weight_plotter = ObjectivePlotter(title="Destroy weights per iteration",
-                                                        log_name=self.log_name)
-
-        if plot_violations_map:
-            self.alns.violation_plotter = HeatmapPlotter(title="Violations for current iteration",
-                                                         log_name=self.log_name)
-
-        if plot_violations_bar:
-            self.alns.violation_plotter = BarchartPlotter(title="Violations for current iteration",
-                                                          log_name=self.log_name)
-        try:
-            self.alns.iterate()
-        except Exception as e:
-            logger.exception(f"An exception occured in {self.log_name}", exception=e,
-                             diagnose=True, backtrace=True)
-
-        return self
-
-    def change_criterion(self, start_temp=100, end_temp=1, step=1, method="linear"):
-        """ Changes the criterion to Simulated Annealing"""
-
-        self.criterion = SimulatedAnnealingCriterion(
-            method=method, start_temperature=start_temp, end_temperature=end_temp, step=step
-        )
-
-        return self
-
-    def set_alns(self, decay, operator_weights=None):
-        """ Sets ALNS based on the given config """
-
-        candidate_solution = self.get_candidate_solution()
-        state = self.get_state(candidate_solution)
-
-        logger.info(f"ALNS with {decay} and {self.criterion}")
-        remaining_runtime = self.runtime - self.construction_runtime
-        criterion = GreedyCriterion()
-
-        self.alns = ALNS(state, criterion, self.data, self.weights, self.log_name, decay=decay,
-                    operator_weights=operator_weights, runtime=remaining_runtime,
-                    results=None, queue=None, share_times=None, seed=0, variant="alns")
 
     def get_state(self, candidate_solution):
         soft_variables = {
