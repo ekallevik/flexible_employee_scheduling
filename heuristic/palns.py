@@ -24,33 +24,37 @@ from heuristic.repair_operators import worst_week_regret_repair, worst_week_repa
     mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
 
 
-class ALNS(multiprocessing.Process):
+class PALNS(multiprocessing.Process):
     def __init__(self, state, criterion, data, objective_weights, log_name, decay=0.5,
                  operator_weights=None, runtime=900, worker_name=None, seed=0, results=None,
                  queue=None, share_times=None, variant="default"):
 
+        # Parallelization
         super().__init__()
         self.queue = queue
         self.share_times = share_times
         self.worker_name = worker_name
         self.prefix = f"{self.worker_name}: " if self.worker_name else ""
+
+        # Log and runtime
         self.variant = variant
-
-        self.objective_weights = objective_weights
-        self.decay = decay
         self.log_name = log_name
-        self.runtime = runtime
         self.start_time = timer()
+        self.runtime = runtime
 
+        # Solutions
         self.initial_solution = state
         self.current_solution = state
-        # current global best and feasible solution
         self.best_solution = state
 
-        self.criterion = criterion
+        # Randomness
         self.seed = seed
         self.random_state = self.initialize_random_state(self.seed)
 
+        # Operators and weights
+        self.objective_weights = objective_weights
+        self.decay = decay
+        self.criterion = criterion
         self.destroy_operators = {}
         self.destroy_weights = {}
         self.repair_operators = defaultdict(dict)
@@ -68,7 +72,6 @@ class ALNS(multiprocessing.Process):
 
         # Sets
         self.t_covered_by_off_shift = data["off_shifts"]["t_in_off_shifts"]
-
         self.combined_time_periods_in_week = data["time"]["combined_time_periods"][1]
         self.employee_with_competency_combination = data["staff"]["employee_with_competency_combination"]
 
@@ -120,6 +123,7 @@ class ALNS(multiprocessing.Process):
 
         get_shift_combinations(self.shift_combinations_violating_daily_rest, self.employees)
 
+        # Initialization of all operators
         remove_worst_week = partial(
             worst_week_removal,
             self.competencies,

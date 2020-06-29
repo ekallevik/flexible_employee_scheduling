@@ -10,7 +10,7 @@ from gurobipy import *
 from loguru import logger
 from timeit import default_timer as timer
 
-from heuristic.alns import ALNS
+from heuristic.palns import PALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.criterions.record_to_record_travel import RecordToRecordTravel
 from heuristic.heuristic_calculations import *
@@ -148,10 +148,10 @@ class ProblemRunner:
 
             remaining_runtime = self.runtime-self.construction_runtime
 
-            alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        operator_weights=operator_weights, runtime=remaining_runtime,
-                        worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
-                        seed=j+seed_offset, variant=variant)
+            alns = PALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
+                         operator_weights=operator_weights, runtime=remaining_runtime,
+                         worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
+                         seed=j+seed_offset, variant=variant)
             processes.append(alns)
 
             logger.info(f"Starting {worker_name}")
