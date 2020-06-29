@@ -5,18 +5,15 @@ from copy import deepcopy
 from datetime import datetime
 from multiprocessing import Queue
 
-
 import fire
 from gurobipy import *
 from loguru import logger
 from timeit import default_timer as timer
 
-
 from heuristic.alns import ALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.criterions.record_to_record_travel import RecordToRecordTravel
 from heuristic.heuristic_calculations import *
-from heuristic.criterions.simulated_annealing_criterion import SimulatedAnnealingCriterion
 from heuristic.state import State
 from model.construction_model import ConstructionModel
 from model.feasibility_model import FeasibilityModel
@@ -27,9 +24,6 @@ from preprocessing import shift_generation
 from results.converter import Converter
 from utils.log_formatter import LogFormatter
 from utils.weights import get_weights
-from visualisation.barchart_plotter import BarchartPlotter
-from visualisation.heatmap_plotter import HeatmapPlotter
-from visualisation.objective_plotter import ObjectivePlotter
 
 formatter = LogFormatter()
 
