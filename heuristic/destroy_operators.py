@@ -20,15 +20,8 @@ def worst_week_removal(
 ):
 
     worst_k_weeks = calc_weekly_objective_function(
-        state,
-        competencies,
-        time_periods_in_week,
-        combined_time_periods_in_week,
-        employees,
-        weeks,
-        L_C_D,
-        destroy_size,
-        "worst",
+        state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks,
+        L_C_D, destroy_size, "worst",
     )
 
     destroy_set_shifts = destroy_shifts(
@@ -55,15 +48,8 @@ def weighted_random_week_removal(
 ):
 
     weekly_objective = calc_weekly_objective_function(
-        state,
-        competencies,
-        time_periods_in_week,
-        combined_time_periods_in_week,
-        employees,
-        weeks,
-        L_C_D,
-        destroy_size,
-        setting="best",
+        state, competencies, time_periods_in_week, combined_time_periods_in_week, employees, weeks,
+        L_C_D, destroy_size, setting="best",
     )
 
     probabilities = get_weighted_probabilities(weekly_objective)

@@ -14,7 +14,7 @@ def convert(model):
 def set_x(state, t_covered_by_shift, e, t, v, value, y_s=None):
     state.x[e, t, v] = value
 
-    if y_s == None:
+    if y_s is None:
         for t1 in t_covered_by_shift[t, v]:
             state.y[0, e, t1] = value
     else:
