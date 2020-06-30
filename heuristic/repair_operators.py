@@ -21,7 +21,6 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                        state, destroy_set, weeks):
 
     logger.warning(f"Using week_demand_repair for weeks {weeks}")
-    # todo: use destroy_set for improvements
 
     repair_set = []
     employees_changed = employees
@@ -34,8 +33,9 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                                                                  time_periods_in_week, competencies,
                                                                  time_step)
         shifts = shifts_in_week[week]
-        demand_per_shift_in_week = {key: value for key, value in demand_per_shift.items()
-                                    if key in shifts}
+        demand_per_shift_in_week = {
+            key: value for key, value in demand_per_shift.items() if key in shifts
+        }
 
         employee_heap = get_scored_employees(employees, week, state, shifts_in_week)
 
@@ -66,13 +66,17 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
 
                     demand_per_shift_in_week[shift] -= 1
 
-                    logger.trace(f"Allocating employee {employee} to shift {shift} "
-                                 f"(remaining demand:{demand_per_shift_in_week[shift]})")
+                    logger.trace(
+                        f"Allocating employee {employee} to shift {shift} "
+                        f"(remaining demand:{demand_per_shift_in_week[shift]})"
+                    )
 
                     updated_employee_score -= shift[1]
 
-                    logger.trace(f"Employee {employee} score: Original={employee_score}, "
-                                 f"Updated={updated_employee_score}")
+                    logger.trace(
+                        f"Employee {employee} score: Original={employee_score}, "
+                        f"Updated={updated_employee_score}"
+                    )
 
                 considered_employees.append((updated_employee_score, employee))
 
@@ -84,8 +88,9 @@ def week_demand_per_shift_repair(shifts_in_week, competencies, t_covered_by_shif
                                                              time_periods_in_week, competencies,
                                                              time_step)
 
-    calculate_deviation_from_demand(state, competencies, t_covered_by_shift,
-                                    employee_with_competencies, demand, destroy_set)
+    calculate_deviation_from_demand(
+        state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set
+    )
 
     return repair_set
 
@@ -108,8 +113,9 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
                                                                  time_periods_in_week, competencies,
                                                                  time_step)
 
-        remaining_demand = get_demand_for_week(competencies, demand, shifts_in_week,
-                                               t_covered_by_shift, week)
+        remaining_demand = get_demand_for_week(
+            competencies, demand, shifts_in_week, t_covered_by_shift, week
+        )
 
         shift_heap = get_scored_shifts(shifts_in_week[week], t_covered_by_shift, remaining_demand)
 
@@ -121,7 +127,9 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
             if not shift_heap:
                 return repair_set
 
-            shift, shift_score = get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift)
+            shift, shift_score = get_most_valuable_shift(
+                remaining_demand, shift_heap, t_covered_by_shift
+            )
             allocations_needed = min([remaining_demand[t] for t in t_covered_by_shift[shift]])
             logger.info(f"Repairing shift {shift} (s: {shift_score}, d: {allocations_needed})")
 
@@ -151,29 +159,35 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 
                     allocations_needed -= 1
 
-                    logger.trace(f"Allocating employee {employee} to shift {shift} "
-                                 f"(remaining demand:{allocations_needed})")
+                    logger.trace(
+                        f"Allocating employee {employee} to shift {shift} "
+                        f"(remaining demand:{allocations_needed})"
+                    )
 
                     updated_employee_score -= shift[1]
 
-                    logger.trace(f"Employee {employee} score: Original={employee_score}, "
-                                 f"Updated={updated_employee_score}")
+                    logger.trace(
+                        f"Employee {employee} score: Original={employee_score}, "
+                        f"Updated={updated_employee_score}"
+                    )
 
                 considered_employees.append((updated_employee_score, employee))
 
             for employee_score, employee in considered_employees:
                 push_to_heap(employee_heap, employee_score, employee)
 
-            shift_heap = get_scored_shifts(shifts_in_week[week], t_covered_by_shift,
-                                           remaining_demand)
+            shift_heap = get_scored_shifts(
+                shifts_in_week[week], t_covered_by_shift, remaining_demand
+            )
 
     delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
                                                              contracted_hours, weeks,
                                                              time_periods_in_week, competencies,
                                                              time_step)
 
-    calculate_deviation_from_demand(state, competencies, t_covered_by_shift,
-                                    employee_with_competencies, demand, destroy_set)
+    calculate_deviation_from_demand(
+        state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set
+    )
 
     return repair_set
 
@@ -181,10 +195,9 @@ def week_demand_repair(shifts_in_week, competencies, t_covered_by_shift,
 def get_most_valuable_shift(remaining_demand, shift_heap, t_covered_by_shift):
     shift_score, shift = pop_from_heap(shift_heap)
     updated_shift_score = get_score_for_shift(shift, t_covered_by_shift, remaining_demand)
-    #
+    
     while shift_score != updated_shift_score:
-        logger.trace(f"Outdated shift score {shift}: {shift_score} vs"
-                     f" {updated_shift_score}")
+        logger.trace(f"Outdated shift score {shift}: {shift_score} vs {updated_shift_score}")
         push_to_heap(shift_heap, updated_shift_score, shift)
 
         shift_score, shift = pop_from_heap(shift_heap)
@@ -196,15 +209,17 @@ def get_demand_for_week(competencies, demand, shifts_in_week, t_covered_by_shift
     times_in_shift_set = set()
     for shift in shifts_in_week[week]:
         times_in_shift_set.update(t_covered_by_shift[shift])
-    remaining_demand = {t: sum(demand["min"][c, t] for c in competencies)
-                        for t in times_in_shift_set}
+    remaining_demand = {
+        t: sum(demand["min"][c, t] for c in competencies) for t in times_in_shift_set
+    }
     return remaining_demand
 
 
 def can_allocate(employee, shift, state, shifts_at_day):
 
     return not any(
-        [state.x[employee, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))]])
+        [state.x[employee, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]]
+    )
 
 
 def get_scored_employees(employees, week, state, shifts_in_week):
@@ -223,7 +238,7 @@ def get_score_for_employee(employee, week, state, shifts_in_week):
     deviation_contracted = state.soft_vars["deviation_contracted_hours"][employee, week]
 
     # penalize negative deviation of contracted hours
-    score = deviation_contracted if deviation_contracted > -10 else 100*deviation_contracted
+    score = deviation_contracted if deviation_contracted > -10 else 100 * deviation_contracted
     logger.trace(f"employee {employee}: dc={deviation_contracted}, s={score}")
 
     return score
@@ -292,40 +307,48 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
 
     logger.info(f"Repairing week: {week}")
 
-    while (True):
-        calculate_deviation_from_demand(state, competencies, t_covered_by_shift,
-                                        employee_with_competencies, demand, changed)
-        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
-                                                                 contracted_hours, weeks,
-                                                                 time_periods_in_week, competencies,
-                                                                 time_step)
+    while True:
+        calculate_deviation_from_demand(
+            state, competencies, t_covered_by_shift, employee_with_competencies, demand, changed
+        )
+        delta_calculate_negative_deviation_from_contracted_hours(
+            state,
+            employees_changed,
+            contracted_hours,
+            weeks,
+            time_periods_in_week,
+            competencies,
+            time_step,
+        )
 
         if sum(state.hard_vars["below_minimum_demand"].values()) != 0:
-            shifts =    {
-                        (t1, v1, comp): -sum(-state.hard_vars["below_minimum_demand"][c,t]
-                                        for c in comp
-                                        for t in t_covered_by_shift[t1, v1]
-                                        if (c,t) in state.hard_vars["below_minimum_demand"])
-                                        - (20*(len(comp)-1) + v1)
-                                        for comp in employee_with_competency_combination 
-                                        for t1, v1 in shifts_in_week[week[0]]
-                                        if (t1,v1,comp) not in impossible_shifts
-                        }
-  
-
+            shifts = {
+                (t1, v1, comp): -sum(
+                    -state.hard_vars["below_minimum_demand"][c, t]
+                    for c in comp
+                    for t in t_covered_by_shift[t1, v1]
+                    if (c, t) in state.hard_vars["below_minimum_demand"]
+                )
+                - (20 * (len(comp) - 1) + v1)
+                for comp in employee_with_competency_combination
+                for t1, v1 in shifts_in_week[week[0]]
+                if (t1, v1, comp) not in impossible_shifts
+            }
 
         else:
-            shifts =    {
-                        (t1, v1, comp): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
-                                        for c in comp
-                                        for t in t_covered_by_shift[t1, v1]
-                                        if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-                                        - (20*(len(comp)-1) + v1)
-                                        for comp in employee_with_competency_combination 
-                                        for j in week
-                                        for t1, v1 in shifts_in_week[j]
-                                        if (t1,v1,comp) not in impossible_shifts
-                        }
+            shifts = {
+                (t1, v1, comp): -sum(
+                    state.soft_vars["deviation_from_ideal_demand"][c, t]
+                    for c in comp
+                    for t in t_covered_by_shift[t1, v1]
+                    if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+                )
+                - (20 * (len(comp) - 1) + v1)
+                for comp in employee_with_competency_combination
+                for j in week
+                for t1, v1 in shifts_in_week[j]
+                if (t1, v1, comp) not in impossible_shifts
+            }
 
         best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
         shift = choice([key for key, value in shifts.items() if value == best_shift_value])
@@ -340,7 +363,7 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
             if state.soft_vars["deviation_from_ideal_demand"][c, t] < 0
         )
 
-        if deviation_from_demand <= ALLOWED_SHIFT_DURATION[0]/time_step:
+        if deviation_from_demand <= ALLOWED_SHIFT_DURATION[0] / time_step:
             return repair_set
 
         y_s_1 = {
@@ -359,27 +382,42 @@ def worst_week_repair(shifts_in_week, competencies, t_covered_by_shift, employee
         ]
         competencies_needed = tuple(set(y_s))
 
-        deviation_contracted_hours = {e:
-                                          (sum(state.soft_vars["deviation_contracted_hours"][e, j]
-                                               for j in weeks)
-
-                                           - (competency_level - len(competencies_needed)))
-
-                                          + (20 if (sum(
-                                              state.soft_vars["deviation_contracted_hours"][e, j]
-                                              for j in weeks) - shift[1] >= 8.5) else 0)
-
-                                          + (20 if (sum(
-                                              state.soft_vars["deviation_contracted_hours"][e, j]
-                                              for j in weeks) - shift[1] <= 17) else 0)
-
-                                          + (100 if (sum(
-                                              state.soft_vars["deviation_contracted_hours"][e, j]
-                                              for j in weeks) - shift[1] == 0) else 0)
-
-                                      for (competency_level, e) in
-                                      employee_with_competency_combination[competencies_needed]
-                                      if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0}
+        deviation_contracted_hours = {
+            e: (
+                sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                - (competency_level - len(competencies_needed))
+            )
+            + (
+                20
+                if (
+                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                    - shift[1]
+                    >= 8.5
+                )
+                else 0
+            )
+            + (
+                20
+                if (
+                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                    - shift[1]
+                    <= 17
+                )
+                else 0
+            )
+            + (
+                100
+                if (
+                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                    - shift[1]
+                    == 0
+                )
+                else 0
+            )
+            for (competency_level, e) in employee_with_competency_combination[competencies_needed]
+            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]))
+            == 0
+        }
 
         if all(i <= ALLOWED_SHIFT_DURATION[0] for i in deviation_contracted_hours):
             impossible_shifts.append(shift)
@@ -547,24 +585,31 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
     repair_set = []
     destroy_set = destroy_set.copy()
     employees_changed = employees
-    allowed_competency_combinations =  {combination for combination in 
-                                        employee_with_competency_combination for item in 
-                                        employee_with_competency_combination[combination] for e in 
-                                        employees_changed if e == item[1]}
-    
+    allowed_competency_combinations = {
+        combination
+        for combination in employee_with_competency_combination
+        for item in employee_with_competency_combination[combination]
+        for e in employees_changed
+        if e == item[1]
+    }
+
     impossible_shifts = []
-    while(True):
-        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
-        shifts =    {
-                    (t1, v1, comp): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
-                                                    for c in comp
-                                                    for t in t_covered_by_shift[t1, v1]
-                                                    if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-                                                    - (20*(len(comp)-1) + v1)
-                                                    for comp in employee_with_competency_combination
-                                                    for t1, v1 in all_shifts
-                                                    if (t1, v1, comp) not in impossible_shifts
-                    }
+    while True:
+        calculate_deviation_from_demand(
+            state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set
+        )
+        shifts = {
+            (t1, v1, comp): -sum(
+                state.soft_vars["deviation_from_ideal_demand"][c, t]
+                for c in comp
+                for t in t_covered_by_shift[t1, v1]
+                if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+            )
+            - (20 * (len(comp) - 1) + v1)
+            for comp in employee_with_competency_combination
+            for t1, v1 in all_shifts
+            if (t1, v1, comp) not in impossible_shifts
+        }
         if not any(shifts.values()):
             return repair_set
         best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
@@ -579,17 +624,16 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
         ]
         competencies_needed = tuple(set(y_s))
 
+        deviation_from_demand = -sum(
+            state.soft_vars["deviation_from_ideal_demand"][c, t]
+            for competencies_2 in allowed_competency_combinations
+            for c in competencies_2
+            for t in t_covered_by_shift[shift[0], shift[1]]
+            if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+            if state.soft_vars["deviation_from_ideal_demand"][c, t] < 0
+        )
 
-        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t] 
-                                    for competencies_2 in allowed_competency_combinations 
-                                    for c in competencies_2 
-                                    for t in t_covered_by_shift[shift[0], shift[1]] 
-                                    if (c, t) in state.soft_vars["deviation_from_ideal_demand"] 
-                                    if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
-        
-        
-        
-        if(deviation_from_demand < ALLOWED_SHIFT_DURATION[0]/time_step):
+        if deviation_from_demand < ALLOWED_SHIFT_DURATION[0] / time_step:
             return repair_set
 
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed,
@@ -598,11 +642,12 @@ def worst_employee_repair(competencies, t_covered_by_shift, employee_with_compet
                                                                  time_step)
         deviation_contracted_hours = {
             e: (
-                    sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
-                    - 10 * (competency_level - len(competencies_needed))
+                sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks)
+                - 10 * (competency_level - len(competencies_needed))
             )
             for (competency_level, e) in employee_with_competency_combination[competencies_needed]
-            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0
+            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]))
+            == 0
             if e in employees
         }
 
@@ -628,40 +673,61 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
     logger.info(f"Repairing employees: {employees_changed}")
     repair_set = []
     destroy_set = destroy_set.copy()
-    allowed_competency_combinations = {combination for combination in
-                                       employee_with_competency_combination for item in
-                                       employee_with_competency_combination[combination] for e in
-                                       employees_changed if e == item[1]}
+    allowed_competency_combinations = {
+        combination
+        for combination in employee_with_competency_combination
+        for item in employee_with_competency_combination[combination]
+        for e in employees_changed
+        if e == item[1]
+    }
     daily_destroy_and_repair = [destroy_set, []]
     impossible_shifts = []
     sundays = [6 + (7 * j) for j in weeks]
-    while(True):
-        calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
-        above_maximum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
-        below_minimum_demand(state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift)
-        delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
+    while True:
+        calculate_deviation_from_demand(
+            state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set
+        )
+        above_maximum_demand(
+            state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift
+        )
+        below_minimum_demand(
+            state, destroy_set, employee_with_competencies, demand, competencies, t_covered_by_shift
+        )
+        delta_calculate_negative_deviation_from_contracted_hours(
+            state,
+            employees_changed,
+            contracted_hours,
+            weeks,
+            time_periods_in_week,
+            competencies,
+            time_step,
+        )
         if any(state.hard_vars["below_minimum_demand"].values()):
-            shifts =    {
-                        (t1, v1, comp): sum(state.hard_vars["below_minimum_demand"][c,t]
-                                        for c in comp
-                                        for t in t_covered_by_shift[t1, v1]
-                                        if (c,t) in state.hard_vars["below_minimum_demand"])
-                                        - (20*(len(comp)-1) + v1)
-                                        for comp in employee_with_competency_combination
-                                        for t1, v1 in all_shifts
-                                        if (t1, v1, comp) not in impossible_shifts
-                        }
+            shifts = {
+                (t1, v1, comp): sum(
+                    state.hard_vars["below_minimum_demand"][c, t]
+                    for c in comp
+                    for t in t_covered_by_shift[t1, v1]
+                    if (c, t) in state.hard_vars["below_minimum_demand"]
+                )
+                - (20 * (len(comp) - 1) + v1)
+                for comp in employee_with_competency_combination
+                for t1, v1 in all_shifts
+                if (t1, v1, comp) not in impossible_shifts
+            }
         else:
-            shifts =    {
-                        (t1, v1, comp): -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
-                                        for c in comp
-                                        for t in t_covered_by_shift[t1, v1]
-                                        if (c,t) in state.soft_vars["deviation_from_ideal_demand"])
-                                        - (20*(len(comp)-1) + v1)
-                                        for comp in employee_with_competency_combination
-                                        for t1, v1 in all_shifts
-                                        if (t1, v1, comp) not in impossible_shifts
-                        }
+            shifts = {
+                (t1, v1, comp): -sum(
+                    state.soft_vars["deviation_from_ideal_demand"][c, t]
+                    for c in comp
+                    for t in t_covered_by_shift[t1, v1]
+                    if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+                )
+                - (20 * (len(comp) - 1) + v1)
+                for comp in employee_with_competency_combination
+                for t1, v1 in all_shifts
+                if (t1, v1, comp) not in impossible_shifts
+            }
 
         best_shift_value = max(shifts.items(), key=itemgetter(1))[1]
         shift = choice([key for key, value in shifts.items() if value == best_shift_value])
@@ -675,17 +741,22 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
         ]
         competencies_needed = tuple(set(y_s))
 
-        deviation_from_demand = -sum(state.soft_vars["deviation_from_ideal_demand"][c,t]
-                                    for competencies_2 in allowed_competency_combinations 
-                                    for c in competencies_2 
-                                    for t in t_covered_by_shift[shift[0], shift[1]] 
-                                    if (c, t) in state.soft_vars["deviation_from_ideal_demand"] 
-                                    if state.soft_vars["deviation_from_ideal_demand"][c,t] < 0)
+        deviation_from_demand = -sum(
+            state.soft_vars["deviation_from_ideal_demand"][c, t]
+            for competencies_2 in allowed_competency_combinations
+            for c in competencies_2
+            for t in t_covered_by_shift[shift[0], shift[1]]
+            if (c, t) in state.soft_vars["deviation_from_ideal_demand"]
+            if state.soft_vars["deviation_from_ideal_demand"][c, t] < 0
+        )
 
-        possible_employees = [(e, score) for score, e in
-                              employee_with_competency_combination[competencies_needed] if (sum(
-                state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0 if
-                              e in employees_changed]
+        possible_employees = [
+            (e, score)
+            for score, e in employee_with_competency_combination[competencies_needed]
+            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]))
+            == 0
+            if e in employees_changed
+        ]
 
         if(deviation_from_demand/time_step < 5 or max([sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e in employees_changed]) < shift[1]):
             return repair_set
@@ -704,7 +775,8 @@ def worst_employee_regret_repair(competencies, t_covered_by_shift, employee_with
 
         max_value = max(employee_objective_functions.items(), key=itemgetter(1))[1]
         e = choice(
-            [key for key, value in employee_objective_functions.items() if value == max_value])
+            [key for key, value in employee_objective_functions.items() if value == max_value]
+        )
 
         destroy_set = [set_x(state, t_covered_by_shift, e, shift[0], shift[1], 1, y_s)]
         repair_set.append((e, shift[0], shift[1]))
@@ -731,10 +803,13 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
         shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
-        possible_employees = [(e, score) for score, e in
-                              employee_with_competency_combination[(0,)] if (sum(
-                state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0]
-        
+        possible_employees = [
+            (e, score)
+            for score, e in employee_with_competency_combination[(0,)]
+            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]))
+            == 0
+        ]
+
         if not possible_employees or max([sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e, score in possible_employees]) < shift[1]:
             del shifts[shift]
             if not any(shifts.keys()):
@@ -743,8 +818,7 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
 
         if(max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
             return repair_set
-        
-        
+
         objective_values = {}
         for e, score in possible_employees:
             objective_values[e] = employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, week[0], L_C_D, preferences, competencies, t_covered_by_shift, 0)
@@ -761,7 +835,7 @@ def week_demand_based_repair_random(shifts_in_week, competencies, t_covered_by_s
         if sum(shifts.values()) == 0:
             return repair_set
     return shifts
-    
+
 
 def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_shift,
                              employee_with_competencies, employee_with_competency_combination,
@@ -784,10 +858,13 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
         calculate_deviation_from_demand(state, competencies, t_covered_by_shift, employee_with_competencies, demand, destroy_set)
         
         shift = max(shifts.items(), key=itemgetter(1))[0]
-        
-        possible_employees = [(e, score) for score, e in
-                              employee_with_competency_combination[(0,)] if (sum(
-                state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0]
+
+        possible_employees = [
+            (e, score)
+            for score, e in employee_with_competency_combination[(0,)]
+            if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83, int((shift[0] + 4) / 24))]))
+            == 0
+        ]
 
 
         if not possible_employees or max([sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) for e, score in possible_employees]) < shift[1]:
@@ -796,8 +873,7 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
     
         if(max([sum(state.soft_vars["deviation_contracted_hours"][e[0],j] for j in weeks) for e in possible_employees]) < shift[1]):
             return repair_set
-        
-        
+
         objective_values = {}
         for e, score in possible_employees:
             objective_values[e] = employee_shift_value(state, e, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, week[0], L_C_D, preferences, competencies, t_covered_by_shift, 0)
@@ -814,7 +890,7 @@ def week_demand_based_repair_greedy(shifts_in_week, competencies, t_covered_by_s
         if sum(shifts.values()) == 0:
             return repair_set
     return repair_set
-        
+
 
 def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_in_week, combined_time_periods_in_week, 
                         employees_with_competencies, shifts_per_day, shifts_overlapping_t, t_in_off_shifts,
@@ -822,52 +898,54 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
                          weeks, time_step, demand, days, weights, contracted_hours, t_covered_by_shift, L_C_D, preferences,
                          state, destroy_set, week):
 
-    days_in_week = days[7*week[0]:(week[0]+1)*7]
-    days_in_week_x = [x_day for x_day in range(max(0, 7*week[0] - 1), min(7*(week[0] + 1) + 1, len(days)))]
+    days_in_week = days[7 * week[0] : (week[0] + 1) * 7]
+    days_in_week_x = [
+        x_day for x_day in range(max(0, 7 * week[0] - 1), min(7 * (week[0] + 1) + 1, len(days)))
+    ]
 
-    updated_time_periods = list({t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]})
+    updated_time_periods = list(
+        {t for t_1, v_1 in shifts_in_week[week[0]] for t in t_covered_by_shift[t_1, v_1]}
+    )
 
-
- 
     model = Model(name="week_operator")
     # Disable logging to file
     model.setParam("LogFile", "")
 
     y_dict = {(c, t): 0 for c in competencies for t in updated_time_periods}
-    x_dict = {(t,v): 0 for c in competencies for i in days_in_week_x for t,v in shifts_per_day[i]}
-
+    x_dict = {(t, v): 0 for c in competencies for i in days_in_week_x for t, v in shifts_per_day[i]}
 
     plus = {(c, t): 0 for c in competencies for t in updated_time_periods}
     minus = {(c, t): 0 for c in competencies for t in updated_time_periods}
-    mu = {(c, t): 0 for c in competencies  for t in updated_time_periods}
+    mu = {(c, t): 0 for c in competencies for t in updated_time_periods}
 
     x = model.addVars(x_dict, vtype=GRB.INTEGER, name="x")
     mu = model.addVars(mu, vtype=GRB.INTEGER, name="mu")
     y = model.addVars(y_dict, vtype=GRB.INTEGER, name="y")
     delta_plus = model.addVars(plus, vtype=GRB.INTEGER, name="delta_plus")
     delta_minus = model.addVars(minus, vtype=GRB.INTEGER, name="delta_minus")
-    
-    if(days_in_week_x[0] == 7*week[0] - 1):
-        for t,v in shifts_per_day[days_in_week_x[0]]:
-            x[t,v].lb = sum(state.x[e,t,v] for e in employees)
-            x[t,v].ub = sum(state.x[e,t,v] for e in employees)
 
-    if(days_in_week_x[-1] == 7*(week[0] + 1)):
-        for t,v in shifts_per_day[days_in_week_x[-1]]:
-            x[t,v].lb = sum(state.x[e,t,v] for e in employees)
-            x[t,v].ub = sum(state.x[e,t,v] for e in employees)
+    if days_in_week_x[0] == 7 * week[0] - 1:
+        for t, v in shifts_per_day[days_in_week_x[0]]:
+            x[t, v].lb = sum(state.x[e, t, v] for e in employees)
+            x[t, v].ub = sum(state.x[e, t, v] for e in employees)
 
+    if days_in_week_x[-1] == 7 * (week[0] + 1):
+        for t, v in shifts_per_day[days_in_week_x[-1]]:
+            x[t, v].lb = sum(state.x[e, t, v] for e in employees)
+            x[t, v].ub = sum(state.x[e, t, v] for e in employees)
 
-    for c,t in y_dict:
-        if sum(state.y[c,e,t] for e in employees) > 0:
-            y[c, t].lb = sum(state.y[c,e,t] for e in employees)
+    for c, t in y_dict:
+        if sum(state.y[c, e, t] for e in employees) > 0:
+            y[c, t].lb = sum(state.y[c, e, t] for e in employees)
 
     model.addConstrs(
-        (   y[c, t]
-            == demand["min"][c, t] + mu[c, t]
+        (
+            y[c, t] == demand["min"][c, t] + mu[c, t]
             for c in competencies
             for t in updated_time_periods
-        ), name="minimum_demand_coverage")
+        ),
+        name="minimum_demand_coverage",
+    )
 
     model.addConstrs(
         (
@@ -875,46 +953,58 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
             for c in competencies
             for t in updated_time_periods
         ),
-        name="mu_less_than_difference")
+        name="mu_less_than_difference",
+    )
 
     model.addConstrs(
-        (   mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
+        (
+            mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
             == delta_plus[c, t] - delta_minus[c, t]
             for c in competencies
             for t in updated_time_periods
-        ), name="deviation_from_ideal_demand")
-
+        ),
+        name="deviation_from_ideal_demand",
+    )
 
     model.addConstrs(
-        (   quicksum(x[t_marked, v] for t_marked, v in shifts_overlapping_t[t])
+        (
+            quicksum(x[t_marked, v] for t_marked, v in shifts_overlapping_t[t])
             == quicksum(y[c, t] for c in competencies if y.get((c, t)))
             for t in updated_time_periods
-        ), name="mapping_shift_to_demand")
-    
-    model.addConstrs((
-        quicksum(x[t, v] for t, v in shifts_per_day[i]) <= len(employees)
-        for i in days_in_week
-    ), name="No_more_than_employees_shift_per_day")
+        ),
+        name="mapping_shift_to_demand",
+    )
+
+    model.addConstrs(
+        (quicksum(x[t, v] for t, v in shifts_per_day[i]) <= len(employees) for i in days_in_week),
+        name="No_more_than_employees_shift_per_day",
+    )
 
     model.setObjective(
-    quicksum(
-        quicksum(delta_plus[c, t] + delta_minus[c, t] for t in updated_time_periods)
-        for c in competencies
+        quicksum(
+            quicksum(delta_plus[c, t] + delta_minus[c, t] for t in updated_time_periods)
+            for c in competencies
+        ),
+        GRB.MINIMIZE,
     )
-    ,GRB.MINIMIZE,)
 
     model.setParam("Threads", 1)
     model.setParam("TimeLimit", 5)
     model.optimize()
 
-    shifts = {(t,v): x[t,v].x for t,v in shifts_in_week[week[0]] if x[t,v].x > 0.5}
-    saturdays = [5 + 7*week[0]]
-    sundays = [6 + 7*week[0]]
+    shifts = {(t, v): x[t, v].x for t, v in shifts_in_week[week[0]] if x[t, v].x > 0.5}
+    saturdays = [5 + 7 * week[0]]
+    sundays = [6 + 7 * week[0]]
     repair_set = []
     while shifts.keys():
-        
+
         shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
-        possible_employees = [e for e in employees if sum(state.x[e, t, v] for t, v in shifts_per_day[min(83,int((shift[0] + 4) / 24))]) == 0]
+        possible_employees = [
+            e
+            for e in employees
+            if sum(state.x[e, t, v] for t, v in shifts_per_day[min(83, int((shift[0] + 4) / 24))])
+            == 0
+        ]
         if not possible_employees:
             del shifts[shift]
             continue
@@ -933,8 +1023,8 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
         
         if shifts[shift] == 0:
-                del shifts[shift]
-        
+            del shifts[shift]
+
     return repair_set
 
 
@@ -966,11 +1056,12 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
     sundays = [6 + j * 7 for j in week]
     days = [i + (7 * j) for j in week for i in range(7)]
     daily_destroy_and_repair = [destroy_set, []]
-    
+
     shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
 
-    
-    while(shifts):
+    while shifts:
+
+        delta_calculate_negative_deviation_from_contracted_hours(
 
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
 
@@ -980,12 +1071,11 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
         possible_employees = [e for e in employees if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0 and sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks) > 5]
 
         if len(possible_employees) == 0:
-            for shift in shifts_at_day[min(83,int((shift[0] + 4)/24))]:
+            for shift in shifts_at_day[min(83, int((shift[0] + 4) / 24))]:
                 shifts.pop(shift, None)
             continue
 
-
-        #Soft Restrictions/Variables
+        # Soft Restrictions/Variables
         calculate_partial_weekends(state, employees_changed, shifts_at_day, saturdays)
         calculate_isolated_working_days(state, employees_changed, shifts_at_day, days)
         calculate_isolated_off_days(state, employees_changed, shifts_at_day, days)
@@ -1001,7 +1091,11 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
             f_diff, penalties = f_regret_values(state, e, shift, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, weeks, saturdays, sundays, days, shifts_in_week, shifts_at_day, weights, preferences, t_covered_by_shift, L_C_D)
             updated_f[e] += f_diff
 
-            value[e] = sum(updated_f.values()) + len(employees) * 0.1 * min(updated_f.values()) + 10 * penalties
+            value[e] = (
+                sum(updated_f.values())
+                + len(employees) * 0.1 * min(updated_f.values())
+                + 10 * penalties
+            )
         max_value = max(value.items(), key=itemgetter(1))[1]
         employee = choice([key for key, value in value.items() if value == max_value])
 
@@ -1038,12 +1132,34 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
 
     updated_invalid_shifts = {e: [(t,v) for t,v in invalid_shifts[e] if (e,t,v) in x_dict] for e in employees}
     
-    updated_shift_combinations_violating_daily_rest = {e: {(t,v): [(t_1,v_1) for t_1,v_1 in shift_combinations_violating_daily_rest[e][t,v] if (e, t_1, v_1) in x_dict] for t,v in shift_combinations_violating_daily_rest[e] if (e,t,v) in x_dict} for e in employees}
+    updated_shift_combinations_violating_daily_rest = {
+        e: {
+            (t, v): [
+                (t_1, v_1)
+                for t_1, v_1 in shift_combinations_violating_daily_rest[e][t, v]
+                if (e, t_1, v_1) in x_dict
+            ]
+            for t, v in shift_combinations_violating_daily_rest[e]
+            if (e, t, v) in x_dict
+        }
+        for e in employees
+    }
 
-    updated_shift_sequences_violating_daily_rest = {e: {(t,v): [(t_1,v_1) for t_1,v_1 in shift_sequences_violating_daily_rest[e][t,v] if (e, t_1, v_1) in x_dict] for t,v in shift_sequences_violating_daily_rest[e] if (e,t,v) in x_dict} for e in employees}
+    updated_shift_sequences_violating_daily_rest = {
+        e: {
+            (t, v): [
+                (t_1, v_1)
+                for t_1, v_1 in shift_sequences_violating_daily_rest[e][t, v]
+                if (e, t_1, v_1) in x_dict
+            ]
+            for t, v in shift_sequences_violating_daily_rest[e]
+            if (e, t, v) in x_dict
+        }
+        for e in employees
+    }
     plus = {(c, t): 0 for c in competencies for t in updated_time_periods}
     minus = {(c, t): 0 for c in competencies for t in updated_time_periods}
-    mu = {(c, t): 0 for c in competencies  for t in updated_time_periods}
+    mu = {(c, t): 0 for c in competencies for t in updated_time_periods}
 
     x = model.addVars(x_dict, vtype=GRB.BINARY, name="x")
     mu = model.addVars(mu, vtype=GRB.INTEGER, name="mu")
@@ -1057,145 +1173,198 @@ def mip_week_operator_3(    employees, shifts_in_week, competencies, time_period
     iso_work = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="q_iso_work")
     iso_off = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="q_iso_off")
     gamma = model.addVars(employees, days_in_week_x, vtype=GRB.BINARY, name="gamma")
-    con = model.addVars(employees, days_in_week_x[:-L_C_D], vtype=GRB.BINARY, name="consecutive_days")
+    con = model.addVars(
+        employees, days_in_week_x[:-L_C_D], vtype=GRB.BINARY, name="consecutive_days"
+    )
     g = model.addVar(vtype=GRB.CONTINUOUS, name="lowest_contracted_hours")
 
-    if(days_in_week_x[0] == 7*week[0] - 1):
+    if days_in_week_x[0] == 7 * week[0] - 1:
         for e in employees:
-            for t,v in shifts_per_day[days_in_week_x[0]]:
-                x[e,t,v].lb = state.x[e,t,v]
-                x[e,t,v].ub = state.x[e,t,v]
+            for t, v in shifts_per_day[days_in_week_x[0]]:
+                x[e, t, v].lb = state.x[e, t, v]
+                x[e, t, v].ub = state.x[e, t, v]
 
-    if(days_in_week_x[-1] == 7*(week[0] + 1)):
+    if days_in_week_x[-1] == 7 * (week[0] + 1):
         for e in employees:
-            for t,v in shifts_per_day[days_in_week_x[-1]]:
-                x[e,t,v].lb = state.x[e,t,v]
-                x[e,t,v].ub = state.x[e,t,v]
+            for t, v in shifts_per_day[days_in_week_x[-1]]:
+                x[e, t, v].lb = state.x[e, t, v]
+                x[e, t, v].ub = state.x[e, t, v]
 
-
-    for c,e,t in y_dict:
-        if(state.y[c,e,t] == 1):
-            y[c, e, t].lb = state.y[c,e,t]
-    
+    for c, e, t in y_dict:
+        if state.y[c, e, t] == 1:
+            y[c, e, t].lb = state.y[c, e, t]
 
     model.addConstrs(
-        (   quicksum(y[c, e, t] for e in employees_with_competencies[c])
+        (
+            quicksum(y[c, e, t] for e in employees_with_competencies[c])
             == demand["min"][c, t] + mu[c, t]
             for c in competencies
             for t in updated_time_periods
-        ), name="minimum_demand_coverage")
-    
+        ),
+        name="minimum_demand_coverage",
+    )
+
     model.addConstrs(
-        (   mu[c, t] <= demand["max"][c, t] - demand["min"][c, t]
+        (
+            mu[c, t] <= demand["max"][c, t] - demand["min"][c, t]
             for c in competencies
             for t in updated_time_periods
         ),
-        name="mu_less_than_difference")
+        name="mu_less_than_difference",
+    )
 
     model.addConstrs(
-        (   mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
+        (
+            mu[c, t] + demand["min"][c, t] - demand["ideal"][c, t]
             == delta_plus[c, t] - delta_minus[c, t]
             for c in competencies
             for t in updated_time_periods
-        ), name="deviation_from_ideal_demand")
-
+        ),
+        name="deviation_from_ideal_demand",
+    )
 
     model.addConstrs(
-        (   quicksum(x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t])
+        (
+            quicksum(x[e, t_marked, v] for t_marked, v in shifts_overlapping_t[t])
             == quicksum(y[c, e, t] for c in competencies)
             for e in employees
             for t in updated_time_periods
-        ), name="mapping_shift_to_demand")
+        ),
+        name="mapping_shift_to_demand",
+    )
 
     model.addConstrs(
         (
             quicksum(x[e, t, v] for t, v in shifts_per_day[i]) <= 1
             for e in employees
             for i in days_in_week
-        ), name="cover_maximum_one_shift",
+        ),
+        name="cover_maximum_one_shift",
     )
 
     model.addConstrs(
-        (   quicksum(x[e, t, v] for t, v in shifts_in_week[week[0]]) <= 6
-            for e in employees
-        ), name="max_6_shifts_a_week",
+        (quicksum(x[e, t, v] for t, v in shifts_in_week[week[0]]) <= 6 for e in employees),
+        name="max_6_shifts_a_week",
     )
-    
-    model.addConstrs(
-        (   quicksum(time_step * y[c, e, t] for c in competencies for t in updated_time_periods) == updated_contracted_hours[e] + lam_plus[e] - lam_minus[e]
-            for e in employees
-        ), name="contracted_hours")
 
     model.addConstrs(
-        (   gamma[e, i] - gamma[e, i + 1] == rho_sat[e, i] - rho_sun[e, i + 1]
+        (
+            quicksum(time_step * y[c, e, t] for c in competencies for t in updated_time_periods)
+            == updated_contracted_hours[e] + lam_plus[e] - lam_minus[e]
+            for e in employees
+        ),
+        name="contracted_hours",
+    )
+
+    model.addConstrs(
+        (
+            gamma[e, i] - gamma[e, i + 1] == rho_sat[e, i] - rho_sun[e, i + 1]
             for e in employees
             for i in saturday
-        ), name="partial_weekends")
+        ),
+        name="partial_weekends",
+    )
 
     model.addConstrs(
-        (   gamma[e, i] - gamma[e, (i + 1)] + gamma[e, (i + 2)] - 1 <= iso_off[e, (i + 1)]
+        (
+            gamma[e, i] - gamma[e, (i + 1)] + gamma[e, (i + 2)] - 1 <= iso_off[e, (i + 1)]
             for e in employees
             for i in days_in_week_x[:-2]
-        ), name="isolated_off_days")
-    
+        ),
+        name="isolated_off_days",
+    )
+
     model.addConstrs(
-        (   -gamma[e, i] + gamma[e, (i + 1)] - gamma[e, (i + 2)] <= iso_work[e, (i + 1)]
+        (
+            -gamma[e, i] + gamma[e, (i + 1)] - gamma[e, (i + 2)] <= iso_work[e, (i + 1)]
             for e in employees
             for i in days_in_week_x[:-2]
-        ), name="isolated_working_days")
+        ),
+        name="isolated_working_days",
+    )
 
     model.addConstrs(
-        (   quicksum(gamma[e, i_marked] for i_marked in range(i, i + L_C_D + 1)) - L_C_D
-                <= con[e, i] - 1
-                for e in employees
-                for i in days_in_week_x[:-L_C_D]
-            ), name="consecutive_days")
+        (
+            quicksum(gamma[e, i_marked] for i_marked in range(i, i + L_C_D + 1)) - L_C_D
+            <= con[e, i] - 1
+            for e in employees
+            for i in days_in_week_x[:-L_C_D]
+        ),
+        name="consecutive_days",
+    )
 
     model.addConstrs(
-        (   quicksum(x[e, t, v] for t, v in shifts_per_day[i]) == gamma[e, i]
+        (
+            quicksum(x[e, t, v] for t, v in shifts_per_day[i]) == gamma[e, i]
             for e in employees
             for i in days_in_week_x
-        ), name="if_employee_e_works_day_i")
+        ),
+        name="if_employee_e_works_day_i",
+    )
 
     model.addConstrs(
-            (   x[e, t, v]
-                + quicksum(
-                    x[e, t_marked, v_marked]
-                    for t_marked, v_marked in updated_shift_sequences_violating_daily_rest[e][t, v]) <= 2
-                for e in employees
-                for t, v in updated_shift_sequences_violating_daily_rest[e]
-                if len(updated_shift_sequences_violating_daily_rest[e]) > 0
-            ), name="daily_rest_shift_sequences",)
+        (
+            x[e, t, v]
+            + quicksum(
+                x[e, t_marked, v_marked]
+                for t_marked, v_marked in updated_shift_sequences_violating_daily_rest[e][t, v]
+            )
+            <= 2
+            for e in employees
+            for t, v in updated_shift_sequences_violating_daily_rest[e]
+            if len(updated_shift_sequences_violating_daily_rest[e]) > 0
+        ),
+        name="daily_rest_shift_sequences",
+    )
 
     model.addConstrs(
-            (   2 * x[e, t, v]
-                + quicksum(
-                    x[e, t_marked, v_marked]
-                    for t_marked, v_marked in updated_shift_combinations_violating_daily_rest[e][t, v]) <= 2
-                for e in employees
-                for t, v in updated_shift_combinations_violating_daily_rest[e]
-                if len(updated_shift_combinations_violating_daily_rest[e]) > 0
-            ), name="daily_rest_shift_combinations",)
+        (
+            2 * x[e, t, v]
+            + quicksum(
+                x[e, t_marked, v_marked]
+                for t_marked, v_marked in updated_shift_combinations_violating_daily_rest[e][t, v]
+            )
+            <= 2
+            for e in employees
+            for t, v in updated_shift_combinations_violating_daily_rest[e]
+            if len(updated_shift_combinations_violating_daily_rest[e]) > 0
+        ),
+        name="daily_rest_shift_combinations",
+    )
 
     model.addConstrs(
-            (quicksum(x[e, t, v] for t, v in updated_invalid_shifts[e]) == 0 for e in employees
-            ), name="invalid_shifts",)
+        (quicksum(x[e, t, v] for t, v in updated_invalid_shifts[e]) == 0 for e in employees),
+        name="invalid_shifts",
+    )
 
     model.setObjective(
         quicksum(
-                - weights["partial weekends"] * quicksum(rho_sat[e, i] + rho_sun[e, i + 1] for i in saturday)
-                - weights["isolated working days"] * quicksum(iso_work[e, i] for i in days_in_week_x)
-                - weights["isolated off days"] * quicksum(iso_off[e, i] for i in days_in_week_x)
-                - weights["consecutive days"] * quicksum(con[e, i] for i in days_in_week_x[:-L_C_D])
-                + weights["preferences"] * quicksum(preferences[e][t] * quicksum(y[c, e, t] for c in competencies) for t in updated_time_periods)
-                -  1.2 * lam_plus[e]/time_step
-        for e in employees)
-        
-        - quicksum(delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in updated_time_periods)
-    , GRB.MAXIMIZE)
+            -weights["partial weekends"]
+            * quicksum(rho_sat[e, i] + rho_sun[e, i + 1] for i in saturday)
+            - weights["isolated working days"] * quicksum(iso_work[e, i] for i in days_in_week_x)
+            - weights["isolated off days"] * quicksum(iso_off[e, i] for i in days_in_week_x)
+            - weights["consecutive days"] * quicksum(con[e, i] for i in days_in_week_x[:-L_C_D])
+            + weights["preferences"]
+            * quicksum(
+                preferences[e][t] * quicksum(y[c, e, t] for c in competencies)
+                for t in updated_time_periods
+            )
+            - 1.2 * lam_plus[e] / time_step
+            for e in employees
+        )
+        - quicksum(
+            delta_plus[c, t] + delta_minus[c, t] for c in competencies for t in updated_time_periods
+        ),
+        GRB.MAXIMIZE,
+    )
 
     model.setParam("TimeLimit", 5)
     model.setParam("Threads", 1)
     model.optimize()
-    repair_set = [set_x(state, t_covered_by_shift, e, t, v, 1) for e in employees for t,v in shifts_in_week[week[0]] if abs(x[e,t,v].x) > 0.5]
+    repair_set = [
+        set_x(state, t_covered_by_shift, e, t, v, 1)
+        for e in employees
+        for t, v in shifts_in_week[week[0]]
+        if abs(x[e, t, v].x) > 0.5
+    ]
     return repair_set
