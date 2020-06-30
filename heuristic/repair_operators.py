@@ -1027,13 +1027,6 @@ def mip_week_operator_2(  employees, shifts_in_week, competencies, time_periods_
 
     return repair_set
 
-
-
-
-
-
-
-
 def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shift,
                              employee_with_competencies, employee_with_competency_combination,
                              demand, time_step, time_periods_in_week, combined_time_periods_in_week,
@@ -1060,14 +1053,9 @@ def repair_week_based_on_f_values(shifts_in_week, competencies, t_covered_by_shi
     shifts = {shift: demand for shift, demand in shifts_with_demand.items() if shift in shifts_in_week[week[0]]}
 
     while shifts:
-
-        delta_calculate_negative_deviation_from_contracted_hours(
-
         delta_calculate_negative_deviation_from_contracted_hours(state, employees_changed, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
 
         shift = choices(list(shifts.keys()), weights=list(shifts.values()))[0]
-
-
         possible_employees = [e for e in employees if (sum(state.x[e, t, v] for t, v in shifts_at_day[min(83,int((shift[0] + 4) / 24))])) == 0 and sum(state.soft_vars["deviation_contracted_hours"][e, j] for j in weeks) > 5]
 
         if len(possible_employees) == 0:
