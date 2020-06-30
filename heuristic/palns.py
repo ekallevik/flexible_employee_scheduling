@@ -13,15 +13,26 @@ from heuristic.destroy_operators import (
     worst_week_removal,
     random_week_removal,
     weighted_random_week_removal,
-    random_employee_removal, random_weekend_removal, weighted_random_employee_removal,
+    random_employee_removal,
+    random_weekend_removal,
+    weighted_random_employee_removal,
     worst_contract_removal,
 )
 from heuristic.local_search_operators import illegal_week_swap, illegal_contracted_hours
 
-from heuristic.repair_operators import worst_week_regret_repair, worst_week_repair, \
-    worst_employee_repair, worst_employee_regret_repair, week_demand_repair, \
-    week_demand_per_shift_repair, week_demand_based_repair_random, week_demand_based_repair_greedy, \
-    mip_week_operator_2, repair_week_based_on_f_values, mip_week_operator_3
+from heuristic.repair_operators import (
+    worst_week_regret_repair,
+    worst_week_repair,
+    worst_employee_repair,
+    worst_employee_regret_repair,
+    week_demand_repair,
+    week_demand_per_shift_repair,
+    week_demand_based_repair_random,
+    week_demand_based_repair_greedy,
+    mip_week_operator_2,
+    repair_week_based_on_f_values,
+    mip_week_operator_3,
+)
 
 
 class PALNS(multiprocessing.Process):
@@ -182,7 +193,7 @@ class PALNS(multiprocessing.Process):
             self.t_covered_by_shift,
             self.competencies,
             self.weeks,
-            self.employees
+            self.employees,
         )
 
         remove_random_employee = partial(
@@ -252,7 +263,7 @@ class PALNS(multiprocessing.Process):
             self.shifts_at_day,
             self.L_C_D,
             self.shifts_overlapping_t,
-            self.preferences
+            self.preferences,
         )
 
         repair_worst_week_greedy = partial(
@@ -293,7 +304,7 @@ class PALNS(multiprocessing.Process):
             self.time_periods_in_week,
             self.time_step,
             self.shifts_overlapping_t,
-            self.preferences
+            self.preferences,
         )
 
         repair_worst_employee_greedy = partial(
@@ -313,101 +324,101 @@ class PALNS(multiprocessing.Process):
 
         repair_worst_week_demand_based_random = partial(
             week_demand_based_repair_random,
-            self.shifts_per_week, 
-            self.competencies, 
+            self.shifts_per_week,
+            self.competencies,
             self.t_covered_by_shift,
-            self.employee_with_competencies, 
+            self.employee_with_competencies,
             self.employee_with_competency_combination,
             self.demand,
             self.time_step,
             self.time_periods_in_week,
             self.combined_time_periods_in_week,
-            self.employees, 
-            self.contracted_hours, 
-            self.demand_per_shift, 
-            self.invalid_shifts, 
+            self.employees,
+            self.contracted_hours,
+            self.demand_per_shift,
+            self.invalid_shifts,
             self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
-            self.weeks, 
+            self.weeks,
             self.shifts_at_day,
-            self.L_C_D, 
+            self.L_C_D,
             self.shifts_overlapping_t,
-            self.preferences
+            self.preferences,
         )
 
         repair_worst_week_demand_based_greedy = partial(
             week_demand_based_repair_greedy,
-            self.shifts_per_week, 
-            self.competencies, 
+            self.shifts_per_week,
+            self.competencies,
             self.t_covered_by_shift,
-            self.employee_with_competencies, 
+            self.employee_with_competencies,
             self.employee_with_competency_combination,
             self.demand,
             self.time_step,
             self.time_periods_in_week,
             self.combined_time_periods_in_week,
-            self.employees, 
-            self.contracted_hours, 
-            self.demand_per_shift, 
-            self.invalid_shifts, 
+            self.employees,
+            self.contracted_hours,
+            self.demand_per_shift,
+            self.invalid_shifts,
             self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
-            self.weeks, 
+            self.weeks,
             self.shifts_at_day,
-            self.L_C_D, 
+            self.L_C_D,
             self.shifts_overlapping_t,
-            self.preferences
+            self.preferences,
         )
 
         mip_operator_week_repair_2 = partial(
             mip_week_operator_2,
-            self.employees, 
-            self.shifts_per_week, 
-            self.competencies, 
-            self.time_periods_in_week, 
-            self.combined_time_periods_in_week, 
-            self.employee_with_competencies, 
-            self.shifts_at_day, 
-            self.shifts_overlapping_t, 
+            self.employees,
+            self.shifts_per_week,
+            self.competencies,
+            self.time_periods_in_week,
+            self.combined_time_periods_in_week,
+            self.employee_with_competencies,
+            self.shifts_at_day,
+            self.shifts_overlapping_t,
             self.t_covered_by_off_shift,
-            self.invalid_shifts, 
-            self.shift_combinations_violating_daily_rest, 
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
-            self.weeks, 
-            self.time_step, 
-            self.demand, 
+            self.weeks,
+            self.time_step,
+            self.demand,
             self.days,
             self.objective_weights,
             self.contracted_hours,
             self.t_covered_by_shift,
-            self.L_C_D, 
-            self.preferences
+            self.L_C_D,
+            self.preferences,
         )
 
         mip_operator_week_repair_3 = partial(
             mip_week_operator_3,
-            self.employees, 
-            self.shifts_per_week, 
-            self.competencies, 
-            self.time_periods_in_week, 
-            self.combined_time_periods_in_week, 
-            self.employee_with_competencies, 
-            self.shifts_at_day, 
-            self.shifts_overlapping_t, 
+            self.employees,
+            self.shifts_per_week,
+            self.competencies,
+            self.time_periods_in_week,
+            self.combined_time_periods_in_week,
+            self.employee_with_competencies,
+            self.shifts_at_day,
+            self.shifts_overlapping_t,
             self.t_covered_by_off_shift,
-            self.invalid_shifts, 
-            self.shift_combinations_violating_daily_rest, 
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
             self.shift_sequences_violating_daily_rest,
-            self.weeks, 
-            self.time_step, 
-            self.demand, 
+            self.weeks,
+            self.time_step,
+            self.demand,
             self.days,
             self.objective_weights,
             self.contracted_hours,
             self.t_covered_by_shift,
             self.demand_per_shift,
             self.L_C_D,
-            self.preferences
+            self.preferences,
         )
 
         repair_worst_week_f_value = partial(
@@ -430,30 +441,18 @@ class PALNS(multiprocessing.Process):
             self.shifts_at_day,
             self.L_C_D,
             self.shifts_overlapping_t,
-            self.objective_weights, 
-            self.preferences, 
+            self.objective_weights,
+            self.preferences,
             self.demand_per_shift,
             self.saturdays,
-            self.days
+            self.days,
         )
-        
+
         operators = {
-            remove_worst_employee: [
-                 repair_worst_employee_regret,
-            ],
-
-            remove_worst_contract: [
-                repair_worst_employee_regret,
-            ],
-
-            remove_random_employee: [
-                repair_worst_employee_regret,
-            ],
-
-            remove_weighted_random_employee: [
-                repair_worst_employee_regret,
-            ],
-
+            remove_worst_employee: [repair_worst_employee_regret,],
+            remove_worst_contract: [repair_worst_employee_regret,],
+            remove_random_employee: [repair_worst_employee_regret,],
+            remove_weighted_random_employee: [repair_worst_employee_regret,],
             remove_worst_week: [
                 repair_worst_week_regret,
                 repair_worst_week_greedy,
@@ -463,7 +462,7 @@ class PALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
                 repair_worst_week_f_value,
-                mip_operator_week_repair_3
+                mip_operator_week_repair_3,
             ],
 
             remove_random_week: [
@@ -475,7 +474,7 @@ class PALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
                 repair_worst_week_f_value,
-                mip_operator_week_repair_3
+                mip_operator_week_repair_3,
             ],
 
             remove_weighted_random_week: [
@@ -487,7 +486,7 @@ class PALNS(multiprocessing.Process):
                 repair_worst_week_demand_based_greedy,
                 mip_operator_week_repair_2,
                 repair_worst_week_f_value,
-                mip_operator_week_repair_3
+                mip_operator_week_repair_3,
             ],
 
             remove_random_weekend: [
@@ -528,31 +527,41 @@ class PALNS(multiprocessing.Process):
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"{self.prefix}Performed {self.iteration} iterations over"
-                       f" {self.runtime:.2f}s (excluding construction)")
+        logger.warning(
+            f"{self.prefix}Performed {self.iteration} iterations over"
+            f" {self.runtime:.2f}s (excluding construction)"
+        )
 
-        logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
+        logger.error(
+            f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}"
+        )
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
 
         # Add a newline between the output of each iteration
         print()
-        current_time = timer()-self.start_time
+        current_time = timer() - self.start_time
         logger.warning(f"{self.prefix}Iteration: {self.iteration} at {current_time:.2f}")
 
         if self.share_times and current_time > self.share_times[0]:
             self.share_solutions()
 
         candidate_solution = self.current_solution.copy()
-        destroy_operator, destroy_operator_id = self.select_operator(self.destroy_operators, self.destroy_weights)
-        repair_operator, repair_operator_id = self.select_operator(self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id])
+        destroy_operator, destroy_operator_id = self.select_operator(
+            self.destroy_operators, self.destroy_weights
+        )
+        repair_operator, repair_operator_id = self.select_operator(
+            self.repair_operators[destroy_operator_id], self.repair_weights[destroy_operator_id]
+        )
 
         destroy_set, destroy_specific_set = destroy_operator(candidate_solution)
         repair_set = repair_operator(candidate_solution, destroy_set, destroy_specific_set)
 
         self.calculate_objective(candidate_solution, destroy_set, repair_set)
-        self.consider_candidate_and_update_weights(candidate_solution, destroy_operator_id, repair_operator_id)
+        self.consider_candidate_and_update_weights(
+            candidate_solution, destroy_operator_id, repair_operator_id
+        )
 
         if self.violation_plotter:
             violations = candidate_solution.get_violations_per_week(
@@ -578,21 +587,29 @@ class PALNS(multiprocessing.Process):
 
     def share_solutions(self):
 
-        logger.error(f"{self.prefix}Sharing at {self.share_times[0]}s."
-                     f" {len(self.share_times) - 1} shares remaining")
+        logger.error(
+            f"{self.prefix}Sharing at {self.share_times[0]}s."
+            f" {len(self.share_times) - 1} shares remaining"
+        )
         del self.share_times[0]
 
         if not self.queue.empty():
             shared_solution = self.queue.get()
-            logger.error(f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
-                         f"best={self.get_best_solution_value(): 7.2f}")
+            logger.error(
+                f"{self.prefix}Shared solution={shared_solution.get_objective_value(): 7.2f} vs "
+                f"best={self.get_best_solution_value(): 7.2f}"
+            )
 
-            if self.criterion.accept(shared_solution, self.current_solution,
-                                     self.best_solution, self.random_state):
+            if self.criterion.accept(
+                shared_solution, self.current_solution, self.best_solution, self.random_state
+            ):
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is accepted")
 
-            if shared_solution.is_feasible() and shared_solution.get_objective_value() > self.best_solution.get_objective_value():
+            if (
+                shared_solution.is_feasible()
+                and shared_solution.get_objective_value() > self.best_solution.get_objective_value()
+            ):
                 self.best_solution = shared_solution
                 self.current_solution = shared_solution
                 logger.error(f"{self.prefix}Shared solution is best solution")
@@ -615,17 +632,23 @@ class PALNS(multiprocessing.Process):
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
-        logger.warning(f"{self.current_solution.get_objective_value(): 7.2f}  vs "
-                       f"{candidate_solution.get_objective_value(): 7.2f} "
-                       f"({destroy_id}, {repair_id})")
+        logger.warning(
+            f"{self.current_solution.get_objective_value(): 7.2f}  vs "
+            f"{candidate_solution.get_objective_value(): 7.2f} "
+            f"({destroy_id}, {repair_id})"
+        )
 
         self.choose_local_search(candidate_solution)
 
-        if self.criterion.accept(candidate_solution, self.current_solution,
-                                 self.best_solution, self.random_state):
+        if self.criterion.accept(
+            candidate_solution, self.current_solution, self.best_solution, self.random_state
+        ):
             self.current_solution = candidate_solution
 
-            if candidate_solution.get_objective_value() > self.current_solution.get_objective_value():
+            if (
+                candidate_solution.get_objective_value()
+                > self.current_solution.get_objective_value()
+            ):
                 logger.debug("Candidate is better")
                 weight_update = self.WeightUpdate["IS_BETTER"]
             else:
@@ -637,9 +660,10 @@ class PALNS(multiprocessing.Process):
             weight_update = self.WeightUpdate["IS_REJECTED"]
 
         # only feasible solution can be considered for best solution
-        if (candidate_solution.is_feasible()
-                and candidate_solution.get_objective_value() >
-                self.best_solution.get_objective_value()):
+        if (
+            candidate_solution.is_feasible()
+            and candidate_solution.get_objective_value() > self.best_solution.get_objective_value()
+        ):
             logger.critical(f"Candidate is best")
             weight_update = self.WeightUpdate["IS_BEST"]
             self.best_solution = candidate_solution
@@ -657,7 +681,7 @@ class PALNS(multiprocessing.Process):
 
         current_value = self.current_solution.get_objective_value()
 
-        if 0 < current_value/candidate_solution.get_objective_value() < 2:
+        if 0 < current_value / candidate_solution.get_objective_value() < 2:
             if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
 
                 destroy_set, repair_set = illegal_week_swap(
@@ -679,24 +703,53 @@ class PALNS(multiprocessing.Process):
                     candidate_solution,
                 )
 
-                destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                destroy, repair = illegal_contracted_hours(
+                    candidate_solution,
+                    self.shifts,
+                    self.time_step,
+                    self.employees,
+                    self.shifts_at_day,
+                    self.weeks,
+                    self.t_covered_by_shift,
+                    self.contracted_hours,
+                    self.time_periods_in_week,
+                    self.competencies,
+                )
 
-                self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
+                self.calculate_objective(
+                    candidate_solution, destroy_set + destroy, repair_set + repair
+                )
 
                 updated_value = self.current_solution.get_objective_value()
-                logger.trace(f"week_swap and contracted_hours increased value from "
-                             f"{current_value} to {updated_value}")
+                logger.trace(
+                    f"week_swap and contracted_hours increased value from "
+                    f"{current_value} to {updated_value}"
+                )
 
-            elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
+            elif penalties["negative_contracted_hours"] and not (
+                penalties["below_minimum_demand"] or penalties["below_minimum_demand"]
+            ):
 
-                destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+                destroy_set, repair_set = illegal_contracted_hours(
+                    candidate_solution,
+                    self.shifts,
+                    self.time_step,
+                    self.employees,
+                    self.shifts_at_day,
+                    self.weeks,
+                    self.t_covered_by_shift,
+                    self.contracted_hours,
+                    self.time_periods_in_week,
+                    self.competencies,
+                )
 
                 self.calculate_objective(candidate_solution, destroy_set, repair_set)
 
                 updated_value = self.current_solution.get_objective_value()
-                logger.trace(f"week_swap and contracted_hours increased value from "
-                             f"{current_value} to {updated_value}")
-
+                logger.trace(
+                    f"week_swap and contracted_hours increased value from "
+                    f"{current_value} to {updated_value}"
+                )
 
     def save_solutions(self):
 
@@ -752,7 +805,7 @@ class PALNS(multiprocessing.Process):
             "weight_update": self.WeightUpdate,
             "destroy_weights": self.destroy_weights,
             "repair_weights": self.repair_weights,
-            "objective_history": self.objective_history
+            "objective_history": self.objective_history,
         }
 
         self.results[self.worker_name] = results
@@ -762,25 +815,23 @@ class PALNS(multiprocessing.Process):
 
         try:
             possible_preferences = [
-                sum(1
-                    for t in self.preferences[e]
-                    if self.preferences[e][t] != 0)
+                sum(1 for t in self.preferences[e] if self.preferences[e][t] != 0)
                 for e in self.employees
             ]
 
             granted_preferences = [
                 sum(
                     (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
-                    or
-                    (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
+                    or (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
                     for c in self.competencies
                     for t in self.preferences[e]
-                ) for e in self.employees
+                )
+                for e in self.employees
             ]
 
             ratio_preferences = [
-                granted / possible for granted, possible in
-                zip(granted_preferences, possible_preferences)
+                granted / possible
+                for granted, possible in zip(granted_preferences, possible_preferences)
             ]
 
         except Exception as e:
@@ -812,8 +863,10 @@ class PALNS(multiprocessing.Process):
 
         probabilities = self.get_probabilities(weights)
 
-        message = f"Probabilities for " \
-                  f"{'Destroy' if 'worst_week_removal' in operators.keys() else 'Repair'} ["
+        message = (
+            f"Probabilities for "
+            f"{'Destroy' if 'worst_week_removal' in operators.keys() else 'Repair'} ["
+        )
 
         for p in probabilities:
             message += f" {p*100:.1f}%"
@@ -833,17 +886,20 @@ class PALNS(multiprocessing.Process):
         """ Updates the value of the operator pair by multiplying both with weight_update """
 
         self.destroy_weights[destroy_id] = (
-                self.decay * self.destroy_weights[destroy_id] + (1-self.decay) * weight_update
+            self.decay * self.destroy_weights[destroy_id] + (1 - self.decay) * weight_update
         )
 
         self.repair_weights[destroy_id][repair_id] = (
-                self.decay * self.repair_weights[destroy_id][repair_id] + (1-self.decay) * weight_update
+            self.decay * self.repair_weights[destroy_id][repair_id]
+            + (1 - self.decay) * weight_update
         )
 
     def initialize_destroy_and_repair_weights(self):
         self.destroy_weights = self.initialize_weights(self.destroy_operators)
         for destroy_operator in self.destroy_operators:
-            self.repair_weights[destroy_operator] = self.initialize_weights(self.repair_operators[destroy_operator])
+            self.repair_weights[destroy_operator] = self.initialize_weights(
+                self.repair_operators[destroy_operator]
+            )
 
     @staticmethod
     def initialize_weights(operators):
@@ -921,7 +977,7 @@ class PALNS(multiprocessing.Process):
             self.weeks,
             self.objective_weights,
             self.preferences,
-            self.competencies
+            self.competencies,
         )
 
     def get_best_solution_value(self):
