@@ -538,6 +538,7 @@ class PALNS(multiprocessing.Process):
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
 
     def perform_iteration(self):
+        """ Perform one local iteration. Shares solutions if sharing interval is reached """
 
         # Add a newline between the output of each iteration
         print()
@@ -563,29 +564,16 @@ class PALNS(multiprocessing.Process):
             candidate_solution, destroy_operator_id, repair_operator_id
         )
 
-        if self.violation_plotter:
-            violations = candidate_solution.get_violations_per_week(
-                self.weeks, self.time_periods_in_week, self.competencies, self.employees
-            )
-
-            self.violation_plotter.plot_data(violations)
-
         self.update_objective_history(candidate_solution, current_time)
-
-        if self.objective_plotter:
-            self.objective_plotter.plot_data(self.objective_history)
-
-        if self.weight_plotter:
-
-            for key, value in self.destroy_weights.items():
-                self.weight_history[key].append(value)
-                self.weight_plotter.plot_data(self.weight_history)
-
         self.iteration += 1
 
         return candidate_solution
 
     def share_solutions(self):
+        """
+        Pops a solution from the shared queue if possible, and then pushes the best solution
+        to the queue
+        """
 
         logger.error(
             f"{self.prefix}Sharing at {self.share_times[0]}s."
@@ -619,6 +607,7 @@ class PALNS(multiprocessing.Process):
         self.queue.put(self.current_solution)
 
     def update_objective_history(self, candidate_solution, current_time):
+        """ Collects statistics """
 
         self.objective_history["candidate"].append(candidate_solution.get_objective_value())
         self.objective_history["current"].append(self.current_solution.get_objective_value())
@@ -632,6 +621,7 @@ class PALNS(multiprocessing.Process):
         :param destroy_id: the id (name) of the destroy function used to create this state
         :param repair_id: the id (name) of the repair function used to create this state
         """
+
         logger.warning(
             f"{self.current_solution.get_objective_value(): 7.2f}  vs "
             f"{candidate_solution.get_objective_value(): 7.2f} "
@@ -672,17 +662,28 @@ class PALNS(multiprocessing.Process):
         self.update_weights(weight_update, destroy_id, repair_id)
 
     def choose_local_search(self, candidate_solution):
+        """ Selects appropriate local search operators and performs an operation """
+
         penalties = {
-            "below_minimum_demand": sum(candidate_solution.hard_vars["below_minimum_demand"].values()),
-            "above_maximum_demand": sum(candidate_solution.hard_vars["above_maximum_demand"].values()),
-            "negative_contracted_hours": sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()),
-            "weekly_off_shift_error": sum(candidate_solution.hard_vars["weekly_off_shift_error"].values())
+            "below_minimum_demand": sum(
+                candidate_solution.hard_vars["below_minimum_demand"].values()
+            ),
+            "above_maximum_demand": sum(
+                candidate_solution.hard_vars["above_maximum_demand"].values()
+            ),
+            "negative_contracted_hours": sum(
+                candidate_solution.hard_vars["delta_positive_contracted_hours"].values()
+            ),
+            "weekly_off_shift_error": sum(
+                candidate_solution.hard_vars["weekly_off_shift_error"].values()
+            )
         }
 
         current_value = self.current_solution.get_objective_value()
 
         if 0 < current_value / candidate_solution.get_objective_value() < 2:
-            if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
+            if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) \
+                    and penalties["weekly_off_shift_error"]:
 
                 destroy_set, repair_set = illegal_week_swap(
                     self.shifts_per_week,
@@ -752,6 +753,7 @@ class PALNS(multiprocessing.Process):
                 )
 
     def save_solutions(self):
+        """ Saves the actual shift allocations to a sol-file """
 
         if "rproblem1" in self.log_name:
             folder = "solutions/rproblem1"
@@ -953,11 +955,31 @@ class PALNS(multiprocessing.Process):
         calculate_isolated_off_days(state, employees, self.shifts_at_day, self.days)
         calculate_consecutive_days(state, employees, self.shifts_at_day, self.L_C_D, self.days)
         calculate_weekly_rest(state, self.shifts_per_week, employees, self.weeks)
-        calculate_daily_rest_error(state, [destroy, repair], self.invalid_shifts, self.shift_combinations_violating_daily_rest, self.shift_sequences_violating_daily_rest)
-        
+        calculate_daily_rest_error(
+            state,
+            [destroy, repair],
+            self.invalid_shifts,
+            self.shift_combinations_violating_daily_rest,
+            self.shift_sequences_violating_daily_rest,
+        )
+
         # Updates the current states hard variables based on changed decision variables
-        below_minimum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
-        above_maximum_demand(state, destroy_repair_set, self.employee_with_competencies, self.demand, self.competencies, self.t_covered_by_shift)
+        below_minimum_demand(
+            state,
+            destroy_repair_set,
+            self.employee_with_competencies,
+            self.demand,
+            self.competencies,
+            self.t_covered_by_shift,
+        )
+        above_maximum_demand(
+            state,
+            destroy_repair_set,
+            self.employee_with_competencies,
+            self.demand,
+            self.competencies,
+            self.t_covered_by_shift,
+        )
         more_than_one_shift_per_day(state, employees, self.demand, self.shifts_at_day, self.days)
         cover_multiple_demand_periods(state, repair, self.t_covered_by_shift, self.competencies)
         mapping_shift_to_demand(
