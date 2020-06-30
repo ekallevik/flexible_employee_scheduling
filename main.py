@@ -113,7 +113,6 @@ class ProblemRunner:
         else:
             logger.critical("Does not log to file!")
 
-
     def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
@@ -131,9 +130,11 @@ class ProblemRunner:
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
         processes = []
+        remaining_runtime = self.runtime-self.construction_runtime
         for j in range(threads):
-            state_copy = deepcopy(state)
+            worker_name = f"worker-{j}"
 
+            state_copy = deepcopy(state)
             criterion = GreedyCriterion() if not criterion_list else criterion_list[j]
 
             decay = 0.9
@@ -144,18 +145,14 @@ class ProblemRunner:
                 "IS_REJECTED": 0.7
             }
 
-            worker_name = f"worker-{j}"
-
-            remaining_runtime = self.runtime-self.construction_runtime
-
-            alns = PALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
+            palns = PALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
                          operator_weights=operator_weights, runtime=remaining_runtime,
                          worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
                          seed=j+seed_offset, variant=variant)
-            processes.append(alns)
+            processes.append(palns)
 
             logger.info(f"Starting {worker_name}")
-            alns.start()
+            palns.start()
 
         cool_off = 60
         logger.warning(f"Cooling off for {cool_off}s")

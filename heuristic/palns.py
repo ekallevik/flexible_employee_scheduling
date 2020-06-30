@@ -440,22 +440,18 @@ class PALNS(multiprocessing.Process):
         operators = {
             remove_worst_employee: [
                  repair_worst_employee_regret,
-                 #repair_worst_employee_greedy
             ],
 
             remove_worst_contract: [
                 repair_worst_employee_regret,
-                #repair_worst_employee_greedy
             ],
 
             remove_random_employee: [
                 repair_worst_employee_regret,
-                #repair_worst_employee_greedy
             ],
 
             remove_weighted_random_employee: [
                 repair_worst_employee_regret,
-                #repair_worst_employee_greedy
             ],
 
             remove_worst_week: [
@@ -504,134 +500,39 @@ class PALNS(multiprocessing.Process):
         self.initialize_destroy_and_repair_weights()
 
     def run(self):
-        """ Automatically called when multiprocess.start() is run """
+        """ Called when palns.start() is run from main.py"""
 
-        logger.error(f"{self.prefix}Starting")
-
+        logger.error(f"{self.prefix}Starting subprocess")
         self.iterate(runtime=self.runtime)
 
         logger.error(f"{self.prefix}Saving solutions")
         self.save_solutions()
+
         logger.error(f"{self.prefix}Solution saved. Calculating result")
+        self.save_result()
 
-        try:
-            possible_preferences = [
-                sum(1
-                    for t in self.preferences[e]
-                    if self.preferences[e][t] != 0)
-                for e in self.employees
-            ]
+        self.close_subprocess()
 
-            granted_preferences = [
-                sum(
-                    (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
-                    or
-                    (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
-                    for c in self.competencies
-                    for t in self.preferences[e]
-                ) for e in self.employees
-            ]
+    def iterate(self, runtime=None):
+        """ Performs iterations until runtime is reached """
 
-            ratio_preferences = [
-                granted / possible for granted, possible in zip(granted_preferences, possible_preferences)
-            ]
+        logger.warning(f"{self.prefix}Running ALNS for {self.runtime:.2f} seconds")
 
-        except Exception as e:
-            logger.error(f"Exception: {e}")
-            granted_preferences = None
-            possible_preferences = None
-            ratio_preferences = None
-
-        total_w = sum(min(v, 72) for t, v in self.best_solution.w.values())
-        employee_weeks = len(self.weeks)*len(self.employees)
-
-        results = {
-            "log": self.log_name,
-            "best_solution": self.get_best_solution_value(),
-            "iterations": self.iteration,
-            "criterion": str(self.criterion),
-            "violations": self.best_solution.get_number_of_violations(),
-            "f": self.best_solution.f,
-            "w": total_w/employee_weeks,
-            "preferences": {
-                "granted": granted_preferences,
-                "possible": possible_preferences,
-                "ratio": ratio_preferences,
-            },
-            "decay": self.decay,
-            "random_seed": self.seed,
-            "random_state": str(self.random_state),
-            "weight_update": self.WeightUpdate,
-            "destroy_weights": self.destroy_weights,
-            "repair_weights": self.repair_weights,
-            "objective_history": self.objective_history
-        }
-
-        self.results[self.worker_name] = results
-        logger.error(f"{self.prefix}Saved results to shared dict")
-
-        cool_off = 60
-        logger.warning(f"Cooling off for {cool_off}s")
-        for t in range(0, cool_off, 5):
-            logger.error(f"Cooled off for {t}s")
-            time.sleep(5)
-
-        self.queue.close()
-        logger.error(f"{self.prefix}Queue closed")
-
-    def iterate(self, iterations=None, runtime=None):
-
-        """ Performs iterations until runtime is reached or the number of iterations is exceeded """
-
-        if not iterations:
-            logger.warning(f"{self.prefix}Running ALNS for {self.runtime:.2f} seconds")
-
-            while timer() < self.start_time + self.runtime:
-                try:
-                    self.perform_iteration()
-                except GurobiError as e:
-                    logger.critical(f"{self.prefix}GurobiError: {e}")
-                except KeyboardInterrupt:
-                    command = input("\n\nAvailable commands: \n"
-                                    "1 - Continue running \n"
-                                    "2 - Save solutions and continue running \n"
-                                    "3 - Drop into debugger \n"
-                                    "4 - Save solutions and stop running\n"
-                                    )
-
-                    if command == "1":
-                        continue
-                    elif command == "2":
-                        custom_filename = input("\nEnter custom filename or hit enter to use "
-                                                "log_name\n")
-
-                        custom_filename = custom_filename if len(custom_filename) else None
-                        self.save_solutions()
-
-                        continue
-
-                    elif command == "3":
-                        breakpoint()
-                    elif command == "4":
-                        break
-                except Exception as e:
-                    logger.exception(f"{self.prefix} caused an exception", e)
-
-        else:
-
-            logger.warning(f"Running ALNS for {iterations} iterations")
-
-            for iteration in range(iterations):
+        while timer() < self.start_time + self.runtime:
+            try:
                 self.perform_iteration()
+            except GurobiError as e:
+                logger.critical(f"{self.prefix}GurobiError: {e}")
+            except Exception as e:
+                logger.exception(f"{self.prefix} caused an exception", e)
 
         # Add a newline after the output from the last iteration
         print()
-        logger.warning(f"{self.prefix}Performed {iterations if iterations else self.iteration} iterations over"
+        logger.warning(f"{self.prefix}Performed {self.iteration} iterations over"
                        f" {self.runtime:.2f}s (excluding construction)")
 
         logger.error(f"{self.prefix}Initial solution: {self.initial_solution.get_objective_value(): .2f}")
         logger.error(f"{self.prefix}Best solution: {self.best_solution.get_objective_value(): .2f}")
-
 
     def perform_iteration(self):
 
@@ -746,6 +647,57 @@ class PALNS(multiprocessing.Process):
 
         self.update_weights(weight_update, destroy_id, repair_id)
 
+    def choose_local_search(self, candidate_solution):
+        penalties = {
+            "below_minimum_demand": sum(candidate_solution.hard_vars["below_minimum_demand"].values()),
+            "above_maximum_demand": sum(candidate_solution.hard_vars["above_maximum_demand"].values()),
+            "negative_contracted_hours": sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()),
+            "weekly_off_shift_error": sum(candidate_solution.hard_vars["weekly_off_shift_error"].values())
+        }
+
+        current_value = self.current_solution.get_objective_value()
+
+        if 0 < current_value/candidate_solution.get_objective_value() < 2:
+            if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
+
+                destroy_set, repair_set = illegal_week_swap(
+                    self.shifts_per_week,
+                    self.employees,
+                    self.shifts_at_day,
+                    self.t_covered_by_shift,
+                    self.competencies,
+                    self.contracted_hours,
+                    self.invalid_shifts,
+                    self.shift_combinations_violating_daily_rest,
+                    self.shift_sequences_violating_daily_rest,
+                    self.time_periods_in_week,
+                    self.time_step,
+                    self.L_C_D,
+                    self.preferences,
+                    self.weeks,
+                    self.combined_time_periods_in_week,
+                    candidate_solution,
+                )
+
+                destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+
+                self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
+
+                updated_value = self.current_solution.get_objective_value()
+                logger.trace(f"week_swap and contracted_hours increased value from "
+                             f"{current_value} to {updated_value}")
+
+            elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
+
+                destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
+
+                self.calculate_objective(candidate_solution, destroy_set, repair_set)
+
+                updated_value = self.current_solution.get_objective_value()
+                logger.trace(f"week_swap and contracted_hours increased value from "
+                             f"{current_value} to {updated_value}")
+
+
     def save_solutions(self):
 
         if "rproblem1" in self.log_name:
@@ -771,6 +723,84 @@ class PALNS(multiprocessing.Process):
 
         suffix = f"-{self.worker_name}" if self.worker_name else ""
         self.best_solution.write(f"{folder}/{self.log_name}-ALNS{suffix}_{self.variant}")
+
+    def save_result(self):
+        """
+        Saves the results from the current subprocess into a shared memory structure as a
+        means of returning data to main.py
+        """
+
+        granted_preferences, possible_preferences, ratio_preferences = self.calculate_preference_result()
+        total_w = sum(min(v, 72) for t, v in self.best_solution.w.values())
+        employee_weeks = len(self.weeks) * len(self.employees)
+        results = {
+            "log": self.log_name,
+            "best_solution": self.get_best_solution_value(),
+            "iterations": self.iteration,
+            "criterion": str(self.criterion),
+            "violations": self.best_solution.get_number_of_violations(),
+            "f": self.best_solution.f,
+            "w": total_w / employee_weeks,
+            "preferences": {
+                "granted": granted_preferences,
+                "possible": possible_preferences,
+                "ratio": ratio_preferences,
+            },
+            "decay": self.decay,
+            "random_seed": self.seed,
+            "random_state": str(self.random_state),
+            "weight_update": self.WeightUpdate,
+            "destroy_weights": self.destroy_weights,
+            "repair_weights": self.repair_weights,
+            "objective_history": self.objective_history
+        }
+
+        self.results[self.worker_name] = results
+
+    def calculate_preference_result(self):
+        """ Calculates achieved and possible preferences, as well as the ratio between them """
+
+        try:
+            possible_preferences = [
+                sum(1
+                    for t in self.preferences[e]
+                    if self.preferences[e][t] != 0)
+                for e in self.employees
+            ]
+
+            granted_preferences = [
+                sum(
+                    (self.preferences[e][t] > 0 and self.best_solution.y[c, e, t] == 1)
+                    or
+                    (self.preferences[e][t] < 0 and self.best_solution.y[c, e, t] == 0)
+                    for c in self.competencies
+                    for t in self.preferences[e]
+                ) for e in self.employees
+            ]
+
+            ratio_preferences = [
+                granted / possible for granted, possible in
+                zip(granted_preferences, possible_preferences)
+            ]
+
+        except Exception as e:
+            logger.error(f"Exception: {e}")
+            granted_preferences = None
+            possible_preferences = None
+            ratio_preferences = None
+        return granted_preferences, possible_preferences, ratio_preferences
+
+    def close_subprocess(self):
+        """ Closes the current subprocess explicitly. Necessary to return a result to main.py """
+
+        cool_off = 60
+        logger.warning(f"Cooling off for {cool_off}s")
+        for t in range(0, cool_off, 5):
+            logger.error(f"Cooled off for {t}s")
+            time.sleep(5)
+        self.queue.close()
+        logger.error(f"{self.prefix}Queue closed")
+        logger.error(f"{self.prefix}Saved results to shared dict")
 
     def select_operator(self, operators, weights):
         """
@@ -896,55 +926,3 @@ class PALNS(multiprocessing.Process):
 
     def get_best_solution_value(self):
         return self.best_solution.get_objective_value()
-
-    def choose_local_search(self, candidate_solution):
-        penalties = {
-            "below_minimum_demand": sum(candidate_solution.hard_vars["below_minimum_demand"].values()),
-            "above_maximum_demand": sum(candidate_solution.hard_vars["above_maximum_demand"].values()),
-            "negative_contracted_hours": sum(candidate_solution.hard_vars["delta_positive_contracted_hours"].values()),
-            "weekly_off_shift_error": sum(candidate_solution.hard_vars["weekly_off_shift_error"].values())
-        }
-
-        current_value = self.current_solution.get_objective_value()
-
-        if 0 < current_value/candidate_solution.get_objective_value() < 2:
-            if (not penalties["below_minimum_demand"] or not penalties["below_minimum_demand"]) and penalties["weekly_off_shift_error"]:
-
-                    destroy_set, repair_set = illegal_week_swap(
-                        self.shifts_per_week,
-                        self.employees,
-                        self.shifts_at_day,
-                        self.t_covered_by_shift,
-                        self.competencies,
-                        self.contracted_hours,
-                        self.invalid_shifts, 
-                        self.shift_combinations_violating_daily_rest, 
-                        self.shift_sequences_violating_daily_rest,
-                        self.time_periods_in_week,
-                        self.time_step,
-                        self.L_C_D,
-                        self.preferences,
-                        self.weeks,
-                        self.combined_time_periods_in_week,
-                        candidate_solution,
-                    )
-
-                    destroy, repair = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
-
-                    self.calculate_objective(candidate_solution, destroy_set + destroy, repair_set + repair)
-
-                    updated_value = self.current_solution.get_objective_value()
-                    logger.trace(f"week_swap and contracted_hours increased value from "
-                                 f"{current_value} to {updated_value}")
-
-
-            elif penalties["negative_contracted_hours"] and not (penalties["below_minimum_demand"] or penalties["below_minimum_demand"]):
-
-                    destroy_set, repair_set = illegal_contracted_hours(candidate_solution, self.shifts, self.time_step, self.employees, self.shifts_at_day, self.weeks, self.t_covered_by_shift, self.contracted_hours, self.time_periods_in_week, self.competencies)
-
-                    self.calculate_objective(candidate_solution, destroy_set, repair_set)
-
-                    updated_value = self.current_solution.get_objective_value()
-                    logger.trace(f"week_swap and contracted_hours increased value from "
-                                 f"{current_value} to {updated_value}")
-
