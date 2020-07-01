@@ -31,7 +31,6 @@ class Demand:
         self.maximum.append(int(maximum))
         self.ideal.append(int(ideal))
         self.requirements.append(competency_requirements)
-        # self.time_delta.append(datetime.combine(self.today, end) - datetime.combine(self.today,start))
 
     def add_info2(self, start, end, maximum, minimum, ideal):
         start = start.split(":")
@@ -47,7 +46,6 @@ class Demand:
         self.minimum.append(int(minimum))
         self.maximum.append(int(maximum))
         self.ideal.append(int(ideal))
-        # self.time_delta.append(datetime.combine(self.today, end) - datetime.combine(self.today,start))
 
     def __str__(self):
         return "DemandID: " + str(self.demand_id) + ", Requirements: " + str(self.requirements)
