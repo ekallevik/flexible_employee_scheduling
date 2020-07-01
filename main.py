@@ -10,7 +10,7 @@ from gurobipy import *
 from loguru import logger
 from timeit import default_timer as timer
 
-from heuristic.alns import ALNS
+from heuristic.palns import PALNS
 from heuristic.criterions.greedy_criterion import GreedyCriterion
 from heuristic.criterions.record_to_record_travel import RecordToRecordTravel
 from heuristic.heuristic_calculations import *
@@ -113,7 +113,6 @@ class ProblemRunner:
         else:
             logger.critical("Does not log to file!")
 
-
     def run_palns(self, threads=48, seed_offset=0, criterion_list=None, variant="default"):
         """ Runs multiple ALNS-instances in parallel and saves the results to a JSON-file """
 
@@ -131,9 +130,11 @@ class ProblemRunner:
         logger.critical(f"Running PALNS with {threads} processes with variant={variant}")
 
         processes = []
+        remaining_runtime = self.runtime-self.construction_runtime
         for j in range(threads):
-            state_copy = deepcopy(state)
+            worker_name = f"worker-{j}"
 
+            state_copy = deepcopy(state)
             criterion = GreedyCriterion() if not criterion_list else criterion_list[j]
 
             decay = 0.9
@@ -144,18 +145,14 @@ class ProblemRunner:
                 "IS_REJECTED": 0.7
             }
 
-            worker_name = f"worker-{j}"
-
-            remaining_runtime = self.runtime-self.construction_runtime
-
-            alns = ALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
-                        operator_weights=operator_weights, runtime=remaining_runtime,
-                        worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
-                        seed=j+seed_offset, variant=variant)
-            processes.append(alns)
+            palns = PALNS(state_copy, criterion, self.data, self.weights, self.log_name, decay=decay,
+                         operator_weights=operator_weights, runtime=remaining_runtime,
+                         worker_name=worker_name, results=shared_results, queue=queue, share_times=share_times,
+                         seed=j+seed_offset, variant=variant)
+            processes.append(palns)
 
             logger.info(f"Starting {worker_name}")
-            alns.start()
+            palns.start()
 
         cool_off = 60
         logger.warning(f"Cooling off for {cool_off}s")
@@ -416,47 +413,7 @@ class ProblemRunner:
 
 
 if __name__ == "__main__":
-    """ 
-    Run any function with arguments ARGS by using:
-        python main.py FUNCTION_NAME ARGS
-        
-    Run functions in a chain:
-        python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE
-        
-        Note: only functions that return `self` can be chained.
-        Note2: functions has to be separated by `-`
-    
-    Access property PROP by using: 
-        python main.py FUNCTION_NAME PROP
-    
-    Examples
-        # Initialize object with default arguments and 
-        python main.py
-        
-        # Initialize object and print self.mode
-        python main.py mode
-        
-        # Run ESP with SDP
-        python main.py run_esp
-        python main.py --with_sdp run_esp
-        
-        # Run ESP without SDP
-        python main.py --nowith_sdp run_esp
-        python main.py --with_sdp=False run_esp
-        
-        # Configure ESP-model and then run
-        python main.py configure_model --seed=1 - run_esp
-        
-        # Run ALNS without SDP
-        python main.py --nowith_sdp run_alns
-        
-        # Change to SA-criterion and the run ALNS
-        python main.py change_criterion --start_temp=150 - run_alns
 
-        #Håkons base command
-        python3 main.py --with_sdp=False change_criterion --start_temp=100 - run_alns --iterations=10 
-         
-    """
 
     fire.Fire(ProblemRunner)
 
