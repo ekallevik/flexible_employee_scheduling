@@ -27,17 +27,24 @@ def calculate_weekly_rest(data, x, w):
     for key in actual_shifts.keys():
         week = int(key[1])
         if len(actual_shifts[key]) == 0:
-            off_shift_periods[key] = [(important[week], float((important[week + 1] - important[week])))]
+            off_shift_periods[key] = [
+                (important[week], float((important[week + 1] - important[week])))
+            ]
 
         else:
             if actual_shifts[key][0][0] - important[week] >= 36:
-                off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
+                off_shift_periods[key].append(
+                    (important[week], actual_shifts[key][0][0] - important[week])
+                )
 
             if actual_shifts[key][0][0] - important[week] >= 36:
-                off_shift_periods[key].append((important[week], actual_shifts[key][0][0] - important[week]))
-                
+                off_shift_periods[key].append(
+                    (important[week], actual_shifts[key][0][0] - important[week])
+                )
+
     for key in off_shift_periods:
-            w[key] = max(off_shift_periods[key],key=itemgetter(1))
+        w[key] = max(off_shift_periods[key], key=itemgetter(1))
+
 
 def calculate_negative_deviation_from_demand(data, y):
     delta = {}
@@ -142,36 +149,27 @@ def calculate_f(data, soft_vars, weights, w, y, employees=None):
 def calculate_f_for_employee(data, e, soft_vars, weights, w, y):
 
     f = (
-        weights["rest"] * sum(
-            min(MAX_REWARDED_WEEKLY_REST, w[e, j][1])
-            for j in data["time"]["weeks"]
-        )
-
-        - weights["contracted hours"][e] * sum(
-            soft_vars["deviation_contracted_hours"][e, j]
-            for j in data["time"]["weeks"]
-        )
-
-
-        - weights["partial weekends"] * sum(
-            soft_vars["partial_weekends"][e, i]
-            for i in data["time"]["saturdays"]
-        )
-
+        weights["rest"]
+        * sum(min(MAX_REWARDED_WEEKLY_REST, w[e, j][1]) for j in data["time"]["weeks"])
+        - weights["contracted hours"][e]
+        * sum(soft_vars["deviation_contracted_hours"][e, j] for j in data["time"]["weeks"])
+        - weights["partial weekends"]
+        * sum(soft_vars["partial_weekends"][e, i] for i in data["time"]["saturdays"])
         - sum(
             weights["isolated working days"] * soft_vars["isolated_working_days"][e, i + 1]
             + weights["isolated off days"] * soft_vars["isolated_off_days"][e, i + 1]
             for i in range(data["time"]["number_of_days"] - 2)
         )
-
-        - weights["consecutive days"] * sum(
+        - weights["consecutive days"]
+        * sum(
             soft_vars["consecutive_days"][e, i]
             for i in range(data["time"]["number_of_days"] - data["limit_on_consecutive_days"])
         )
-
-        + weights["preferences"] * sum(
-            data["preferences"][e][t] * y[c,e,t] 
-            for t in data["preferences"][e] for c in data["competencies"]
+        + weights["preferences"]
+        * sum(
+            data["preferences"][e][t] * y[c, e, t]
+            for t in data["preferences"][e]
+            for c in data["competencies"]
         )
     )
 
@@ -183,12 +181,11 @@ def calculate_objective_function(data, soft_vars, weights, w, y):
     f = calculate_f(data, soft_vars, weights, w, y)
     g = min(f.values())
 
-    # todo: Split demand deviation into positive and negative
-
     objective_function_value = (
         sum(f.values())
         + weights["lowest fairness score"] * g
-        - weights["excess demand deviation factor"] * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
+        - weights["excess demand deviation factor"]
+        * abs(sum(soft_vars["deviation_from_ideal_demand"].values()))
     )
 
     logger.info(f"Initial objective: {objective_function_value: .2f}")

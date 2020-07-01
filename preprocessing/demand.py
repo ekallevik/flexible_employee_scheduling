@@ -15,6 +15,7 @@ class Demand:
         self.time_step_length = None
 
     def add_info(self, start, end, maximum, minimum, ideal, competency_requirements):
+
         start = start.split(":")
         end = end.split(":")
         if int(start[1]) != 0:
