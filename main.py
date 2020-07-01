@@ -413,47 +413,7 @@ class ProblemRunner:
 
 
 if __name__ == "__main__":
-    """ 
-    Run any function with arguments ARGS by using:
-        python main.py FUNCTION_NAME ARGS
-        
-    Run functions in a chain:
-        python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE
-        
-        Note: only functions that return `self` can be chained.
-        Note2: functions has to be separated by `-`
-    
-    Access property PROP by using: 
-        python main.py FUNCTION_NAME PROP
-    
-    Examples
-        # Initialize object with default arguments and 
-        python main.py
-        
-        # Initialize object and print self.mode
-        python main.py mode
-        
-        # Run ESP with SDP
-        python main.py run_esp
-        python main.py --with_sdp run_esp
-        
-        # Run ESP without SDP
-        python main.py --nowith_sdp run_esp
-        python main.py --with_sdp=False run_esp
-        
-        # Configure ESP-model and then run
-        python main.py configure_model --seed=1 - run_esp
-        
-        # Run ALNS without SDP
-        python main.py --nowith_sdp run_alns
-        
-        # Change to SA-criterion and the run ALNS
-        python main.py change_criterion --start_temp=150 - run_alns
 
-        #Håkons base command
-        python3 main.py --with_sdp=False change_criterion --start_temp=100 - run_alns --iterations=10 
-         
-    """
 
     fire.Fire(ProblemRunner)
 
