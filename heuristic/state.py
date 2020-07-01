@@ -3,19 +3,16 @@ from collections import defaultdict
 
 from loguru import logger
 
-from heuristic.delta_calculations import hard_constraint_penalties
-
-
 class State:
     def __init__(self, decision_vars, soft_vars, hard_vars, objective_function_value, f,
                  hard_penalty=12):
 
-        #Hard decision variables
+        # Hard decision variables
         self.x = decision_vars["x"]
         self.y = decision_vars["y"]
         self.w = decision_vars["w"]
 
-        #Soft Variables
+        # Soft Variables
         self.soft_vars = soft_vars
 
         # Hard Penalty Variables
@@ -91,9 +88,8 @@ class State:
 
         return violations
 
-
     def get_violations(self, weeks, time_periods_in_week, competencies, employees):
-        """ Extracts all violations of hard constraints per week"""
+        """ Extracts all violations of hard constraints per week """
 
         below_demand = {
             j: {(c, t):
@@ -132,8 +128,7 @@ class State:
 
         return violations
 
-    def get_violations_per_week(self, weeks, time_periods_in_week, competencies,
-                                            employees):
+    def get_violations_per_week(self, weeks, time_periods_in_week, competencies, employees):
         """ Sums violations of hard constraints per week"""
 
         below_demand = [sum(self.hard_vars["below_minimum_demand"].get((c, t), 0)
@@ -160,24 +155,24 @@ class State:
 
     def write(self, filename):
 
-        summasjon = defaultdict(float)
+        summation = defaultdict(float)
         f = open(f"{filename}.sol", "w+")
         f.write(f"# Objective value = {self.objective_function_value}\n")
 
-        for c,e,t in self.y:
+        for c, e, t in self.y:
             f.write(f"y[{c},{e},{t}] {int(self.y[c,e,t])}\n")
             
         for e, t, v in self.x:
             f.write(f"x[{e},{t},{v}] {int(self.x[e,t,v])}\n")
-        for e,j in self.w:
+        for e, j in self.w:
             f.write(f"w[{e},{self.w[e,j][0]},{self.w[e,j][1]}] 1\n")
 
         for key in self.soft_vars.keys():
-            if(key == "deviation_contracted_hours"):
+            if key == "deviation_contracted_hours":
                 for key2 in self.soft_vars[key]:
-                    summasjon[key2[0]] += float(self.soft_vars[key][key2])
-                for e in summasjon:
-                    f.write(f"deviation_contracted_hours[{e}] {summasjon[e]}\n")
+                    summation[key2[0]] += float(self.soft_vars[key][key2])
+                for e in summation:
+                    f.write(f"deviation_contracted_hours[{e}] {summation[e]}\n")
             else:
                 for key2 in self.soft_vars[key]:
                     f.write("%s[%s] %s\n" % (key, ''.join(str(key2)), str(int(self.soft_vars[key][key2]))))
