@@ -1,5 +1,4 @@
 from heuristic.delta_calculations import (
-    calc_weekly_objective_function,
     calculate_consecutive_days,
     calculate_isolated_off_days,
     calculate_isolated_working_days,
@@ -7,31 +6,15 @@ from heuristic.delta_calculations import (
     calculate_weekly_rest,
     delta_calculate_negative_deviation_from_contracted_hours,
     employee_shift_value,
-    worst_employee_regret_value,
-    calculate_deviation_from_demand
 )
 from heuristic.converter import set_x, remove_x
 from operator import itemgetter
 from random import choice
-from utils.const import DESIRED_SHIFT_DURATION
-import itertools
 
 def illegal_week_swap(
-    shifts_in_week,
-    employees,
-    shifts_at_day,
-    t_covered_by_shift,
-    competencies,
-    contracted_hours,
-    invalid_shifts, 
-    shift_combinations_violating_daily_rest, 
-    shift_sequences_violating_daily_rest,
-    time_periods_in_week,
-    time_step,
-    L_C_D,
-    preferences,
-    weeks,
-    combined_time_periods_in_week,
+    shifts_in_week, employees, shifts_at_day, t_covered_by_shift, competencies, contracted_hours,
+    invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest,
+    time_periods_in_week, time_step, L_C_D, preferences, weeks, combined_time_periods_in_week,
     state,
 ):
     destroy_set = []
@@ -57,7 +40,6 @@ def illegal_week_swap(
                 calculate_consecutive_days(current_state, [emp], shifts_at_day, L_C_D, days_in_week)
                 delta_calculate_negative_deviation_from_contracted_hours(current_state, [emp], contracted_hours, weeks, time_periods_in_week, competencies, time_step)
 
-
                 for e_p in possible_employees:
                     objective_values[e_p, shift] = employee_shift_value(state, e_p, shift, saturdays, sundays, invalid_shifts, shift_combinations_violating_daily_rest, shift_sequences_violating_daily_rest, shifts_in_week, weeks, shifts_at_day, j, L_C_D, preferences, competencies, t_covered_by_shift, 0)
 
@@ -82,10 +64,9 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
             illegal_shifts = [(e,t,v) for t,v in shifts if state.x[e,t,v] == 1]
             for e,t,v in illegal_shifts:
                 swap_shifts = [(e,t1,v1) for e in employees for t1,v1 in shifts_in_day[int(t/24)] if state.x[e,t1,v1] == 1 and v1 < v and sum(state.soft_vars["deviation_contracted_hours"][e,j] for j in weeks) + (v1 - v) >= 0]
-                if(len(swap_shifts) != 0):
+                if len(swap_shifts) != 0:
                     zero_shifts = [(e_2, t_2, v_2) for e_2, t_2, v_2 in swap_shifts if (v - v_2) == illegal_hours]
                     shift = min(swap_shifts, key=itemgetter(1)) if len(zero_shifts) == 0 else choice(zero_shifts)
-                    #shift = choice(swap_shifts)
                     destroy_set.append(remove_x(state, t_covered_by_shift, competencies, e, t, v))
                     destroy_set.append(remove_x(state, t_covered_by_shift, competencies, shift[0], shift[1], shift[2]))
 
@@ -94,11 +75,6 @@ def illegal_contracted_hours(state, shifts, time_step, employees, shifts_in_day,
                     delta_calculate_negative_deviation_from_contracted_hours(state, employees, contracted_hours, weeks, time_periods_in_week, competencies, time_step)
                     illegal_hours -= (v - shift[2])
 
-                    if(illegal_hours <= 0):
+                    if illegal_hours <= 0:
                         break
     return destroy_set, repair_set
-
-
-
-
-                    
