@@ -532,6 +532,7 @@ def get_t_covered_by_off_shifts(off_shifts, time_sets, competencies):
     return t_covered
 
 
+
 def get_updated_off_shift_sets(data, shifts):
     competencies = data["competencies"]
     return (
