@@ -57,3 +57,5 @@ Some of the repair operators check if an employee works a shift on a particular 
 ```shifts_at_day[int(shift[0] / 24)]```
 was replaced with:
 ```shifts_at_day[min(83,int((shift[0] + 4) / 24))]```
+
+By doing this we ensure that a shift belongs to the correct day. If an employee are assigned a shift before 20:00 they are not allowed to be assigned another shift before after 20:00.
