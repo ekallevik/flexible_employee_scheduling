@@ -27,7 +27,7 @@ Initialize object with default arguments
 Run ESP with SDH-SR
 ```python main.py --problem=PROBLEM_NAME run_esp```
     
-Run ESP with SDH (with SR)
+Run ESP with SDH (without SR)
 ```python main.py --problem=PROBLEM_NAME --with_sdp=False run_esp```
 
 Run PALNS
@@ -45,3 +45,15 @@ Note1, the MIP model from the report is named `ESP` in the code.
 * P7 - rproblem7
 * P8 - rproblem8
 * P9 - rproblem9
+
+## Problem Fixes.
+As we encountered some difficulties regarding some of the provided problems a few special fixes was done to address the problems. In some cases it only affects the parameters used when running the problem. However, in one case we had to do some changes to the code.
+
+### rproblem4 fix
+For rproblem4 the parameter defining which day a shift belongs to is changed from 24 (regular calendar days) to 20. A shift begining at 20:00 or later is then defined to belong to the next day. This parameter affects the constraint saying an employee are only allowed to work one shift each day. 
+
+Changing this parameter had unforseen impact on some of the implemented repair operators. The MIP model is on the other hand intact, and works as usual. 
+Some of the repair operators check if an employee works a shift on a particular day, creating a set of available employees. However, the calculation relied on the day_defining_shift parameter to stay at 24. To fix this the following code:
+```shifts_at_day[int(shift[0] / 24)]```
+was replaced with:
+```shifts_at_day[min(83,int((shift[0] + 4) / 24))]```
