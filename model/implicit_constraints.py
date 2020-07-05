@@ -34,7 +34,6 @@ class ImplicitConstraints:
         self.contracted_hours = data["staff"]["employee_contracted_hours"]
 
         # Adding constraints
-        #self.add_no_shift_while_no_demand(var.x)
         self.add_minimum_demand_coverage(var.y, var.mu)
         self.add_maximum_demand_coverage(var.mu)
         self.add_deviation_from_ideal_demand(var.mu, var.delta)
@@ -50,24 +49,6 @@ class ImplicitConstraints:
         self.add_isolated_working_days(var.gamma, var.q)
         self.add_isolated_off_days(var.gamma, var.q)
         self.add_consecutive_days(var.gamma, var.q)
-
-    """
-    def add_no_shift_while_no_demand(self, x):
-
-        self.model.addConstrs(
-            (
-                quicksum(
-                    quicksum(
-                        x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t_marked + v - self.time_step in self.time_periods_with_no_demand
-                    )
-                    for v in self.shift_durations["work"]
-                ) == 0
-                for e in self.employees
-            ),
-            name="no_work_shift_ending_in_no_demand_allowed"
-        )
-    """
 
     def add_minimum_demand_coverage(self, y, mu):
 
@@ -112,30 +93,15 @@ class ImplicitConstraints:
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
                         if t - v + self.time_step <= t_marked <= t
-                        if (e,t_marked,v) in x
-                        # 
-                        # and
-                        # t_marked + v - self.time_step in self.combined_time_periods
+                        if (e, t_marked, v) in x
                     )
                     for v in self.shift_durations["work"]
                 ) == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
                 for e in self.employees
                 for t in self.combined_time_periods
-                #for t in self.combined_time_periods if t < 165.75
             ),
             name="mapping_shift_to_demand"
         )
-        """
-        self.model.addConstrs(
-            (
-                x[e, 165.75, 2.25]
-                == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
-                for e in self.employees
-                for t in self.combined_time_periods if t >= 165.75
-            ),
-            name="mapping_shift_to_demand_special_case"
-        )
-        """
 
     def add_max_one_demand_cover_each_time(self, y):
 

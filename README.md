@@ -27,11 +27,14 @@ Initialize object with default arguments
 Run ESP with SDH-SR
 ```python main.py --problem=PROBLEM_NAME run_esp```
     
-Run ESP with SDH (with SR)
+Run ESP with SDH (without SR)
 ```python main.py --problem=PROBLEM_NAME --with_sdp=False run_esp```
 
-Run PALNS
-```python main.py --problem=PROBLEM_NAME --nowith_sdp run_alns```
+Run PALNS with SDH-SR
+```python main.py --problem=PROBLEM_NAME run_palns```
+
+Run PALNS with SDH (without SR)
+```python main.py --problem=PROBLEM_NAME --with_sdp=False run_palns```
 
 Note1, the MIP model from the report is named `ESP` in the code. 
 
