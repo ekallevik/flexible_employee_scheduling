@@ -9,7 +9,7 @@ Code for Master Thesis at NTNU
 ## Available commands
 
 Run any method with arguments ARGS by using:
-``python main.py FUNCTION_NAME ARGS```
+```python main.py FUNCTION_NAME ARGS```
     
 Run methods in a chain:
 ```python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE```
@@ -38,7 +38,16 @@ Run PALNS with SDH (without SR)
 
 Note1, the MIP model from the report is named `ESP` in the code. 
 
+## Special Modes
+Run the IMP-MIP model
+```python main.py --problem=PROBLEM_NAME --mode=implicit run_esp```
+
+Run the ESP with predefined skifts
+```python main.py --problem=PROBLEM_NAME --use_predefined_shifts=True run_esp```
+
+
 ## Problem names
+Real-life problems
 * P1 - rproblem1
 * P2 - rproblem2
 * P3 - rproblem3
@@ -48,6 +57,18 @@ Note1, the MIP model from the report is named `ESP` in the code.
 * P7 - rproblem7
 * P8 - rproblem8
 * P9 - rproblem9
+
+### Implicit Problems
+In order to enable tests including the IMP-MIP model, special problems werer introduced. These are idential to the real problems, but reduced to one week planning horizon.
+* P1_IMP - rproblem1_implicit
+* P2_IMP - rproblem2_implicit
+* P3_IMP - rproblem3_implicit
+* P4_IMP - rproblem4_implicit
+* P5_IMP - rproblem5_implicit
+* P6_IMP - rproblem6_implicit
+* P7_IMP - rproblem7_implicit
+* P8_IMP - rproblem8_implicit
+* P9_IMP - rproblem9_implicit
 
 ## Problem Fixes.
 As we encountered some difficulties regarding some of the provided problems a few special fixes was done to address the problems. In some cases it only affects the parameters used when running the problem. However, in one case we had to do some changes to the code.
