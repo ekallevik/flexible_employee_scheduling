@@ -21,6 +21,8 @@ Access property PROP by using:
 ```python main.py FUNCTION_NAME PROP```
 
 ## Examples
+**Note that the MIP model from the report is named `ESP` in the code.**
+
 Initialize object with default arguments 
 ```python main.py```
     
@@ -36,7 +38,6 @@ Run PALNS with SDH-SR
 Run PALNS with SDH (without SR)
 ```python main.py --problem=PROBLEM_NAME --with_sdp=False run_palns```
 
-Note1, the MIP model from the report is named `ESP` in the code. 
 
 ## Special Modes
 Run the IMP-MIP model
@@ -59,7 +60,7 @@ Real-life problems
 * P9 - rproblem9
 
 ### Implicit Problems
-In order to enable tests including the IMP-MIP model, special problems werer introduced. These are idential to the real problems, but reduced to one week planning horizon.
+In order to enable tests involving the IMP-MIP model, special problems were introduced. These are identical to the real problems, but reduced to a one-week planning horizon.
 * P1_IMP - rproblem1_implicit
 * P2_IMP - rproblem2_implicit
 * P3_IMP - rproblem3_implicit
