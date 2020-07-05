@@ -1,15 +1,15 @@
 # Flexible Employee Scheduling
 Code for Master Thesis at NTNU
 
-# How to run the code
+# How to Run the Code
 1. Navigate to ../flexible employee scheduling/
 2. Run one of the available commands. This will initiate one of the methods from the
  ProblemRunner-class
 
-## Available commands
+## Available Commands
 
 Run any method with arguments ARGS by using:
-``python main.py FUNCTION_NAME ARGS```
+```python main.py FUNCTION_NAME ARGS```
     
 Run methods in a chain:
 ```python main.py INIT_ARGS FUNC1 --FUNC1_ARG=FUNC1_VALUE - FUNC2 --FUNC2_ARG=FUNC2_VALUE```
@@ -21,6 +21,8 @@ Access property PROP by using:
 ```python main.py FUNCTION_NAME PROP```
 
 ## Examples
+**Note that the MIP model from the report is named `ESP` in the code.**
+
 Initialize object with default arguments 
 ```python main.py```
     
@@ -36,9 +38,17 @@ Run PALNS with SDH-SR
 Run PALNS with SDH (without SR)
 ```python main.py --problem=PROBLEM_NAME --with_sdp=False run_palns```
 
-Note1, the MIP model from the report is named `ESP` in the code. 
 
-## Problem names
+## Special Modes
+Run the IMP-MIP model
+```python main.py --problem=PROBLEM_NAME --mode=implicit run_esp```
+
+Run the ESP with predefined shifts
+```python main.py --problem=PROBLEM_NAME --use_predefined_shifts=True run_esp```
+
+
+## Problem Names
+Real-life problems
 * P1 - rproblem1
 * P2 - rproblem2
 * P3 - rproblem3
@@ -49,10 +59,22 @@ Note1, the MIP model from the report is named `ESP` in the code.
 * P8 - rproblem8
 * P9 - rproblem9
 
+### Implicit Problems
+In order to enable tests involving the IMP-MIP model, special problems were introduced. These are identical to the real problems, but reduced to a one-week planning horizon.
+* P1_IMP - rproblem1_implicit
+* P2_IMP - rproblem2_implicit
+* P3_IMP - rproblem3_implicit
+* P4_IMP - rproblem4_implicit
+* P5_IMP - rproblem5_implicit
+* P6_IMP - rproblem6_implicit
+* P7_IMP - rproblem7_implicit
+* P8_IMP - rproblem8_implicit
+* P9_IMP - rproblem9_implicit
+
 ## Problem Fixes.
 As we encountered some difficulties regarding some of the provided problems a few special fixes was done to address the problems. In some cases it only affects the parameters used when running the problem. However, in one case we had to do some changes to the code.
 
-### rproblem4 fix
+### Rproblem4 Fix
 For rproblem4 the parameter defining which day a shift belongs to is changed from 24 (regular calendar days) to 20. A shift begining at 20:00 or later is then defined to belong to the next day. This parameter affects the constraint saying an employee are only allowed to work one shift each day. 
 
 Changing this parameter had unforseen impact on some of the implemented repair operators. The MIP model is on the other hand intact, and works as usual. 
