@@ -19,7 +19,10 @@ class ImplicitConstraints:
         self.time_periods = data["time"]["periods"][0]
         self.combined_time_periods = data["time"]["combined_time_periods"][0]
         self.combined_time_periods_in_day = data["time"]["combined_time_periods"][2]
+        self.time_periods_with_no_demand = data["time"]["time_periods_with_no_demand"]
         self.every_time_period = data["time"]["every_time_period"]
+        self.every_time_period_in_day = data["time"]["every_time_period_in_day"]
+        self.every_time_period_in_week = data["time"]["every_time_period_in_week"]
         self.shift_durations = data["shift_durations"]
         self.days = data["time"]["days"]
         self.weeks = data["time"]["weeks"]
@@ -89,11 +92,11 @@ class ImplicitConstraints:
                 quicksum(
                     quicksum(
                         x[e, t_marked, v] for t_marked in self.combined_time_periods
-                        if t - v + 1 <= t_marked <= t
+                        if t - v + self.time_step <= t_marked <= t
+                        if (e, t_marked, v) in x
                     )
                     for v in self.shift_durations["work"]
-                )
-                == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
+                ) == quicksum(y[c, e, t] for c in self.competencies if y.get((c, e, t)))
                 for e in self.employees
                 for t in self.combined_time_periods
             ),
@@ -119,12 +122,13 @@ class ImplicitConstraints:
             (
                 quicksum(
                     quicksum(
-                        x[e, t, v] for t in self.combined_time_periods
-                        if (n * 24) <= t <= ((n + 1) * 24)
+                        x[e, t, v] for t in self.combined_time_periods_in_day[day]
+                        if t + v - self.time_step in self.combined_time_periods
+                        if (e, t, v) in x
                         )
                     for v in self.shift_durations["work"]
                 ) <= 1
-                for n in self.days
+                for day in self.days
                 for e in self.employees
             ),
             name="maximum_one_daily_shift"
@@ -138,16 +142,16 @@ class ImplicitConstraints:
                 quicksum(
                     (1 - quicksum(y[c, e, t_marked] for c in self.competencies if y.get((c, e, t_marked))))
                     for t_marked in self.combined_time_periods
-                    if t <= t_marked <= t + (v - 1)
+                    if t <= t_marked <= t + v - self.time_step
                     )
                 >= quicksum(
                     self.time_step for t_marked_2 in self.combined_time_periods
-                    if t <= t_marked_2 <= t + (v - 1)
+                    if t <= t_marked_2 <= t + v - self.time_step
                 )
                 * w_day[e, t, v]
                 for e in self.employees
                 for v in self.shift_durations["daily_off"]
-                for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
+                for t in self.combined_time_periods if t + v - self.time_step <= max(self.combined_time_periods)
             ),
             name="cover_no_demand_while_daily_off_shift"
         )
@@ -158,16 +162,17 @@ class ImplicitConstraints:
                 quicksum(
                     (1 - quicksum(y[c, e, t_marked] for c in self.competencies if y.get((c, e, t_marked))))
                     for t_marked in self.combined_time_periods
-                    if t <= t_marked <= t + (v - 1)
+                    if t <= t_marked <= t + v - self.time_step
                 )
                 >= quicksum(
                     self.time_step for t_marked_2 in self.combined_time_periods
-                    if t <= t_marked_2 <= t + (v - 1)
+                    if t <= t_marked_2 <= t + v - self.time_step
                 )
                 * w_week[e, t, v]
                 for e in self.employees
+                for t in self.every_time_period
                 for v in self.shift_durations["weekly_off"]
-                for t in self.combined_time_periods if t + v - 1 <= max(self.combined_time_periods)
+                if t + v in self.every_time_period
             ),
             name="cover_no_demand_while_weekly_off_shift"
         )
@@ -236,6 +241,7 @@ class ImplicitConstraints:
                         w_week[e, t, v] for t in self.every_time_period
                         if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
                         >= t >= self.weekly_offset[e] + j * HOURS_IN_A_WEEK
+                        if t + v in self.every_time_period
                     )
                     for v in self.shift_durations["weekly_off"]
                     if v >= self.weekly_rest[e]
@@ -254,6 +260,7 @@ class ImplicitConstraints:
                         w_week[e, t, v] for t in self.every_time_period
                         if self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK
                         >= t > self.weekly_offset[e] + (j + 1) * HOURS_IN_A_WEEK - v
+                        if t + v in self.every_time_period
                     )
                     for v in self.shift_durations["weekly_off"] if v >= self.weekly_rest[e]
                 )
