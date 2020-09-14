@@ -1,6 +1,6 @@
 pycodestyle==2.6.0
 pytest==5.4.3
-coverage==5.1
+coverage==5.3
 pytest-cov==2.10.0
 gurobipy==9.0.0
 pygments==2.6.1
