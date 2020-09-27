@@ -1,5 +1,5 @@
 pycodestyle==2.6.0
-pytest==5.4.3
+pytest==6.1.0
 coverage==5.1
 pytest-cov==2.10.0
 gurobipy==9.0.0
