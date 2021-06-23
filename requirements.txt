@@ -7,5 +7,5 @@ pygments==2.6.1
 fire==0.3.1
 pdbpp==0.10.2
 loguru==0.5.1
-numpy==1.19.0
+numpy==1.21.0
 matplotlib~=3.2.1
